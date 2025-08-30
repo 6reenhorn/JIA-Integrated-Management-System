@@ -25,7 +25,7 @@ This is a cross-platform desktop application built with **Electron.js**.
    ```bash
    git clone https://github.com/6reenhorn/JIA-Integrated-Management-System.git
    cd JIA-Integrated-Management-System
-````
+    ````
 
 2. Install dependencies:
 
