@@ -53,3 +53,7 @@ This is a cross-platform desktop application built with **Electron.js**.
 
 * This is an early version. More features will be added.
 `
+
+
+
+* Hi cyril gwapo coder
