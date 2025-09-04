@@ -1,0 +1,18 @@
+{
+    "appId": "com._Nu1L.JIA_Integrated_Management_System",
+    "files": [
+        "dist-electron",
+        "dist-react"
+    ],
+    "icon": "./JIMS_Icon1.jpg",
+    "mac": {
+        "target": "dmg"
+    },
+    "linux": {
+        "target": "AppImage",
+        "category": "Utility"
+    },
+    "win": {
+        "target": ["portable", "msi"]
+    }
+}
