@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "Integrated Management System for JIA Business Center",
+  "author": "_Nu1L", 
   "main": "dist-electron/main.js",
   "scripts": {
     "dev:react": "vite",
