@@ -57,3 +57,5 @@ This is a cross-platform desktop application built with **Electron.js**.
 ## 📌 Notes
 
 * This is an early version. More features will be added.
+
+## qweasdae adkakd dhe ha
