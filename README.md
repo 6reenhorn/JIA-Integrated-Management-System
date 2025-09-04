@@ -36,7 +36,9 @@ This is a cross-platform desktop application built with **Electron.js**.
 3. Start the app:
 
    ```bash
-   npm start
+   npm run dev:react
+   npm run transpile:electron
+   npm run dev:electron
    ```
 
 ---
