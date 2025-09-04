@@ -88,5 +88,3 @@ Developed for **JIA Business Center** as the final project for the **Software En
 * Written in **TypeScript** for better maintainability and fewer runtime errors.
 
 ---
-
-👉 Want me to also add a **“Project Structure”** section (like `src/`, `electron/`, `dist/`) so future contributors can easily understand the folder organization?
