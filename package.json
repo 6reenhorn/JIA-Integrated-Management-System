@@ -5,6 +5,12 @@
   "type": "module",
   "description": "Integrated Management System for JIA Business Center",
   "author": "_Nu1L", 
+  "license": "MIT",
+  "homepage": "https://github.com/6reenhorn/JIA-Integrated-Management-System",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/6reenhorn/JIA-Integrated-Management-System.git"
+  },
   "main": "dist-electron/main.js",
   "scripts": {
     "dev:react": "vite",
