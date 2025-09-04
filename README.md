@@ -44,7 +44,6 @@ This is a cross-platform desktop application built with **Electron.js**.
 ---
 
 ## 👥 Team
-
 * Anino, Glenn Mark R. – Full-Stack Developer / Lead QA
 * Antonio, Den Jester B. – Full-Stack Developer / QA
 * Casia, John Jaybird L. – UI/UX Designer / QA
@@ -55,5 +54,4 @@ This is a cross-platform desktop application built with **Electron.js**.
 ---
 
 ## 📌 Notes
-
 * This is an early version. More features will be added.
