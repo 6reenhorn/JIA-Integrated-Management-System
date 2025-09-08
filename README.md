@@ -66,6 +66,13 @@ Developed for **JIA Business Center** as the final project for the **Software En
      npm run dev:electron
      ```
 
+5. **Single-line Command (Build + Start):**
+
+    * Build and Run servers:
+      ```bash
+      npm run dev
+      ```
+
 ---
 
 ## 👥 Team
