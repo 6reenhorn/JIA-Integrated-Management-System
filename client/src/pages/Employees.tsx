@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import DashboardCard from '../view/DashboardCard';
-import EmployeeStats from './EmployeeStats';
-import EmployeeFilters from './EmployeeFilters';
-import EmployeeTable from './EmployeeTable';
-import EmployeeActions from './EmployeeActions';
-import type { Employee } from './types';
-import { filterEmployees, calculateStats } from './utils';
+import DashboardCard from '../components/view/DashboardCard';
+import EmployeeStats from '../components/employees/EmployeeStats';
+import EmployeeFilters from '../components/employees/EmployeeFilters';
+import EmployeeTable from '../components/employees/EmployeeTable';
+import EmployeeActions from '../components/employees/EmployeeActions';
+import type { Employee } from '../types/types';
+import { filterEmployees, calculateStats } from '../utils/utils';
 
 const PAGE_SIZE = 5;
 

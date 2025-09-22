@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../sidebar/Sidebar';
 import Overview from './Overview';
 import Inventory from '../inventory/Inventory';
-import Employees from '../employees/Employees';
+import Employees from '../../pages/Employees';
 import EWallet from '../e-wallet/EWallet';
 import Settings from '../support/settings/Settings';
 import About from '../support/about/About';
