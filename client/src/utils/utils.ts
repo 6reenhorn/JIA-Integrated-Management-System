@@ -1,4 +1,4 @@
-import type { Employee } from './types';
+import type { Employee } from '../types/types';
 
 export const getStatusColor = (status: Employee['status']): string => {
   return status === 'Active' 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, Edit, Trash2, User } from 'lucide-react';
-import type { Employee } from './types';
-import { getStatusColor, getRoleColor } from './utils';
+import type { Employee } from '../../types/types';
+import { getStatusColor, getRoleColor } from '../../utils/utils';
 
 interface EmployeeTableProps {
   employees: Employee[];
