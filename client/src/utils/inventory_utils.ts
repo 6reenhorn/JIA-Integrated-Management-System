@@ -1,14 +1,12 @@
 import type { InventoryItem } from '../types/inventory_types';
 
-export const getStatusColor = (status: InventoryItem['status']): string => {
-  switch (status) {
-    case 'Good':
+export const getStatusColor = (status: string): string => {
+  switch (status.toLowerCase()) {
+    case 'in stock':
       return 'bg-green-100 text-green-800';
-    case 'Low Stock':
+    case 'low stock':
       return 'bg-yellow-100 text-yellow-800';
-    case 'Out Of Stock':
-      return 'bg-red-100 text-red-800';
-    case 'Expired':
+    case 'out of stock':
       return 'bg-red-100 text-red-800';
     default:
       return 'bg-gray-100 text-gray-800';

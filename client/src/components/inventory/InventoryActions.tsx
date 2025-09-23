@@ -16,35 +16,48 @@ const InventoryActions: React.FC<InventoryActionsProps> = ({
   onPageChange
 }) => {
   return (
-    <div className="flex items-center justify-between mt-6 pt-4 border-t">
+    <div className="flex items-center justify-between mt-6">
       <div className="text-sm text-gray-500">
         Page {currentPage} of {totalPages} • Showing {filteredCount} of {totalCount} items
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <button
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded"
         >
           Previous
         </button>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            className={`px-3 py-1 text-sm border rounded ${
-              currentPage === page
-                ? 'bg-gray-900 text-white border-gray-900'
-                : 'border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            {page}
-          </button>
-        ))}
+        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          let pageNum;
+          if (totalPages <= 5) {
+            pageNum = i + 1;
+          } else if (currentPage <= 3) {
+            pageNum = i + 1;
+          } else if (currentPage >= totalPages - 2) {
+            pageNum = totalPages - 4 + i;
+          } else {
+            pageNum = currentPage - 2 + i;
+          }
+          
+          return (
+            <button
+              key={pageNum}
+              onClick={() => onPageChange(pageNum)}
+              className={`px-3 py-1.5 text-sm rounded ${
+                currentPage === pageNum
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {pageNum}
+            </button>
+          );
+        })}
         <button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded"
         >
           Next
         </button>

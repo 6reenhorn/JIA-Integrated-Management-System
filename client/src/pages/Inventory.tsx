@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import DashboardCard from '../components/layout/LayoutCard';
 import InventoryStats from '../components/inventory/InventoryStats';
 import InventoryFilters from '../components/inventory/InventoryFilters';
 import InventoryTable from '../components/inventory/InventoryTable';
@@ -83,9 +82,6 @@ const Inventory: React.FC = () => {
     <div className="space-y-6">
       {/* Summary Cards */}
       <InventoryStats stats={stats} />
-
-      {/* Main Inventory Management */}
-      <DashboardCard title="Inventory Management">
         {/* Header Controls */}
         <InventoryFilters
           searchTerm={searchTerm}
@@ -114,7 +110,6 @@ const Inventory: React.FC = () => {
           totalCount={inventoryItems.length}
           onPageChange={handlePageChange}
         />
-      </DashboardCard>
     </div>
   );
 };
