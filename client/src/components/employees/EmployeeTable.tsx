@@ -30,7 +30,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
           </tr>
         </thead>
       </table>
-      <div className="max-h-[370px] overflow-y-auto">
+      <div className="max-h-[370px] overflow-y-auto min-h-[370px]">
         <table className="w-full">
           <tbody className="divide-y divide-gray-200">
             {employees.map((employee) => (
