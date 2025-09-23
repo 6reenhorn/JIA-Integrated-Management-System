@@ -7,7 +7,7 @@ export interface DLayoutCardProps {
 }
 
 const LayoutCard: React.FC<DLayoutCardProps> = ({ title, children, className = "" }) => (
-  <div className={`bg-gray-200 rounded-lg p-6 min-h-[150px] ${className}`}>
+  <div className={`bg-gray-100 border-2 border-[#E5E7EB] rounded-lg p-6 min-h-[150px] ${className}`}>
     {title && <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>}
     {children}
   </div>

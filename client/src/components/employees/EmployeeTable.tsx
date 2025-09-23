@@ -17,13 +17,12 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onDeleteEmployee
 }) => {
   return (
-    <div className="overflow-x-auto border rounded-lg">
+    <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
       <table className="w-full">
-        <thead className="bg-gray-50 border-b">
+        <thead className="border-[#E5E7EB] border-b">
           <tr>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Staff Member</th>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Role</th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Department</th>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Contact</th>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Status</th>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Last Login</th>
@@ -48,9 +47,6 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(employee.role)}`}>
                   {employee.role}
                 </span>
-              </td>
-              <td className="py-4 px-6 text-sm text-gray-600">
-                {employee.department}
               </td>
               <td className="py-4 px-6">
                 <div className="text-sm text-gray-900 whitespace-pre-line">

@@ -35,13 +35,13 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
   return (
     <div className="space-y-4">
       {/* Toggle Filters Button */}
-      <button
+      {/* <button
         onClick={() => setFilterOpen(!filterOpen)}
         className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
       >
         <Filter className="w-4 h-4" />
         {filterOpen ? 'Hide Filters' : 'Show Filters'}
-      </button>
+      </button> */}
 
       {/* Header with Search and Filters */}
       {filterOpen && (
