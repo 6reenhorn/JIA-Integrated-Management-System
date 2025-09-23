@@ -14,17 +14,17 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({ stats }) => {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-gray-900">{stats.totalEmployees}</p>
-            <p className="text-sm text-gray-600">{stats.activeEmployees} active employees</p>
+            <p className="text-sm text-gray-600">{stats.activeEmployees} active staff</p>
           </div>
           <User className="w-8 h-8 text-blue-500" />
         </div>
       </DashboardCard>
       
-      <DashboardCard title="Departments">
+      <DashboardCard title="Active Staff">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-gray-900">{stats.departments}</p>
-            <p className="text-sm text-gray-600">Active departments</p>
+            <p className="text-sm text-gray-600">Currently working</p>
           </div>
           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
             <span className="text-green-600 font-semibold">{stats.departments}</span>
@@ -32,11 +32,11 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({ stats }) => {
         </div>
       </DashboardCard>
       
-      <DashboardCard title="New Hires">
+      <DashboardCard title="Recent Logins">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-gray-900">{stats.newHires}</p>
-            <p className="text-sm text-gray-600">This week</p>
+            <p className="text-sm text-gray-600">Last 24 hours</p>
           </div>
           <Plus className="w-8 h-8 text-purple-500" />
         </div>

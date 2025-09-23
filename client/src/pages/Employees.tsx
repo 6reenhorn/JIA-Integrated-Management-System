@@ -6,6 +6,8 @@ import EmployeeTable from '../components/employees/EmployeeTable';
 import EmployeeActions from '../components/employees/EmployeeActions';
 import type { Employee } from '../types/employee_types';
 import { filterEmployees, calculateStats } from '../utils/employee_utils';
+import MainLayoutCard from '../components/layout/MainLayoutCard';
+import EmployeeSearchBar from '../components/employees/EmployeeSearchBar';
 
 const PAGE_SIZE = 5;
 
@@ -127,9 +129,9 @@ const Employees: React.FC = () => {
       <EmployeeStats stats={stats} />
 
       {/* Staff Directory Section */}
-      <DashboardCard title="Staff Directory">
+      <MainLayoutCard title="Staff Management">
         <div className="space-y-6">
-          <EmployeeFilters
+          {/* <EmployeeFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             roleFilter={roleFilter}
@@ -143,7 +145,10 @@ const Employees: React.FC = () => {
             filterOpen={filterOpen}
             setFilterOpen={setFilterOpen}
             onAddEmployee={handleAddEmployee}
-          />
+          /> */}
+          <div>
+            <EmployeeSearchBar />
+          </div>
 
           <EmployeeTable
             employees={paginatedEmployees}
@@ -158,7 +163,7 @@ const Employees: React.FC = () => {
             onPageChange={handlePageChange}
           />
         </div>
-      </DashboardCard>
+      </MainLayoutCard>
     </div>
   );
 };
