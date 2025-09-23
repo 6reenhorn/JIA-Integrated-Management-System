@@ -25,8 +25,8 @@ const EWallet = () => {
   const tabs = ['Overview', 'GCash', 'PayMaya', 'JuanPay'];
 
   const StatCard = ({ title, amount, subtitle, bgColor = 'bg-white', textColor = 'text-blue-600', subtitleColor = 'text-gray-500' }: StatCardProps) => (
-    <div className={`${bgColor} rounded-xl p-6 shadow-sm border`}>
-      <h3 className="text-gray-700 font-medium mb-2">{title}</h3>
+    <div className={`${bgColor} rounded-lg p-6 border border-gray-300`}>
+      <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
       <div className={`text-3xl font-bold ${textColor} mb-1`}>
         {amount}
       </div>
@@ -37,12 +37,12 @@ const EWallet = () => {
   );
 
   const SummaryCard = ({ title, data }: SummaryCardProps) => (
-    <div className="bg-white rounded-xl p-6 shadow-sm border">
-      <h3 className="text-gray-700 font-medium mb-4">{title}</h3>
+    <div className="bg-white rounded-lg p-6 border border-gray-300">
+      <h3 className="text-gray-500 font-medium mb-4">{title}</h3>
       <div className="space-y-3">
         {data.map((item, index) => (
           <div key={index} className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm">{item.label}</span>
+            <span className="text-gray-500 text-sm">{item.label}</span>
             <span className={`font-medium ${item.value.startsWith('-') ? 'text-red-500' : 'text-gray-900'}`}>
               {item.value}
             </span>
@@ -53,8 +53,8 @@ const EWallet = () => {
   );
 
   const RecordCard = ({ title, count }: RecordCardProps) => (
-    <div className="bg-white rounded-xl p-6 shadow-sm border text-center">
-      <h3 className="text-gray-700 font-medium mb-2">{title}</h3>
+    <div className="bg-white rounded-lg p-6 border border-gray-300 text-center">
+      <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
       <div className="text-4xl font-bold text-gray-900">
         {count}
       </div>
@@ -87,15 +87,15 @@ const EWallet = () => {
     <div className="space-y-6">
       {/* Navigation Tabs */}
       <div className="mb-8">
-        <div className="flex space-x-8 border-b border-gray-200">
+        <div className="flex space-x-8 border-b border-gray-300">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors hover:bg-gray-50 ${
                 activeTab === tab
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               {tab}
