@@ -6,7 +6,7 @@ import Employees from './Employees';
 import EWallet from '../components/e-wallet/EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
-import Navbar from '../navbar/navbar';
+import Navbar from '../navbar/Navbar';
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');

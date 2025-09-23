@@ -2,12 +2,12 @@ import React from "react";
 
 const CustomTitleBar: React.FC = () => {
     return (
-        <div className="flex items-center justify-between p-2 w-full" style={{ WebkitAppRegion: 'drag' } as any}>
+        <div className="flex items-center justify-between" style={{ WebkitAppRegion: 'drag' } as any}>
             {/* Draggable area */}
             <div className="flex-1"></div>
             
             {/* Window controls (non-draggable) */}
-            <div className="flex items-center space-x-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
+            <div className="flex items-center space-x-6" style={{ WebkitAppRegion: 'no-drag' } as any}>
                 <button onClick={() => window.electronAPI.minimize()}>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                         <rect x="5" y="10" width="10" height="1" fill="white"/>
