@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import DashboardCard from '../view/DashboardCard';
+import DashboardCard from '../layout/LayoutCard';
 import InventoryStats from './InventoryStats';
 import InventoryFilters from './InventoryFilters';
 import InventoryTable from './InventoryTable';
 import InventoryActions from './InventoryActions';
-import type { InventoryItem } from './types';
-import { filterInventoryItems, calculateStats } from './utils';
+import type { InventoryItem } from '../../types/inventory_types';
+import { filterInventoryItems, calculateStats } from '../../utils/inventory_utils';
 
 const Inventory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');

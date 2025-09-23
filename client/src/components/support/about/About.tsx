@@ -1,5 +1,5 @@
 import React from 'react';
-import DashboardCard from '../../view/DashboardCard';
+import DashboardCard from '../../layout/LayoutCard';
 
 const About: React.FC = () => (
   <div className="space-y-6">

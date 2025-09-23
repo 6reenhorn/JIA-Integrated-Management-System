@@ -1,4 +1,4 @@
-import type { InventoryItem } from './types';
+import type { InventoryItem } from '../types/inventory_types';
 
 export const getStatusColor = (status: InventoryItem['status']): string => {
   switch (status) {

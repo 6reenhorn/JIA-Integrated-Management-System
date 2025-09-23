@@ -1,7 +1,7 @@
 import React from 'react';
 import { Package, TrendingDown, AlertTriangle, XCircle } from 'lucide-react';
-import DashboardCard from '../view/DashboardCard';
-import type { InventoryStats as InventoryStatsType } from './types';
+import DashboardCard from '../layout/LayoutCard';
+import type { InventoryStats as InventoryStatsType } from '../../types/inventory_types';
 
 interface InventoryStatsProps {
   stats: InventoryStatsType;
