@@ -6,6 +6,7 @@ import Employees from './Employees';
 import EWallet from '../components/e-wallet/EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
+import Navbar from '../navbar/NavBar';
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
@@ -61,24 +62,27 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar
-        activeItem={activeItem}
-        onItemClick={setActiveItem}
-        isCollapsed={isSidebarCollapsed}
-        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
-      
-      <main className="flex-1 overflow-auto">
-        <div className="p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
-            <p className="text-gray-600">Today, {getCurrentDate()}</p>
+    <div className="flex flex-col h-screen bg-gray-100">
+      <Navbar />
+      <div className='flex flex-1'>
+        <Sidebar
+          activeItem={activeItem}
+          onItemClick={setActiveItem}
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
+        
+        <main className="flex-1 overflow-auto">
+          <div className="p-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
+              <p className="text-gray-600">Today, {getCurrentDate()}</p>
+            </div>
+        
+            {renderContent()}
           </div>
-          
-          {renderContent()}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
