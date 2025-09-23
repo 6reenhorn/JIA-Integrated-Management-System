@@ -34,10 +34,10 @@ const EWallet = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors hover:bg-gray-50 ${
+              className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab
                   ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  : 'border-transparent text-gray-500'
               }`}
             >
               {tab}
