@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Navbar />
-      <div className='flex flex-1'>
+      <div className='flex flex-1 overflow-hidden'>
         <Sidebar
           activeItem={activeItem}
           onItemClick={setActiveItem}
@@ -72,7 +72,7 @@ const Dashboard: React.FC = () => {
           onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
         
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
