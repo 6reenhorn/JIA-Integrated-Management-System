@@ -124,21 +124,6 @@ const Employees: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <DashboardCard title="Employee Management">
-        <p className="text-gray-600">
-          View and manage employee information, roles, and permissions.
-        </p>
-        <div className="mt-4 space-y-2">
-          <div className="text-sm text-gray-500">Management Features:</div>
-          <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
-            <li>Employee profiles</li>
-            <li>Role assignments</li>
-            <li>Permission management</li>
-            <li>Performance tracking</li>
-          </ul>
-        </div>
-      </DashboardCard>
-      
       <EmployeeStats stats={stats} />
 
       {/* Staff Directory Section */}

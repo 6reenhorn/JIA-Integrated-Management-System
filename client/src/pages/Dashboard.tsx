@@ -12,17 +12,6 @@ const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
-  const getCurrentDate = (): string => {
-    const date = new Date();
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: '2-digit'
-    };
-    return date.toLocaleDateString('en-US', options);
-  };
-
   const renderContent = (): React.ReactNode => {
     switch (activeItem) {
       case 'dashboard':
@@ -61,6 +50,21 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const getHeaderSubtitle = (): string => {
+    switch (activeItem) {
+      case 'dashboard':
+        return 'Monitor your inventory at a glance';
+      case 'inventory':
+        return 'Manage your products and stock levels';
+      case 'employees':
+        return 'Manage your team members and roles';
+      case 'e-wallet':
+        return 'Track transactions and payments';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Navbar />
@@ -76,7 +80,7 @@ const Dashboard: React.FC = () => {
           <div className="p-8">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
-              <p className="text-gray-600">Today, {getCurrentDate()}</p>
+              <p className="text-gray-600">{getHeaderSubtitle()}</p>
             </div>
         
             {renderContent()}
