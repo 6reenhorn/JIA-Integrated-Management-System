@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import Sidebar from '../sidebar/Sidebar';
-import Overview from './Overview';
-import Inventory from '../inventory/Inventory';
-import Employees from '../../pages/Employees';
-import EWallet from '../e-wallet/EWallet';
-import Settings from '../support/settings/Settings';
-import About from '../support/about/About';
+import Overview from '../components/dashboard/Overview';
+import Inventory from './Inventory';
+import Employees from './Employees';
+import EWallet from '../components/e-wallet/EWallet';
+import Settings from '../components/support/settings/Settings';
+import About from '../components/support/about/About';
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
