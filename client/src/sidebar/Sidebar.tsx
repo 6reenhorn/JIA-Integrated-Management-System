@@ -37,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
           setExpanded(expanded === item.id ? null : item.id);
           onItemClick(item.id); 
         }}
-        className={`w-full flex items-center justify-center gap-3 py-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
+        className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
           activeItem === item.id ? 'bg-gray-600 text-white' : 'text-gray-300'
         }`}
       >
@@ -50,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
   const renderFullSidebar = (itemId: string) => {
     const item = [...mainMenuItems, ...supportItems].find(i => i.id === itemId);
     return (
-      <div className="bg-gray-900 text-white w-64 min-h-screen flex flex-col shadow-lg z-20">
+      <div className="bg-gray-900 text-white w-64 min-h-screen flex flex-col shadow-lg">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <span className="font-bold text-lg">{item?.label || 'Sidebar'}</span>
           <button onClick={() => setExpanded(null)}>
@@ -67,11 +67,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
                     onItemClick(menuItem.id);
                     setExpanded(menuItem.id); 
                   }}
-                  className={`w-full flex items-center gap-3 py-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 ${
+                  className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 ${
                     activeItem === menuItem.id ? 'bg-gray-700 text-white' : 'text-gray-300'
                   }`}
                 >
-                  <span className="flex-shrink-0">{menuItem.icon}</span>
                   <span className="font-medium">{menuItem.label}</span>
                 </button>
               </li>
@@ -87,11 +86,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
                       onItemClick(menuItem.id);
                       setExpanded(menuItem.id); 
                     }}
-                    className={`w-full flex items-center gap-3 py-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 ${
+                    className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 ${
                       activeItem === menuItem.id ? 'bg-gray-700 text-white' : 'text-gray-300'
                     }`}
                   >
-                    <span className="flex-shrink-0">{menuItem.icon}</span>
                     <span className="font-medium">{menuItem.label}</span>
                   </button>
                 </li>
@@ -110,11 +108,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
         <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mb-4" onClick={onToggle} style={{ cursor: 'pointer' }}>
           <span className="text-sm font-bold">L</span>
         </div>
-        <ul className="space-y-2">
+        <ul className="space-y-2 mt-12">
           {mainMenuItems.map(renderMenuItem)}
         </ul>
         <div className="mt-8">
-          <ul className="space-y-2">
+          <ul className="space-y-2 mt-8.5">
             {supportItems.map(renderMenuItem)}
           </ul>
         </div>
