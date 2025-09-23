@@ -1,5 +1,11 @@
-const navbar = () => {
-    return <div>navbar</div>;
+import CustomTitleBar from "../components/common/CustomTitleBar";
+
+const Navbar = () => {
+    return (
+        <div className="bg-gray-800">
+            <CustomTitleBar />
+        </div>
+    );
 }
 
-export default navbar;
+export default Navbar;

@@ -1,13 +1,5 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Package, 
-  Users, 
-  Wallet, 
-  Settings, 
-  Info,
-  Menu
-} from 'lucide-react';
+import { LayoutDashboard, Package, Users, Wallet, Settings, Info,Menu } from 'lucide-react';
 
 export interface MenuItem {
   id: string;
@@ -32,7 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, isCollapsed,
   ];
 
   const supportItems: MenuItem[] = [
-    { id: 'settings', label: 'Settings', icon: <Settings size={20} />, category: 'Support?' },
+    { id: 'settings', label: 'Settings', icon: <Settings size={20} />, category: 'Support' },
     { id: 'about', label: 'About', icon: <Info size={20} /> },
   ];
 
@@ -80,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, isCollapsed,
         {/* Support Section */}
         <div className="mt-8">
           {!isCollapsed && (
-            <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Support?</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Support</p>
           )}
           <ul className="space-y-2">
             {supportItems.map(renderMenuItem)}
