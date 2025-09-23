@@ -30,6 +30,26 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     { id: 'about', label: 'About', icon: <Info size={20} /> },
   ];
 
+  // Hardcoded sections for each menu item
+  const getSections = (itemId: string) => {
+    switch (itemId) {
+      case 'dashboard':
+        return ['+ Overview', '+ Analytics', '+ Reports', '+ Statistics'];
+      case 'inventory':
+        return ['+ Products', '+ Categories', '+ Stock Levels', '+ Suppliers'];
+      case 'employees':
+        return ['+ Employee List', '+ Departments', '+ Attendance', '+ Payroll'];
+      case 'e-wallet':
+        return ['+ Balance', '+ Transactions', '+ Transfer Money', '+ History'];
+      case 'settings':
+        return ['+ General', '+ Security', '+ Notifications', '+ Preferences'];
+      case 'about':
+        return ['+ Company Info', '+ Version', '+ Support', '+ License'];
+      default:
+        return [];
+    }
+  };
+
   const renderMenuItem = (item: MenuItem) => (
     <li key={item.id}>
       <button
@@ -37,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
           setExpanded(expanded === item.id ? null : item.id);
           onItemClick(item.id); 
         }}
-        className={`w-full flex items-center justify-center gap-3 py-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
+        className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
           activeItem === item.id ? 'bg-gray-600 text-white' : 'text-gray-300'
         }`}
       >
@@ -49,8 +69,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
   // Full sidebar content
   const renderFullSidebar = (itemId: string) => {
     const item = [...mainMenuItems, ...supportItems].find(i => i.id === itemId);
+    const sections = getSections(itemId);
+    
     return (
-      <div className="bg-gray-900 text-white w-64 min-h-screen flex flex-col shadow-lg z-20">
+      <div className="bg-gray-900 text-white w-64 min-h-screen flex flex-col shadow-lg">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <span className="font-bold text-lg">{item?.label || 'Sidebar'}</span>
           <button onClick={() => setExpanded(null)}>
@@ -58,46 +80,37 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
           </button>
         </div>
         <div className="flex-1 p-4">
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Main Menu</p>
-          <ul className="space-y-2">
-            {mainMenuItems.map(menuItem => (
-              <li key={menuItem.id}>
-                <button
-                  onClick={() => {
-                    onItemClick(menuItem.id);
-                    setExpanded(menuItem.id); 
-                  }}
-                  className={`w-full flex items-center gap-3 py-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 ${
-                    activeItem === menuItem.id ? 'bg-gray-700 text-white' : 'text-gray-300'
-                  }`}
-                >
-                  <span className="flex-shrink-0">{menuItem.icon}</span>
-                  <span className="font-medium">{menuItem.label}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-8">
-            <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Support</p>
-            <ul className="space-y-2">
-              {supportItems.map(menuItem => (
-                <li key={menuItem.id}>
-                  <button
-                    onClick={() => {
-                      onItemClick(menuItem.id);
-                      setExpanded(menuItem.id); 
-                    }}
-                    className={`w-full flex items-center gap-3 py-3 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 ${
-                      activeItem === menuItem.id ? 'bg-gray-700 text-white' : 'text-gray-300'
-                    }`}
-                  >
-                    <span className="flex-shrink-0">{menuItem.icon}</span>
-                    <span className="font-medium">{menuItem.label}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {/* Show the selected item */}
+          <div className="mb-6">
+            <button
+              onClick={() => onItemClick(itemId)}
+              className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 ${
+                activeItem === itemId ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <span className="flex-shrink-0">{item?.icon}</span>
+              <span className="font-medium">{item?.label}</span>
+            </button>
           </div>
+          
+          {/* Show sections */}
+          {sections.length > 0 && (
+            <div>
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Sections</p>
+              <ul className="space-y-2">
+                {sections.map((section, index) => (
+                  <li key={index}>
+                    <button
+                      onClick={() => onItemClick(`${itemId}-${section.split(' ').slice(1).join('-').toLowerCase().replace(/\s+/g, '-')}`)}
+                      className="w-full flex items-center gap-3 py-2 px-4 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 text-gray-300 text-sm"
+                    >
+                      <span>{section}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -110,11 +123,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
         <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mb-4" onClick={onToggle} style={{ cursor: 'pointer' }}>
           <span className="text-sm font-bold">L</span>
         </div>
-        <ul className="space-y-2">
+        <ul className="space-y-2 mt-4">
           {mainMenuItems.map(renderMenuItem)}
         </ul>
-        <div className="mt-8">
-          <ul className="space-y-2">
+        <div className="mt-140">
+          <ul className="space-y-2 mt-8.5">
             {supportItems.map(renderMenuItem)}
           </ul>
         </div>
