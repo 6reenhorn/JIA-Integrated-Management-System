@@ -1,5 +1,5 @@
 import React from 'react';
-import type { InventoryStats as InventoryStatsType } from '../../types/inventory_types';
+import type { InventoryStats as InventoryStatsType } from '../../../types/inventory_types';
 
 interface InventoryStatsProps {
   stats: InventoryStatsType;

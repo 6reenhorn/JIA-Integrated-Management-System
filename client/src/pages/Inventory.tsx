@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import InventoryStats from '../components/inventory/InventoryStats';
-import InventoryFilters from '../components/inventory/InventoryFilters';
-import InventoryTable from '../components/inventory/InventoryTable';
-import InventoryActions from '../components/inventory/InventoryActions';
+import InventoryStats from '../components/inventory/Elements of Inventory/InventoryStats';
+import InventoryFilters from '../components/inventory/Elements of Inventory/InventoryFilters';
+import InventoryTable from '../components/inventory/Elements of Inventory/InventoryTable';
+import InventoryActions from '../components/inventory/Elements of Inventory/InventoryActions';
 import AddProductModal from '../modals/Inventory/AddProductModal';
 import EditProductModal from '../modals/Inventory/EditProductModal';
 import type { InventoryItem, ProductFormData } from '../types/inventory_types';
