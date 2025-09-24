@@ -1,36 +1,57 @@
-import React from 'react';
-import DashboardCard from '../layout/LayoutCard';
+import { useState } from 'react';
 
-const EWallet: React.FC = () => (
-  <div className="space-y-6">
-    <DashboardCard title="E-Wallet">
-      <p className="text-gray-600">
-        Monitor wallet balance, transactions, and payment history.
-      </p>
-      <div className="mt-4 space-y-2">
-        <div className="text-sm text-gray-500">Wallet Features:</div>
-        <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
-          <li>Balance tracking</li>
-          <li>Transaction history</li>
-          <li>Payment processing</li>
-          <li>Fund transfers</li>
-        </ul>
+import Overview from './Overview';
+import GCash from './Gcash';
+import PayMaya from './PayMaya';
+import JuanPay from './JuanPay';
+
+const EWallet = () => {
+  const [activeTab, setActiveTab] = useState('Overview');
+
+  const tabs = ['Overview', 'GCash', 'PayMaya', 'JuanPay'];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'Overview':
+        return <Overview />;
+      case 'GCash':
+        return <GCash />;
+      case 'PayMaya':
+        return <PayMaya />;
+      case 'JuanPay':
+        return <JuanPay />;
+      default:
+        return <Overview />;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Navigation Tabs */}
+      <div className="mb-8">
+        <div className="flex space-x-8 border-b border-gray-300">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === tab
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-500'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
-    </DashboardCard>
-    
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <DashboardCard title="Current Balance">
-        <p className="text-gray-600">Available funds and balance</p>
-      </DashboardCard>
-      <DashboardCard title="Recent Transactions">
-        <p className="text-gray-600">Latest payment activities</p>
-      </DashboardCard>
+
+      {/* Dynamic Content */}
+      {renderContent()}
     </div>
-    
-    <DashboardCard title="Transaction Analytics" className="min-h-[200px]">
-      <p className="text-gray-600">Spending patterns and financial insights</p>
-    </DashboardCard>
-  </div>
-);
+  );
+};
 
 export default EWallet;
+
+// uhmm 

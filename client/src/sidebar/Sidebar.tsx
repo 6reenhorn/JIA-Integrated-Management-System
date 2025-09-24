@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
       case 'employees':
         return ['+ Employee List', '+ Departments', '+ Attendance', '+ Payroll'];
       case 'e-wallet':
-        return ['+ Balance', '+ Transactions', '+ Transfer Money', '+ History'];
+        return ['+ Overview', '+ GCash', '+ PayMaya', '+ JuanPay'];
       case 'settings':
         return ['+ General', '+ Security', '+ Notifications', '+ Preferences'];
       case 'about':
