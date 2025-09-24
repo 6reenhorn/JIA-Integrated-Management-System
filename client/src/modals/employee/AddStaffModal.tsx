@@ -247,7 +247,7 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
                   </div>
                   <div>
                     <label htmlFor="employee_contact_number" className="text-[12px] font-bold">Phone Number</label>
-                    <input type="text" id="employee_contact_number" name="employee_contact_number" placeholder="Enter phone number" className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                    <input type="text" id="employee_contact_number" name="employee_contact_number" placeholder="Enter phone number" className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none w-full" />
                   </div>
                 </div>
                 <div className='mt-2 w-full'>
@@ -328,7 +328,7 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
           </div>
         </form>
       </div>
-      <div className="w-full flex justify-end gap-2 mt-4">
+      <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button 
           className="border border-gray-300 rounded-md px-3 py-1"
           onClick={onClose}>

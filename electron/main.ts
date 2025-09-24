@@ -22,6 +22,7 @@ app.on('ready', () => {
         }
     });
     mainWindow.menuBarVisible = false;
+    mainWindow.maximize();
 
     if (isDev()) {
         mainWindow.loadURL('http://localhost:3000');
