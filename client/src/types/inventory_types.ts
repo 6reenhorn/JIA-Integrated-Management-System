@@ -1,16 +1,21 @@
+// types/inventory_types.ts
 export interface InventoryItem {
   id: number;
   productName: string;
   category: string;
   storageLocation: string;
-  status: 'Good' | 'Low Stock' | 'Out Of Stock' | 'Expired';
+  status: string;
   productPrice: number;
-  quantity?: number;
+  quantity: number;
 }
 
-export interface InventoryStats {
-  totalItems: number;
-  lowStockItems: number;
-  expiredItems: number;
-  outOfStockItems: number;
+// Add this new interface for the product form
+export interface ProductFormData {
+  productName: string;
+  description?: string; // <-- Add this line if missing
+  category: string;
+  storageLocation: string;
+  productPrice: number;
+  quantity: number;
+  minimumStock?: number;
 }
