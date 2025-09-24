@@ -3,27 +3,27 @@ export interface InventoryItem {
   id: number;
   productName: string;
   category: string;
-  storageLocation: string;
+  stock: number;
   status: string;
   productPrice: number;
-  quantity: number;
+  totalAmount: number;
 }
 
-// Add this new interface for the product form
+// ProductFormData interface
 export interface ProductFormData {
   productName: string;
-  description?: string; // <-- Add this line if missing
+  description?: string;
   category: string;
-  storageLocation: string;
   productPrice: number;
-  quantity: number;
+  quantity: number; 
   minimumStock?: number;
+  status?: string; 
 }
 
 // Add the missing InventoryStats interface
 export interface InventoryStats {
   totalItems: number;
-  inventoryValue?: number; // Make optional temporarily
+  inventoryValue?: number;
   lowStockItems: number;
   expiredItems: number;
   outOfStockItems: number;

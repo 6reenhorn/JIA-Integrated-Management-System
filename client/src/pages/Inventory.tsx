@@ -3,8 +3,8 @@ import InventoryStats from '../components/inventory/InventoryStats';
 import InventoryFilters from '../components/inventory/InventoryFilters';
 import InventoryTable from '../components/inventory/InventoryTable';
 import InventoryActions from '../components/inventory/InventoryActions';
-import AddProductModal from '../components/inventory/AddProductModal';
-import EditProductModal from '../components/inventory/EditProductModal'; // Add this import
+import AddProductModal from '../modals/Inventory/AddProductModal';
+import EditProductModal from '../modals/Inventory/EditProductModal';
 import type { InventoryItem, ProductFormData } from '../types/inventory_types';
 import { filterInventoryItems, calculateStats } from '../utils/inventory_utils';
 
@@ -14,39 +14,55 @@ const Inventory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  
-  // Add states for Edit Modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
   
-  // Sample inventory data - now using state so we can update it
+  // Corrected inventory data with proper calculations
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([
     {
       id: 1,
-      productName: 'Chicharon ni Madam',
-      category: 'Chichirina',
-      storageLocation: 'Shelf 1',
-      status: 'Good',
+      productName: 'Product 1',
+      category: 'Category 1',
+      stock: 69,
+      status: 'In Stock',
       productPrice: 69.69,
-      quantity: 25
+      totalAmount: 69 * 69.69 // = 4808.61
     },
     {
       id: 2,
-      productName: 'Tubig nga gamay',
-      category: 'Drinkables',
-      storageLocation: 'Refrigerator',
+      productName: 'Product 2',
+      category: 'Category 2',
+      stock: 10,
       status: 'Low Stock',
       productPrice: 20.20,
-      quantity: 5
+      totalAmount: 10 * 20.20 // = 202.00
     },
     {
       id: 3,
-      productName: 'Tubig nga gamay',
-      category: 'Chichirina',
-      storageLocation: 'Shelf 1',
-      status: 'Out Of Stock',
+      productName: 'Product 3',
+      category: 'Category 3',
+      stock: 5,
+      status: 'Low Stock',
       productPrice: 50.00,
-      quantity: 0
+      totalAmount: 5 * 50.00 // = 250.00
+    },
+    {
+      id: 4,
+      productName: 'Product 4',
+      category: 'Category 4',
+      stock: 0,
+      status: 'Out Of Stock',
+      productPrice: 5.00,
+      totalAmount: 0 * 5.00 // = 0.00
+    },
+    {
+      id: 5,
+      productName: 'Product 5',
+      category: 'Category 5',
+      stock: 69,
+      status: 'In Stock',
+      productPrice: 30.00,
+      totalAmount: 69 * 30.00 // = 2070.00
     }
   ]);
 
@@ -69,7 +85,6 @@ const Inventory: React.FC = () => {
     console.log('View item:', id);
   };
 
-  // Updated handleEditItem function
   const handleEditItem = (id: number) => {
     const item = inventoryItems.find(item => item.id === id);
     if (item) {
@@ -86,31 +101,46 @@ const Inventory: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
+  // Helper function to determine status based on stock quantity
+  const getStatusFromStock = (stock: number, minimumStock: number = 10) => {
+    if (stock === 0) return 'Out Of Stock';
+    if (stock <= minimumStock) return 'Low Stock';
+    return 'In Stock';
+  };
+
   const handleAddProduct = (productData: ProductFormData) => {
+    const totalAmount = productData.productPrice * productData.quantity;
+    
     const newProduct: InventoryItem = {
-      id: Math.max(...inventoryItems.map(item => item.id), 0) + 1, // Generate new ID
+      id: Math.max(...inventoryItems.map(item => item.id), 0) + 1,
       productName: productData.productName,
       category: productData.category,
-      storageLocation: productData.storageLocation,
-      status: productData.quantity === 0 ? 'Out Of Stock' : 
-              productData.quantity <= (productData.minimumStock || 5) ? 'Low Stock' : 'Good',
+      stock: productData.quantity,
+      status: getStatusFromStock(productData.quantity),
       productPrice: productData.productPrice,
-      quantity: productData.quantity
+      totalAmount: totalAmount
     };
 
     setInventoryItems(prev => [...prev, newProduct]);
   };
 
-  // Add handler for saving edited product
   const handleSaveProduct = (updatedItem: InventoryItem) => {
+    // Recalculate total amount and status before saving
+    const totalAmount = updatedItem.stock * updatedItem.productPrice;
+    
+    const finalItem = {
+      ...updatedItem,
+      status: getStatusFromStock(updatedItem.stock),
+      totalAmount: totalAmount
+    };
+
     setInventoryItems(prev => 
       prev.map(item => 
-        item.id === updatedItem.id ? updatedItem : item
+        item.id === finalItem.id ? finalItem : item
       )
     );
   };
 
-  // Add handler for closing edit modal
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
     setEditingItem(undefined);
@@ -148,7 +178,7 @@ const Inventory: React.FC = () => {
       {/* Pagination */}
       <InventoryActions
         currentPage={currentPage}
-        totalPages={Math.ceil(filteredItems.length / 10)} // Assuming 10 items per page
+        totalPages={Math.ceil(filteredItems.length / 10)}
         filteredCount={filteredItems.length}
         totalCount={inventoryItems.length}
         onPageChange={handlePageChange}
@@ -162,7 +192,7 @@ const Inventory: React.FC = () => {
         categories={categories}
       />
 
-      {/* Add Edit Product Modal */}
+      {/* Edit Product Modal */}
       <EditProductModal
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
