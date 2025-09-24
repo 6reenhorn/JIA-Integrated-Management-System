@@ -1,6 +1,10 @@
 import { Plus } from 'lucide-react';
 
-const EmployeeFilters = () => {
+interface EmployeeFiltersProps {
+  onAddStaff: () => void;
+}
+
+const EmployeeFilters = ({ onAddStaff }: EmployeeFiltersProps) => {
   return (
     <div className="flex justify-between items gap-3 my-5">
       <button className='flex items-center gap-2 bg-gray-100 border-2 border-[#E5E7EB] rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500'>
@@ -15,7 +19,10 @@ const EmployeeFilters = () => {
           <polygon points="4,6 12,6 8,12" fill="currentColor" />
         </svg>
       </button>
-      <button className='flex items-center gap-2 bg-gray-100 border-2 border-[#E5E7EB] rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500'>
+      <button 
+        onClick={onAddStaff}
+        className='flex items-center gap-2 bg-gray-100 border-2 border-[#E5E7EB] rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500'
+      >
         <Plus className="w-4 h-4 mr-2" />
         Add Staff
       </button>

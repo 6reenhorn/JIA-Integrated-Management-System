@@ -13,11 +13,11 @@ const PAGE_SIZE = 5;
 
 const Employees: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [roleFilter, setRoleFilter] = useState('All Roles');
   const [departmentFilter, setDepartmentFilter] = useState('All Departments');
   const [statusFilter, setStatusFilter] = useState('All Status');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [employees] = useState<Employee[]>([
     {
@@ -93,19 +93,20 @@ const Employees: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  }
+
   return (
     <div className="space-y-6">
       <EmployeeStats stats={stats} />
 
-      <div className='absolute top-20 left-96 z-10'>
-        <AddStaffModal />
-      </div>
       {/* Staff Directory Section */}
       <MainLayoutCard title="Staff Management">
         <div className="space-y-6">
           <div className='flex justify-between items-center mb-0'>
             <EmployeeSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-            <EmployeeFilters />
+            <EmployeeFilters onAddStaff={toggleModal} />
           </div>
 
           <EmployeeTable
@@ -122,6 +123,22 @@ const Employees: React.FC = () => {
           />
         </div>
       </MainLayoutCard>
+
+      {/* Employee Modal */}
+      {isModalOpen && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center'>
+          {/* Backdrop with blur effect - no click handler */}
+          <div
+            className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm'
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          </div>
+
+          {/* Modal content */}
+          <div className='relative z-[60]'>
+            <AddStaffModal onClose={toggleModal} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

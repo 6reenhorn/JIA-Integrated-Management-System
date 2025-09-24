@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 
-const AddStaffModal = () => {
+interface AddStaffModalProps {
+  onClose?: () => void;
+}
+
+const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -63,6 +67,7 @@ const AddStaffModal = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
 
   return (
     <div className="bg-gray-100 shadow-md rounded-lg p-6 w-[460px] max-h-[850px]">
@@ -324,7 +329,9 @@ const AddStaffModal = () => {
         </form>
       </div>
       <div className="w-full flex justify-end gap-2 mt-4">
-        <button className="border border-gray-300 rounded-md px-3 py-1">
+        <button 
+          className="border border-gray-300 rounded-md px-3 py-1"
+          onClick={onClose}>
           Cancel
         </button>
         <button className="border border-gray-300 rounded-md px-3 py-1 bg-gray-500">
