@@ -83,26 +83,26 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_first_name" className="text-[12px] font-bold">First Name</label>
-                  <input type="text" id="employee_first_name" name="employee_first_name" placeholder='Enter first name' className="border border-gray-300 rounded-md px-2 py-1" />
+                  <input type="text" id="employee_first_name" name="employee_first_name" placeholder='Enter first name' className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_last_name" className="text-[12px] font-bold">Last Name</label>
-                  <input type="text" id="employee_last_name" name="employee_last_name" placeholder='Enter last name' className="border border-gray-300 rounded-md px-2 py-1" />
+                  <input type="text" id="employee_last_name" name="employee_last_name" placeholder='Enter last name' className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_email_address" className="text-[12px] font-bold">Email Address</label>
-                  <input type="text" id="employee_email_address" name="employee_email_address" placeholder='Enter email address' className="border border-gray-300 rounded-md px-2 py-1" />
+                  <input type="text" id="employee_email_address" name="employee_email_address" placeholder='Enter email address' className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_phone_number" className="text-[12px] font-bold">Phone Number</label>
-                  <input type="text" id="employee_phone_number" name="employee_phone_number" placeholder='Enter phone number' className="border border-gray-300 rounded-md px-2 py-1" />
+                  <input type="text" id="employee_phone_number" name="employee_phone_number" placeholder='Enter phone number' className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
                 </div>
               </div>
               <div className='mt-2'>
                 <label htmlFor="employee_address" className="text-[12px] font-bold">Address</label>
-                <textarea name="employee_address" id="employee_address" placeholder='Enter complete address' className="w-full border border-gray-300 rounded-md px-2 py-1"></textarea>
+                <textarea name="employee_address" id="employee_address" placeholder='Enter complete address' className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"></textarea>
               </div>
             </div>
           </div>
@@ -233,7 +233,7 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
             </div>
             <div className='mt-2'>
               <label htmlFor="employee-salary" className='text-[12px] font-bold'>Salary</label>
-              <input type="text" id='employee-salary' name='employee-salary' placeholder='Enter salary (Optional)' className="border border-gray-300 rounded-md w-full px-2 py-1" />
+              <input type="text" id='employee-salary' name='employee-salary' placeholder='Enter salary (Optional)' className="border border-gray-300 rounded-md w-full px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
             </div>
           </div>
           <div>
@@ -243,11 +243,11 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div className="flex flex-col justify-center">
                     <label htmlFor="employee_contact_name" className="text-[12px] font-bold">Contact Name</label>
-                    <input type="text" id="employee_contact_name" name="employee_contact_name" placeholder="Enter contact name" className="border border-gray-300 rounded-md px-2 py-1" />
+                    <input type="text" id="employee_contact_name" name="employee_contact_name" placeholder="Enter contact name" className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
                   </div>
                   <div>
                     <label htmlFor="employee_contact_number" className="text-[12px] font-bold">Phone Number</label>
-                    <input type="text" id="employee_contact_number" name="employee_contact_number" placeholder="Enter phone number" className="border border-gray-300 rounded-md px-2 py-1" />
+                    <input type="text" id="employee_contact_number" name="employee_contact_number" placeholder="Enter phone number" className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
                   </div>
                 </div>
                 <div className='mt-2 w-full'>
