@@ -22,10 +22,10 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
           <tr>
             <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Product Name</th>
             <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Category</th>
-            <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Storage Location</th>
+            <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Stock</th>
             <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Status</th>
             <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Product Price</th>
-            <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Quantity</th>
+            <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Total Amount</th>
             <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Actions</th>
           </tr>
         </thead>
@@ -39,11 +39,11 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                 {item.category}
               </td>
               <td className="py-4 px-6 text-sm text-gray-600">
-                {item.storageLocation}
+                {item.stock} Units
               </td>
               <td className="py-4 px-6">
                 <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                  item.status === 'Good' ? 'bg-green-100 text-green-800' :
+                  item.status === 'In Stock' ? 'bg-green-100 text-green-800' :
                   item.status === 'Low Stock' ? 'bg-yellow-100 text-yellow-800' :
                   item.status === 'Out Of Stock' ? 'bg-red-100 text-red-800' :
                   getStatusColor(item.status)
@@ -54,12 +54,11 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
               <td className="py-4 px-6 text-sm text-gray-900">
                 ₱{item.productPrice.toFixed(2)}
               </td>
-              <td className="py-4 px-6 text-sm text-gray-600">
-                {item.quantity || 0}
+              <td className="py-4 px-6 text-sm text-gray-900 font-medium">
+                ₱{item.totalAmount.toFixed(2)}
               </td>
               <td className="py-4 px-6">
                 <div className="flex items-center gap-1">
-                 
                   <button 
                     onClick={() => onEditItem(item.id)}
                     className="p-1.5 hover:bg-gray-100 rounded transition-colors" 

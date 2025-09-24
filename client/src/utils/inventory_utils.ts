@@ -29,9 +29,9 @@ export const filterInventoryItems = (
 };
 
 export const calculateStats = (items: InventoryItem[]): InventoryStats => {
-  // Calculate total inventory value (price * quantity for each item)
+  // CORRECTED: Calculate total inventory value by summing the pre-calculated totalAmount
   const inventoryValue = items.reduce((total, item) => {
-    return total + (item.productPrice * item.quantity);
+    return total + item.totalAmount;
   }, 0);
 
   return {
