@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import type { InventoryItem } from '../../types/inventory_types';
 import { getStatusColor } from '../../utils/inventory_utils';
 
@@ -12,7 +12,6 @@ interface InventoryTableProps {
 
 const InventoryTable: React.FC<InventoryTableProps> = ({
   items,
-  onViewItem,
   onEditItem,
   onDeleteItem
 }) => {
@@ -60,13 +59,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
               </td>
               <td className="py-4 px-6">
                 <div className="flex items-center gap-1">
-                  <button 
-                    onClick={() => onViewItem(item.id)}
-                    className="p-1.5 hover:bg-gray-100 rounded transition-colors" 
-                    title="View"
-                  >
-                    <Eye className="w-4 h-4 text-gray-600" />
-                  </button>
+                 
                   <button 
                     onClick={() => onEditItem(item.id)}
                     className="p-1.5 hover:bg-gray-100 rounded transition-colors" 
