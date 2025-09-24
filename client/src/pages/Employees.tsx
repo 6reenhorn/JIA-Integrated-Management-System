@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import DashboardCard from '../components/layout/LayoutCard';
 import EmployeeStats from '../components/employees/EmployeeStats';
 import EmployeeFilters from '../components/employees/EmployeeFilters';
 import EmployeeTable from '../components/employees/EmployeeTable';
@@ -8,6 +7,7 @@ import type { Employee } from '../types/employee_types';
 import { filterEmployees, calculateStats } from '../utils/employee_utils';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
 import EmployeeSearchBar from '../components/employees/EmployeeSearchBar';
+import AddStaffModal from '../modals/employee/AddStaffModal';
 
 const PAGE_SIZE = 5;
 
@@ -97,6 +97,9 @@ const Employees: React.FC = () => {
     <div className="space-y-6">
       <EmployeeStats stats={stats} />
 
+      <div className='absolute top-20 left-96 z-10'>
+        <AddStaffModal />
+      </div>
       {/* Staff Directory Section */}
       <MainLayoutCard title="Staff Management">
         <div className="space-y-6">
