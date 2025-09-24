@@ -18,7 +18,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   const [formData, setFormData] = useState<ProductFormData>({
     productName: '',
     category: '',
-    storageLocation: 'Shelf 1', // Default value since it's required in type
     productPrice: 0,
     quantity: 0,
     minimumStock: 0
@@ -58,8 +57,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     setIsSelectOpen(false);
   };
 
-
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -82,7 +79,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     setFormData({
       productName: '',
       category: '',
-      storageLocation: 'Shelf 1', // Reset to default value
       productPrice: 0,
       quantity: 0,
       minimumStock: 0

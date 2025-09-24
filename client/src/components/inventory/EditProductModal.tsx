@@ -22,10 +22,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     id: 0,
     productName: '',
     category: '',
-    storageLocation: '',
+    stock: 0,
     status: 'Good',
     productPrice: 0,
-    quantity: 0
+    totalAmount: 0
   });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -51,8 +51,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     // Update status based on quantity and minimum stock
     const updatedFormData = {
       ...formData,
-      status: formData.quantity === 0 ? 'Out Of Stock' : 
-              formData.quantity <= minimumStock ? 'Low Stock' : 'Good'
+      status: formData.totalAmount === 0 ? 'Out Of Stock' : 
+              formData.totalAmount <= minimumStock ? 'Low Stock' : 'Good'
     };
     
     onSave(updatedFormData);
@@ -164,10 +164,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={`${formData.quantity} Units`}
+                  value={`${formData.totalAmount} Units`}
                   onChange={(e) => {
                     const value = e.target.value.replace(' Units', '');
-                    handleInputChange('quantity', parseInt(value) || 0);
+                    handleInputChange('stock', parseInt(value) || 0);
                   }}
                   className="w-full px-4 py-3 bg-gray-300 border-0 rounded-lg text-gray-900 focus:outline-none focus:ring-0"
                 />
