@@ -19,3 +19,12 @@ export interface ProductFormData {
   quantity: number;
   minimumStock?: number;
 }
+
+// Add the missing InventoryStats interface
+export interface InventoryStats {
+  totalItems: number;
+  inventoryValue?: number; // Make optional temporarily
+  lowStockItems: number;
+  expiredItems: number;
+  outOfStockItems: number;
+}
