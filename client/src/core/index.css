@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+.dropdown {
+  position: relative;
+  width: 200px;
+  cursor: pointer;
+}
+
+.dropdown-selected {
+  padding: 10px;
+  background-color: #eee;
+  border: 1px solid #ccc;
+}
+
+.dropdown-options {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  z-index: 10;
+}
+
+.option {
+  padding: 10px;
+}
+
+.option:hover {
+  background-color: #f0f0f0;
+}

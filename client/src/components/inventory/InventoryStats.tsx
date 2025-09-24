@@ -19,25 +19,25 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({ stats }) => {
         </div>
       </div>
 
-      {/* Low Stock Items */}
+      {/* Inventory Value */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-medium font-bold text-black">Inventory Value</h3>
         </div>
         <div className="text-left">
-          <p className="text-3xl font-bold text-yellow-600 mb-1">{stats.lowStockItems}</p>
+          <p className="text-3xl font-bold text-yellow-600 mb-1">₱{(stats.inventoryValue || 0).toFixed(2)}</p>
           <p className="text-xs text-gray-500">Across all items</p>
         </div>
       </div>
 
-      {/* Expired Items */}
+      {/* Low Stock Items */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-medium font-bold text-black">Low Stock Items</h3>
         </div>
         <div className="text-left">
-          <p className="text-3xl font-bold text-red-600 mb-1">{stats.expiredItems}</p>
-          <p  className="inline-block px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
+          <p className="text-3xl font-bold text-red-600 mb-1">{stats.lowStockItems}</p>
+          <p className="inline-block px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
             Needs Attention
           </p>
         </div>
