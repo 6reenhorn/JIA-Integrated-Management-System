@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { EWalletTab } from '../../types/ewallet_types';
 
 import Overview from './Overview';
@@ -6,8 +6,17 @@ import GCash from './Gcash';
 import PayMaya from './PayMaya';
 import JuanPay from './JuanPay';
 
-const EWallet: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<EWalletTab>('Overview');
+interface EWalletProps {
+  initialTab?: EWalletTab;
+}
+
+const EWallet: React.FC<EWalletProps> = ({ initialTab = 'Overview' }) => {
+  const [activeTab, setActiveTab] = useState<EWalletTab>(initialTab);
+
+  // Update activeTab when initialTab changes (useful for sidebar navigation)
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const tabs: EWalletTab[] = ['Overview', 'GCash', 'PayMaya', 'JuanPay'];
 
