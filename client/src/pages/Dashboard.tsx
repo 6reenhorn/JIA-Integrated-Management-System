@@ -13,17 +13,19 @@ const Dashboard: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   const renderContent = (): React.ReactNode => {
-    // Handle E-Wallet sections
+    // Handle E-Wallet sections (removed overview handling)
     if (activeItem.startsWith('e-wallet')) {
+      if (activeItem === 'e-wallet') {
+        // Default E-Wallet shows Overview tab
+        return <EWallet key={activeItem} initialTab="Overview" />;
+      }
+      
       const section = activeItem.replace('e-wallet-', '');
       
-      // Map section IDs to E-Wallet tab names
+      // Map section IDs to E-Wallet tab names (removed overview case)
       let initialTab: 'Overview' | 'GCash' | 'PayMaya' | 'JuanPay' = 'Overview';
       
       switch (section) {
-        case 'overview':
-          initialTab = 'Overview';
-          break;
         case 'gcash':
           initialTab = 'GCash';
           break;
@@ -60,13 +62,15 @@ const Dashboard: React.FC = () => {
   };
 
   const getPageTitle = (): string => {
-    // Handle E-Wallet sections
+    // Handle E-Wallet sections (removed overview handling)
     if (activeItem.startsWith('e-wallet')) {
+      if (activeItem === 'e-wallet') {
+        return 'E-Wallet';
+      }
+      
       const section = activeItem.replace('e-wallet-', '');
       
       switch (section) {
-        case 'overview':
-          return 'E-Wallet Overview';
         case 'gcash':
           return 'GCash';
         case 'paymaya':
@@ -98,13 +102,15 @@ const Dashboard: React.FC = () => {
   };
 
   const getHeaderSubtitle = (): string => {
-    // Handle E-Wallet sections
+    // Handle E-Wallet sections (simplified subtitle handling)
     if (activeItem.startsWith('e-wallet')) {
+      if (activeItem === 'e-wallet') {
+        return 'Complete overview of all your e-wallet accounts';
+      }
+      
       const section = activeItem.replace('e-wallet-', '');
       
       switch (section) {
-        case 'overview':
-          return 'Complete overview of all your e-wallet accounts';
         case 'gcash':
           return 'Manage your GCash transactions and balance';
         case 'paymaya':
@@ -125,7 +131,7 @@ const Dashboard: React.FC = () => {
       case 'employees':
         return 'Manage your team members and roles';
       case 'e-wallet':
-        return 'Track transactions and payments';
+        return 'Complete overview of all your e-wallet accounts';
       default:
         return '';
     }

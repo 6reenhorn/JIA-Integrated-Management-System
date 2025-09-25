@@ -33,7 +33,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
 
   // Define functional sections for E-Wallet
   const getEWalletSections = () => [
-    { id: 'e-wallet-overview', label: 'Overview' },
     { id: 'e-wallet-gcash', label: 'GCash' },
     { id: 'e-wallet-paymaya', label: 'PayMaya' },
     { id: 'e-wallet-juanpay', label: 'JuanPay' },
