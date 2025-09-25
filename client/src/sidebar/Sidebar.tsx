@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     }
   };
 
-  // Check if a section belongs to E-Wallet and should be functional
+  // Checker
   const isEWalletSection = (sectionId: string) => {
     return sectionId.startsWith('e-wallet-');
   };
@@ -92,8 +92,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     <li key={item.id}>
       <button
         onClick={() => {
-          setExpanded(expanded === item.id ? null : item.id);
-          onItemClick(item.id); 
+          const isCurrentlyInThisModule = activeItem === item.id || activeItem.startsWith(item.id + '-');
+          //sidebar behavior :)
+          if (isCurrentlyInThisModule && expanded === item.id) {
+            setExpanded(null);
+          } else if (isCurrentlyInThisModule && expanded !== item.id) {
+            setExpanded(item.id);
+          } else {
+            setExpanded(item.id);
+            onItemClick(item.id); 
+          }
         }}
         className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
           activeItem === item.id || activeItem.startsWith(item.id + '-') ? 'bg-gray-600 text-white' : 'text-gray-300'
