@@ -9,19 +9,33 @@ import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
 import type { EWalletTab } from '../types/ewallet_types';
 
+// Define the section information type
+interface SectionInfo {
+  page: string;
+  section?: string;
+}
+
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
-  const handleEWalletTabChange = (tab: EWalletTab) => {
+  const [currentSection, setCurrentSection] = useState<SectionInfo>({ 
+    page: 'dashboard', 
+    section: undefined 
+  });
 
+  const handleEWalletTabChange = (tab: EWalletTab) => {
     const tabToActiveItem: Record<EWalletTab, string> = {
       'Overview': 'e-wallet',
       'GCash': 'e-wallet-gcash',
       'PayMaya': 'e-wallet-paymaya',
       'JuanPay': 'e-wallet-juanpay'
     };
-    
     setActiveItem(tabToActiveItem[tab]);
+  };
+
+  // Function to update the current section from child components
+  const updateCurrentSection = (page: string, section?: string) => {
+    setCurrentSection({ page, section });
   };
 
   const renderContent = (): React.ReactNode => {
@@ -30,19 +44,12 @@ const Dashboard: React.FC = () => {
       if (activeItem === 'e-wallet') {
         // Default E-Wallet shows Overview tab
         return (
-          <EWallet 
-            key={activeItem} 
-            initialTab="Overview" 
-            onTabChange={handleEWalletTabChange}
-          />
+          <EWallet key={activeItem} initialTab="Overview" onTabChange={handleEWalletTabChange} />
         );
       }
-      
       const section = activeItem.replace('e-wallet-', '');
-      
       // Map section IDs to E-Wallet tab names
       let initialTab: EWalletTab = 'Overview';
-      
       switch (section) {
         case 'gcash':
           initialTab = 'GCash';
@@ -56,13 +63,8 @@ const Dashboard: React.FC = () => {
         default:
           initialTab = 'Overview';
       }
-      
       return (
-        <EWallet 
-          key={activeItem} 
-          initialTab={initialTab} 
-          onTabChange={handleEWalletTabChange}
-        />
+        <EWallet key={activeItem} initialTab={initialTab} onTabChange={handleEWalletTabChange} />
       );
     }
 
@@ -71,14 +73,12 @@ const Dashboard: React.FC = () => {
       case 'dashboard':
         return <Overview />;
       case 'inventory':
-        return <Inventory />;
+        return <Inventory onSectionChange={(section) => updateCurrentSection('inventory', section)} />;
       case 'employees':
         return <Employees />;
       case 'e-wallet':
         return (
-          <EWallet 
-            onTabChange={handleEWalletTabChange}
-          />
+          <EWallet onTabChange={handleEWalletTabChange} />
         );
       case 'settings':
         return <Settings />;
@@ -90,14 +90,26 @@ const Dashboard: React.FC = () => {
   };
 
   const getPageTitle = (): string => {
+    // If we're in inventory and have a specific section, use that
+    if (currentSection.page === 'inventory' && currentSection.section) {
+      switch (currentSection.section) {
+        case 'inventory':
+          return 'Inventory';
+        case 'sales':
+          return 'Sales';
+        case 'category':
+          return 'Category';
+        default:
+          return 'Inventory';
+      }
+    }
+
     // Handle E-Wallet sections
     if (activeItem.startsWith('e-wallet')) {
       if (activeItem === 'e-wallet') {
         return 'E-Wallet';
       }
-      
       const section = activeItem.replace('e-wallet-', '');
-      
       switch (section) {
         case 'gcash':
           return 'GCash';
@@ -130,14 +142,26 @@ const Dashboard: React.FC = () => {
   };
 
   const getHeaderSubtitle = (): string => {
+    // If we're in inventory and have a specific section, use section-specific subtitles
+    if (currentSection.page === 'inventory' && currentSection.section) {
+      switch (currentSection.section) {
+        case 'inventory':
+          return 'Manage your products and stock levels';
+        case 'sales':
+          return 'Track your sales and transactions';
+        case 'category':
+          return 'Organize your product categories';
+        default:
+          return 'Manage your inventory system';
+      }
+    }
+
     // Handle E-Wallet sections
     if (activeItem.startsWith('e-wallet')) {
       if (activeItem === 'e-wallet') {
         return 'Complete overview of all your e-wallet accounts';
       }
-      
       const section = activeItem.replace('e-wallet-', '');
-      
       switch (section) {
         case 'gcash':
           return 'Manage your GCash transactions and balance';
@@ -169,20 +193,21 @@ const Dashboard: React.FC = () => {
     <div className="flex flex-col h-screen bg-gray-100">
       <Navbar />
       <div className='flex flex-1 overflow-hidden'>
-        <Sidebar
-          activeItem={activeItem}
-          onItemClick={setActiveItem}
-          isCollapsed={isSidebarCollapsed}
-          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        <Sidebar 
+          activeItem={activeItem} 
+          onItemClick={(item) => {
+            setActiveItem(item);
+            setCurrentSection({ page: item, section: undefined });
+          }} 
+          isCollapsed={isSidebarCollapsed} 
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
         />
-        
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
               <p className="text-gray-600">{getHeaderSubtitle()}</p>
             </div>
-        
             {renderContent()}
           </div>
         </main>
