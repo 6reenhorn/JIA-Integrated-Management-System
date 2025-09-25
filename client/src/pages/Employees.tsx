@@ -178,8 +178,8 @@ const Employees: React.FC = () => {
       {/* Employee Stats Section */}
       <EmployeeStats stats={stats} />
 
-      {/* Staff Directory Section */}
       <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={setActiveSection}>
+        {/* Staff Management Section */}
         {activeSection === 'staff' && (
           <div className="space-y-6">
             <div className='flex justify-between items-center mb-0'>
@@ -205,6 +205,7 @@ const Employees: React.FC = () => {
             />
           </div>
         )}
+        {/* Attendance Management Section */}
         {activeSection === 'attendance' && (
           <div className="space-y-6 p-4">
             <h4 className="text-lg font-semibold">Attendance Management</h4>
