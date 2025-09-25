@@ -340,11 +340,11 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
       </div>
       <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button 
-          className="border border-gray-300 rounded-md px-3 py-1"
+          className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
           onClick={onClose}>
           Cancel
         </button>
-        <button className="border border-gray-300 rounded-md px-3 py-1 bg-blue-500 text-white" onClick={() => {
+        <button className="border border-gray-300 rounded-md px-3 py-1 bg-[#02367B] hover:bg-[#016CA5] text-white" onClick={() => {
           if (onAddEmployee) {
             onAddEmployee({
               name: `${firstName} ${lastName}`,
