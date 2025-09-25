@@ -30,35 +30,81 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     { id: 'about', label: 'About', icon: <Info size={20} /> },
   ];
 
-  // Hardcoded sections for each menu item
+  // Define functional sections for E-Wallet
+  const getEWalletSections = () => [
+    { id: 'e-wallet-overview', label: 'Overview' },
+    { id: 'e-wallet-gcash', label: 'GCash' },
+    { id: 'e-wallet-paymaya', label: 'PayMaya' },
+    { id: 'e-wallet-juanpay', label: 'JuanPay' },
+  ];
+
+  // Hardcoded sections for other menu items (for future implementation)
   const getSections = (itemId: string) => {
     switch (itemId) {
       case 'dashboard':
-        return ['+ Overview', '+ Analytics', '+ Reports', '+ Statistics'];
+        return [
+          { id: 'dashboard-overview', label: 'Overview' },
+          { id: 'dashboard-analytics', label: 'Analytics' },
+          { id: 'dashboard-reports', label: 'Reports' },
+          { id: 'dashboard-statistics', label: 'Statistics' }
+        ];
       case 'inventory':
-        return ['+ Products', '+ Categories', '+ Stock Levels', '+ Suppliers'];
+        return [
+          { id: 'inventory-products', label: 'Products' },
+          { id: 'inventory-categories', label: 'Categories' },
+          { id: 'inventory-stock-levels', label: 'Stock Levels' },
+          { id: 'inventory-suppliers', label: 'Suppliers' }
+        ];
       case 'employees':
-        return ['+ Employee List', '+ Departments', '+ Attendance', '+ Payroll'];
+        return [
+          { id: 'employees-list', label: 'Employee List' },
+          { id: 'employees-departments', label: 'Departments' },
+          { id: 'employees-attendance', label: 'Attendance' },
+          { id: 'employees-payroll', label: 'Payroll' }
+        ];
       case 'e-wallet':
-        return ['+ Overview', '+ GCash', '+ PayMaya', '+ JuanPay'];
+        return getEWalletSections();
       case 'settings':
-        return ['+ General', '+ Security', '+ Notifications', '+ Preferences'];
+        return [
+          { id: 'settings-general', label: 'General' },
+          { id: 'settings-security', label: 'Security' },
+          { id: 'settings-notifications', label: 'Notifications' },
+          { id: 'settings-preferences', label: 'Preferences' }
+        ];
       case 'about':
-        return ['+ Company Info', '+ Version', '+ Support', '+ License'];
+        return [
+          { id: 'about-company', label: 'Company Info' },
+          { id: 'about-version', label: 'Version' },
+          { id: 'about-support', label: 'Support' },
+          { id: 'about-license', label: 'License' }
+        ];
       default:
         return [];
     }
+  };
+
+  // Checker
+  const isEWalletSection = (sectionId: string) => {
+    return sectionId.startsWith('e-wallet-');
   };
 
   const renderMenuItem = (item: MenuItem) => (
     <li key={item.id}>
       <button
         onClick={() => {
-          setExpanded(expanded === item.id ? null : item.id);
-          onItemClick(item.id); 
+          const isCurrentlyInThisModule = activeItem === item.id || activeItem.startsWith(item.id + '-');
+          //sidebar behavior :)
+          if (isCurrentlyInThisModule && expanded === item.id) {
+            setExpanded(null);
+          } else if (isCurrentlyInThisModule && expanded !== item.id) {
+            setExpanded(item.id);
+          } else {
+            setExpanded(item.id);
+            onItemClick(item.id); 
+          }
         }}
         className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
-          activeItem === item.id ? 'bg-gray-600 text-white' : 'text-gray-300'
+          activeItem === item.id || activeItem.startsWith(item.id + '-') ? 'bg-gray-600 text-white' : 'text-gray-300'
         }`}
       >
         <span className="flex-shrink-0">{item.icon}</span>
@@ -101,13 +147,26 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 whitespace-nowrap">Sections</p>
               <ul className="space-y-2">
-                {sections.map((section, index) => (
-                  <li key={index}>
+                {sections.map((section) => (
+                  <li key={section.id}>
                     <button
-                      onClick={() => onItemClick(`${itemId}-${section.split(' ').slice(1).join('-').toLowerCase().replace(/\s+/g, '-')}`)}
-                      className="w-full flex items-center gap-3 py-2 px-4 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 text-gray-300 text-sm"
+                      onClick={() => {
+                        // For E-Wallet sections, handle them functionally
+                        if (isEWalletSection(section.id)) {
+                          onItemClick(section.id);
+                        } else {
+                          // For other sections, keep them as placeholders for now
+                          console.log('Section not implemented yet:', section.id);
+                        }
+                      }}
+                      className={`w-full flex items-center gap-3 py-2 px-4 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 text-sm ${
+                        activeItem === section.id ? 'bg-gray-700 text-white' : 'text-gray-300'
+                      } ${isEWalletSection(section.id) ? 'cursor-pointer' : 'cursor-default opacity-75'}`}
                     >
-                      <span className="whitespace-nowrap">{section}</span>
+                      <span className="whitespace-nowrap">+ {section.label}</span>
+                      {!isEWalletSection(section.id) && (
+                        <span className="text-xs text-gray-500 ml-auto">(Soon)</span>
+                      )}
                     </button>
                   </li>
                 ))}
