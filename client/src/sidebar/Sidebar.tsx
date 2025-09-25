@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Package, Users, Wallet, Settings, Info, X, Menu, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Package, Users, Wallet, Settings, Info, Menu } from 'lucide-react';
 
 export interface MenuItem {
   id: string;
