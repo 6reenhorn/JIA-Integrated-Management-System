@@ -5,6 +5,8 @@ import InventoryTable from '../components/inventory/Elements of Inventory/Invent
 import InventoryActions from '../components/inventory/Elements of Inventory/InventoryActions';
 import AddProductModal from '../modals/Inventory/AddProductModal';
 import EditProductModal from '../modals/Inventory/EditProductModal';
+import AddCategoryModal from '../modals/Inventory/AddCategoryModal';
+import CategoryContent from '../components/inventory/Elements of Category/CategoryContent';
 import type { InventoryItem, ProductFormData } from '../types/inventory_types';
 import { filterInventoryItems, calculateStats } from '../utils/inventory_utils';
 
@@ -15,9 +17,20 @@ const Inventory: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
+  const [activeTab, setActiveTab] = useState('inventory');
   
-  // Corrected inventory data with proper calculations
+  // ADD: State to store category colors
+  const [categoryColors, setCategoryColors] = useState<Record<string, string>>({
+    'Category 1': '#3B82F6',
+    'Category 2': '#EF4444',
+    'Category 3': '#10B981',
+    'Category 4': '#F59E0B',
+    'Category 5': '#EC4899'
+  });
+  
+  // Your existing inventory data
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([
     {
       id: 1,
@@ -26,7 +39,7 @@ const Inventory: React.FC = () => {
       stock: 69,
       status: 'In Stock',
       productPrice: 69.69,
-      totalAmount: 69 * 69.69 // = 4808.61
+      totalAmount: 69 * 69.69
     },
     {
       id: 2,
@@ -35,7 +48,7 @@ const Inventory: React.FC = () => {
       stock: 10,
       status: 'Low Stock',
       productPrice: 20.20,
-      totalAmount: 10 * 20.20 // = 202.00
+      totalAmount: 10 * 20.20
     },
     {
       id: 3,
@@ -44,7 +57,7 @@ const Inventory: React.FC = () => {
       stock: 5,
       status: 'Low Stock',
       productPrice: 50.00,
-      totalAmount: 5 * 50.00 // = 250.00
+      totalAmount: 5 * 50.00
     },
     {
       id: 4,
@@ -53,7 +66,7 @@ const Inventory: React.FC = () => {
       stock: 0,
       status: 'Out Of Stock',
       productPrice: 5.00,
-      totalAmount: 0 * 5.00 // = 0.00
+      totalAmount: 0 * 5.00
     },
     {
       id: 5,
@@ -62,7 +75,7 @@ const Inventory: React.FC = () => {
       stock: 69,
       status: 'In Stock',
       productPrice: 30.00,
-      totalAmount: 69 * 30.00 // = 2070.00
+      totalAmount: 69 * 30.00
     }
   ]);
 
@@ -81,6 +94,31 @@ const Inventory: React.FC = () => {
     [inventoryItems]
   );
 
+  // UPDATED: Prepare category data with colors
+  const categoryData = useMemo(() => {
+    const categoryMap = new Map();
+    
+    inventoryItems.forEach(item => {
+      if (!categoryMap.has(item.category)) {
+        categoryMap.set(item.category, {
+          name: item.category,
+          productCount: 0,
+          totalStock: 0,
+          totalValue: 0,
+          color: categoryColors[item.category] || '#6B7280' // Add color with fallback
+        });
+      }
+      
+      const category = categoryMap.get(item.category);
+      category.productCount += 1;
+      category.totalStock += item.stock;
+      category.totalValue += item.totalAmount;
+    });
+    
+    return Array.from(categoryMap.values());
+  }, [inventoryItems, categoryColors]); // Add categoryColors as dependency
+
+  // Your existing handlers...
   const handleViewItem = (id: number) => {
     console.log('View item:', id);
   };
@@ -101,7 +139,32 @@ const Inventory: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
-  // Helper function to determine status based on stock quantity
+  // Add category handler
+  const handleAddCategory = () => {
+    setIsAddCategoryModalOpen(true);
+  };
+
+  // UPDATED: Handle adding a new category with color
+  const handleSaveCategory = (categoryName: string, color: string) => {
+    console.log('Adding new category:', categoryName, 'with color:', color);
+    
+    // Add the new category color to the categoryColors state
+    setCategoryColors(prev => ({
+      ...prev,
+      [categoryName]: color
+    }));
+    
+    // You might also want to add an empty product for this category
+    // or just let it exist as a category option for future products
+  };
+
+  // Handle viewing products by category
+  const handleViewProducts = (categoryName: string) => {
+    // Switch to inventory tab and filter by the selected category
+    setActiveTab('inventory');
+    setSelectedCategory(categoryName);
+  };
+
   const getStatusFromStock = (stock: number, minimumStock: number = 10) => {
     if (stock === 0) return 'Out Of Stock';
     if (stock <= minimumStock) return 'Low Stock';
@@ -125,7 +188,6 @@ const Inventory: React.FC = () => {
   };
 
   const handleSaveProduct = (updatedItem: InventoryItem) => {
-    // Recalculate total amount and status before saving
     const totalAmount = updatedItem.stock * updatedItem.productPrice;
     
     const finalItem = {
@@ -152,10 +214,10 @@ const Inventory: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <InventoryStats stats={stats} />
+      {/* Summary Cards - Only show for inventory tab */}
+      {activeTab === 'inventory' && <InventoryStats stats={stats} />}
       
-      {/* Header Controls */}
+      {/* Header Controls with Tabs */}
       <InventoryFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -165,24 +227,46 @@ const Inventory: React.FC = () => {
         filterOpen={filterOpen}
         setFilterOpen={setFilterOpen}
         onAddItem={handleAddItem}
+        onAddCategory={handleAddCategory}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        totalItems={activeTab === 'inventory' ? filteredItems.length : categoryData.length}
       />
 
-      {/* Inventory Table */}
-      <InventoryTable
-        items={filteredItems}
-        onViewItem={handleViewItem}
-        onEditItem={handleEditItem}
-        onDeleteItem={handleDeleteItem}
-      />
+      {/* Conditional Content Based on Active Tab */}
+      {activeTab === 'inventory' ? (
+        <>
+          {/* Inventory Table */}
+          <InventoryTable
+            items={filteredItems}
+            onViewItem={handleViewItem}
+            onEditItem={handleEditItem}
+            onDeleteItem={handleDeleteItem}
+          />
 
-      {/* Pagination */}
-      <InventoryActions
-        currentPage={currentPage}
-        totalPages={Math.ceil(filteredItems.length / 10)}
-        filteredCount={filteredItems.length}
-        totalCount={inventoryItems.length}
-        onPageChange={handlePageChange}
-      />
+          {/* Pagination */}
+          <InventoryActions
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredItems.length / 10)}
+            filteredCount={filteredItems.length}
+            totalCount={inventoryItems.length}
+            onPageChange={handlePageChange}
+          />
+        </>
+      ) : (
+        <>
+          {/* Category Content */}
+          <CategoryContent
+            categories={categoryData}
+            currentPage={currentPage}
+            totalPages={Math.ceil(categoryData.length / 10)}
+            filteredCount={categoryData.length}
+            totalCount={categoryData.length}
+            onPageChange={handlePageChange}
+            onViewProducts={handleViewProducts}
+          />
+        </>
+      )}
 
       {/* Add Product Modal */}
       <AddProductModal
@@ -199,6 +283,13 @@ const Inventory: React.FC = () => {
         onSave={handleSaveProduct}
         initialData={editingItem}
         categories={categories}
+      />
+
+      {/* UPDATED: Add Category Modal with color support */}
+      <AddCategoryModal
+        isOpen={isAddCategoryModalOpen}
+        onClose={() => setIsAddCategoryModalOpen(false)}
+        onAddCategory={handleSaveCategory}
       />
     </div>
   );
