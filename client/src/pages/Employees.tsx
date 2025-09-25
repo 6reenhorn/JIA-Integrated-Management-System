@@ -22,6 +22,9 @@ const Employees: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
 
   const [activeSection, setActiveSection] = useState('staff');
 
@@ -173,6 +176,61 @@ const Employees: React.FC = () => {
     console.log('Adding new employee:', employee);
   }
 
+  const handleRequestDelete = (id: number, event: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const popoverHeight = 80; 
+    const popoverWidth = 210; 
+    let top = rect.top - popoverHeight - 10; 
+    let left = rect.left + rect.width / 2 - popoverWidth / 2; 
+
+    if (top < 10) {
+      top = rect.bottom + 10; 
+    }
+
+    // Clamp to viewport
+    top = Math.max(10, Math.min(top, window.innerHeight - popoverHeight - 10));
+    left = Math.max(10, Math.min(left, window.innerWidth - popoverWidth - 10));
+
+    console.log('Popover position:', top, left);
+    setPopoverPosition({ top, left });
+    setDeleteId(id);
+    setShowConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteId !== null) {
+      setEmployees(prev => prev.filter(emp => emp.id !== deleteId));
+    }
+    setShowConfirm(false);
+    setDeleteId(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowConfirm(false);
+    setDeleteId(null);
+  };
+
+  // Prevent body scroll when popover is open without layout shift
+  useEffect(() => {
+    if (showConfirm) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      document.documentElement.style.paddingRight = '';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.documentElement.style.paddingRight = '';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [showConfirm]);
+
   return (
     <div className="space-y-6">
       {/* Employee Stats Section */}
@@ -195,7 +253,7 @@ const Employees: React.FC = () => {
                 setSelectedEmployee(emp);
                 setIsEditModalOpen(true);
               }}
-              onDeleteEmployee={() => {}}
+              onRequestDelete={handleRequestDelete}
             />
 
             <EmployeeActions
@@ -238,6 +296,30 @@ const Employees: React.FC = () => {
               onClose={() => setIsEditModalOpen(false)}
               onSave={handleSaveEmployee}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Popover */}
+      {showConfirm && (
+        <div
+          className="fixed bg-white border border-gray-300 rounded shadow-lg p-3 z-50 w-[210px]"
+          style={{ top: popoverPosition.top, left: popoverPosition.left }}
+        >
+          <p className="text-[10px] mb-2">Are you sure you want to delete this employee?</p>
+          <div className="flex gap-2 justify-between w-full">
+            <button
+              onClick={handleConfirmDelete}
+              className="px-7 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+            >
+              Yes
+            </button>
+            <button
+              onClick={handleCancelDelete}
+              className="px-7 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
+            >
+              No
+            </button>
           </div>
         </div>
       )}
