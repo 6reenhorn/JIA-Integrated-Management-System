@@ -58,17 +58,17 @@ const Overview: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 border-gray-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Total Balance</h3>
-          <div className="text-3xl font-bold text-black mb-1">₱14,480.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱14,480.00</div>
           <div className="text-sm text-gray-500">Combined Funds</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">GCash Net</h3>
-          <div className="text-3xl font-bold text-blue-600 mb-1">₱7,380.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,380.00</div>
           <div className="text-sm text-gray-500">After Charges</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">JuanPay</h3>
-          <div className="text-3xl font-bold text-green-600 mb-1">₱7,380.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,380.00</div>
           <div className="text-sm text-gray-500">Total Revenue</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
