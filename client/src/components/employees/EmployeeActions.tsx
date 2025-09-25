@@ -12,7 +12,7 @@ const EmployeeActions: React.FC<EmployeeActionsProps> = ({
   onPageChange
 }) => {
   return (
-    <div className="flex items-center justify-between pt-4">
+    <div className="flex items-center justify-between pt-1">
       <div className="text-sm text-gray-500">
         Page {currentPage} of {pageCount}
       </div>
