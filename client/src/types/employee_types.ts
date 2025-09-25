@@ -13,6 +13,5 @@ export interface Employee {
 export interface EmployeeStats {
   totalEmployees: number;
   activeEmployees: number;
-  departments: number;
   newHires: number;
 }
