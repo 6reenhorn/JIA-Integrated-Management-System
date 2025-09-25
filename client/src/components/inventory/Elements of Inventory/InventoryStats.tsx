@@ -25,7 +25,7 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({ stats }) => {
           <h3 className="text-medium font-bold text-black">Inventory Value</h3>
         </div>
         <div className="text-left">
-          <p className="text-3xl font-bold text-yellow-600 mb-1">₱{(stats.inventoryValue || 0).toFixed(2)}</p>
+          <p className="text-3xl font-bold text-black mb-1">₱{(stats.inventoryValue || 0).toFixed(2)}</p>
           <p className="text-xs text-gray-500">Across all items</p>
         </div>
       </div>
