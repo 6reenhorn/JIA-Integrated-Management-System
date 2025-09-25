@@ -27,7 +27,7 @@ const EmployeeActions: React.FC<EmployeeActionsProps> = ({
         {[...Array(pageCount)].map((_, idx) => (
           <button
             key={idx + 1}
-            className={`px-3 py-1 text-sm rounded ${currentPage === idx + 1 ? 'bg-gray-900 text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
+            className={`px-3 py-1 text-sm rounded ${currentPage === idx + 1 ? 'bg-[#02367B] text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
             onClick={() => onPageChange(idx + 1)}
           >
             {idx + 1}
