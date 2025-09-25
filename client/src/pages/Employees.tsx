@@ -23,6 +23,13 @@ const Employees: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
+  const [activeSection, setActiveSection] = useState('staff');
+
+  const sections = [
+    { label: 'Staff Management', key: 'staff' },
+    { label: 'Attendance', key: 'attendance' }
+  ];
+
   const [employees, setEmployees] = useState<Employee[]>([
     {
       id: 1,
@@ -127,7 +134,6 @@ const Employees: React.FC = () => {
   }
 
   const handleSaveEmployee = (updatedEmployee: Employee) => {
-    // The updatedEmployee already has the contact string composed and additional fields
     // Temporarily update the employee in the state (since no backend yet)
     setEmployees(prevEmployees =>
       prevEmployees.map(emp =>
@@ -155,7 +161,7 @@ const Employees: React.FC = () => {
       ...newEmployee,
       id: newId,
       empId: newEmpId,
-      lastLogin: 'Never' // Default for new employees
+      lastLogin: 'Never' 
     };
 
     // Add the new employee to the state
@@ -169,45 +175,51 @@ const Employees: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Employee Stats Section */}
       <EmployeeStats stats={stats} />
 
       {/* Staff Directory Section */}
-      <MainLayoutCard title="Staff Management">
-        <div className="space-y-6">
-          <div className='flex justify-between items-center mb-0'>
-            <EmployeeSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-            <EmployeeFilters onAddStaff={toggleModal} />
+      <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={setActiveSection}>
+        {activeSection === 'staff' && (
+          <div className="space-y-6">
+            <div className='flex justify-between items-center mb-0'>
+              <EmployeeSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+              <EmployeeFilters onAddStaff={toggleModal} />
+            </div>
+
+            <EmployeeTable
+              employees={filteredEmployees}
+              onViewEmployee={() => {}}
+              onEditEmployee={(id: number) => {
+                const emp = employees.find(e => e.id === id) || null;
+                setSelectedEmployee(emp);
+                setIsEditModalOpen(true);
+              }}
+              onDeleteEmployee={() => {}}
+            />
+
+            <EmployeeActions
+              currentPage={currentPage}
+              pageCount={pageCount}
+              onPageChange={handlePageChange}
+            />
           </div>
-
-          <EmployeeTable
-            employees={filteredEmployees}
-            onViewEmployee={() => {}}
-            onEditEmployee={(id: number) => {
-              const emp = employees.find(e => e.id === id) || null;
-              setSelectedEmployee(emp);
-              setIsEditModalOpen(true);
-            }}
-            onDeleteEmployee={() => {}}
-          />
-
-          <EmployeeActions
-            currentPage={currentPage}
-            pageCount={pageCount}
-            onPageChange={handlePageChange}
-          />
-        </div>
+        )}
+        {activeSection === 'attendance' && (
+          <div className="space-y-6 p-4">
+            <h4 className="text-lg font-semibold">Attendance Management</h4>
+            <p>Placeholder for Attendance section content. Implement attendance tracking features here.</p>
+          </div>
+        )}
       </MainLayoutCard>
 
       {/* Employee Modal */}
       {isModalOpen && (
         <div className='fixed inset-0 z-50 flex items-center justify-center'>
-          {/* Backdrop with blur effect - no click handler */}
           <div
             className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm'
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
           </div>
-
-          {/* Modal content */}
           <div className='relative z-[60]'>
             <AddStaffModal onClose={toggleModal} onAddEmployee={handleAddEmployee} />
           </div>
