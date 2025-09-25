@@ -16,10 +16,11 @@ import type { InventoryItem, ProductFormData } from '../types/inventory_types';
 import { filterInventoryItems, calculateStats } from '../utils/inventory_utils';
 
 interface InventoryProps {
+  activeSection?: string;
   onSectionChange?: (section: string) => void;
 }
 
-const Inventory: React.FC<InventoryProps> = ({ onSectionChange }) => {
+const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,14 +30,24 @@ const Inventory: React.FC<InventoryProps> = ({ onSectionChange }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
-  const [activeSection, setActiveSection] = useState('inventory');
+  
+  // Use prop if provided, otherwise use local state
+  const [localActiveSection, setLocalActiveSection] = useState('inventory');
+  const activeSection = propActiveSection || localActiveSection;
 
   // Notify parent component when section changes
   useEffect(() => {
-    if (onSectionChange) {
+    if (onSectionChange && propActiveSection === undefined) {
       onSectionChange(activeSection);
     }
-  }, [activeSection, onSectionChange]);
+  }, [activeSection, onSectionChange, propActiveSection]);
+
+  // Sync with prop changes - FIXED DEPENDENCY ARRAY
+  useEffect(() => {
+    if (propActiveSection && propActiveSection !== activeSection) {
+      setLocalActiveSection(propActiveSection);
+    }
+  }, [propActiveSection, activeSection]); // Added activeSection to dependencies
 
   // Sales records state
   const [salesRecords] = useState<SalesRecord[]>([]);
@@ -131,7 +142,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSectionChange }) => {
   const handleSaveCategory = (categoryName: string, color: string) => setCategoryColors(prev => ({ ...prev, [categoryName]: color }));
 
   const handleViewProducts = (categoryName: string) => {
-    setActiveSection('inventory');
+    handleSectionChange('inventory');
     setSelectedCategory(categoryName);
   };
 
@@ -168,7 +179,10 @@ const Inventory: React.FC<InventoryProps> = ({ onSectionChange }) => {
 
   // Handle section change
   const handleSectionChange = (section: string) => {
-    setActiveSection(section);
+    setLocalActiveSection(section);
+    if (onSectionChange) {
+      onSectionChange(section);
+    }
   };
 
   return (

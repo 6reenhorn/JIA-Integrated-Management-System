@@ -33,6 +33,29 @@ const Dashboard: React.FC = () => {
     setActiveItem(tabToActiveItem[tab]);
   };
 
+  // Function to handle sidebar item clicks
+  const handleSidebarItemClick = (itemId: string) => {
+    setActiveItem(itemId);
+    
+    // Map sidebar section IDs to Inventory component sections
+    const sectionMapping: Record<string, string> = {
+      'inventory-inventory': 'inventory',
+      'inventory-categories': 'sales', // Note: your sidebar has "Sales" but ID is "inventory-categories"
+      'inventory-stock-levels': 'category' // Note: your sidebar has "Category" but ID is "inventory-stock-levels"
+    };
+    
+    // If it's a known section ID, set the current section
+    if (sectionMapping[itemId]) {
+      setCurrentSection({ page: 'inventory', section: sectionMapping[itemId] });
+    } else if (itemId === 'inventory') {
+      // If it's the main inventory item, default to inventory section
+      setCurrentSection({ page: 'inventory', section: 'inventory' });
+    } else {
+      // For other pages, reset the section
+      setCurrentSection({ page: itemId, section: undefined });
+    }
+  };
+
   // Function to update the current section from child components
   const updateCurrentSection = (page: string, section?: string) => {
     setCurrentSection({ page, section });
@@ -73,7 +96,10 @@ const Dashboard: React.FC = () => {
       case 'dashboard':
         return <Overview />;
       case 'inventory':
-        return <Inventory onSectionChange={(section) => updateCurrentSection('inventory', section)} />;
+        return <Inventory 
+          activeSection={currentSection.section || 'inventory'} 
+          onSectionChange={(section) => updateCurrentSection('inventory', section)} 
+        />;
       case 'employees':
         return <Employees />;
       case 'e-wallet':
@@ -195,10 +221,7 @@ const Dashboard: React.FC = () => {
       <div className='flex flex-1 overflow-hidden'>
         <Sidebar 
           activeItem={activeItem} 
-          onItemClick={(item) => {
-            setActiveItem(item);
-            setCurrentSection({ page: item, section: undefined });
-          }} 
+          onItemClick={handleSidebarItemClick} 
           isCollapsed={isSidebarCollapsed} 
           onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
         />
