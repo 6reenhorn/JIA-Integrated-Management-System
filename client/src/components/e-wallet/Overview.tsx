@@ -9,14 +9,30 @@ const Overview: React.FC = () => {
   const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
     <LayoutCard title={title} className="min-h-[200px]">
       <div className="space-y-3">
-        {data.map((item, index) => (
-          <div key={index} className="flex justify-between items-center">
-            <span className="text-gray-500 text-sm">{item.label}</span>
-            <span className={`font-medium ${item.value.startsWith('-') ? 'text-red-500' : 'text-gray-900'}`}>
-              {item.value}
-            </span>
-          </div>
-        ))}
+        {data.map((item, index) => {
+          const isHighlight =
+            item.label === 'Net Amount' || item.label === 'Total Sales';
+          return (
+            <div key={index} className="flex justify-between items-center">
+              <span
+                className={`text-sm ${
+                  isHighlight ? 'text-gray-900 font-bold' : 'text-gray-500'
+                }`}
+              >
+                {item.label}
+              </span>
+              <span
+                className={`${
+                  item.value.startsWith('-')
+                    ? 'text-red-500 font-medium'
+                    : 'text-gray-900 font-medium'
+                }`}
+              >
+                {item.value}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </LayoutCard>
   );
