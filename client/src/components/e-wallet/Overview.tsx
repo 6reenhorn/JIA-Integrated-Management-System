@@ -1,25 +1,19 @@
+import React from 'react';
+import type { 
+  StatCardProps, 
+  SummaryCardProps, 
+  RecordCardProps
+} from '../../types/ewallet_types';
 
-interface StatCardProps {
-  title: string;
-  amount: string;
-  subtitle: string;
-  bgColor?: string;
-  textColor?: string;
-  subtitleColor?: string;
-}
-
-interface SummaryCardProps {
-  title: string;
-  data: Array<{ label: string; value: string }>;
-}
-
-interface RecordCardProps {
-  title: string;
-  count: string;
-}
-
-const Overview = () => {
-  const StatCard = ({ title, amount, subtitle, bgColor = 'bg-white', textColor = 'text-blue-600', subtitleColor = 'text-gray-500' }: StatCardProps) => (
+const Overview: React.FC = () => {
+  const StatCard: React.FC<StatCardProps> = ({ 
+    title, 
+    amount, 
+    subtitle, 
+    bgColor = 'bg-white', 
+    textColor = 'text-blue-600', 
+    subtitleColor = 'text-gray-500' 
+  }) => (
     <div className={`${bgColor} rounded-lg p-6 border border-gray-300`}>
       <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
       <div className={`text-3xl font-bold ${textColor} mb-1`}>
@@ -31,7 +25,7 @@ const Overview = () => {
     </div>
   );
 
-  const SummaryCard = ({ title, data }: SummaryCardProps) => (
+  const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
     <div className="bg-white rounded-lg p-6 border border-gray-300">
       <h3 className="text-gray-500 font-medium mb-4">{title}</h3>
       <div className="space-y-3">
@@ -47,7 +41,7 @@ const Overview = () => {
     </div>
   );
 
-  const RecordCard = ({ title, count }: RecordCardProps) => (
+  const RecordCard: React.FC<RecordCardProps> = ({ title, count }) => (
     <div className="bg-white rounded-lg p-6 border border-gray-300 text-center">
       <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
       <div className="text-4xl font-bold text-gray-900">
