@@ -54,18 +54,18 @@ const GCash: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 border-gray-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Total Cash</h3>
-          <div className="text-3xl font-bold text-black mb-1">₱7,380.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,380.00</div>
           <div className="text-sm text-gray-500 opacity-80">Money In</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
-          <h3 className="text-red-500 font-medium mb-2">Total Charges</h3>
-          <div className="text-3xl font-bold text-red-500 mb-1">₱75.00</div>
-          <div className="text-sm text-red-500">Transaction Fees</div>
+          <h3 className="text-gray-500 font-medium mb-2">Total Charges</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱75.00</div>
+          <div className="text-sm text-gray-500">Transaction Fees</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
-          <h3 className="text-green-500 font-medium mb-2">Place Holder</h3>
-          <div className="text-3xl font-bold text-green-600 mb-1">₱7,380.00</div>
-          <div className="text-sm text-green-500">Total Revenue</div>
+          <h3 className="text-gray-500 font-medium mb-2">Place Holder</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,380.00</div>
+          <div className="text-sm text-gray-500">Total Revenue</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Place Holder</h3>
