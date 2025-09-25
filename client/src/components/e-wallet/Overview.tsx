@@ -13,7 +13,12 @@ const Overview: React.FC = () => {
           const isHighlight =
             item.label === 'Net Amount' || item.label === 'Total Sales';
           return (
-            <div key={index} className="flex justify-between items-center">
+            <div
+              key={index}
+              className={`flex justify-between items-center ${
+                isHighlight ? 'pt-2 mt-2 border-t border-gray-200' : ''
+              }`}
+            >
               <span
                 className={`text-sm ${
                   isHighlight ? 'text-gray-900 font-bold' : 'text-gray-500'
