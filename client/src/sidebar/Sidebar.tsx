@@ -50,10 +50,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
         ];
       case 'inventory':
         return [
-          { id: 'inventory-products', label: 'Products' },
-          { id: 'inventory-categories', label: 'Categories' },
-          { id: 'inventory-stock-levels', label: 'Stock Levels' },
-          { id: 'inventory-suppliers', label: 'Suppliers' }
+          { id: 'inventory-inventory', label: 'Inventory' },
+          { id: 'inventory-categories', label: 'Sales' },
+          { id: 'inventory-stock-levels', label: 'Category' },
         ];
       case 'employees':
         return [
