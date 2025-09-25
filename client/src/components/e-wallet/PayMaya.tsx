@@ -1,34 +1,14 @@
 import React from 'react';
+import LayoutCard from '../layout/LayoutCard';
 import type { 
-  StatCardProps, 
   SummaryCardProps, 
   RecordCardProps,
   TransactionItem
 } from '../../types/ewallet_types';
 
 const PayMaya: React.FC = () => {
-  const StatCard: React.FC<StatCardProps> = ({ 
-    title, 
-    amount, 
-    subtitle, 
-    bgColor = 'bg-white', 
-    textColor = 'text-blue-600', 
-    subtitleColor = 'text-gray-500' 
-  }) => (
-    <div className={`${bgColor} rounded-lg p-6 border border-gray-300`}>
-      <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
-      <div className={`text-3xl font-bold ${textColor} mb-1`}>
-        {amount}
-      </div>
-      <div className={`text-sm ${subtitleColor}`}>
-        {subtitle}
-      </div>
-    </div>
-  );
-
   const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
-    <div className="bg-white rounded-lg p-6 border border-gray-300">
-      <h3 className="text-gray-500 font-medium mb-4">{title}</h3>
+    <LayoutCard title={title} className="min-h-[200px]">
       <div className="space-y-3">
         {data.map((item, index) => (
           <div key={index} className="flex justify-between items-center">
@@ -39,16 +19,16 @@ const PayMaya: React.FC = () => {
           </div>
         ))}
       </div>
-    </div>
+    </LayoutCard>
   );
 
   const RecordCard: React.FC<RecordCardProps> = ({ title, count }) => (
-    <div className="bg-white rounded-lg p-6 border border-gray-300 text-center">
+    <LayoutCard className="text-center min-h-[120px]">
       <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
       <div className="text-4xl font-bold text-gray-900">
         {count}
       </div>
-    </div>
+    </LayoutCard>
   );
 
   const paymayaData = [
@@ -66,41 +46,34 @@ const PayMaya: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* PayMaya Stats Cards */}
+      {/* PayMaya Stats using LayoutCard directly */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="PayMaya Balance"
-          amount="₱7,010.00"
-          subtitle="Available Funds"
-          bgColor="bg-green-500"
-          textColor="text-white"
-          subtitleColor="text-green-100"
-        />
-        <StatCard
-          title="Total Cash-In"
-          amount="₱7,500.00"
-          subtitle="This Month"
-          textColor="text-green-600"
-        />
-        <StatCard
-          title="Total Cash-Out"
-          amount="₱500.00"
-          subtitle="This Month"
-          textColor="text-red-500"
-        />
-        <StatCard
-          title="Service Charges"
-          amount="₱10.00"
-          subtitle="Monthly Fee"
-          textColor="text-orange-500"
-        />
+        <LayoutCard className="bg-green-500 min-h-[120px]">
+          <h3 className="text-green-100 font-medium mb-2">PayMaya Balance</h3>
+          <div className="text-3xl font-bold text-white mb-1">₱7,010.00</div>
+          <div className="text-sm text-green-100">Available Funds</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash-In</h3>
+          <div className="text-3xl font-bold text-green-600 mb-1">₱7,500.00</div>
+          <div className="text-sm text-gray-500">This Month</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash-Out</h3>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱500.00</div>
+          <div className="text-sm text-gray-500">This Month</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Service Charges</h3>
+          <div className="text-3xl font-bold text-orange-500 mb-1">₱10.00</div>
+          <div className="text-sm text-gray-500">Monthly Fee</div>
+        </LayoutCard>
       </div>
 
       {/* PayMaya Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SummaryCard title="PayMaya Summary" data={paymayaData} />
-        <div className="bg-white rounded-lg p-6 border border-gray-300">
-          <h3 className="text-gray-500 font-medium mb-4">Recent Transactions</h3>
+        <LayoutCard title="Recent Transactions" className="min-h-[200px]">
           <div className="space-y-3">
             {recentTransactions.map((transaction, index) => (
               <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
@@ -114,7 +87,7 @@ const PayMaya: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
+        </LayoutCard>
       </div>
 
       {/* PayMaya Records */}

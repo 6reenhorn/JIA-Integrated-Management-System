@@ -1,34 +1,14 @@
 import React from 'react';
+import LayoutCard from '../layout/LayoutCard';
 import type { 
-  StatCardProps, 
   SummaryCardProps, 
   RecordCardProps,
   TransactionItem
 } from '../../types/ewallet_types';
 
 const JuanPay: React.FC = () => {
-  const StatCard: React.FC<StatCardProps> = ({ 
-    title, 
-    amount, 
-    subtitle, 
-    bgColor = 'bg-white', 
-    textColor = 'text-blue-600', 
-    subtitleColor = 'text-gray-500' 
-  }) => (
-    <div className={`${bgColor} rounded-lg p-6 border border-gray-300`}>
-      <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
-      <div className={`text-3xl font-bold ${textColor} mb-1`}>
-        {amount}
-      </div>
-      <div className={`text-sm ${subtitleColor}`}>
-        {subtitle}
-      </div>
-    </div>
-  );
-
   const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
-    <div className="bg-white rounded-lg p-6 border border-gray-300">
-      <h3 className="text-gray-500 font-medium mb-4">{title}</h3>
+    <LayoutCard title={title} className="min-h-[200px]">
       <div className="space-y-3">
         {data.map((item, index) => (
           <div key={index} className="flex justify-between items-center">
@@ -39,16 +19,16 @@ const JuanPay: React.FC = () => {
           </div>
         ))}
       </div>
-    </div>
+    </LayoutCard>
   );
 
   const RecordCard: React.FC<RecordCardProps> = ({ title, count }) => (
-    <div className="bg-white rounded-lg p-6 border border-gray-300 text-center">
+    <LayoutCard className="text-center min-h-[120px]">
       <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
       <div className="text-4xl font-bold text-gray-900">
         {count}
       </div>
-    </div>
+    </LayoutCard>
   );
 
   const juanpayData = [
@@ -67,41 +47,34 @@ const JuanPay: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* JuanPay Stats Cards */}
+      {/* JuanPay Stats using LayoutCard directly */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="JuanPay Balance"
-          amount="₱7,100.00"
-          subtitle="Total Sales"
-          bgColor="bg-purple-500"
-          textColor="text-white"
-          subtitleColor="text-purple-100"
-        />
-        <StatCard
-          title="Beginning Balance"
-          amount="₱15,500.00"
-          subtitle="Start of Month"
-          textColor="text-blue-600"
-        />
-        <StatCard
-          title="Ending Balance"
-          amount="₱8,400.00"
-          subtitle="Current Month"
-          textColor="text-red-500"
-        />
-        <StatCard
-          title="Average per Record"
-          amount="₱2,366.67"
-          subtitle="Per Transaction"
-          textColor="text-green-600"
-        />
+        <LayoutCard className="bg-purple-500 min-h-[120px]">
+          <h3 className="text-purple-100 font-medium mb-2">JuanPay Balance</h3>
+          <div className="text-3xl font-bold text-white mb-1">₱7,100.00</div>
+          <div className="text-sm text-purple-100">Total Sales</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Beginning Balance</h3>
+          <div className="text-3xl font-bold text-blue-600 mb-1">₱15,500.00</div>
+          <div className="text-sm text-gray-500">Start of Month</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Ending Balance</h3>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱8,400.00</div>
+          <div className="text-sm text-gray-500">Current Month</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Average per Record</h3>
+          <div className="text-3xl font-bold text-green-600 mb-1">₱2,366.67</div>
+          <div className="text-sm text-gray-500">Per Transaction</div>
+        </LayoutCard>
       </div>
 
       {/* JuanPay Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SummaryCard title="JuanPay Summary" data={juanpayData} />
-        <div className="bg-white rounded-lg p-6 border border-gray-300">
-          <h3 className="text-gray-500 font-medium mb-4">Recent Transactions</h3>
+        <LayoutCard title="Recent Transactions" className="min-h-[200px]">
           <div className="space-y-3">
             {recentTransactions.map((transaction, index) => (
               <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
@@ -115,7 +88,7 @@ const JuanPay: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
+        </LayoutCard>
       </div>
 
       {/* JuanPay Records */}
