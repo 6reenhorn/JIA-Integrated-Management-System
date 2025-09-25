@@ -122,15 +122,21 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
   return (
     <div className="relative flex h-screen">
       {/* Collapsed sidebar with icons only */}
-      <div className="bg-gray-800 text-white w-16 min-h-screen flex flex-col items-center py-4 space-y-2 flex-shrink-0">
-        <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mb-4 hover:bg-gray-500 transition-colors duration-200" onClick={onToggle} style={{ cursor: 'pointer' }}>
+      <div className="bg-gray-800 text-white w-16 min-h-screen flex flex-col py-4 space-y-2 flex-shrink-0">
+        <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mb-4 hover:bg-gray-500 transition-colors duration-200 mx-auto" onClick={onToggle} style={{ cursor: 'pointer' }}>
           <span className="text-sm font-bold">L</span>
         </div>
-        <ul className="space-y-2 mt-4">
-          {mainMenuItems.map(renderMenuItem)}
-        </ul>
-        <div className="mt-140">
-          <ul className="space-y-2 mt-8.5">
+        
+        {/* Main menu items */}
+        <div className="flex-1 flex flex-col items-center">
+          <ul className="space-y-2 mt-4">
+            {mainMenuItems.map(renderMenuItem)}
+          </ul>
+        </div>
+        
+        {/* Support items at bottom */}
+        <div className="flex flex-col items-center pb-8">
+          <ul className="space-y-2">
             {supportItems.map(renderMenuItem)}
           </ul>
         </div>
