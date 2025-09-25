@@ -6,6 +6,7 @@ import InventoryActions from '../components/inventory/Elements of Inventory/Inve
 import AddProductModal from '../modals/Inventory/AddProductModal';
 import EditProductModal from '../modals/Inventory/EditProductModal';
 import AddCategoryModal from '../modals/Inventory/AddCategoryModal';
+import MainLayoutCard from '../components/layout/MainLayoutCard';
 import CategoryContent from '../components/inventory/Elements of Category/CategoryContent';
 import type { InventoryItem, ProductFormData } from '../types/inventory_types';
 import { filterInventoryItems, calculateStats } from '../utils/inventory_utils';
@@ -19,9 +20,9 @@ const Inventory: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
-  const [activeTab, setActiveTab] = useState('inventory');
+  const [activeSection, setActiveSection] = useState('inventory');
   
-  // ADD: State to store category colors
+  // State to store category colors
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({
     'Category 1': '#3B82F6',
     'Category 2': '#EF4444',
@@ -79,6 +80,12 @@ const Inventory: React.FC = () => {
     }
   ]);
 
+  // Define sections for MainLayoutCard with proper key and label properties
+  const sections = [
+    { id: 'inventory', label: 'Inventory', key: 'inventory' },
+    { id: 'category', label: 'Category', key: 'category' }
+  ];
+
   // Calculate stats for inventory
   const inventoryStats = useMemo(() => calculateStats(inventoryItems), [inventoryItems]);
 
@@ -92,9 +99,8 @@ const Inventory: React.FC = () => {
     return {
       totalItems: totalCategories,
       totalValue: totalValue,
-      lowStockItems: 0, // Categories don't have low stock concept
-      outOfStockItems: 0, // Categories don't have out of stock concept
-      // Add custom properties for categories
+      lowStockItems: 0,
+      outOfStockItems: 0,
       totalProducts: totalProducts,
       totalStock: totalStock
     };
@@ -112,7 +118,7 @@ const Inventory: React.FC = () => {
     [inventoryItems]
   );
 
-  // UPDATED: Prepare category data with colors
+  // Prepare category data with colors
   const categoryData = useMemo(() => {
     const categoryMap = new Map();
     
@@ -123,7 +129,7 @@ const Inventory: React.FC = () => {
           productCount: 0,
           totalStock: 0,
           totalValue: 0,
-          color: categoryColors[item.category] || '#6B7280' // Add color with fallback
+          color: categoryColors[item.category] || '#6B7280'
         });
       }
       
@@ -134,9 +140,9 @@ const Inventory: React.FC = () => {
     });
     
     return Array.from(categoryMap.values());
-  }, [inventoryItems, categoryColors]); // Add categoryColors as dependency
+  }, [inventoryItems, categoryColors]);
 
-  // Your existing handlers...
+  // Event handlers
   const handleViewItem = (id: number) => {
     console.log('View item:', id);
   };
@@ -157,29 +163,20 @@ const Inventory: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
-  // Add category handler
   const handleAddCategory = () => {
     setIsAddCategoryModalOpen(true);
   };
 
-  // UPDATED: Handle adding a new category with color
   const handleSaveCategory = (categoryName: string, color: string) => {
     console.log('Adding new category:', categoryName, 'with color:', color);
-    
-    // Add the new category color to the categoryColors state
     setCategoryColors(prev => ({
       ...prev,
       [categoryName]: color
     }));
-    
-    // You might also want to add an empty product for this category
-    // or just let it exist as a category option for future products
   };
 
-  // Handle viewing products by category
   const handleViewProducts = (categoryName: string) => {
-    // Switch to inventory tab and filter by the selected category
-    setActiveTab('inventory');
+    setActiveSection('inventory');
     setSelectedCategory(categoryName);
   };
 
@@ -232,32 +229,24 @@ const Inventory: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards - Show for both tabs but with different data */}
-      {activeTab === 'inventory' ? (
+      {/* Summary Cards - Show for both sections but with different data */}
+      {activeSection === 'inventory' ? (
         <InventoryStats stats={inventoryStats} />
       ) : (
-        // Create a custom stats component for categories that matches InventoryStats design
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Total Categories Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Categories</h3>
             <p className="text-3xl font-bold text-gray-900">{categoryStats.totalItems}</p>
           </div>
-
-          {/* Total Products Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Products</h3>
             <p className="text-3xl font-bold text-gray-900">{categoryStats.totalProducts}</p>
             <p className="text-xs text-gray-400 mt-1">Across all categories</p>
           </div>
-
-          {/* Total Stock Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Stock</h3>
             <p className="text-3xl font-bold text-gray-900">{categoryStats.totalStock}</p>
           </div>
-
-          {/* Total Value Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
             <p className="text-3xl font-bold text-gray-900">
@@ -266,60 +255,78 @@ const Inventory: React.FC = () => {
           </div>
         </div>
       )}
-      
-      {/* Header Controls with Tabs */}
-      <InventoryFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        categories={categories}
-        filterOpen={filterOpen}
-        setFilterOpen={setFilterOpen}
-        onAddItem={handleAddItem}
-        onAddCategory={handleAddCategory}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        totalItems={activeTab === 'inventory' ? filteredItems.length : categoryData.length}
-      />
 
-      {/* Conditional Content Based on Active Tab */}
-      {activeTab === 'inventory' ? (
-        <>
-          {/* Inventory Table */}
-          <InventoryTable
-            items={filteredItems}
-            onViewItem={handleViewItem}
-            onEditItem={handleEditItem}
-            onDeleteItem={handleDeleteItem}
-          />
+      <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={setActiveSection}>
+        {activeSection === 'inventory' && (
+          <div className="space-y-6">
+            <div className='flex justify-between items-center mb-0'>
+              <InventoryFilters
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                categories={categories}
+                filterOpen={filterOpen}
+                setFilterOpen={setFilterOpen}
+                onAddItem={handleAddItem}
+                totalItems={filteredItems.length}
+                activeSection={activeSection}
+                onAddCategory={handleAddCategory}
+                showTabsAndTitle={false} // Hide tabs since MainLayoutCard handles them
+              />
+            </div>
 
-          {/* Pagination */}
-          <InventoryActions
-            currentPage={currentPage}
-            totalPages={Math.ceil(filteredItems.length / 10)}
-            filteredCount={filteredItems.length}
-            totalCount={inventoryItems.length}
-            onPageChange={handlePageChange}
-          />
-        </>
-      ) : (
-        <>
-          {/* Category Content - WITHOUT the header stats since they're now at the top */}
-          <CategoryContent
-            categories={categoryData}
-            currentPage={currentPage}
-            totalPages={Math.ceil(categoryData.length / 10)}
-            filteredCount={categoryData.length}
-            totalCount={categoryData.length}
-            onPageChange={handlePageChange}
-            onViewProducts={handleViewProducts}
-            showHeaderStats={false} // Add this prop to hide header stats
-          />
-        </>
-      )}
+            <InventoryTable
+              items={filteredItems}
+              onViewItem={handleViewItem}
+              onEditItem={handleEditItem}
+              onDeleteItem={handleDeleteItem}
+            />
 
-      {/* Add Product Modal */}
+            <InventoryActions
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredItems.length / 10)}
+              filteredCount={filteredItems.length}
+              totalCount={inventoryItems.length}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
+
+        {activeSection === 'category' && (
+          <div className="space-y-6">
+            <div className='flex justify-between items-center mb-0'>
+              <InventoryFilters
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                categories={categories}
+                filterOpen={filterOpen}
+                setFilterOpen={setFilterOpen}
+                onAddItem={handleAddCategory}
+                totalItems={categoryData.length}
+                activeSection={activeSection}
+                onAddCategory={handleAddCategory}
+                showTabsAndTitle={false}
+              />
+            </div>
+
+            <CategoryContent
+              categories={categoryData}
+              currentPage={currentPage}
+              totalPages={Math.ceil(categoryData.length / 10)}
+              filteredCount={categoryData.length}
+              totalCount={categoryData.length}
+              onPageChange={handlePageChange}
+              onViewProducts={handleViewProducts}
+              showHeaderStats={false}
+            />
+          </div>
+        )}
+      </MainLayoutCard>
+
+      {/* Modals */}
       <AddProductModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -327,7 +334,6 @@ const Inventory: React.FC = () => {
         categories={categories}
       />
 
-      {/* Edit Product Modal */}
       <EditProductModal
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
@@ -336,7 +342,6 @@ const Inventory: React.FC = () => {
         categories={categories}
       />
 
-      {/* UPDATED: Add Category Modal with color support */}
       <AddCategoryModal
         isOpen={isAddCategoryModalOpen}
         onClose={() => setIsAddCategoryModalOpen(false)}
