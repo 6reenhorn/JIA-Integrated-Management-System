@@ -8,9 +8,10 @@ import JuanPay from './JuanPay';
 
 interface EWalletProps {
   initialTab?: EWalletTab;
+  onTabChange?: (tab: EWalletTab) => void;
 }
 
-const EWallet: React.FC<EWalletProps> = ({ initialTab = 'Overview' }) => {
+const EWallet: React.FC<EWalletProps> = ({ initialTab = 'Overview', onTabChange }) => {
   const [activeTab, setActiveTab] = useState<EWalletTab>(initialTab);
 
   // Update activeTab when initialTab changes (useful for sidebar navigation)
@@ -19,6 +20,13 @@ const EWallet: React.FC<EWalletProps> = ({ initialTab = 'Overview' }) => {
   }, [initialTab]);
 
   const tabs: EWalletTab[] = ['Overview', 'GCash', 'PayMaya', 'JuanPay'];
+
+  const handleTabChange = (tab: EWalletTab) => {
+    setActiveTab(tab);
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
 
   const renderContent = (): React.ReactNode => {
     switch (activeTab) {
@@ -43,7 +51,7 @@ const EWallet: React.FC<EWalletProps> = ({ initialTab = 'Overview' }) => {
           {tabs.map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab
                   ? 'border-gray-900 text-gray-900'

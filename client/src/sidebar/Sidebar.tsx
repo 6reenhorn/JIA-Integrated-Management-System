@@ -17,6 +17,7 @@ export interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const mainMenuItems: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, category: 'Main Menu' },
@@ -32,7 +33,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
 
   // Define functional sections for E-Wallet
   const getEWalletSections = () => [
-    { id: 'e-wallet-overview', label: 'Overview' },
     { id: 'e-wallet-gcash', label: 'GCash' },
     { id: 'e-wallet-paymaya', label: 'PayMaya' },
     { id: 'e-wallet-juanpay', label: 'JuanPay' },
@@ -88,29 +88,54 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     return sectionId.startsWith('e-wallet-');
   };
 
-  const renderMenuItem = (item: MenuItem) => (
-    <li key={item.id}>
-      <button
-        onClick={() => {
-          const isCurrentlyInThisModule = activeItem === item.id || activeItem.startsWith(item.id + '-');
-          //sidebar behavior :)
-          if (isCurrentlyInThisModule && expanded === item.id) {
-            setExpanded(null);
-          } else if (isCurrentlyInThisModule && expanded !== item.id) {
-            setExpanded(item.id);
-          } else {
-            setExpanded(item.id);
-            onItemClick(item.id); 
-          }
-        }}
-        className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
-          activeItem === item.id || activeItem.startsWith(item.id + '-') ? 'bg-gray-600 text-white' : 'text-gray-300'
-        }`}
-      >
-        <span className="flex-shrink-0">{item.icon}</span>
-      </button>
-    </li>
-  );
+  // Check if item is currently active (including sub-sections)
+  const isItemActive = (itemId: string) => {
+    return activeItem === itemId || activeItem.startsWith(itemId + '-');
+  };
+
+  const renderMenuItem = (item: MenuItem) => {
+    const isActive = isItemActive(item.id);
+    const showTooltip = hoveredItem === item.id && !isActive;
+
+    return (
+      <li key={item.id} className="relative">
+        <button
+          onMouseEnter={() => setHoveredItem(item.id)}
+          onMouseLeave={() => setHoveredItem(null)}
+          onClick={() => {
+            const isCurrentlyInThisModule = isActive;
+            //sidebar behavior :)
+            if (isCurrentlyInThisModule && expanded === item.id) {
+              setExpanded(null);
+            } else if (isCurrentlyInThisModule && expanded !== item.id) {
+              setExpanded(item.id);
+            } else {
+              setExpanded(item.id);
+              onItemClick(item.id); 
+            }
+          }}
+          className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
+            isActive ? 'bg-gray-600 text-white' : 'text-gray-300'
+          }`}
+        >
+          <span className="flex-shrink-0">{item.icon}</span>
+        </button>
+        
+        {/* Tooltip */}
+        {showTooltip && (
+          <div className="absolute left-16 top-1/2 transform -translate-y-1/2 ml-2 z-50">
+            <div className="bg-gray-700 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap shadow-lg border border-gray-600">
+              {item.label}
+              {/* Arrow pointing to the button */}
+              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1">
+                <div className="w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-gray-700"></div>
+              </div>
+            </div>
+          </div>
+        )}
+      </li>
+    );
+  };
 
   // Full sidebar content
   const renderFullSidebar = (itemId: string) => {

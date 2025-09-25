@@ -7,23 +7,43 @@ import EWallet from '../components/e-wallet/EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
+import type { EWalletTab } from '../types/ewallet_types';
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const handleEWalletTabChange = (tab: EWalletTab) => {
+
+    const tabToActiveItem: Record<EWalletTab, string> = {
+      'Overview': 'e-wallet',
+      'GCash': 'e-wallet-gcash',
+      'PayMaya': 'e-wallet-paymaya',
+      'JuanPay': 'e-wallet-juanpay'
+    };
+    
+    setActiveItem(tabToActiveItem[tab]);
+  };
 
   const renderContent = (): React.ReactNode => {
     // Handle E-Wallet sections
     if (activeItem.startsWith('e-wallet')) {
+      if (activeItem === 'e-wallet') {
+        // Default E-Wallet shows Overview tab
+        return (
+          <EWallet 
+            key={activeItem} 
+            initialTab="Overview" 
+            onTabChange={handleEWalletTabChange}
+          />
+        );
+      }
+      
       const section = activeItem.replace('e-wallet-', '');
       
       // Map section IDs to E-Wallet tab names
-      let initialTab: 'Overview' | 'GCash' | 'PayMaya' | 'JuanPay' = 'Overview';
+      let initialTab: EWalletTab = 'Overview';
       
       switch (section) {
-        case 'overview':
-          initialTab = 'Overview';
-          break;
         case 'gcash':
           initialTab = 'GCash';
           break;
@@ -37,7 +57,13 @@ const Dashboard: React.FC = () => {
           initialTab = 'Overview';
       }
       
-      return <EWallet key={activeItem} initialTab={initialTab} />;
+      return (
+        <EWallet 
+          key={activeItem} 
+          initialTab={initialTab} 
+          onTabChange={handleEWalletTabChange}
+        />
+      );
     }
 
     // Handle main menu items
@@ -49,7 +75,11 @@ const Dashboard: React.FC = () => {
       case 'employees':
         return <Employees />;
       case 'e-wallet':
-        return <EWallet />;
+        return (
+          <EWallet 
+            onTabChange={handleEWalletTabChange}
+          />
+        );
       case 'settings':
         return <Settings />;
       case 'about':
@@ -62,11 +92,13 @@ const Dashboard: React.FC = () => {
   const getPageTitle = (): string => {
     // Handle E-Wallet sections
     if (activeItem.startsWith('e-wallet')) {
+      if (activeItem === 'e-wallet') {
+        return 'E-Wallet';
+      }
+      
       const section = activeItem.replace('e-wallet-', '');
       
       switch (section) {
-        case 'overview':
-          return 'E-Wallet Overview';
         case 'gcash':
           return 'GCash';
         case 'paymaya':
@@ -100,11 +132,13 @@ const Dashboard: React.FC = () => {
   const getHeaderSubtitle = (): string => {
     // Handle E-Wallet sections
     if (activeItem.startsWith('e-wallet')) {
+      if (activeItem === 'e-wallet') {
+        return 'Complete overview of all your e-wallet accounts';
+      }
+      
       const section = activeItem.replace('e-wallet-', '');
       
       switch (section) {
-        case 'overview':
-          return 'Complete overview of all your e-wallet accounts';
         case 'gcash':
           return 'Manage your GCash transactions and balance';
         case 'paymaya':
@@ -125,7 +159,7 @@ const Dashboard: React.FC = () => {
       case 'employees':
         return 'Manage your team members and roles';
       case 'e-wallet':
-        return 'Track transactions and payments';
+        return 'Complete overview of all your e-wallet accounts';
       default:
         return '';
     }
