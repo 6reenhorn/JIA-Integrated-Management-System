@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { EWalletTab } from '../../types/ewallet_types';
+import LayoutCard from '../layout/LayoutCard';
 
 import Overview from './Overview';
 import GCash from './Gcash';
@@ -44,9 +45,8 @@ const EWallet: React.FC<EWalletProps> = ({ initialTab = 'Overview', onTabChange 
   };
 
   return (
-    <div className="space-y-6">
-      {/* Navigation Tabs */}
-      <div className="mb-8">
+    <LayoutCard>
+      <div className="mb-4">
         <div className="flex space-x-8 border-b border-gray-300">
           {tabs.map((tab) => (
             <button
@@ -66,7 +66,7 @@ const EWallet: React.FC<EWalletProps> = ({ initialTab = 'Overview', onTabChange 
 
       {/* Dynamic Content */}
       {renderContent()}
-    </div>
+    </LayoutCard>
   );
 };
 
