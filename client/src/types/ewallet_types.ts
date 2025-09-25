@@ -88,4 +88,5 @@ export type EWalletTab = 'Overview' | 'GCash' | 'PayMaya' | 'JuanPay';
 
 export interface EWalletProps {
   initialTab?: EWalletTab;
+  onTabChange?: (tab: EWalletTab) => void;
 }
