@@ -1,0 +1,7 @@
+- [x] Update outer div className to "overflow-auto max-h-[370px] border-2 border-[#E5E7EB] rounded-lg"
+- [x] Update tbody className to "divide-y divide-gray-200" (remove max-h, overflow-y-auto, block)
+- [ ] Update table class to "table-fixed w-full"
+- [ ] Update thead class to "table-header-group border-[#E5E7EB] border-b"
+- [ ] Update tbody class to "block overflow-y-auto max-h-[370px] divide-y divide-gray-200"
+- [ ] Update outer div class to "border-2 border-[#E5E7EB] rounded-lg"
+- [ ] Add fixed widths to th and td for alignment
