@@ -1,102 +1,175 @@
-import React from 'react';
+import React, { useState } from 'react';
 import LayoutCard from '../layout/LayoutCard';
-import type { 
-  SummaryCardProps, 
-  RecordCardProps,
-  TransactionItem
-} from '../../types/ewallet_types';
+import MainLayoutCard from '../layout/MainLayoutCard';
+import { Search } from 'lucide-react';
 
 const PayMaya: React.FC = () => {
-  const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
-    <LayoutCard title={title} className="min-h-[200px]">
-      <div className="space-y-3">
-        {data.map((item, index) => (
-          <div key={index} className="flex justify-between items-center">
-            <span className="text-gray-500 text-sm">{item.label}</span>
-            <span className={`font-medium ${item.value.startsWith('-') ? 'text-red-500' : 'text-gray-900'}`}>
-              {item.value}
-            </span>
-          </div>
-        ))}
-      </div>
-    </LayoutCard>
-  );
+  const [activeSection, setActiveSection] = useState('records');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const RecordCard: React.FC<RecordCardProps> = ({ title, count }) => (
-    <LayoutCard className="text-center min-h-[120px]">
-      <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
-      <div className="text-4xl font-bold text-gray-900">
-        {count}
-      </div>
-    </LayoutCard>
-  );
-
-  const paymayaData = [
-    { label: 'Total Cash-In', value: '₱7,500.00' },
-    { label: 'Total Cash-Out', value: '-₱500.00' },
-    { label: 'Service Charge', value: '₱10.00' },
-    { label: 'Net Amount', value: '₱7,010.00' }
+  const sections = [
+    { label: 'PayMaya Records', key: 'records' }
   ];
 
-  const recentTransactions: TransactionItem[] = [
-    { type: 'Load Wallet', date: 'Sept 24, 2025', amount: '+₱3,000.00', isPositive: true },
-    { type: 'Online Purchase', date: 'Sept 23, 2025', amount: '-₱250.00', isPositive: false },
-    { type: 'Load Wallet', date: 'Sept 22, 2025', amount: '+₱4,500.00', isPositive: true }
+  const mockTransactions = [
+    {
+      id: 1,
+      date: '9/24/2025',
+      referenceNumber: 'PM123456',
+      transactionType: 'Load Wallet',
+      amount: 3000.0,
+      serviceCharge: 5.0,
+      chargeMOP: 'PayMaya'
+    },
+    {
+      id: 2,
+      date: '9/23/2025',
+      referenceNumber: 'PM234567',
+      transactionType: 'Online Purchase',
+      amount: 250.0,
+      serviceCharge: 0.0,
+      chargeMOP: 'PayMaya'
+    },
+    {
+      id: 3,
+      date: '9/22/2025',
+      referenceNumber: 'PM345678',
+      transactionType: 'Load Wallet',
+      amount: 4500.0,
+      serviceCharge: 5.0,
+      chargeMOP: 'Cash'
+    }
   ];
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const totalPages = Math.ceil(mockTransactions.length / 10);
 
   return (
     <div className="space-y-6">
-      {/* PayMaya Stats using LayoutCard directly */}
+      {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <LayoutCard className="bg-green-500 min-h-[120px]">
-          <h3 className="text-green-100 font-medium mb-2">PayMaya Balance</h3>
-          <div className="text-3xl font-bold text-white mb-1">₱7,010.00</div>
-          <div className="text-sm text-green-100">Available Funds</div>
+        <LayoutCard className="bg-blue-500 border-gray-500 min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">PayMaya Balance</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,010.00</div>
+          <div className="text-sm text-gray-500">Available Funds</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Total Cash-In</h3>
-          <div className="text-3xl font-bold text-green-600 mb-1">₱7,500.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,500.00</div>
           <div className="text-sm text-gray-500">This Month</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Total Cash-Out</h3>
-          <div className="text-3xl font-bold text-red-500 mb-1">₱500.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱500.00</div>
           <div className="text-sm text-gray-500">This Month</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Service Charges</h3>
-          <div className="text-3xl font-bold text-orange-500 mb-1">₱10.00</div>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱10.00</div>
           <div className="text-sm text-gray-500">Monthly Fee</div>
         </LayoutCard>
       </div>
 
-      {/* PayMaya Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SummaryCard title="PayMaya Summary" data={paymayaData} />
-        <LayoutCard title="Recent Transactions" className="min-h-[200px]">
-          <div className="space-y-3">
-            {recentTransactions.map((transaction, index) => (
-              <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                <div>
-                  <div className="text-sm font-medium text-gray-900">{transaction.type}</div>
-                  <div className="text-xs text-gray-500">{transaction.date}</div>
-                </div>
-                <span className={`font-medium ${transaction.isPositive ? 'text-green-600' : 'text-red-500'}`}>
-                  {transaction.amount}
-                </span>
+      {/* Transaction Table Section */}
+      <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={setActiveSection}>
+        {activeSection === 'records' && (
+          <div className="space-y-6 mt-5">
+            {/* Search and Add Record Button */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search Categories"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-90"
+                />
               </div>
-            ))}
-          </div>
-        </LayoutCard>
-      </div>
+              <button className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]/90 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Record
+              </button>
+            </div>
 
-      {/* PayMaya Records */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        <RecordCard title="Total Records" count="3" />
-        <RecordCard title="Load Wallet" count="2" />
-        <RecordCard title="Purchases" count="1" />
-        <RecordCard title="Pending" count="0" />
-      </div>
+            {/* Transaction Table */}
+            <div className="overflow-x-auto border-2 border-gray-200 rounded-lg">
+              <table className="w-full">
+                <thead className="border-b border-gray-200" style={{ backgroundColor: '#EDEDED' }}>
+                  <tr>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Date</th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Reference Number</th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Transaction Type</th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Amount</th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Service Charge</th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Charge MOP</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {mockTransactions.map((transaction) => (
+                    <tr key={transaction.id} className="hover:bg-gray-50">
+                      <td className="py-4 px-6 text-sm text-gray-900">{transaction.date}</td>
+                      <td className="py-4 px-6 text-sm text-gray-900">{transaction.referenceNumber}</td>
+                      <td className="py-4 px-6 text-sm text-gray-900">{transaction.transactionType}</td>
+                      <td className="py-4 px-6 text-sm text-gray-900">{transaction.amount.toFixed(2)}</td>
+                      <td className="py-4 px-6 text-sm text-gray-900">{transaction.serviceCharge.toFixed(2)}</td>
+                      <td className="py-4 px-6 text-sm text-gray-900">{transaction.chargeMOP}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between pt-2">
+              <div className="text-sm text-gray-500">
+                Page {currentPage} of {totalPages}
+              </div>
+
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+
+                {[...Array(Math.min(3, totalPages))].map((_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1 text-sm rounded ${
+                        currentPage === pageNum
+                          ? 'bg-[#02367B] text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </MainLayoutCard>
     </div>
   );
 };
