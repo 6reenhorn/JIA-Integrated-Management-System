@@ -1,2 +1,13 @@
-- [x] Update MainLayoutCard.tsx: Modify props to include sections (array of { label: string, key: string }), activeSection (string), and onSectionChange (function); render sections as clickable tabs/buttons in the title area instead of static h3; make title prop optional.
-- [x] Update Employees.tsx: Add activeSection state; define sections array (e.g., Staff Management, Attendance); update MainLayoutCard usage with new props; conditionally render children content based on activeSection (staff UI for staff, placeholder for attendance).
+# TODO List for JIA-Integrated-Management-System
+
+## Fix Popover Page Shift in Employees.tsx
+
+### Steps:
+- [x] Update the useEffect hook in `client/src/pages/Employees.tsx` to remove `position: fixed`, `overflow`, and `width` styles from `document.documentElement` (html element). Only apply `overflow: hidden` and `paddingRight` to `document.body`.
+- [x] Add `console.log('Popover position:', top, left);` in the `handleRequestDelete` function after calculating the position to verify clamping.
+- [x] Add Tailwind classes `max-h-[80px] overflow-y-auto` to the popover div for handling potential content overflow.
+- [x] Ensure the cleanup function in the useEffect only resets the body styles (`overflow` and `paddingRight`).
+- [x] Test the changes: Open the Employees page, trigger the delete popover, confirm no page shift, check console for position logs, and verify popover positioning.
+
+## Previous Tasks (if any)
+<!-- Add any existing todos here if needed -->

@@ -7,14 +7,14 @@ interface EmployeeTableProps {
   employees: Employee[];
   onViewEmployee: (id: number) => void;
   onEditEmployee: (id: number) => void;
-  onDeleteEmployee: (id: number) => void;
+  onRequestDelete: (id: number, event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 const EmployeeTable: React.FC<EmployeeTableProps> = ({
   employees,
   onViewEmployee,
   onEditEmployee,
-  onDeleteEmployee
+  onRequestDelete
 }) => {
   return (
     <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
@@ -81,7 +81,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       <Edit className="w-4 h-4 text-gray-600" />
                     </button>
                     <button
-                      onClick={() => onDeleteEmployee(employee.id)}
+                      onClick={(e) => onRequestDelete(employee.id, e)}
                       className="p-1 hover:bg-gray-100 rounded transition-colors"
                       title="Delete"
                     >
