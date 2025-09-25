@@ -145,6 +145,28 @@ const Employees: React.FC = () => {
     setIsEditModalOpen(false);
   }
 
+  const handleAddEmployee = (newEmployee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string }) => {
+    // Generate a new ID and empId for the new employee
+    const newId = Math.max(...employees.map(emp => emp.id)) + 1;
+    const newEmpId = `EMP${String(newId).padStart(3, '0')}`;
+
+    // Create the full employee object
+    const employee: Employee = {
+      ...newEmployee,
+      id: newId,
+      empId: newEmpId,
+      lastLogin: 'Never' // Default for new employees
+    };
+
+    // Add the new employee to the state
+    setEmployees(prevEmployees => [...prevEmployees, employee]);
+
+    // Close the modal
+    setIsModalOpen(false);
+
+    console.log('Adding new employee:', employee);
+  }
+
   return (
     <div className="space-y-6">
       <EmployeeStats stats={stats} />
@@ -187,7 +209,7 @@ const Employees: React.FC = () => {
 
           {/* Modal content */}
           <div className='relative z-[60]'>
-            <AddStaffModal onClose={toggleModal} />
+            <AddStaffModal onClose={toggleModal} onAddEmployee={handleAddEmployee} />
           </div>
         </div>
       )}

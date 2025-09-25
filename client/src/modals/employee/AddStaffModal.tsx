@@ -1,13 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
+import type { Employee } from '../../types/employee_types';
 
 interface AddStaffModalProps {
   onClose?: () => void;
+  onAddEmployee?: (employee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string }) => void;
 }
 
-const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
+const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [salary, setSalary] = useState('');
+  const [contactName, setContactName] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<'Active' | 'Inactive'>('Active');
   const [selectedStatusText, setSelectedStatusText] = useState('Select Status');
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedRoleText, setSelectedRoleText] = useState('Select Role');
@@ -26,7 +36,7 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
     setIsRoleDropdownOpen(!isRoleDropdownOpen);
   };
 
-  const handleStatusOptionClick = (value: string, text: string) => {
+  const handleStatusOptionClick = (value: 'Active' | 'Inactive', text: string) => {
     setSelectedStatus(value);
     setSelectedStatusText(text);
     setIsStatusDropdownOpen(false);
@@ -83,26 +93,26 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_first_name" className="text-[12px] font-bold">First Name</label>
-                  <input type="text" id="employee_first_name" name="employee_first_name" placeholder='Enter first name' className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" />
+                  <input type="text" id="employee_first_name" name="employee_first_name" placeholder='Enter first name' value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_last_name" className="text-[12px] font-bold">Last Name</label>
-                  <input type="text" id="employee_last_name" name="employee_last_name" placeholder='Enter last name' className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <input type="text" id="employee_last_name" name="employee_last_name" placeholder='Enter last name' value={lastName} onChange={(e) => setLastName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_email_address" className="text-[12px] font-bold">Email Address</label>
-                  <input type="text" id="employee_email_address" name="employee_email_address" placeholder='Enter email address' className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <input type="text" id="employee_email_address" name="employee_email_address" placeholder='Enter email address' value={email} onChange={(e) => setEmail(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_phone_number" className="text-[12px] font-bold">Phone Number</label>
-                  <input type="text" id="employee_phone_number" name="employee_phone_number" placeholder='Enter phone number' className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <input type="text" id="employee_phone_number" name="employee_phone_number" placeholder='Enter phone number' value={phone} onChange={(e) => setPhone(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
                 </div>
               </div>
               <div className='mt-2'>
                 <label htmlFor="employee_address" className="text-[12px] font-bold">Address</label>
-                <textarea name="employee_address" id="employee_address" placeholder='Enter complete address' className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"></textarea>
+                <textarea name="employee_address" id="employee_address" placeholder='Enter complete address' value={address} onChange={(e) => setAddress(e.target.value)} className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"></textarea>
               </div>
             </div>
           </div>
@@ -145,15 +155,15 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
                 >
                   <div
                     className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    data-value="active"
-                    onClick={() => handleStatusOptionClick('active', 'Active')}
+                    data-value="Active"
+                    onClick={() => handleStatusOptionClick('Active', 'Active')}
                   >
                     Active
                   </div>
                   <div
                     className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    data-value="inactive"
-                    onClick={() => handleStatusOptionClick('inactive', 'Inactive')}
+                    data-value="Inactive"
+                    onClick={() => handleStatusOptionClick('Inactive', 'Inactive')}
                   >
                     Inactive
                   </div>
@@ -210,9 +220,9 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
                   <div
                     className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
                     data-value="sales_associates"
-                    onClick={() => handleRoleOptionClick('sales_associates', 'Sales Associates')}
+                    onClick={() => handleRoleOptionClick('sales_associates', 'Sales Associate')}
                   >
-                    Sales Associates
+                    Sales Associate
                   </div>
                   <div
                     className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
@@ -233,7 +243,7 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
             </div>
             <div className='mt-2'>
               <label htmlFor="employee-salary" className='text-[12px] font-bold'>Salary</label>
-              <input type="text" id='employee-salary' name='employee-salary' placeholder='Enter salary (Optional)' className="border border-gray-300 rounded-md w-full px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+              <input type="text" id='employee-salary' name='employee-salary' placeholder='Enter salary (Optional)' value={salary} onChange={(e) => setSalary(e.target.value)} className="border border-gray-300 rounded-md w-full px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
             </div>
           </div>
           <div>
@@ -243,11 +253,11 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div className="flex flex-col justify-center">
                     <label htmlFor="employee_contact_name" className="text-[12px] font-bold">Contact Name</label>
-                    <input type="text" id="employee_contact_name" name="employee_contact_name" placeholder="Enter contact name" className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                    <input type="text" id="employee_contact_name" name="employee_contact_name" placeholder="Enter contact name" value={contactName} onChange={(e) => setContactName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
                   </div>
                   <div>
                     <label htmlFor="employee_contact_number" className="text-[12px] font-bold">Phone Number</label>
-                    <input type="text" id="employee_contact_number" name="employee_contact_number" placeholder="Enter phone number" className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none w-full" />
+                    <input type="text" id="employee_contact_number" name="employee_contact_number" placeholder="Enter phone number" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none w-full" />
                   </div>
                 </div>
                 <div className='mt-2 w-full'>
@@ -334,7 +344,23 @@ const AddStaffModal = ({ onClose }: AddStaffModalProps) => {
           onClick={onClose}>
           Cancel
         </button>
-        <button className="border border-gray-300 rounded-md px-3 py-1 bg-gray-500">
+        <button className="border border-gray-300 rounded-md px-3 py-1 bg-blue-500 text-white" onClick={() => {
+          if (onAddEmployee) {
+            onAddEmployee({
+              name: `${firstName} ${lastName}`,
+              role: selectedRoleText,
+              department: '',
+              contact: `${email}\n${phone}\n${address}`,
+              status: selectedStatus,
+              avatar: undefined,
+              address,
+              salary,
+              contactName,
+              contactNumber,
+              relationship: selectedRelationshipText
+            });
+          }
+        }}>
           Add Employee
         </button>
       </div>
