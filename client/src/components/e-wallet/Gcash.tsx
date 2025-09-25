@@ -1,25 +1,20 @@
+import React from 'react';
+import type { 
+  StatCardProps, 
+  SummaryCardProps, 
+  RecordCardProps,
+  TransactionItem
+} from '../../types/ewallet_types';
 
-interface StatCardProps {
-  title: string;
-  amount: string;
-  subtitle: string;
-  bgColor?: string;
-  textColor?: string;
-  subtitleColor?: string;
-}
-
-interface SummaryCardProps {
-  title: string;
-  data: Array<{ label: string; value: string }>;
-}
-
-interface RecordCardProps {
-  title: string;
-  count: string;
-}
-
-const GCash = () => {
-  const StatCard = ({ title, amount, subtitle, bgColor = 'bg-white', textColor = 'text-blue-600', subtitleColor = 'text-gray-500' }: StatCardProps) => (
+const GCash: React.FC = () => {
+  const StatCard: React.FC<StatCardProps> = ({ 
+    title, 
+    amount, 
+    subtitle, 
+    bgColor = 'bg-white', 
+    textColor = 'text-blue-600', 
+    subtitleColor = 'text-gray-500' 
+  }) => (
     <div className={`${bgColor} rounded-lg p-6 border border-gray-300`}>
       <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
       <div className={`text-3xl font-bold ${textColor} mb-1`}>
@@ -31,7 +26,7 @@ const GCash = () => {
     </div>
   );
 
-  const SummaryCard = ({ title, data }: SummaryCardProps) => (
+  const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
     <div className="bg-white rounded-lg p-6 border border-gray-300">
       <h3 className="text-gray-500 font-medium mb-4">{title}</h3>
       <div className="space-y-3">
@@ -47,7 +42,7 @@ const GCash = () => {
     </div>
   );
 
-  const RecordCard = ({ title, count }: RecordCardProps) => (
+  const RecordCard: React.FC<RecordCardProps> = ({ title, count }) => (
     <div className="bg-white rounded-lg p-6 border border-gray-300 text-center">
       <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
       <div className="text-4xl font-bold text-gray-900">
@@ -61,6 +56,12 @@ const GCash = () => {
     { label: 'Total Cash-Out', value: '-₱500.00' },
     { label: 'Service Charge', value: '₱10.00' },
     { label: 'Net Amount', value: '₱7,010.00' }
+  ];
+
+  const recentTransactions: TransactionItem[] = [
+    { type: 'Cash In', date: 'Sept 24, 2025', amount: '+₱2,000.00', isPositive: true },
+    { type: 'Payment', date: 'Sept 23, 2025', amount: '-₱150.00', isPositive: false },
+    { type: 'Cash In', date: 'Sept 22, 2025', amount: '+₱5,500.00', isPositive: true }
   ];
 
   return (
@@ -101,27 +102,17 @@ const GCash = () => {
         <div className="bg-white rounded-lg p-6 border border-gray-300">
           <h3 className="text-gray-500 font-medium mb-4">Recent Transactions</h3>
           <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <div>
-                <div className="text-sm font-medium text-gray-900">Cash In</div>
-                <div className="text-xs text-gray-500">Sept 24, 2025</div>
+            {recentTransactions.map((transaction, index) => (
+              <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                <div>
+                  <div className="text-sm font-medium text-gray-900">{transaction.type}</div>
+                  <div className="text-xs text-gray-500">{transaction.date}</div>
+                </div>
+                <span className={`font-medium ${transaction.isPositive ? 'text-green-600' : 'text-red-500'}`}>
+                  {transaction.amount}
+                </span>
               </div>
-              <span className="font-medium text-green-600">+₱2,000.00</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <div>
-                <div className="text-sm font-medium text-gray-900">Payment</div>
-                <div className="text-xs text-gray-500">Sept 23, 2025</div>
-              </div>
-              <span className="font-medium text-red-500">-₱150.00</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <div>
-                <div className="text-sm font-medium text-gray-900">Cash In</div>
-                <div className="text-xs text-gray-500">Sept 22, 2025</div>
-              </div>
-              <span className="font-medium text-green-600">+₱5,500.00</span>
-            </div>
+            ))}
           </div>
         </div>
       </div>

@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import type { EWalletTab } from '../../types/ewallet_types';
 
 import Overview from './Overview';
 import GCash from './Gcash';
 import PayMaya from './PayMaya';
 import JuanPay from './JuanPay';
 
-const EWallet = () => {
-  const [activeTab, setActiveTab] = useState('Overview');
+const EWallet: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<EWalletTab>('Overview');
 
-  const tabs = ['Overview', 'GCash', 'PayMaya', 'JuanPay'];
+  const tabs: EWalletTab[] = ['Overview', 'GCash', 'PayMaya', 'JuanPay'];
 
-  const renderContent = () => {
+  const renderContent = (): React.ReactNode => {
     switch (activeTab) {
       case 'Overview':
         return <Overview />;
@@ -53,5 +54,3 @@ const EWallet = () => {
 };
 
 export default EWallet;
-
-// uhmm 
