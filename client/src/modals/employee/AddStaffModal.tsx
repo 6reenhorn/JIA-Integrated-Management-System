@@ -220,9 +220,9 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
                   <div
                     className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
                     data-value="sales_associates"
-                    onClick={() => handleRoleOptionClick('sales_associates', 'Sales Associates')}
+                    onClick={() => handleRoleOptionClick('sales_associates', 'Sales Associate')}
                   >
-                    Sales Associates
+                    Sales Associate
                   </div>
                   <div
                     className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
