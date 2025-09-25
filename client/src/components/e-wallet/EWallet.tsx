@@ -52,7 +52,7 @@ const EWallet: React.FC<EWalletProps> = ({ initialTab = 'Overview', onTabChange 
             <button
               key={tab}
               onClick={() => handleTabChange(tab)}
-              className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-3 px-4 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab
                   ? 'border-gray-900 text-gray-900'
                   : 'border-transparent text-gray-500'
