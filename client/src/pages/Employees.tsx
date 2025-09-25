@@ -242,7 +242,13 @@ const Employees: React.FC = () => {
           <div className="space-y-6">
             <div className='flex justify-between items-center mb-0'>
               <EmployeeSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-              <EmployeeFilters onAddStaff={toggleModal} />
+              <EmployeeFilters 
+                onAddStaff={toggleModal} 
+                roleFilter={roleFilter}
+                statusFilter={statusFilter}
+                onRoleChange={setRoleFilter}
+                onStatusChange={setStatusFilter}
+              />
             </div>
 
             <EmployeeTable
