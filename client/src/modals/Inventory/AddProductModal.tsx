@@ -248,13 +248,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                           {category}
                         </div>
                       ))}
-                      
-                      <div
-                        onClick={() => setShowAddCategory(true)}
-                        className="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 border-t border-gray-200 cursor-pointer transition-colors"
-                      >
-                        + Add New Category
-                      </div>
                     </div>
                   </div>
 

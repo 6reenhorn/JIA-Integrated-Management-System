@@ -6,13 +6,41 @@ import Employees from './Employees';
 import EWallet from '../components/e-wallet/EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
-import Navbar from '../navbar/Navbar';
+import Navbar from '../navbar/navbar';
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   const renderContent = (): React.ReactNode => {
+    // Handle E-Wallet sections
+    if (activeItem.startsWith('e-wallet')) {
+      const section = activeItem.replace('e-wallet-', '');
+      
+      // Map section IDs to E-Wallet tab names
+      let initialTab: 'Overview' | 'GCash' | 'PayMaya' | 'JuanPay' = 'Overview';
+      
+      switch (section) {
+        case 'overview':
+          initialTab = 'Overview';
+          break;
+        case 'gcash':
+          initialTab = 'GCash';
+          break;
+        case 'paymaya':
+          initialTab = 'PayMaya';
+          break;
+        case 'juanpay':
+          initialTab = 'JuanPay';
+          break;
+        default:
+          initialTab = 'Overview';
+      }
+      
+      return <EWallet key={activeItem} initialTab={initialTab} />;
+    }
+
+    // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
         return <Overview />;
@@ -32,6 +60,25 @@ const Dashboard: React.FC = () => {
   };
 
   const getPageTitle = (): string => {
+    // Handle E-Wallet sections
+    if (activeItem.startsWith('e-wallet')) {
+      const section = activeItem.replace('e-wallet-', '');
+      
+      switch (section) {
+        case 'overview':
+          return 'E-Wallet Overview';
+        case 'gcash':
+          return 'GCash';
+        case 'paymaya':
+          return 'PayMaya';
+        case 'juanpay':
+          return 'JuanPay';
+        default:
+          return 'E-Wallet';
+      }
+    }
+
+    // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
         return 'Overview';
@@ -51,6 +98,25 @@ const Dashboard: React.FC = () => {
   };
 
   const getHeaderSubtitle = (): string => {
+    // Handle E-Wallet sections
+    if (activeItem.startsWith('e-wallet')) {
+      const section = activeItem.replace('e-wallet-', '');
+      
+      switch (section) {
+        case 'overview':
+          return 'Complete overview of all your e-wallet accounts';
+        case 'gcash':
+          return 'Manage your GCash transactions and balance';
+        case 'paymaya':
+          return 'Track your PayMaya payments and balance';
+        case 'juanpay':
+          return 'Monitor your JuanPay transactions and balance';
+        default:
+          return 'Track transactions and payments';
+      }
+    }
+
+    // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
         return 'Monitor your inventory at a glance';
