@@ -1,33 +1,13 @@
 import React from 'react';
+import LayoutCard from '../layout/LayoutCard';
 import type { 
-  StatCardProps, 
   SummaryCardProps, 
   RecordCardProps
 } from '../../types/ewallet_types';
 
 const Overview: React.FC = () => {
-  const StatCard: React.FC<StatCardProps> = ({ 
-    title, 
-    amount, 
-    subtitle, 
-    bgColor = 'bg-white', 
-    textColor = 'text-blue-600', 
-    subtitleColor = 'text-gray-500' 
-  }) => (
-    <div className={`${bgColor} rounded-lg p-6 border border-gray-300`}>
-      <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
-      <div className={`text-3xl font-bold ${textColor} mb-1`}>
-        {amount}
-      </div>
-      <div className={`text-sm ${subtitleColor}`}>
-        {subtitle}
-      </div>
-    </div>
-  );
-
   const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
-    <div className="bg-white rounded-lg p-6 border border-gray-300">
-      <h3 className="text-gray-500 font-medium mb-4">{title}</h3>
+    <LayoutCard title={title} className="min-h-[200px]">
       <div className="space-y-3">
         {data.map((item, index) => (
           <div key={index} className="flex justify-between items-center">
@@ -38,16 +18,16 @@ const Overview: React.FC = () => {
           </div>
         ))}
       </div>
-    </div>
+    </LayoutCard>
   );
 
   const RecordCard: React.FC<RecordCardProps> = ({ title, count }) => (
-    <div className="bg-white rounded-lg p-6 border border-gray-300 text-center">
+    <LayoutCard className="text-center min-h-[120px]">
       <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
       <div className="text-4xl font-bold text-gray-900">
         {count}
       </div>
-    </div>
+    </LayoutCard>
   );
 
   const gcashData = [
@@ -74,34 +54,28 @@ const Overview: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Main Stats Cards */}
+      {/* Main Stats using LayoutCard directly */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Balance"
-          amount="₱14,480.00"
-          subtitle="Combined Funds"
-          bgColor="bg-green-500"
-          textColor="text-white"
-          subtitleColor="text-green-100"
-        />
-        <StatCard
-          title="GCash Net"
-          amount="₱7,380.00"
-          subtitle="After Charges"
-          textColor="text-blue-600"
-        />
-        <StatCard
-          title="JuanPay"
-          amount="₱7,380.00"
-          subtitle="Total Revenue"
-          textColor="text-green-600"
-        />
-        <StatCard
-          title="Today's Record"
-          amount="0"
-          subtitle="Active Today"
-          textColor="text-red-500"
-        />
+        <LayoutCard className="bg-blue-500 border-gray-500 min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Balance</h3>
+          <div className="text-3xl font-bold text-black mb-1">₱14,480.00</div>
+          <div className="text-sm text-gray-500">Combined Funds</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">GCash Net</h3>
+          <div className="text-3xl font-bold text-blue-600 mb-1">₱7,380.00</div>
+          <div className="text-sm text-gray-500">After Charges</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">JuanPay</h3>
+          <div className="text-3xl font-bold text-green-600 mb-1">₱7,380.00</div>
+          <div className="text-sm text-gray-500">Total Revenue</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Today's Record</h3>
+          <div className="text-3xl font-bold text-red-500 mb-1">0</div>
+          <div className="text-sm text-gray-500">Active Today</div>
+        </LayoutCard>
       </div>
 
       {/* Summary Cards */}
