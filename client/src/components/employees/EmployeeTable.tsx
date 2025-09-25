@@ -18,24 +18,24 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 }) => {
   return (
     <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
-      <table className="w-full">
+      <table className="table-fixed w-full">
         <thead className="border-[#E5E7EB] border-b">
           <tr>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Staff Member</th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Role</th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Contact</th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Status</th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Last Login</th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Actions</th>
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[200px]">Staff Member</th>
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Role</th>
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[200px]">Contact</th>
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Status</th>
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[150px]">Last Login</th>
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Actions</th>
           </tr>
         </thead>
       </table>
       <div className="max-h-[370px] overflow-y-auto min-h-[370px]">
-        <table className="w-full">
+        <table className="table-fixed w-full">
           <tbody className="divide-y divide-gray-200">
             {employees.map((employee) => (
               <tr key={employee.id} className="hover:bg-gray-50">
-                <td className="py-4 px-6">
+                <td className="py-4 px-6 w-[200px]">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
                       <User className="w-5 h-5 text-gray-500" />
@@ -46,25 +46,25 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                     </div>
                   </div>
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-6 w-[100px]">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(employee.role)}`}>
                     {employee.role}
                   </span>
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-6 w-[200px]">
                   <div className="text-sm text-gray-900 whitespace-pre-line">
                     {employee.contact}
                   </div>
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-6 w-[100px]">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(employee.status)}`}>
                     {employee.status}
                   </span>
                 </td>
-                <td className="py-4 px-6 text-sm text-gray-600">
+                <td className="py-4 px-6 text-sm text-gray-600 w-[150px]">
                   {employee.lastLogin}
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-6 w-[120px]">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onViewEmployee(employee.id)}
