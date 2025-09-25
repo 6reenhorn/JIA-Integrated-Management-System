@@ -46,8 +46,8 @@ const InventoryActions: React.FC<InventoryActionsProps> = ({
               onClick={() => onPageChange(pageNum)}
               className={`px-3 py-1.5 text-sm rounded ${
                 currentPage === pageNum
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-500 hover:bg-gray-700'
               }`}
             >
               {pageNum}

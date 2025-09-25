@@ -16,6 +16,7 @@ interface CategoryContentProps {
   totalCount: number;
   onPageChange: (page: number) => void;
   onViewProducts?: (categoryName: string) => void;
+  showHeaderStats?: boolean; // Add this prop to control header stats visibility
 }
 
 const CategoryContent: React.FC<CategoryContentProps> = ({
@@ -24,7 +25,8 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
   totalPages,
   totalCount,
   onPageChange,
-  onViewProducts
+  onViewProducts,
+  showHeaderStats = true // Default to true for backward compatibility
 }) => {
   // Default colors if not provided
   const defaultColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'];
@@ -33,37 +35,39 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
 
   return (
     <>
-      {/* Header Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        {/* Total Categories Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Total Categories</h3>
-          <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
-        </div>
+      {/* Header Stats Cards - Only show if showHeaderStats is true */}
+      {showHeaderStats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          {/* Total Categories Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Categories</h3>
+            <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
+          </div>
 
-        {/* Total Products Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Total Products</h3>
-          <p className="text-3xl font-bold text-gray-900">{totalProducts}</p>
-          <p className="text-xs text-gray-400 mt-1">Across all categories</p>
-        </div>
+          {/* Total Products Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Products</h3>
+            <p className="text-3xl font-bold text-gray-900">{totalProducts}</p>
+            <p className="text-xs text-gray-400 mt-1">Across all categories</p>
+          </div>
 
-        {/* Total Stock Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Total Stock</h3>
-          <p className="text-3xl font-bold text-gray-900">
-            {categories.reduce((sum, category) => sum + category.totalStock, 0)}
-          </p>
-        </div>
+          {/* Total Stock Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Stock</h3>
+            <p className="text-3xl font-bold text-gray-900">
+              {categories.reduce((sum, category) => sum + category.totalStock, 0)}
+            </p>
+          </div>
 
-        {/* Total Value Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
-          <p className="text-3xl font-bold text-gray-900">
-            ₱{categories.reduce((sum, category) => sum + category.totalValue, 0).toLocaleString()}
-          </p>
+          {/* Total Value Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
+            <p className="text-3xl font-bold text-gray-900">
+              ₱{categories.reduce((sum, category) => sum + category.totalValue, 0).toLocaleString()}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Categories Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">

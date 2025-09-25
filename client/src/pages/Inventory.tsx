@@ -79,8 +79,26 @@ const Inventory: React.FC = () => {
     }
   ]);
 
-  // Calculate stats
-  const stats = useMemo(() => calculateStats(inventoryItems), [inventoryItems]);
+  // Calculate stats for inventory
+  const inventoryStats = useMemo(() => calculateStats(inventoryItems), [inventoryItems]);
+
+  // Calculate stats for categories
+  const categoryStats = useMemo(() => {
+    const totalCategories = Array.from(new Set(inventoryItems.map(item => item.category))).length;
+    const totalProducts = inventoryItems.length;
+    const totalStock = inventoryItems.reduce((sum, item) => sum + item.stock, 0);
+    const totalValue = inventoryItems.reduce((sum, item) => sum + item.totalAmount, 0);
+
+    return {
+      totalItems: totalCategories,
+      totalValue: totalValue,
+      lowStockItems: 0, // Categories don't have low stock concept
+      outOfStockItems: 0, // Categories don't have out of stock concept
+      // Add custom properties for categories
+      totalProducts: totalProducts,
+      totalStock: totalStock
+    };
+  }, [inventoryItems]);
 
   // Filter items based on search and category
   const filteredItems = useMemo(() => 
@@ -214,8 +232,40 @@ const Inventory: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards - Only show for inventory tab */}
-      {activeTab === 'inventory' && <InventoryStats stats={stats} />}
+      {/* Summary Cards - Show for both tabs but with different data */}
+      {activeTab === 'inventory' ? (
+        <InventoryStats stats={inventoryStats} />
+      ) : (
+        // Create a custom stats component for categories that matches InventoryStats design
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Total Categories Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Categories</h3>
+            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalItems}</p>
+          </div>
+
+          {/* Total Products Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Products</h3>
+            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalProducts}</p>
+            <p className="text-xs text-gray-400 mt-1">Across all categories</p>
+          </div>
+
+          {/* Total Stock Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Stock</h3>
+            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalStock}</p>
+          </div>
+
+          {/* Total Value Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
+            <p className="text-3xl font-bold text-gray-900">
+              ₱{categoryStats.totalValue.toLocaleString()}
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* Header Controls with Tabs */}
       <InventoryFilters
@@ -255,7 +305,7 @@ const Inventory: React.FC = () => {
         </>
       ) : (
         <>
-          {/* Category Content */}
+          {/* Category Content - WITHOUT the header stats since they're now at the top */}
           <CategoryContent
             categories={categoryData}
             currentPage={currentPage}
@@ -264,6 +314,7 @@ const Inventory: React.FC = () => {
             totalCount={categoryData.length}
             onPageChange={handlePageChange}
             onViewProducts={handleViewProducts}
+            showHeaderStats={false} // Add this prop to hide header stats
           />
         </>
       )}
