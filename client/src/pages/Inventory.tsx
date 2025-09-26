@@ -70,10 +70,11 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     { id: 5, productName: 'Product 5', category: 'Category 5', stock: 69, status: 'In Stock', productPrice: 30.00, totalAmount: 69 * 30.00 },
   ]);
 
+  // for changing the name of tabs
   const sections = [
     { id: 'inventory', label: 'Inventory', key: 'inventory' },
     { id: 'sales', label: 'Sales', key: 'sales' },
-    { id: 'category', label: 'Category', key: 'category' },
+    { id: 'category', label: 'Categories', key: 'category' }, 
   ];
 
   // Stats
@@ -193,7 +194,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       ) : activeSection === 'sales' ? (
         // Sales Stats
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Sales</h3>
             <p className="text-3xl font-bold text-gray-900">{salesRecords.length}</p>
           </div>
@@ -201,20 +202,20 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       ) : (
         // Category stats
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Categories</h3>
             <p className="text-3xl font-bold text-gray-900">{categoryStats.totalItems}</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Products</h3>
             <p className="text-3xl font-bold text-gray-900">{categoryStats.totalProducts}</p>
             <p className="text-xs text-gray-400 mt-1">Across all categories</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Stock</h3>
             <p className="text-3xl font-bold text-gray-900">{categoryStats.totalStock}</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Value</h3>
             <p className="text-3xl font-bold text-gray-900">₱{categoryStats.totalValue.toLocaleString()}</p>
           </div>
@@ -241,8 +242,10 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
                 onAddItem={handleAddItem}
                 totalItems={filteredItems.length}
                 activeSection={activeSection}
+                setActiveSection={handleSectionChange}
                 onAddCategory={handleAddCategory}
                 showTabsAndTitle={false}
+                sections={sections} // Pass sections configuration
               />
             </div>
             <InventoryTable 
@@ -276,8 +279,10 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
                 onAddItem={handleAddCategory}
                 totalItems={categoryData.length}
                 activeSection={activeSection}
+                setActiveSection={handleSectionChange}
                 onAddCategory={handleAddCategory}
                 showTabsAndTitle={false}
+                sections={sections} // Pass sections configuration
               />
             </div>
             <CategoryContent 

@@ -39,20 +39,20 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       {showHeaderStats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           {/* Total Categories Card */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-lg border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Categories</h3>
             <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
           </div>
 
           {/* Total Products Card */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-lg border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Products</h3>
             <p className="text-3xl font-bold text-gray-900">{totalProducts}</p>
             <p className="text-xs text-gray-400 mt-1">Across all categories</p>
           </div>
 
           {/* Total Stock Card */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-lg border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Stock</h3>
             <p className="text-3xl font-bold text-gray-900">
               {categories.reduce((sum, category) => sum + category.totalStock, 0)}
@@ -60,7 +60,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
           </div>
 
           {/* Total Value Card */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-lg border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
             <p className="text-3xl font-bold text-gray-900">
               ₱{categories.reduce((sum, category) => sum + category.totalValue, 0).toLocaleString()}
@@ -118,7 +118,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                 {onViewProducts && (
                   <button
                     onClick={() => onViewProducts(category.name)}
-                    className="w-full text-blue-600 hover:text-blue-800 text-sm font-medium underline"
+                    className="w-full text-[#02367B] hover:text-[#02367B] text-sm font-medium underline"
                   >
                     View Products
                   </button>
@@ -152,7 +152,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                   onClick={() => onPageChange(pageNum)}
                   className={`w-8 h-8 text-sm font-medium rounded ${
                     currentPage === pageNum
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-[#02367B] text-white'
                       : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                   }`}
                 >
