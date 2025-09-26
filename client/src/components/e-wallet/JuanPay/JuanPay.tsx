@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import LayoutCard from '../layout/LayoutCard';
+import LayoutCard from '../../layout/LayoutCard';
 import { Search } from 'lucide-react';
 
 const JuanPay: React.FC = () => {

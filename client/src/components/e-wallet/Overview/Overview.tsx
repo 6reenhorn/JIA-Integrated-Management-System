@@ -1,9 +1,9 @@
 import React from 'react';
-import LayoutCard from '../layout/LayoutCard';
+import LayoutCard from '../../layout/LayoutCard';
 import type { 
   SummaryCardProps, 
   RecordCardProps
-} from '../../types/ewallet_types';
+} from '../../../types/ewallet_types';
 
 const Overview: React.FC = () => {
   const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
