@@ -1,20 +1,26 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Portal from '../components/common/Portal';
-import EmployeeStats from '../components/employees/EmployeeStats';
-import EmployeeFilters from '../components/employees/EmployeeFilters';
-import EmployeeTable from '../components/employees/EmployeeTable';
-import EmployeeActions from '../components/employees/EmployeeActions';
+import EmployeeStats from '../components/employees/management/EmployeeStats';
+import EmployeeFilters from '../components/employees/management/EmployeeFilters';
+import EmployeeTable from '../components/employees/management/EmployeeTable';
+import EmployeeActions from '../components/employees/management/EmployeeActions';
 import type { Employee } from '../types/employee_types';
 import { filterEmployees, calculateStats } from '../utils/employee_utils';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
-import EmployeeSearchBar from '../components/employees/EmployeeSearchBar';
+import EmployeeSearchBar from '../components/employees/management/EmployeeSearchBar';
 import AddStaffModal from '../modals/employee/AddStaffModal';
+import EmployeeAttendance from '../components/employees/attendance/EmployeeAttendance';
 
 import EditStaffDetailsModal from '../modals/employee/EditStaffDetailsModal';
 
 const PAGE_SIZE = 5;
 
-const Employees: React.FC = () => {
+interface EmployeesProps {
+  activeSection?: string;
+  onSectionChange?: (section: string) => void;
+}
+
+const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [roleFilter, setRoleFilter] = useState('All Roles');
@@ -25,14 +31,24 @@ const Employees: React.FC = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
+  const [popoverPosition, setPopoverPosition] = useState({ top: -0, left: 0 });
 
-  const [activeSection, setActiveSection] = useState('staff');
+  const [internalActiveSection, setInternalActiveSection] = useState('staff');
+
+  const activeSection = propActiveSection ?? internalActiveSection;
 
   const sections = [
     { label: 'Staff Management', key: 'staff' },
     { label: 'Attendance', key: 'attendance' }
   ];
+
+  const handleSectionChange = (section: string) => {
+    if (onSectionChange) {
+      onSectionChange(section);
+    } else {
+      setInternalActiveSection(section);
+    }
+  };
 
   const [employees, setEmployees] = useState<Employee[]>([
     {
@@ -179,14 +195,10 @@ const Employees: React.FC = () => {
 
   const handleRequestDelete = (id: number, event: React.MouseEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const popoverHeight = 120;
+    const popoverHeight = 80;
     const popoverWidth = 256;
-    let top = rect.top - popoverHeight - 10;
+    let top = rect.top - popoverHeight - 20;
     let left = rect.left + rect.width / 2 - popoverWidth / 2;
-
-    if (top < 10) {
-      top = rect.bottom + 10;
-    }
 
     // Clamp to viewport
     top = Math.max(10, Math.min(top, window.innerHeight - popoverHeight - 10));
@@ -219,7 +231,7 @@ const Employees: React.FC = () => {
       {/* Employee Stats Section */}
       <EmployeeStats stats={stats} />
 
-      <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={setActiveSection}>
+      <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={handleSectionChange}>
         {/* Staff Management Section */}
         {activeSection === 'staff' && (
           <div className="space-y-6">
@@ -254,10 +266,7 @@ const Employees: React.FC = () => {
         )}
         {/* Attendance Management Section */}
         {activeSection === 'attendance' && (
-          <div className="space-y-6 p-4">
-            <h4 className="text-lg font-semibold">Attendance Management</h4>
-            <p>Placeholder for Attendance section content. Implement attendance tracking features here.</p>
-          </div>
+          <EmployeeAttendance />
         )}
       </MainLayoutCard>
 
@@ -297,7 +306,7 @@ const Employees: React.FC = () => {
       {showConfirm && (
         <Portal>
           <div
-            className="fixed bg-white border border-gray-300 rounded-lg shadow-xl p-4 z-[1100] w-64"
+            className="fixed bg-white border border-gray-300 rounded-md shadow-xl px-4 py-2 z-[1100] w-64"
             style={{ top: popoverPosition.top, left: popoverPosition.left, position: 'fixed' }}
           >
             <h3 className="text-[12px] font-semibold mb-2">Confirm Delete</h3>
@@ -305,13 +314,13 @@ const Employees: React.FC = () => {
             <div className="flex gap-2 justify-end w-full">
               <button
                 onClick={handleConfirmDelete}
-                className="px-5 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+                className="px-5 py-1 bg-red-500 text-white text-[10px] rounded hover:bg-red-600"
               >
                 Yes
               </button>
               <button
                 onClick={handleCancelDelete}
-                className="px-5 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+                className="px-5 py-1 bg-gray-500 text-white text-[10px] rounded hover:bg-gray-600"
               >
                 No
               </button>
