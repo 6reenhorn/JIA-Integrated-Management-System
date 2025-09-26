@@ -1,46 +1,40 @@
 import React, { useState } from 'react';
 import LayoutCard from '../layout/LayoutCard';
-import { Search } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
+import AddGCashRecordModal from '../../modals/ewallet/gcashrecordmodal';
+import type { GCashRecord } from '../../modals/ewallet/gcashrecordmodal';
+import GCashRecordsTable from './GcashRecords';
 
 const GCash: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [gcashRecords, setGcashRecords] = useState<GCashRecord[]>([]);
 
-  const mockTransactions = [
-    {
-      id: 1,
-      date: '9/23/2025',
-      referenceNumber: '123234134',
-      transactionType: 'Cash-In',
-      amount: 400.00,
-      serviceCharge: 10.00,
-      chargeMOP: 'GCash'
-    },
-    {
-      id: 2,
-      date: '9/25/2025',
-      referenceNumber: '73784034',
-      transactionType: 'Cash-Out',
-      amount: 500.00,
-      serviceCharge: 10.00,
-      chargeMOP: 'Cash'
-    },
-    {
-      id: 3,
-      date: '9/25/2025',
-      referenceNumber: '23456453',
-      transactionType: 'Cash-In',
-      amount: 600.00,
-      serviceCharge: 15.00,
-      chargeMOP: 'Cash'
+  // Handler to add new record
+  const handleAddRecord = (newRecord: GCashRecord) => {
+    setGcashRecords(prev => [...prev, newRecord]);
+    console.log('New GCash record added:', newRecord);
+  };
+
+  // Handler to delete record
+  const handleDeleteRecord = (id: string) => {
+    if (confirm('Are you sure you want to delete this record?')) {
+      setGcashRecords(prev => prev.filter(record => record.id !== id));
     }
-  ];
+  };
+
+  // Handler to edit record (placeholder)
+  const handleEditRecord = (record: GCashRecord) => {
+    console.log('Edit record:', record);
+    // Implement edit functionality here
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const totalPages = Math.ceil(mockTransactions.length / 10);
+  const totalPages = Math.ceil(gcashRecords.length / 10) || 1;
 
   return (
     <div className="space-y-6">
@@ -75,7 +69,7 @@ const GCash: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">GCash Records</h3>
-              <span className="text-sm text-gray-500">(3 entries)</span>
+              <span className="text-sm text-gray-500">({gcashRecords.length} entries)</span>
             </div>
 
             {/* Search */}
@@ -92,98 +86,72 @@ const GCash: React.FC = () => {
           </div>
 
           {/* Right side: Add Button */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]/90 transition-colors whitespace-nowrap">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Record
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]/90 transition-colors whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4" />
+            Add GCash Record
           </button>
         </div>
       </div>
 
-        {/* Transaction Table */}
-        <div className="overflow-x-auto border-2 border-gray-200 rounded-lg">
-          <table className="w-full ">
-            <thead className="border-b border-gray-200" style={{ backgroundColor: '#EDEDED' }}>
-              <tr>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Date</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Reference Number</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Transaction Type</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Amount</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Service Charge</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Charge MOP</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {mockTransactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50">
-                  <td className="py-4 px-6 text-sm text-gray-900">
-                    {transaction.date}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-900">
-                    {transaction.referenceNumber}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-900">
-                    {transaction.transactionType}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-900">
-                    {transaction.amount.toFixed(2)}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-900">
-                    {transaction.serviceCharge.toFixed(2)}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-900">
-                    {transaction.chargeMOP}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Records Table */}
+      <GCashRecordsTable
+        records={gcashRecords}
+        onEditRecord={handleEditRecord}
+        onDeleteRecord={handleDeleteRecord}
+      />
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between pt-2">
-          <div className="text-sm text-gray-500">
-            Page {currentPage} of {totalPages}
-          </div>
+      {/* Pagination */}
+      <div className="flex items-center justify-between pt-2">
+        <div className="text-sm text-gray-500">
+          Page {currentPage} of {totalPages}
+        </div>
+        
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
           
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            
-            {/* Page Numbers */}
-            {[...Array(Math.min(3, totalPages))].map((_, i) => {
-              const pageNum = i + 1;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`px-3 py-1 text-sm rounded ${
-                    currentPage === pageNum
-                      ? 'bg-[#02367B] text-white'
-                      : 'border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-            
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
+          {[...Array(Math.min(3, totalPages))].map((_, i) => {
+            const pageNum = i + 1;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                className={`px-3 py-1 text-sm rounded ${
+                  currentPage === pageNum
+                    ? 'bg-[#02367B] text-white'
+                    : 'border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
         </div>
       </div>
+
+      {/* Modal */}
+      <AddGCashRecordModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddRecord={handleAddRecord}
+      />
+    </div>
   );
 };
 
