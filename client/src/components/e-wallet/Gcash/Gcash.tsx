@@ -11,17 +11,37 @@ const GCash: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [gcashRecords, setGcashRecords] = useState<GCashRecord[]>([]);
 
+  const recordsPerPage = 10;
+
   // Handler to add new record
   const handleAddRecord = (newRecord: GCashRecord) => {
     setGcashRecords(prev => [...prev, newRecord]);
     console.log('New GCash record added:', newRecord);
   };
 
+  // Filter records based on search term
+  const filteredRecords = gcashRecords.filter(record =>
+    record.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.transactionType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.chargeMOP.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
+  const startIndex = (currentPage - 1) * recordsPerPage;
+  const endIndex = startIndex + recordsPerPage;
+  const currentRecords = filteredRecords.slice(startIndex, endIndex);
+
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
-  const totalPages = Math.ceil(gcashRecords.length / 10) || 1;
+  // Reset to page 1 when search term changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -56,7 +76,7 @@ const GCash: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">GCash Records</h3>
-              <span className="text-sm text-gray-500">({gcashRecords.length} entries)</span>
+              <span className="text-sm text-gray-500">({filteredRecords.length} entries)</span>
             </div>
 
             {/* Search */}
@@ -85,26 +105,37 @@ const GCash: React.FC = () => {
 
       {/* Records Table */}
       <GCashRecordsTable
-        records={gcashRecords}
+        records={currentRecords}
       />
 
       {/* Pagination */}
       <div className="flex items-center justify-between pt-2">
         <div className="text-sm text-gray-500">
-          Page {currentPage} of {totalPages}
+          Page {currentPage} of {totalPages} • Showing {currentRecords.length} of {filteredRecords.length} records
         </div>
         
         <div className="flex items-center space-x-1">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || filteredRecords.length === 0}
             className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
           
-          {[...Array(Math.min(3, totalPages))].map((_, i) => {
-            const pageNum = i + 1;
+          {/* Show page numbers (max 5 pages visible) */}
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+            
             return (
               <button
                 key={pageNum}
@@ -122,7 +153,7 @@ const GCash: React.FC = () => {
           
           <button
             onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages || filteredRecords.length === 0}
             className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
