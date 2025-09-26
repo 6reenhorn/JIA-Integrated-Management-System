@@ -1,4 +1,5 @@
 import React from 'react';
+
 export interface GCashRecord {
     id: string;
     amount: number;
@@ -43,10 +44,39 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
 
     if (records.length === 0) {
         return (
-            <div className="rounded-lg border border-gray-200 p-8 text-center">
-                <p className="text-gray-500">
-                    No GCash records found. Add your first record to get started.
-                </p>
+            <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
+                {/* Fixed Header */}
+                <table className="table-fixed bg-[#EDEDED] w-full">
+                    <thead className="border-[#E5E7EB] border-b">
+                        <tr>
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+                                Date
+                            </th>
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[150px]">
+                                Reference Number
+                            </th>
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">
+                                Transaction Type
+                            </th>
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+                                Amount
+                            </th>
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">
+                                Service Charge
+                            </th>
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                                Charge MOP
+                            </th>
+                        </tr>
+                    </thead>
+                </table>
+                
+                {/* Empty State Content with Fixed Height */}
+                <div className="h-[370px] flex items-center justify-center">
+                    <p className="text-gray-500">
+                        No GCash records found. Add your first record to get started.
+                    </p>
+                </div>
             </div>
         );
     }
@@ -77,8 +107,9 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                     </tr>
                 </thead>
             </table>
-            <div className="max-h-[370px] overflow-y-auto min-h-[370px]">
-                <table className="table-fixed w-full">
+            
+            <div className="h-[370px] overflow-y-auto">
+                <table className="table-fixed w-full h-full">
                     <tbody className="divide-y divide-gray-200">
                         {records.map((record) => (
                             <tr key={record.id} className="hover:bg-gray-50">
@@ -118,6 +149,11 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                                 </td>
                             </tr>
                         ))}
+                        {records.length < 10 && (
+                            <tr className="h-full">
+                                <td colSpan={6} className="h-full"></td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
