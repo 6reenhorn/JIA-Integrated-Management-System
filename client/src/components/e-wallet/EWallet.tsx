@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { EWalletTab } from '../../types/ewallet_types';
 import LayoutCard from '../layout/LayoutCard';
 
-import Overview from './Overview';
-import GCash from './Gcash';
-import PayMaya from './PayMaya';
-import JuanPay from './JuanPay';
+import Overview from './Overview/Overview';
+import GCash from './Gcash/Gcash';
+import PayMaya from './Paymaya/PayMaya';
+import JuanPay from './JuanPay/JuanPay';
 
 interface EWalletProps {
   initialTab?: EWalletTab;
