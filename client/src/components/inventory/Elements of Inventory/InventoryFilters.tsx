@@ -57,28 +57,28 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
       case 'inventory':
         return {
           addButtonText: 'Add Product',
-          searchPlaceholder: 'Q search',
+          searchPlaceholder: 'Search Items',
           title: `Inventory (${totalItems} items)`,
           showCategoryFilter: true,
         };
       case 'sales':
         return {
           addButtonText: 'Add Sale',
-          searchPlaceholder: 'Q search',
+          searchPlaceholder: 'Search Sales',
           title: 'Sales',
           showCategoryFilter: false,
         };
       case 'category':
         return {
           addButtonText: 'Add Category',
-          searchPlaceholder: 'Q search',
+          searchPlaceholder: 'Search Categories',
           title: 'Categories',
           showCategoryFilter: false,
         };
       default:
         return {
           addButtonText: currentSection?.label ? `Add ${currentSection.label}` : 'Add Item',
-          searchPlaceholder: 'Q search',
+          searchPlaceholder: 'Search',
           title: currentSection?.label || 'Items',
           showCategoryFilter: activeSection === 'inventory',
         };
@@ -111,21 +111,21 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
       )}
 
       {/* Header Section */}
-      <div className="flex items-center justify-between py-4">
+      <div className="flex items-center justify-between py-4 w-full">
         {/* Left side: Title and Search */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           {/* Title - Always show for inventory section */}
           {activeSection === 'inventory' ? (
-            <h2 className="text-xl font-semibold text-gray-900 whitespace-nowrap">
+            <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
               {config.title}
             </h2>
           ) : showTabsAndTitle ? (
-            <h2 className="text-xl font-semibold text-gray-900 whitespace-nowrap">
+            <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
               {config.title}
             </h2>
           ) : null}
 
-          {/* Search - Moved to left side */}
+          {/* Search - Left side */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -133,26 +133,19 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               placeholder={config.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:outline-none w-64 transition-all bg-gray-50"
+              className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent w-64"
             />
           </div>
         </div>
 
         {/* Right side: Category Filter and Add Button */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           {/* Category Filter - conditionally shown */}
           {config.showCategoryFilter && (
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2.5 border border-[#02367B] rounded-md focus:ring-2 focus:ring-[#02367B] focus:border-white focus:outline-none bg-[#02367B] text-white font-medium transition-all appearance-none cursor-pointer"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: 'right 0.5rem center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '1.5em 1.5em',
-                paddingRight: '2.5rem'
-              }}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent bg-white cursor-pointer"
             >
               <option value="all">All Categories</option>
               {categories.map((category) => (
@@ -166,7 +159,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
           {/* Add Button */}
           <button
             onClick={handleAddClick}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#02367B] text-white rounded-md hover:bg-[#022a5c] transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2 font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#01295a] transition-colors"
           >
             <Plus className="w-4 h-4" />
             {config.addButtonText}
