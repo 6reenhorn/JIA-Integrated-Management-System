@@ -17,19 +17,6 @@ const GCash: React.FC = () => {
     console.log('New GCash record added:', newRecord);
   };
 
-  // Handler to delete record
-  const handleDeleteRecord = (id: string) => {
-    if (confirm('Are you sure you want to delete this record?')) {
-      setGcashRecords(prev => prev.filter(record => record.id !== id));
-    }
-  };
-
-  // Handler to edit record (placeholder)
-  const handleEditRecord = (record: GCashRecord) => {
-    console.log('Edit record:', record);
-    // Implement edit functionality here
-  };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -99,8 +86,6 @@ const GCash: React.FC = () => {
       {/* Records Table */}
       <GCashRecordsTable
         records={gcashRecords}
-        onEditRecord={handleEditRecord}
-        onDeleteRecord={handleDeleteRecord}
       />
 
       {/* Pagination */}
