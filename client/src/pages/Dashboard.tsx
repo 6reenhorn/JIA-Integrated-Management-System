@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../sidebar/Sidebar';
 import Overview from '../components/dashboard/Overview';
 import Inventory from './Inventory';
@@ -23,6 +23,23 @@ const Dashboard: React.FC = () => {
     section: undefined 
   });
 
+  // Sync sidebar with inventory sections
+  useEffect(() => {
+    // Sync sidebar with inventory sections
+    if (currentSection.page === 'inventory' && currentSection.section) {
+      const sectionToSidebarId: Record<string, string> = {
+        'inventory': 'inventory-inventory',
+        'sales': 'inventory-categories',
+        'category': 'inventory-stock-levels'
+      };
+      
+      const sidebarId = sectionToSidebarId[currentSection.section];
+      if (sidebarId && activeItem !== sidebarId) {
+        setActiveItem(sidebarId);
+      }
+    }
+  }, [currentSection, activeItem]);
+
   const handleEWalletTabChange = (tab: EWalletTab) => {
     const tabToActiveItem: Record<EWalletTab, string> = {
       'Overview': 'e-wallet',
@@ -46,18 +63,17 @@ const Dashboard: React.FC = () => {
   const handleSidebarItemClick = (itemId: string) => {
     setActiveItem(itemId);
     
-    // Map sidebar section IDs to Inventory component sections
-    const sectionMapping: Record<string, string> = {
-      'inventory-inventory': 'inventory',
-      'inventory-categories': 'sales', // Note: your sidebar has "Sales" but ID is "inventory-categories"
-      'inventory-stock-levels': 'category', // Note: your sidebar has "Category" but ID is "inventory-stock-levels"
-      'employees-attendance': 'attendance'
+    // Enhanced section mapping
+    const sectionMapping: Record<string, {page: string, section: string}> = {
+      'inventory-inventory': { page: 'inventory', section: 'inventory' },
+      'inventory-categories': { page: 'inventory', section: 'sales' },
+      'inventory-stock-levels': { page: 'inventory', section: 'category' },
+      'employees-attendance': { page: 'employees', section: 'attendance' }
     };
 
     // If it's a known section ID, set the current section
     if (sectionMapping[itemId]) {
-      const page = itemId.startsWith('inventory-') ? 'inventory' : itemId.startsWith('employees-') ? 'employees' : itemId;
-      setCurrentSection({ page, section: sectionMapping[itemId] });
+      setCurrentSection(sectionMapping[itemId]);
     } else if (itemId === 'inventory') {
       // If it's the main inventory item, default to inventory section
       setCurrentSection({ page: 'inventory', section: 'inventory' });
@@ -114,15 +130,18 @@ const Dashboard: React.FC = () => {
       />;
     }
 
+    // Handle Inventory sections
+    if (activeItem.startsWith('inventory') || activeItem === 'inventory') {
+      return <Inventory
+        activeSection={currentSection.section || 'inventory'}
+        onSectionChange={(section) => updateCurrentSection('inventory', section)}
+      />;
+    }
+
     // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
         return <Overview />;
-      case 'inventory':
-        return <Inventory
-          activeSection={currentSection.section || 'inventory'}
-          onSectionChange={(section) => updateCurrentSection('inventory', section)}
-        />;
       case 'e-wallet':
         return (
           <EWallet onTabChange={handleEWalletTabChange} />
@@ -260,7 +279,8 @@ const Dashboard: React.FC = () => {
           activeItem={activeItem} 
           onItemClick={handleSidebarItemClick} 
           isCollapsed={isSidebarCollapsed} 
-          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          currentSection={currentSection.section}
         />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
