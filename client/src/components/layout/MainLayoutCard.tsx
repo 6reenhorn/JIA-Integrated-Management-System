@@ -19,8 +19,8 @@ const MainLayoutCard: React.FC<MainLayoutCardProps> = ({ sections, activeSection
                 onClick={() => onSectionChange?.(section.key)}
                 className={`text-[14px] font-semibold px-3 py-1 rounded ${
                   activeSection === section.key
-                    ? 'section-navigation-underline text-[#043886]'
-                    : 'text-gray-800 hover:bg-gray-200'
+                    ? 'section-navigation-underline text-[#03285F]'
+                    : 'text-[#6B7280] hover:bg-gray-200'
                 }`}
               >
                 {section.label}
