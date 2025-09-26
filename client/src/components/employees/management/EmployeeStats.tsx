@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Plus } from 'lucide-react';
-import DashboardCard from '../layout/LayoutCard';
-import type { EmployeeStats as EmployeeStatsType } from '../../types/employee_types';
+import DashboardCard from '../../layout/LayoutCard';
+import type { EmployeeStats as EmployeeStatsType } from '../../../types/employee_types';
 
 interface EmployeeStatsProps {
   stats: EmployeeStatsType;

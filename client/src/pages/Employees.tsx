@@ -1,20 +1,26 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Portal from '../components/common/Portal';
-import EmployeeStats from '../components/employees/EmployeeStats';
-import EmployeeFilters from '../components/employees/EmployeeFilters';
-import EmployeeTable from '../components/employees/EmployeeTable';
-import EmployeeActions from '../components/employees/EmployeeActions';
+import EmployeeStats from '../components/employees/management/EmployeeStats';
+import EmployeeFilters from '../components/employees/management/EmployeeFilters';
+import EmployeeTable from '../components/employees/management/EmployeeTable';
+import EmployeeActions from '../components/employees/management/EmployeeActions';
 import type { Employee } from '../types/employee_types';
 import { filterEmployees, calculateStats } from '../utils/employee_utils';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
-import EmployeeSearchBar from '../components/employees/EmployeeSearchBar';
+import EmployeeSearchBar from '../components/employees/management/EmployeeSearchBar';
 import AddStaffModal from '../modals/employee/AddStaffModal';
+import EmployeeAttendance from '../components/employees/attendance/EmployeeAttendance';
 
 import EditStaffDetailsModal from '../modals/employee/EditStaffDetailsModal';
 
 const PAGE_SIZE = 5;
 
-const Employees: React.FC = () => {
+interface EmployeesProps {
+  activeSection?: string;
+  onSectionChange?: (section: string) => void;
+}
+
+const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [roleFilter, setRoleFilter] = useState('All Roles');
@@ -27,12 +33,22 @@ const Employees: React.FC = () => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: -0, left: 0 });
 
-  const [activeSection, setActiveSection] = useState('staff');
+  const [internalActiveSection, setInternalActiveSection] = useState('staff');
+
+  const activeSection = propActiveSection ?? internalActiveSection;
 
   const sections = [
     { label: 'Staff Management', key: 'staff' },
     { label: 'Attendance', key: 'attendance' }
   ];
+
+  const handleSectionChange = (section: string) => {
+    if (onSectionChange) {
+      onSectionChange(section);
+    } else {
+      setInternalActiveSection(section);
+    }
+  };
 
   const [employees, setEmployees] = useState<Employee[]>([
     {
@@ -215,7 +231,7 @@ const Employees: React.FC = () => {
       {/* Employee Stats Section */}
       <EmployeeStats stats={stats} />
 
-      <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={setActiveSection}>
+      <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={handleSectionChange}>
         {/* Staff Management Section */}
         {activeSection === 'staff' && (
           <div className="space-y-6">
@@ -250,10 +266,7 @@ const Employees: React.FC = () => {
         )}
         {/* Attendance Management Section */}
         {activeSection === 'attendance' && (
-          <div className="space-y-6 p-4">
-            <h4 className="text-lg font-semibold">Attendance Management</h4>
-            <p>Placeholder for Attendance section content. Implement attendance tracking features here.</p>
-          </div>
+          <EmployeeAttendance />
         )}
       </MainLayoutCard>
 
