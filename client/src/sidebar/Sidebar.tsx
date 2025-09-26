@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Package, Users, Wallet, Settings, Info, Menu } from 'lucide-react';
 
 export interface MenuItem {
@@ -13,11 +13,34 @@ export interface SidebarProps {
   onItemClick: (itemId: string) => void;
   isCollapsed: boolean;
   onToggle: () => void;
+  currentSection?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, currentSection }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  // Initialize expanded state based on activeItem
+  useEffect(() => {
+    if (activeItem && !expanded) {
+      // Determine which main item should be expanded based on activeItem
+      if (activeItem.startsWith('inventory')) {
+        setExpanded('inventory');
+      } else if (activeItem.startsWith('employees')) {
+        setExpanded('employees');
+      } else if (activeItem.startsWith('e-wallet')) {
+        setExpanded('e-wallet');
+      } else if (activeItem.startsWith('dashboard')) {
+        setExpanded('dashboard');
+      } else if (activeItem.startsWith('settings')) {
+        setExpanded('settings');
+      } else if (activeItem.startsWith('about')) {
+        setExpanded('about');
+      } else {
+        setExpanded(activeItem);
+      }
+    }
+  }, [activeItem, expanded]);
 
   const mainMenuItems: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, category: 'Main Menu' },
@@ -38,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     { id: 'e-wallet-juanpay', label: 'JuanPay' },
   ];
 
-  // Hardcoded sections for other menu items (for future implementation)
+  // Hardcoded sections for other menu items
   const getSections = (itemId: string) => {
     switch (itemId) {
       case 'dashboard':
@@ -79,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     }
   };
 
-  // Checker
+  // Checker functions
   const isEWalletSection = (sectionId: string) => {
     return sectionId.startsWith('e-wallet-');
   };
@@ -88,8 +111,47 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     return sectionId.startsWith('employees-');
   };
 
-  // Check if item is currently active (including sub-sections)
+  const isInventorySection = (sectionId: string) => {
+    return sectionId.startsWith('inventory-');
+  };
+
+  // Function to check if a section is actually implemented/functional
+  const isSectionFunctional = (sectionId: string) => {
+    // E-Wallet sections are functional
+    if (isEWalletSection(sectionId)) return true;
+    
+    // Employee sections are functional
+    if (isEmployeeSection(sectionId)) return true;
+    
+    // Inventory sections are functional
+    if (isInventorySection(sectionId)) return true;
+    
+    // Dashboard main section is functional
+    if (sectionId === 'dashboard') return true;
+    
+    // Settings and About main sections are functional
+    if (sectionId === 'settings' || sectionId === 'about') return true;
+    
+    // All other sections are not implemented yet
+    return false;
+  };
+
+  // Enhanced function to check if item is active (including sub-sections and current section)
   const isItemActive = (itemId: string) => {
+    // If we're in inventory and have a current section, map it to sidebar IDs
+    if (activeItem === 'inventory' && currentSection) {
+      const sectionMapping: Record<string, string> = {
+        'inventory': 'inventory-inventory',
+        'sales': 'inventory-categories',
+        'category': 'inventory-stock-levels'
+      };
+      
+      const mappedSectionId = sectionMapping[currentSection];
+      if (mappedSectionId && itemId === mappedSectionId) {
+        return true;
+      }
+    }
+    
     return activeItem === itemId || activeItem.startsWith(itemId + '-');
   };
 
@@ -103,9 +165,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
           onMouseEnter={() => setHoveredItem(item.id)}
           onMouseLeave={() => setHoveredItem(null)}
           onClick={() => {
-            onItemClick(item.id);
-            if (expanded) {
+            // Toggle expansion or set to current item
+            if (expanded === item.id) {
+              setExpanded(null);
+            } else {
               setExpanded(item.id);
+              onItemClick(item.id);
             }
           }}
           className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
@@ -136,11 +201,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     const item = [...mainMenuItems, ...supportItems].find(i => i.id === itemId);
     const sections = getSections(itemId);
     
+    if (!item) return null;
+    
     return (
       <div className="bg-gray-900 text-white h-full flex flex-col shadow-lg overflow-hidden">
         <div className='flex pl-1'>
           <div className="flex justify-start items-center gap-2 p-4 border-b border-gray-700 flex-shrink-0">
-            <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 mx-auto" onClick={() => setExpanded(null)} style={{ cursor: 'pointer' }}>
+            <div 
+              className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 mx-auto cursor-pointer" 
+              onClick={() => setExpanded(null)}
+            >
               <span className="text-sm font-bold">L</span>
             </div>
             <span className="font-bold text-lg whitespace-nowrap">JIA <span className="text-sm">Integrated System</span></span>
@@ -150,13 +220,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
           {/* Show the selected item */}
           <div className="mb-6">
             <button
-              onClick={() => onItemClick(itemId)}
+              onClick={() => {
+                onItemClick(itemId);
+                setExpanded(itemId);
+              }}
               className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 ${
                 activeItem === itemId ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <span className="flex-shrink-0">{item?.icon}</span>
-              <span className="font-medium whitespace-nowrap">{item?.label}</span>
+              <span className="flex-shrink-0">{item.icon}</span>
+              <span className="font-medium whitespace-nowrap">{item.label}</span>
             </button>
           </div>
           
@@ -169,20 +242,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
                   <li key={section.id}>
                     <button
                       onClick={() => {
-                        // For E-Wallet and Employee sections, handle them functionally
-                        if (isEWalletSection(section.id) || isEmployeeSection(section.id)) {
+                        // For functional sections, handle them properly
+                        if (isSectionFunctional(section.id)) {
                           onItemClick(section.id);
-                        } else {
-                          // For other sections, keep them as placeholders for now
-                          console.log('Section not implemented yet:', section.id);
+                          setExpanded(itemId); // Keep the parent expanded
                         }
                       }}
-                      className={`w-full flex items-center gap-3 py-2 px-4 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 text-sm ${
-                        activeItem === section.id ? 'bg-gray-700 text-white' : 'text-gray-300'
-                      } ${(isEWalletSection(section.id) || isEmployeeSection(section.id)) ? 'cursor-pointer' : 'cursor-default opacity-75'}`}
+                      className={`w-full flex items-center gap-3 py-2 px-4 text-left rounded-lg transition-all duration-200 text-sm ${
+                        isItemActive(section.id) ? 'bg-gray-700 text-white' : 'text-gray-300'
+                      } ${isSectionFunctional(section.id) ? 'hover:bg-gray-700 cursor-pointer' : 'cursor-default opacity-60'}`}
                     >
                       <span className="whitespace-nowrap">+ {section.label}</span>
-                      {!(isEWalletSection(section.id) || isEmployeeSection(section.id)) && (
+                      {!isSectionFunctional(section.id) && (
                         <span className="text-xs text-gray-500 ml-auto">(Soon)</span>
                       )}
                     </button>
@@ -200,13 +271,25 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
     <div className="relative flex h-screen">
       {/* Collapsed sidebar with icons only */}
       <div className="bg-gray-800 text-white w-16 min-h-screen flex flex-col py-4 space-y-2 flex-shrink-0">
-        <div className="w-8 h-8 flex items-center justify-center mb-4 rounded-lg transition-colors duration-200 mx-auto" onClick={() => {
-          if (expanded) {
-            setExpanded(null);
-          } else {
-            setExpanded(activeItem || 'dashboard');
-          }
-        }} style={{ cursor: 'pointer' }}>
+        <div 
+          className="w-8 h-8 flex items-center justify-center mb-4 rounded-lg transition-colors duration-200 mx-auto cursor-pointer" 
+          onClick={() => {
+            if (expanded) {
+              setExpanded(null);
+            } else {
+              // Expand based on current active item
+              if (activeItem.startsWith('inventory')) {
+                setExpanded('inventory');
+              } else if (activeItem.startsWith('employees')) {
+                setExpanded('employees');
+              } else if (activeItem.startsWith('e-wallet')) {
+                setExpanded('e-wallet');
+              } else {
+                setExpanded(activeItem || 'dashboard');
+              }
+            }
+          }}
+        >
           {expanded ? (
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512">
               <path d="M0 0 C91.74 0 183.48 0 278 0 C278 14.19 278 28.38 278 43 C186.26 43 94.52 43 0 43 C0 28.81 0 14.62 0 0 Z " fill="currentColor" transform="translate(64,341)"/>
