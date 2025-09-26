@@ -16,7 +16,7 @@ export interface SidebarProps {
   currentSection?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, currentSection }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, isCollapsed, currentSection }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
@@ -209,7 +209,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, cu
           <div className="flex justify-start items-center gap-2 p-4 border-b border-gray-700 flex-shrink-0">
             <div 
               className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 mx-auto cursor-pointer" 
-              onClick={() => setExpanded(null)}
+              onClick={() => {
+                setExpanded(null);
+                onToggle(); // Call onToggle to collapse the sidebar
+              }}
             >
               <span className="text-sm font-bold">L</span>
             </div>
@@ -267,6 +270,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, cu
     );
   };
 
+  // Check if sidebar should show as expanded (when there's an expanded item and not collapsed)
+  const shouldShowExpanded = expanded && !isCollapsed;
+
   return (
     <div className="relative flex h-screen">
       {/* Collapsed sidebar with icons only */}
@@ -274,10 +280,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, cu
         <div 
           className="w-8 h-8 flex items-center justify-center mb-4 rounded-lg transition-colors duration-200 mx-auto cursor-pointer" 
           onClick={() => {
-            if (expanded) {
-              setExpanded(null);
-            } else {
-              // Expand based on current active item
+            onToggle(); // Toggle the collapsed state
+            if (isCollapsed) {
+              // If we're currently collapsed and opening, set expanded state
               if (activeItem.startsWith('inventory')) {
                 setExpanded('inventory');
               } else if (activeItem.startsWith('employees')) {
@@ -287,10 +292,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, cu
               } else {
                 setExpanded(activeItem || 'dashboard');
               }
+            } else {
+              // If we're closing, clear expanded state
+              setExpanded(null);
             }
           }}
         >
-          {expanded ? (
+          {shouldShowExpanded ? (
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512">
               <path d="M0 0 C91.74 0 183.48 0 278 0 C278 14.19 278 28.38 278 43 C186.26 43 94.52 43 0 43 C0 28.81 0 14.62 0 0 Z " fill="currentColor" transform="translate(64,341)"/>
               <path d="M0 0 C91.74 0 183.48 0 278 0 C278 14.19 278 28.38 278 43 C186.26 43 94.52 43 0 43 C0 28.81 0 14.62 0 0 Z " fill="currentColor" transform="translate(64,128)"/>
@@ -320,7 +328,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, cu
       {/* Animated expandable sidebar */}
       <div 
         className={`bg-gray-900 text-white min-h-screen transition-all duration-150 ease-out overflow-hidden ${
-          expanded ? 'w-64' : 'w-0'
+          shouldShowExpanded ? 'w-64' : 'w-0'
         }`}
       >
         {expanded && (
