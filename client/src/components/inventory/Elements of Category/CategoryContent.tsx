@@ -170,7 +170,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-gray-200 pt-6">
+        <div className="flex items-center justify-between border-t border-none pt-6">
           <div className="text-sm text-gray-500">
             Page {currentPage} of {totalPages}
           </div>
@@ -179,7 +179,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-2 text-sm font-medium text-gray-500 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-2 text-sm font-medium text-gray-500 border border-gray-500 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Previous
             </button>
@@ -205,7 +205,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-2 text-sm font-medium text-gray-500 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-2 text-sm font-medium text-gray-500 border border-gray-500 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next
             </button>
