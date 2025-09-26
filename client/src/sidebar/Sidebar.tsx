@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
     { id: 'e-wallet-juanpay', label: 'JuanPay' },
   ];
 
-  // Hardcoded sections for other menu items
+  // Updated sections for inventory - removed the duplicate "Inventory" section
   const getSections = (itemId: string) => {
     switch (itemId) {
       case 'dashboard':
@@ -73,7 +73,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
         ];
       case 'inventory':
         return [
-          { id: 'inventory-inventory', label: 'Inventory' },
           { id: 'inventory-categories', label: 'Sales' },
           { id: 'inventory-stock-levels', label: 'Category' }
         ];
@@ -138,10 +137,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
 
   // Enhanced function to check if item is active (including sub-sections and current section)
   const isItemActive = (itemId: string) => {
+    // Handle main inventory page - if we're on inventory and current section is 'inventory' or undefined, 
+    // the main inventory button should be active
+    if (itemId === 'inventory' && activeItem === 'inventory' && (!currentSection || currentSection === 'inventory')) {
+      return true;
+    }
+    
     // If we're in inventory and have a current section, map it to sidebar IDs
     if (activeItem === 'inventory' && currentSection) {
       const sectionMapping: Record<string, string> = {
-        'inventory': 'inventory-inventory',
         'sales': 'inventory-categories',
         'category': 'inventory-stock-levels'
       };
@@ -157,7 +161,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
 
   const renderMenuItem = (item: MenuItem) => {
     const isActive = isItemActive(item.id);
-    const showTooltip = hoveredItem === item.id && !isActive;
+    // Always show tooltip when hovered, regardless of active state
+    const showTooltip = hoveredItem === item.id;
 
     return (
       <li key={item.id} className="relative">
@@ -165,8 +170,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
           onMouseEnter={() => setHoveredItem(item.id)}
           onMouseLeave={() => setHoveredItem(null)}
           onClick={() => {
+            // Prevent re-clicking when already on the main item and expanded
+            if (isActive && expanded === item.id) {
+              return; // Do nothing if already active and expanded
+            }
+            
             // Toggle expansion or set to current item
-            if (expanded === item.id) {
+            if (expanded === item.id && !isActive) {
               setExpanded(null);
             } else {
               setExpanded(item.id);
@@ -180,7 +190,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
           <span className="flex-shrink-0">{item.icon}</span>
         </button>
         
-        {/* Tooltip */}
+        {/* Tooltip - now shows even when active */}
         {showTooltip && (
           <div className="absolute left-12 top-1/2 transform -translate-y-1/2 ml-2 z-50">
             <div className="bg-gray-700 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap shadow-lg border border-gray-600">
@@ -224,11 +234,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
           <div className="mb-6">
             <button
               onClick={() => {
-                onItemClick(itemId);
+                // For inventory, clicking the main button should go to inventory section
+                if (itemId === 'inventory') {
+                  // Don't allow re-clicking if already on main inventory section
+                  if (activeItem === 'inventory' && currentSection === 'inventory') {
+                    return;
+                  }
+                  onItemClick('inventory');
+                } else {
+                  onItemClick(itemId);
+                }
                 setExpanded(itemId);
               }}
               className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 ${
-                activeItem === itemId ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
+                (activeItem === itemId && (itemId !== 'inventory' || !currentSection || currentSection === 'inventory')) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
               }`}
             >
               <span className="flex-shrink-0">{item.icon}</span>
@@ -247,6 +266,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
                       onClick={() => {
                         // For functional sections, handle them properly
                         if (isSectionFunctional(section.id)) {
+                          // Prevent re-clicking if already active
+                          if (isItemActive(section.id)) {
+                            return;
+                          }
                           onItemClick(section.id);
                           setExpanded(itemId); // Keep the parent expanded
                         }
