@@ -57,9 +57,9 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
           <h2 className="text-xl font-semibold text-gray-900">Add New Category</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-1"
+            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 rounded-md p-1"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -110,18 +110,18 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
+                className="px-4 py-1.5 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="px-6 py-3 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B] transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
+                className="px-4 py-1.5 bg-[#02367B] text-white rounded-md hover:bg-[#02367B]/90 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1"
               >
                 Add Category
               </button>

@@ -138,9 +138,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           <h2 className="text-xl font-semibold text-gray-900">Add New Product</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B]focus:ring-offset-2 rounded-lg"
+            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 rounded-md p-1"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -248,6 +248,13 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                           {category}
                         </div>
                       ))}
+                      
+                      <div
+                        onClick={() => setShowAddCategory(true)}
+                        className="px-4 py-2 text-left hover:bg-blue-50 text-[#02367B] border-t border-gray-200 cursor-pointer transition-colors"
+                      >
+                        + Add New Category
+                      </div>
                     </div>
                   </div>
 
@@ -258,14 +265,14 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
                         placeholder="Enter new category name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B]focus:outline-none mb-2"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:outline-none mb-2"
                         onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
                       />
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={handleAddCategory}
-                          className="px-3 py-1 bg-[#02367B] text-white text-sm rounded hover:bg-[#02367B]ransition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
+                          className="px-3 py-1.5 bg-[#02367B] text-white text-xs rounded-md hover:bg-[#02367B]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 font-medium"
                         >
                           Add
                         </button>
@@ -275,7 +282,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                             setShowAddCategory(false);
                             setNewCategory('');
                           }}
-                          className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                          className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded-md hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 font-medium"
                         >
                           Cancel
                         </button>
@@ -336,17 +343,17 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex justify-end gap-2 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B]focus:ring-offset-2"
+                className="px-4 py-1.5 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
+                className="px-4 py-1.5 bg-[#02367B] text-white rounded-md hover:bg-[#02367B]/90 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1"
               >
                 Add Product
               </button>

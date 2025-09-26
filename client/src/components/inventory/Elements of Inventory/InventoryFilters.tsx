@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, Plus } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Plus, ChevronDown } from 'lucide-react';
 
 interface InventoryFiltersProps {
   searchTerm: string;
@@ -40,6 +40,21 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
     { id: 'category', label: 'Categories', key: 'category' },
   ],
 }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Handle add button click
   const handleAddClick = () => {
     if (activeSection === 'category' && onAddCategory) {
@@ -47,6 +62,17 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
     } else {
       onAddItem();
     }
+  };
+
+  // Handle category selection
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setIsDropdownOpen(false);
+  };
+
+  // Toggle dropdown
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   // Dynamic configuration based on active section
@@ -86,6 +112,12 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
   };
 
   const config = getSectionConfig();
+
+  // Get display text for selected category
+  const getDisplayText = () => {
+    if (selectedCategory === 'all') return 'All Categories';
+    return categories.find(cat => cat === selectedCategory) || 'All Categories';
+  };
 
   return (
     <div className="mb-6">
@@ -140,20 +172,46 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
 
         {/* Right side: Category Filter and Add Button */}
         <div className="flex items-center gap-3 ml-auto">
-          {/* Category Filter - conditionally shown */}
+          {/* Custom Category Dropdown - conditionally shown */}
           {config.showCategoryFilter && (
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent bg-white cursor-pointer"
-            >
-              <option value="all">All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={toggleDropdown}
+                className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent bg-white cursor-pointer min-w-[140px] justify-between"
+              >
+                <span className="truncate">{getDisplayText()}</span>
+                <ChevronDown 
+                  className={`w-3 h-3 transition-transform duration-200 ${
+                    isDropdownOpen ? 'rotate-180' : 'rotate-0'
+                  }`}
+                />
+              </button>
+              
+              {/* Dropdown Menu */}
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                  <button
+                    onClick={() => handleCategorySelect('all')}
+                    className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors ${
+                      selectedCategory === 'all' ? 'bg-blue-50 text-blue-600' : ''
+                    }`}
+                  >
+                    All Categories
+                  </button>
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => handleCategorySelect(category)}
+                      className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors ${
+                        selectedCategory === category ? 'bg-blue-50 text-blue-600' : ''
+                    }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Add Button */}
