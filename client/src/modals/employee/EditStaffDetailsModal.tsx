@@ -131,14 +131,14 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
   };
 
   return (
-    <div className="bg-gray-100 shadow-md rounded-lg p-6 w-[460px] max-h-[850px]">
+    <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
       <div>
         <h3 className="text-[20px] font-bold">Edit Employee</h3>
         <p className="text-[12px]">Update the employee's information and role details.</p>
       </div>
       <div className="overflow-y-auto max-h-[680px] mt-4 text-[12px]">
         <form id="edit-employee-form" onSubmit={handleSubmit} className='flex flex-col gap-3'>
-          <div className="shadow-md shadow-gray-200 rounded-lg m-1 p-4">
+          <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4">
             <h3 className="text-[16px] font-bold">Basic Information</h3>
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div>
@@ -165,13 +165,13 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               <textarea name="employee_address" id="employee_address" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"></textarea>
             </div>
           </div>
-          <div className="shadow-md shadow-gray-200 rounded-lg m-1 p-4 text-[12px]">
+          <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4 text-[12px]">
             <h3 className="text-[16px] font-bold">Work Information</h3>
             <div className='flex gap-4 text-[12px] relative mt-2'>
               <div className="dropdown relative" ref={statusDropdownRef}>
                 <p className="text-[12px] font-bold">Status</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-lg px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
                   onClick={toggleStatusDropdown}
                 >
                   {selectedStatusText}
@@ -186,7 +186,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options"
+                  className="dropdown-options mt-1 rounded-md"
                   style={{
                     display: isStatusDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -221,7 +221,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               <div className="dropdown relative" ref={roleDropdownRef}>
                 <p className="text-[12px] font-bold">Role</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-lg px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
                   onClick={toggleRoleDropdown}
                 >
                   {selectedRoleText}
@@ -236,7 +236,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options"
+                  className="dropdown-options mt-1 rounded-md"
                   style={{
                     display: isRoleDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -295,7 +295,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               <input type="text" id='employee-salary' name='employee-salary' value={salary} onChange={(e) => setSalary(e.target.value)} className="border border-gray-300 rounded-md w-full px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
             </div>
           </div>
-          <div className="shadow-md shadow-gray-200 rounded-lg m-1 p-4 text-[12px]">
+          <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4 text-[12px]">
             <h3 className="text-[16px] font-bold">Emergency Contact (Optional)</h3>
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div className="flex flex-col justify-center">
@@ -311,7 +311,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               <div className="dropdown relative" ref={relationshipDropdownRef}>
                 <p className="text-[12px] font-bold">Relationship</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-lg px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
                   onClick={toggleRelationshipDropdown}
                 >
                   {selectedRelationshipText}
@@ -326,7 +326,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options"
+                  className="dropdown-options -mt-1 rounded-md"
                   style={{
                     display: isRelationshipDropdownOpen ? 'block' : 'none',
                     position: 'absolute',

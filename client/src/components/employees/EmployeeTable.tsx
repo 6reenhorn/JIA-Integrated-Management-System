@@ -17,7 +17,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onRequestDelete
 }) => {
   return (
-    <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
+    <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-md">
       <table className="table-fixed w-full">
         <thead className="border-[#E5E7EB] border-b">
           <tr>
@@ -47,7 +47,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   </div>
                 </td>
                 <td className="py-4 px-6 w-[100px]">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(employee.role)}`}>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-md ${getRoleColor(employee.role)}`}>
                     {employee.role}
                   </span>
                 </td>
@@ -57,7 +57,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   </div>
                 </td>
                 <td className="py-4 px-6 w-[100px]">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(employee.status)}`}>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-md ${getStatusColor(employee.status)}`}>
                     {employee.status}
                   </span>
                 </td>

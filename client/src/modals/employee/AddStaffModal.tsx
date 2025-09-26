@@ -80,14 +80,14 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
 
 
   return (
-    <div className="bg-gray-100 shadow-md rounded-lg p-6 w-[460px] max-h-[850px]">
+    <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
       <div>
         <h3 className="text-[20px] font-bold">Add New Employee</h3>
         <p className="text-[12px]">Add a new team member to your organization with their details and role.</p>
       </div>
       <div className="overflow-y-auto max-h-[650px] mt-4 text-[12px]">
         <form action="submit" className='flex flex-col gap-3'>
-          <div className="shadow-md shadow-gray-200 rounded-lg m-1 p-4">
+          <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4">
             <h3 className="text-[16px] font-bold">Basic Information</h3>
             <div>
               <div className="grid grid-cols-2 gap-4 mt-2">
@@ -116,13 +116,13 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
               </div>
             </div>
           </div>
-          <div className="shadow-md shadow-gray-200 rounded-lg m-1 p-4 text-[12px]">
+          <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4 text-[12px]">
             <h3 className="text-[16px] font-bold">Work Information</h3>
             <div className='flex gap-4 text-[12px] relative mt-2'>
               <div className="dropdown relative" ref={statusDropdownRef}>
                 <p className="text-[12px] font-bold">Status</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-lg px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
                   onClick={toggleStatusDropdown}
                 >
                   {selectedStatusText}
@@ -137,7 +137,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options"
+                  className="dropdown-options mt-1 rounded-md"
                   style={{
                     display: isStatusDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -172,7 +172,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
               <div className="dropdown relative" ref={roleDropdownRef}>
                 <p className="text-[12px] font-bold">Role</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-lg px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
                   onClick={toggleRoleDropdown}
                 >
                   {selectedRoleText}
@@ -187,7 +187,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options"
+                  className="dropdown-options mt-1 rounded-md"
                   style={{
                     display: isRoleDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -247,7 +247,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
             </div>
           </div>
           <div>
-            <div className="shadow-md shadow-gray-200 rounded-lg m-1 p-4 text-[12px]">
+            <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4 text-[12px]">
               <h3 className="text-[16px] font-bold">Emergency Contact (Optional)</h3>
               <div>
                 <div className="grid grid-cols-2 gap-4 mt-2">
@@ -264,7 +264,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
                   <div className="dropdown relative" ref={relationshipDropdownRef}>
                     <p className="text-[12px] font-bold">Relationship</p>
                     <div
-                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-lg px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
                       onClick={toggleRelationshipDropdown}
                     >
                       {selectedRelationshipText}
@@ -279,7 +279,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
                       </svg>
                     </div>
                     <div
-                      className="dropdown-options"
+                      className="dropdown-options -mt-1 rounded-md"
                       style={{
                         display: isRelationshipDropdownOpen ? 'block' : 'none',
                         position: 'absolute',

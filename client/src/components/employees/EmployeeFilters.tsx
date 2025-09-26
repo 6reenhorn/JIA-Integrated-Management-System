@@ -49,7 +49,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
     <div className="flex justify-between items gap-4 my-5">
       <div className="dropdown relative" ref={roleDropdownRef}>
         <div
-          className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[145px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[145px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={toggleRoleDropdown}
         >
           {roleFilter}
@@ -64,13 +64,14 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
           </svg>
         </div>
         <div
-          className="dropdown-options"
+          className="dropdown-options mt-1 rounded-md"
           style={{
             display: isRoleDropdownOpen ? 'block' : 'none',
             position: 'absolute',
             top: '100%',
             left: 0,
             right: 0,
+
             backgroundColor: 'white',
             border: '1px solid #ccc',
             zIndex: 10,
@@ -93,7 +94,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
       </div>
       <div className="dropdown relative" ref={statusDropdownRef}>
         <div
-          className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[145px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[145px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={toggleStatusDropdown}
         >
           {statusFilter}
@@ -108,7 +109,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
           </svg>
         </div>
         <div
-          className="dropdown-options"
+          className="dropdown-options mt-1 rounded-md"
           style={{
             display: isStatusDropdownOpen ? 'block' : 'none',
             position: 'absolute',
@@ -137,7 +138,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
       </div>
       <button
         onClick={onAddStaff}
-        className='flex items-center gap-2 text-[14px] h-[36px] bg-[#02367B] border-2 border-[#1C4A9E] rounded-lg px-4 py-2 text-white hover:bg-[#016CA5] focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0'
+        className='flex items-center gap-2 text-[14px] h-[36px] bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 py-2 text-white hover:bg-[#016CA5] focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0'
       >
         <Plus className="w-4 h-4 mr-2" />
         Add Staff

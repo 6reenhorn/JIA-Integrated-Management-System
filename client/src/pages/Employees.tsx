@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import Portal from '../components/common/Portal';
 import EmployeeStats from '../components/employees/EmployeeStats';
 import EmployeeFilters from '../components/employees/EmployeeFilters';
 import EmployeeTable from '../components/employees/EmployeeTable';
@@ -178,20 +179,20 @@ const Employees: React.FC = () => {
 
   const handleRequestDelete = (id: number, event: React.MouseEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const popoverHeight = 80; 
-    const popoverWidth = 210; 
-    let top = rect.top - popoverHeight - 10; 
-    let left = rect.left + rect.width / 2 - popoverWidth / 2; 
+    const popoverHeight = 120;
+    const popoverWidth = 256;
+    let top = rect.top - popoverHeight - 10;
+    let left = rect.left + rect.width / 2 - popoverWidth / 2;
 
     if (top < 10) {
-      top = rect.bottom + 10; 
+      top = rect.bottom + 10;
     }
 
     // Clamp to viewport
     top = Math.max(10, Math.min(top, window.innerHeight - popoverHeight - 10));
     left = Math.max(10, Math.min(left, window.innerWidth - popoverWidth - 10));
 
-    console.log('Popover position:', top, left);
+    console.log('Modal position:', top, left);
     setPopoverPosition({ top, left });
     setDeleteId(id);
     setShowConfirm(true);
@@ -210,26 +211,8 @@ const Employees: React.FC = () => {
     setDeleteId(null);
   };
 
-  // Prevent body scroll when popover is open without layout shift
-  useEffect(() => {
-    if (showConfirm) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      document.documentElement.style.paddingRight = `${scrollbarWidth}px`;
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    } else {
-      document.documentElement.style.paddingRight = '';
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    }
-
-    // Cleanup on unmount
-    return () => {
-      document.documentElement.style.paddingRight = '';
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    };
-  }, [showConfirm]);
+  // No scroll lock needed when using a portal-rendered overlay
+  useEffect(() => {}, [showConfirm]);
 
   return (
     <div className="space-y-6">
@@ -280,54 +263,61 @@ const Employees: React.FC = () => {
 
       {/* Employee Modal */}
       {isModalOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center'>
-          <div
-            className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm'
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+        <Portal>
+          <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
+            <div
+              className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm'
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            </div>
+            <div className='relative z-[1010]'>
+              <AddStaffModal onClose={toggleModal} onAddEmployee={handleAddEmployee} />
+            </div>
           </div>
-          <div className='relative z-[60]'>
-            <AddStaffModal onClose={toggleModal} onAddEmployee={handleAddEmployee} />
-          </div>
-        </div>
+        </Portal>
       )}
       {isEditModalOpen && selectedEmployee && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center'>
-          <div
-            className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm'
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+        <Portal>
+          <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
+            <div
+              className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm'
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            </div>
+            <div className='relative z-[1010]'>
+              <EditStaffDetailsModal
+                employee={selectedEmployee}
+                onClose={() => setIsEditModalOpen(false)}
+                onSave={handleSaveEmployee}
+              />
+            </div>
           </div>
-          <div className='relative z-[60]'>
-            <EditStaffDetailsModal
-              employee={selectedEmployee}
-              onClose={() => setIsEditModalOpen(false)}
-              onSave={handleSaveEmployee}
-            />
-          </div>
-        </div>
+        </Portal>
       )}
 
-      {/* Delete Confirmation Popover */}
+      {/* Delete Confirmation Modal */}
       {showConfirm && (
-        <div
-          className="fixed bg-white border border-gray-300 rounded shadow-lg p-3 z-50 w-[210px]"
-          style={{ top: popoverPosition.top, left: popoverPosition.left }}
-        >
-          <p className="text-[10px] mb-2">Are you sure you want to delete this employee?</p>
-          <div className="flex gap-2 justify-between w-full">
-            <button
-              onClick={handleConfirmDelete}
-              className="px-7 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-            >
-              Yes
-            </button>
-            <button
-              onClick={handleCancelDelete}
-              className="px-7 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
-            >
-              No
-            </button>
+        <Portal>
+          <div
+            className="fixed bg-white border border-gray-300 rounded-lg shadow-xl p-4 z-[1100] w-64"
+            style={{ top: popoverPosition.top, left: popoverPosition.left, position: 'fixed' }}
+          >
+            <h3 className="text-[12px] font-semibold mb-2">Confirm Delete</h3>
+            <p className="text-[10px] mb-4">Are you sure you want to delete this employee?</p>
+            <div className="flex gap-2 justify-end w-full">
+              <button
+                onClick={handleConfirmDelete}
+                className="px-5 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+              >
+                Yes
+              </button>
+              <button
+                onClick={handleCancelDelete}
+                className="px-5 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+              >
+                No
+              </button>
+            </div>
           </div>
-        </div>
+        </Portal>
       )}
     </div>
   );
