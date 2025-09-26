@@ -10,7 +10,7 @@ import MainLayoutCard from '../components/layout/MainLayoutCard';
 import CategoryContent from '../components/inventory/Elements of Category/CategoryContent';
 import SalesFilters from '../components/inventory/Elements of Sales/SalesFilters';
 import SalesTable from '../components/inventory/Elements of Sales/SalesTable';
-import SalesStats from '../components/inventory/Elements of Sales/SalesStats'; // New import
+import SalesStats from '../components/inventory/Elements of Sales/SalesStats';
 import type { SalesRecord } from '../components/inventory/Elements of Sales/SalesTable';
 import SalesActions from '../components/inventory/Elements of Sales/SalesActions';
 import type { InventoryItem, ProductFormData } from '../types/inventory_types';
@@ -23,7 +23,7 @@ interface InventoryProps {
 
 const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [categorySearchTerm, setCategorySearchTerm] = useState(''); // Add separate search for categories
+  const [categorySearchTerm, setCategorySearchTerm] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -209,7 +209,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
 
   const handlePageChange = (page: number) => setCurrentPage(page);
 
-  // Handle section change
+  // Handle section change - enhanced to properly notify parent
   const handleSectionChange = (section: string) => {
     setLocalActiveSection(section);
     if (onSectionChange) {
@@ -260,7 +260,6 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         {/* Inventory Section */}
         {activeSection === 'inventory' && (
           <div className="space-y-6">
-            {/* FIXED: Removed the problematic wrapper div */}
             <InventoryFilters 
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -293,7 +292,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           </div>
         )}
 
-        {/* Category Section - Updated to use the new CategoryContent with built-in search and add button */}
+        {/* Category Section */}
         {activeSection === 'category' && (
           <CategoryContent 
             categories={filteredCategoryData}
