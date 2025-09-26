@@ -7,7 +7,7 @@ interface InventoryStatsProps {
 
 const InventoryStats: React.FC<InventoryStatsProps> = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       {/* Total Items */}
       <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-4">

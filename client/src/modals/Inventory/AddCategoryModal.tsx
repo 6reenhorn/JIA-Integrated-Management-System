@@ -114,7 +114,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
+                className="px-6 py-3 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
               >
                 Cancel
               </button>

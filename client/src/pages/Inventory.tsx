@@ -10,6 +10,7 @@ import MainLayoutCard from '../components/layout/MainLayoutCard';
 import CategoryContent from '../components/inventory/Elements of Category/CategoryContent';
 import SalesFilters from '../components/inventory/Elements of Sales/SalesFilters';
 import SalesTable from '../components/inventory/Elements of Sales/SalesTable';
+import SalesStats from '../components/inventory/Elements of Sales/SalesStats'; // New import
 import type { SalesRecord } from '../components/inventory/Elements of Sales/SalesTable';
 import SalesActions from '../components/inventory/Elements of Sales/SalesActions';
 import type { InventoryItem, ProductFormData } from '../types/inventory_types';
@@ -22,6 +23,7 @@ interface InventoryProps {
 
 const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [categorySearchTerm, setCategorySearchTerm] = useState(''); // Add separate search for categories
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -42,15 +44,36 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   }, [activeSection, onSectionChange, propActiveSection]);
 
-  // Sync with prop changes - FIXED DEPENDENCY ARRAY
+  // Sync with prop changes
   useEffect(() => {
     if (propActiveSection && propActiveSection !== activeSection) {
       setLocalActiveSection(propActiveSection);
     }
-  }, [propActiveSection, activeSection]); // Added activeSection to dependencies
+  }, [propActiveSection, activeSection]);
 
-  // Sales records state
-  const [salesRecords] = useState<SalesRecord[]>([]);
+  // Sales records state with sample data
+  const [salesRecords] = useState<SalesRecord[]>([
+    { date: '9/25/2025', productName: 'Platos', quantity: 2, price: 15.00, total: 30.00, paymentMethod: 'Cash' },
+    { date: '9/25/2025', productName: 'Nova', quantity: 2, price: 16.00, total: 32.00, paymentMethod: 'Gcash' },
+    { date: '9/25/2025', productName: 'Mobee', quantity: 1, price: 8.00, total: 8.00, paymentMethod: 'PayMaya' },
+    { date: '9/25/2025', productName: 'Pencil', quantity: 2, price: 6.00, total: 16.00, paymentMethod: 'Cash' },
+    { date: '9/25/2025', productName: '1 whole paper', quantity: 1, price: 50.00, total: 50.00, paymentMethod: 'Cash' },
+  ]);
+
+  // Calculate sales stats
+  const salesStats = useMemo(() => {
+    const totalSales = salesRecords.length;
+    const totalAmount = salesRecords.reduce((sum, record) => sum + record.total, 0);
+    const totalItemsSold = salesRecords.reduce((sum, record) => sum + record.quantity, 0);
+    const averageSale = totalSales > 0 ? totalAmount / totalSales : 0;
+    
+    return {
+      totalSales,
+      totalAmount,
+      averageSale,
+      totalItemsSold
+    };
+  }, [salesRecords]);
 
   // Category colors
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({
@@ -117,6 +140,14 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     });
     return Array.from(map.values());
   }, [inventoryItems, categoryColors]);
+
+  // Filter categories based on search term
+  const filteredCategoryData = useMemo(() => {
+    if (!categorySearchTerm) return categoryData;
+    return categoryData.filter(category => 
+      category.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
+    );
+  }, [categoryData, categorySearchTerm]);
 
   // Handlers
   const handleEditItem = (id: number) => {
@@ -192,13 +223,12 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       {activeSection === 'inventory' ? (
         <InventoryStats stats={inventoryStats} />
       ) : activeSection === 'sales' ? (
-        // Sales Stats
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-sm font-bold text-black mb-2">Total Sales</h3>
-            <p className="text-3xl font-bold text-gray-900">{salesRecords.length}</p>
-          </div>
-        </div>
+        <SalesStats 
+          totalSales={salesStats.totalSales}
+          totalAmount={salesStats.totalAmount}
+          averageSale={salesStats.averageSale}
+          totalItemsSold={salesStats.totalItemsSold}
+        />
       ) : (
         // Category stats
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -230,24 +260,23 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         {/* Inventory Section */}
         {activeSection === 'inventory' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center mb-0">
-              <InventoryFilters 
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                categories={categories}
-                filterOpen={filterOpen}
-                setFilterOpen={setFilterOpen}
-                onAddItem={handleAddItem}
-                totalItems={filteredItems.length}
-                activeSection={activeSection}
-                setActiveSection={handleSectionChange}
-                onAddCategory={handleAddCategory}
-                showTabsAndTitle={false}
-                sections={sections} // Pass sections configuration
-              />
-            </div>
+            {/* FIXED: Removed the problematic wrapper div */}
+            <InventoryFilters 
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              categories={categories}
+              filterOpen={filterOpen}
+              setFilterOpen={setFilterOpen}
+              onAddItem={handleAddItem}
+              totalItems={filteredItems.length}
+              activeSection={activeSection}
+              setActiveSection={handleSectionChange}
+              onAddCategory={handleAddCategory}
+              showTabsAndTitle={false}
+              sections={sections}
+            />
             <InventoryTable 
               items={filteredItems}
               onViewItem={(id) => console.log('View item', id)}
@@ -264,49 +293,33 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           </div>
         )}
 
-        {/* Category Section */}
+        {/* Category Section - Updated to use the new CategoryContent with built-in search and add button */}
         {activeSection === 'category' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center mb-0">
-              <InventoryFilters 
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                categories={categories}
-                filterOpen={filterOpen}
-                setFilterOpen={setFilterOpen}
-                onAddItem={handleAddCategory}
-                totalItems={categoryData.length}
-                activeSection={activeSection}
-                setActiveSection={handleSectionChange}
-                onAddCategory={handleAddCategory}
-                showTabsAndTitle={false}
-                sections={sections} // Pass sections configuration
-              />
-            </div>
-            <CategoryContent 
-              categories={categoryData}
-              currentPage={currentPage}
-              totalPages={Math.ceil(categoryData.length / 10)}
-              filteredCount={categoryData.length}
-              totalCount={categoryData.length}
-              onPageChange={handlePageChange}
-              onViewProducts={handleViewProducts}
-              showHeaderStats={false}
-            />
-          </div>
+          <CategoryContent 
+            categories={filteredCategoryData}
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredCategoryData.length / 10)}
+            filteredCount={filteredCategoryData.length}
+            totalCount={categoryData.length}
+            onPageChange={handlePageChange}
+            onViewProducts={handleViewProducts}
+            showHeaderStats={false}
+            onAddCategory={handleAddCategory}
+            searchQuery={categorySearchTerm}
+            onSearchChange={setCategorySearchTerm}
+          />
         )}
 
         {/* Sales Section */}
         {activeSection === 'sales' && (
           <div className="space-y-6">
-            <SalesFilters 
+           <SalesFilters
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
               onAddSale={handleAddSale}
+              salesRecordsCount={salesRecords.length}
             />
             <SalesTable 
               salesRecords={salesRecords}
