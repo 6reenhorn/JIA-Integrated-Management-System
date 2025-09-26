@@ -138,7 +138,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           <h2 className="text-xl font-semibold text-gray-900">Add New Product</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg"
+            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B]focus:ring-offset-2 rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
@@ -162,7 +162,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   value={formData.productName}
                   onChange={handleChange}
                   placeholder="Enter product name"
-                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all outline-none"
+                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
                   required
                 />
               </div>
@@ -178,7 +178,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   onChange={handleChange}
                   placeholder="Enter product description"
                   rows={3}
-                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all resize-none outline-none"
+                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all resize-none outline-none"
                 />
               </div>
 
@@ -192,7 +192,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     <div
                       onClick={toggleCategoryDropdown}
                       className={`w-full px-3 py-2 pr-8 bg-gray-100 border border-gray-300 rounded-lg text-left cursor-pointer hover:bg-gray-200 transition-all outline-none ${
-                        isSelectOpen ? 'ring-2 ring-blue-500 border-blue-500 bg-white' : 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white'
+                        isSelectOpen ? 'ring-2 ring-[#02367B] border-[#02367B] bg-white' : 'focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white'
                       }`}
                     >
                       <div className="flex items-center">
@@ -258,14 +258,14 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
                         placeholder="Enter new category name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none mb-2"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B]focus:outline-none mb-2"
                         onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
                       />
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={handleAddCategory}
-                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="px-3 py-1 bg-[#02367B] text-white text-sm rounded hover:bg-[#02367B]ransition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
                         >
                           Add
                         </button>
@@ -295,7 +295,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     placeholder="0"
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
                     required
                   />
                 </div>
@@ -314,7 +314,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
                     required
                   />
                 </div>
@@ -329,7 +329,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all outline-none"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
                   />
                 </div>
               </div>
@@ -340,13 +340,13 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B]focus:ring-offset-2"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="px-6 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
               >
                 Add Product
               </button>
