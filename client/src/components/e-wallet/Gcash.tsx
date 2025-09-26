@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import LayoutCard from '../layout/LayoutCard';
 import { Search, Plus } from 'lucide-react';
-import AddGCashRecordModal from '../../modals/ewallet/gcashrecordmodal';
-import type { GCashRecord } from '../../modals/ewallet/gcashrecordmodal';
+import AddGCashRecordModal from '../../modals/ewallet/GcashRecordModal';
+import type { GCashRecord } from '../../modals/ewallet/GcashRecordModal';
 import GCashRecordsTable from './GcashRecords';
 
 const GCash: React.FC = () => {
