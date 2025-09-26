@@ -154,7 +154,6 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Background overlay with blur effect - UPDATED */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                 onClick={onClose}
