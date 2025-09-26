@@ -24,7 +24,7 @@ const InventoryActions: React.FC<InventoryActionsProps> = ({
         <button
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+          className="px-3 py-1.5 text-sm text-gray-600 border border-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded"
         >
           Previous
         </button>
@@ -44,10 +44,10 @@ const InventoryActions: React.FC<InventoryActionsProps> = ({
             <button
               key={pageNum}
               onClick={() => onPageChange(pageNum)}
-              className={`px-3 py-1.5 text-sm rounded ${
+              className={`px-3 py-1.5 text-sm border rounded ${
                 currentPage === pageNum
-                  ? 'bg-[#02367B] text-white'
-                  : 'text-gray-500 hover:bg-gray-700'
+                  ? 'bg-[#02367B] text-white border-[#02367B]'
+                  : 'text-gray-500 border-gray-300 hover:bg-gray-100'
               }`}
             >
               {pageNum}
@@ -57,7 +57,7 @@ const InventoryActions: React.FC<InventoryActionsProps> = ({
         <button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+          className="px-3 py-1.5 text-sm text-gray-600 border border-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded"
         >
           Next
         </button>

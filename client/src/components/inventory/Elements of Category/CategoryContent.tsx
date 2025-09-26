@@ -5,7 +5,7 @@ interface Category {
   productCount: number;
   totalStock: number;
   totalValue: number;
-  color?: string; // Add color property
+  color?: string;
 }
 
 interface CategoryContentProps {
@@ -16,7 +16,10 @@ interface CategoryContentProps {
   totalCount: number;
   onPageChange: (page: number) => void;
   onViewProducts?: (categoryName: string) => void;
-  showHeaderStats?: boolean; // Add this prop to control header stats visibility
+  showHeaderStats?: boolean;
+  onAddCategory?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 const CategoryContent: React.FC<CategoryContentProps> = ({
@@ -26,9 +29,11 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
   totalCount,
   onPageChange,
   onViewProducts,
-  showHeaderStats = true // Default to true for backward compatibility
+  showHeaderStats = true,
+  onAddCategory,
+  searchQuery = '',
+  onSearchChange
 }) => {
-  // Default colors if not provided
   const defaultColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'];
   
   const totalProducts = categories.reduce((sum, category) => sum + category.productCount, 0);
@@ -70,10 +75,46 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       )}
 
       {/* Categories Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex justify-between items-center mb-6">
+      <div className="bg-none rounded-l p-6">
+        {/* Header with Category Counter, Search, and Add Button */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          {/* Left side - Category Counter */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Category ({categories.length} Categories)</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Category ({categories.length} Categories)
+            </h3>
+          </div>
+          
+          {/* Right side - Search and Add Button */}
+          <div className="flex items-center gap-3">
+            {/* Search Bar */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search Categories"
+                value={searchQuery}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent w-64"
+              />
+            </div>
+            
+            {/* Add Category Button */}
+            {onAddCategory && (
+              <button
+                onClick={onAddCategory}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#01295a] transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Category
+              </button>
+            )}
           </div>
         </div>
         
@@ -118,7 +159,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                 {onViewProducts && (
                   <button
                     onClick={() => onViewProducts(category.name)}
-                    className="w-full text-[#02367B] hover:text-[#02367B] text-sm font-medium underline"
+                    className="w-full text-[#02367B] hover:text-[#01295a] text-sm font-medium underline transition-colors"
                   >
                     View Products
                   </button>
@@ -138,7 +179,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm font-medium text-gray-500 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Previous
             </button>
@@ -150,10 +191,10 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                 <button
                   key={pageNum}
                   onClick={() => onPageChange(pageNum)}
-                  className={`w-8 h-8 text-sm font-medium rounded ${
+                  className={`w-8 h-8 text-sm font-medium border rounded transition-colors ${
                     currentPage === pageNum
-                      ? 'bg-[#02367B] text-white'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                      ? 'bg-[#02367B] text-white border-[#02367B]'
+                      : 'text-gray-500 border-gray-300 hover:bg-gray-100'
                   }`}
                 >
                   {pageNum}
@@ -164,7 +205,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm font-medium text-gray-500 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next
             </button>
