@@ -154,6 +154,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Background overlay with blur effect */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                 onClick={onClose}
@@ -175,146 +176,137 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                 </div>
                 
                 <div className="overflow-y-auto max-h-[60vh] mt-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    <form onSubmit={handleSubmit} className='flex flex-col gap-3'>
-                        {/* Transaction Details Section */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <h3 className="text-[16px] font-bold text-gray-800 mb-3">Transaction Details</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="flex flex-col justify-center">
-                                    <label htmlFor="amount" className="text-[12px] font-bold text-gray-700 mb-1">Amount (₱)</label>
-                                    <input 
-                                        type="number" 
-                                        step="0.01"
-                                        id="amount" 
-                                        name="amount" 
-                                        placeholder='₱0.00' 
-                                        value={formData.amount} 
-                                        onChange={(e) => handleInputChange('amount', e.target.value)} 
-                                        className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white" 
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col justify-center">
-                                    <label htmlFor="serviceCharge" className="text-[12px] font-bold text-gray-700 mb-1">Service Charge (₱)</label>
-                                    <input 
-                                        type="number" 
-                                        step="0.01"
-                                        id="serviceCharge" 
-                                        name="serviceCharge" 
-                                        placeholder='₱0.00' 
-                                        value={formData.serviceCharge} 
-                                        onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
-                                        className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white" 
-                                    />
-                                </div>
+                    <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
+                        {/* Amount and Service Charge */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col">
+                                <label htmlFor="amount" className="text-[12px] font-bold text-gray-700 mb-1">Amount (₱)</label>
+                                <input 
+                                    type="number" 
+                                    step="0.01"
+                                    id="amount" 
+                                    name="amount" 
+                                    placeholder='₱0.00' 
+                                    value={formData.amount} 
+                                    onChange={(e) => handleInputChange('amount', e.target.value)} 
+                                    className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                    required
+                                />
+                            </div>
+                            <div className="flex flex-col">
+                                <label htmlFor="serviceCharge" className="text-[12px] font-bold text-gray-700 mb-1">Service Charge (₱)</label>
+                                <input 
+                                    type="number" 
+                                    step="0.01"
+                                    id="serviceCharge" 
+                                    name="serviceCharge" 
+                                    placeholder='₱0.00' 
+                                    value={formData.serviceCharge} 
+                                    onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
+                                    className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                />
                             </div>
                         </div>
 
-                        {/* Transaction Type and MOP Section */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <h3 className="text-[16px] font-bold text-gray-800 mb-3">Transaction Information</h3>
-                            <div className='grid grid-cols-2 gap-4'>
-                                {/* Transaction Type Dropdown */}
-                                <div className="dropdown relative" ref={transactionTypeRef}>
-                                    <label className="text-[12px] font-bold text-gray-700 mb-1 block">Transaction Type</label>
-                                    <div
-                                        className="dropdown-selected relative flex items-center justify-between bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
-                                        onClick={() => handleDropdownToggle('transactionType')}
+                        {/* Transaction Type and Charge MOP */}
+                        <div className='grid grid-cols-2 gap-4'>
+                            {/* Transaction Type Dropdown */}
+                            <div className="dropdown relative" ref={transactionTypeRef}>
+                                <label className="text-[12px] font-bold text-gray-700 mb-1 block">Transaction Type</label>
+                                <div
+                                    className="dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
+                                    onClick={() => handleDropdownToggle('transactionType')}
+                                >
+                                    <span className={formData.transactionType ? 'text-gray-900' : 'text-gray-500'}>
+                                        {formData.transactionType || 'Select Transaction Type'}
+                                    </span>
+                                    <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 16 16"
+                                        fill="none"
+                                        className={`transition-transform duration-200 ${dropdowns.transactionType ? 'rotate-180' : ''}`}
                                     >
-                                        <span className={formData.transactionType ? 'text-gray-900' : 'text-gray-500'}>
-                                            {formData.transactionType || 'Select Transaction Type'}
-                                        </span>
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 16 16"
-                                            fill="none"
-                                            className={`transition-transform duration-200 ${dropdowns.transactionType ? 'rotate-180' : ''}`}
-                                        >
-                                            <polygon points="4,6 12,6 8,12" fill="currentColor" />
-                                        </svg>
-                                    </div>
-                                    {dropdowns.transactionType && (
-                                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
-                                            {transactionTypeOptions.map((option) => (
-                                                <div
-                                                    key={option}
-                                                    className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
-                                                    onClick={() => handleDropdownSelect('transactionType', option)}
-                                                >
-                                                    {option}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                        <polygon points="4,6 12,6 8,12" fill="currentColor" />
+                                    </svg>
                                 </div>
+                                {dropdowns.transactionType && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
+                                        {transactionTypeOptions.map((option) => (
+                                            <div
+                                                key={option}
+                                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
+                                                onClick={() => handleDropdownSelect('transactionType', option)}
+                                            >
+                                                {option}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
-                                {/* Charge MOP Dropdown */}
-                                <div className="dropdown relative" ref={chargeMOPRef}>
-                                    <label className="text-[12px] font-bold text-gray-700 mb-1 block">Charge MOP</label>
-                                    <div
-                                        className="dropdown-selected relative flex items-center justify-between bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
-                                        onClick={() => handleDropdownToggle('chargeMOP')}
+                            {/* Charge MOP Dropdown */}
+                            <div className="dropdown relative" ref={chargeMOPRef}>
+                                <label className="text-[12px] font-bold text-gray-700 mb-1 block">Charge MOP (₱)</label>
+                                <div
+                                    className="dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
+                                    onClick={() => handleDropdownToggle('chargeMOP')}
+                                >
+                                    <span className={formData.chargeMOP ? 'text-gray-900' : 'text-gray-500'}>
+                                        {formData.chargeMOP || 'Select MOP'}
+                                    </span>
+                                    <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 16 16"
+                                        fill="none"
+                                        className={`transition-transform duration-200 ${dropdowns.chargeMOP ? 'rotate-180' : ''}`}
                                     >
-                                        <span className={formData.chargeMOP ? 'text-gray-900' : 'text-gray-500'}>
-                                            {formData.chargeMOP || 'Select MOP'}
-                                        </span>
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 16 16"
-                                            fill="none"
-                                            className={`transition-transform duration-200 ${dropdowns.chargeMOP ? 'rotate-180' : ''}`}
-                                        >
-                                            <polygon points="4,6 12,6 8,12" fill="currentColor" />
-                                        </svg>
-                                    </div>
-                                    {dropdowns.chargeMOP && (
-                                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
-                                            {chargeMOPOptions.map((option) => (
-                                                <div
-                                                    key={option}
-                                                    className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
-                                                    onClick={() => handleDropdownSelect('chargeMOP', option)}
-                                                >
-                                                    {option}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                        <polygon points="4,6 12,6 8,12" fill="currentColor" />
+                                    </svg>
                                 </div>
+                                {dropdowns.chargeMOP && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
+                                        {chargeMOPOptions.map((option) => (
+                                            <div
+                                                key={option}
+                                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
+                                                onClick={() => handleDropdownSelect('chargeMOP', option)}
+                                            >
+                                                {option}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* Additional Information Section */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <h3 className="text-[16px] font-bold text-gray-800 mb-3">Additional Information</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="flex flex-col justify-center">
-                                    <label htmlFor="referenceNumber" className="text-[12px] font-bold text-gray-700 mb-1">Reference Number</label>
-                                    <input 
-                                        type="text" 
-                                        id="referenceNumber" 
-                                        name="referenceNumber" 
-                                        placeholder="Enter reference number" 
-                                        value={formData.referenceNumber} 
-                                        onChange={(e) => handleInputChange('referenceNumber', e.target.value)} 
-                                        className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white" 
-                                    />
-                                </div>
-                                <div className="flex flex-col justify-center">
-                                    <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
-                                    <input 
-                                        type="date" 
-                                        id="date" 
-                                        name="date" 
-                                        value={formData.date} 
-                                        onChange={(e) => handleInputChange('date', e.target.value)} 
-                                        className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white" 
-                                        required
-                                    />
-                                </div>
-                            </div>
+                        {/* Reference Number */}
+                        <div className="flex flex-col">
+                            <label htmlFor="referenceNumber" className="text-[12px] font-bold text-gray-700 mb-1">Reference Number</label>
+                            <input 
+                                type="text" 
+                                id="referenceNumber" 
+                                name="referenceNumber" 
+                                placeholder="Enter reference number" 
+                                value={formData.referenceNumber} 
+                                onChange={(e) => handleInputChange('referenceNumber', e.target.value)} 
+                                className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
+                            />
+                        </div>
+
+                        {/* Date */}
+                        <div className="flex flex-col">
+                            <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
+                            <input 
+                                type="date" 
+                                id="date" 
+                                name="date" 
+                                value={formData.date} 
+                                onChange={(e) => handleInputChange('date', e.target.value)} 
+                                className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                required
+                            />
                         </div>
                     </form>
                 </div>
