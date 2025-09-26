@@ -17,7 +17,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onRequestDelete
 }) => {
   return (
-    <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
+    <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-md">
       <table className="table-fixed w-full">
         <thead className="border-[#E5E7EB] border-b">
           <tr>
