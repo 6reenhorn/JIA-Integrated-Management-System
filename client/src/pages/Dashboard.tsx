@@ -33,6 +33,15 @@ const Dashboard: React.FC = () => {
     setActiveItem(tabToActiveItem[tab]);
   };
 
+  const handleEmployeeSectionChange = (section: string) => {
+    const sectionToActiveItem: Record<string, string> = {
+      'staff': 'employees',
+      'attendance': 'employees-attendance'
+    };
+    setActiveItem(sectionToActiveItem[section] || 'employees');
+    updateCurrentSection('employees', section);
+  };
+
   // Function to handle sidebar item clicks
   const handleSidebarItemClick = (itemId: string) => {
     setActiveItem(itemId);
@@ -41,15 +50,20 @@ const Dashboard: React.FC = () => {
     const sectionMapping: Record<string, string> = {
       'inventory-inventory': 'inventory',
       'inventory-categories': 'sales', // Note: your sidebar has "Sales" but ID is "inventory-categories"
-      'inventory-stock-levels': 'category' // Note: your sidebar has "Category" but ID is "inventory-stock-levels"
+      'inventory-stock-levels': 'category', // Note: your sidebar has "Category" but ID is "inventory-stock-levels"
+      'employees-attendance': 'attendance'
     };
-    
+
     // If it's a known section ID, set the current section
     if (sectionMapping[itemId]) {
-      setCurrentSection({ page: 'inventory', section: sectionMapping[itemId] });
+      const page = itemId.startsWith('inventory-') ? 'inventory' : itemId.startsWith('employees-') ? 'employees' : itemId;
+      setCurrentSection({ page, section: sectionMapping[itemId] });
     } else if (itemId === 'inventory') {
       // If it's the main inventory item, default to inventory section
       setCurrentSection({ page: 'inventory', section: 'inventory' });
+    } else if (itemId === 'employees') {
+      // If it's the main employees item, default to staff section
+      setCurrentSection({ page: 'employees', section: 'staff' });
     } else {
       // For other pages, reset the section
       setCurrentSection({ page: itemId, section: undefined });
@@ -91,17 +105,24 @@ const Dashboard: React.FC = () => {
       );
     }
 
+    // Handle Employees sections
+    if (activeItem.startsWith('employees')) {
+      const section = activeItem === 'employees-attendance' ? 'attendance' : 'staff';
+      return <Employees
+        activeSection={section}
+        onSectionChange={handleEmployeeSectionChange}
+      />;
+    }
+
     // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
         return <Overview />;
       case 'inventory':
-        return <Inventory 
-          activeSection={currentSection.section || 'inventory'} 
-          onSectionChange={(section) => updateCurrentSection('inventory', section)} 
+        return <Inventory
+          activeSection={currentSection.section || 'inventory'}
+          onSectionChange={(section) => updateCurrentSection('inventory', section)}
         />;
-      case 'employees':
-        return <Employees />;
       case 'e-wallet':
         return (
           <EWallet onTabChange={handleEWalletTabChange} />
@@ -146,6 +167,14 @@ const Dashboard: React.FC = () => {
         default:
           return 'E-Wallet';
       }
+    }
+
+    // Handle Employees sections
+    if (activeItem.startsWith('employees')) {
+      if (activeItem === 'employees-attendance') {
+        return 'Attendance';
+      }
+      return 'Employees';
     }
 
     // Handle main menu items
@@ -198,6 +227,14 @@ const Dashboard: React.FC = () => {
         default:
           return 'Track transactions and payments';
       }
+    }
+
+    // Handle Employees sections
+    if (activeItem.startsWith('employees')) {
+      if (activeItem === 'employees-attendance') {
+        return 'Track employee attendance and schedules';
+      }
+      return 'Manage your team members and roles';
     }
 
     // Handle main menu items

@@ -52,14 +52,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
         return [
           { id: 'inventory-inventory', label: 'Inventory' },
           { id: 'inventory-categories', label: 'Sales' },
-          { id: 'inventory-stock-levels', label: 'Category' },
+          { id: 'inventory-stock-levels', label: 'Category' }
         ];
       case 'employees':
         return [
-          { id: 'employees-list', label: 'Employee List' },
-          { id: 'employees-departments', label: 'Departments' },
-          { id: 'employees-attendance', label: 'Attendance' },
-          { id: 'employees-payroll', label: 'Payroll' }
+          { id: 'employees-attendance', label: 'Attendance' }
         ];
       case 'e-wallet':
         return getEWalletSections();
@@ -85,6 +82,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
   // Checker
   const isEWalletSection = (sectionId: string) => {
     return sectionId.startsWith('e-wallet-');
+  };
+
+  const isEmployeeSection = (sectionId: string) => {
+    return sectionId.startsWith('employees-');
   };
 
   // Check if item is currently active (including sub-sections)
@@ -168,8 +169,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
                   <li key={section.id}>
                     <button
                       onClick={() => {
-                        // For E-Wallet sections, handle them functionally
-                        if (isEWalletSection(section.id)) {
+                        // For E-Wallet and Employee sections, handle them functionally
+                        if (isEWalletSection(section.id) || isEmployeeSection(section.id)) {
                           onItemClick(section.id);
                         } else {
                           // For other sections, keep them as placeholders for now
@@ -178,10 +179,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
                       }}
                       className={`w-full flex items-center gap-3 py-2 px-4 text-left rounded-lg transition-all duration-200 hover:bg-gray-700 text-sm ${
                         activeItem === section.id ? 'bg-gray-700 text-white' : 'text-gray-300'
-                      } ${isEWalletSection(section.id) ? 'cursor-pointer' : 'cursor-default opacity-75'}`}
+                      } ${(isEWalletSection(section.id) || isEmployeeSection(section.id)) ? 'cursor-pointer' : 'cursor-default opacity-75'}`}
                     >
                       <span className="whitespace-nowrap">+ {section.label}</span>
-                      {!isEWalletSection(section.id) && (
+                      {!(isEWalletSection(section.id) || isEmployeeSection(section.id)) && (
                         <span className="text-xs text-gray-500 ml-auto">(Soon)</span>
                       )}
                     </button>
