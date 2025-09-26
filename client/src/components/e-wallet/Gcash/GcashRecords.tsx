@@ -72,7 +72,7 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                 </table>
                 
                 {/* Empty State Content with Fixed Height */}
-                <div className="h-[350px] flex items-center justify-center">
+                <div className="h-[335px] flex items-center justify-center">
                     <p className="text-gray-500">
                         No GCash records found. Add your first record to get started.
                     </p>
@@ -108,7 +108,7 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                 </thead>
             </table>
             
-            <div className="h-[350px] overflow-y-auto">
+            <div className="h-[335px] overflow-y-auto">
                 <table className="table-fixed w-full h-full">
                     <tbody className="divide-y divide-gray-200">
                         {records.map((record) => (
