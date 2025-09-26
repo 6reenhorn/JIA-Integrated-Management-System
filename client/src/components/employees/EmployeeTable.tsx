@@ -22,9 +22,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         <thead className="border-[#E5E7EB] border-b">
           <tr>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[200px]">Staff Member</th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Role</th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[200px]">Contact</th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Status</th>
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[90px]">Role</th>
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[195px]">Contact</th>
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[95px]">Status</th>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[150px]">Last Login</th>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Actions</th>
           </tr>

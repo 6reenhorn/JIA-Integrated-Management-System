@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Package, Users, Wallet, Settings, Info, X, Menu, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Package, Users, Wallet, Settings, Info, Menu } from 'lucide-react';
 
 export interface MenuItem {
   id: string;
@@ -50,10 +50,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle }) 
         ];
       case 'inventory':
         return [
-          { id: 'inventory-products', label: 'Products' },
-          { id: 'inventory-categories', label: 'Categories' },
-          { id: 'inventory-stock-levels', label: 'Stock Levels' },
-          { id: 'inventory-suppliers', label: 'Suppliers' }
+          { id: 'inventory-inventory', label: 'Inventory' },
+          { id: 'inventory-categories', label: 'Sales' },
+          { id: 'inventory-stock-levels', label: 'Category' },
         ];
       case 'employees':
         return [

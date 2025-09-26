@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import InventoryStats from '../components/inventory/Elements of Inventory/InventoryStats';
 import InventoryFilters from '../components/inventory/Elements of Inventory/InventoryFilters';
 import InventoryTable from '../components/inventory/Elements of Inventory/InventoryTable';
@@ -15,7 +15,12 @@ import SalesActions from '../components/inventory/Elements of Sales/SalesActions
 import type { InventoryItem, ProductFormData } from '../types/inventory_types';
 import { filterInventoryItems, calculateStats } from '../utils/inventory_utils';
 
-const Inventory: React.FC = () => {
+interface InventoryProps {
+  activeSection?: string;
+  onSectionChange?: (section: string) => void;
+}
+
+const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,7 +30,24 @@ const Inventory: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
-  const [activeSection, setActiveSection] = useState('inventory');
+  
+  // Use prop if provided, otherwise use local state
+  const [localActiveSection, setLocalActiveSection] = useState('inventory');
+  const activeSection = propActiveSection || localActiveSection;
+
+  // Notify parent component when section changes
+  useEffect(() => {
+    if (onSectionChange && propActiveSection === undefined) {
+      onSectionChange(activeSection);
+    }
+  }, [activeSection, onSectionChange, propActiveSection]);
+
+  // Sync with prop changes - FIXED DEPENDENCY ARRAY
+  useEffect(() => {
+    if (propActiveSection && propActiveSection !== activeSection) {
+      setLocalActiveSection(propActiveSection);
+    }
+  }, [propActiveSection, activeSection]); // Added activeSection to dependencies
 
   // Sales records state
   const [salesRecords] = useState<SalesRecord[]>([]);
@@ -48,21 +70,20 @@ const Inventory: React.FC = () => {
     { id: 5, productName: 'Product 5', category: 'Category 5', stock: 69, status: 'In Stock', productPrice: 30.00, totalAmount: 69 * 30.00 },
   ]);
 
+  // for changing the name of tabs
   const sections = [
     { id: 'inventory', label: 'Inventory', key: 'inventory' },
     { id: 'sales', label: 'Sales', key: 'sales' },
-    { id: 'category', label: 'Category', key: 'category' },
+    { id: 'category', label: 'Categories', key: 'category' }, 
   ];
 
   // Stats
   const inventoryStats = useMemo(() => calculateStats(inventoryItems), [inventoryItems]);
-
   const categoryStats = useMemo(() => {
     const totalCategories = Array.from(new Set(inventoryItems.map(item => item.category))).length;
     const totalProducts = inventoryItems.length;
     const totalStock = inventoryItems.reduce((sum, item) => sum + item.stock, 0);
     const totalValue = inventoryItems.reduce((sum, item) => sum + item.totalAmount, 0);
-
     return { totalItems: totalCategories, totalProducts, totalStock, totalValue, lowStockItems: 0, outOfStockItems: 0 };
   }, [inventoryItems]);
 
@@ -105,6 +126,7 @@ const Inventory: React.FC = () => {
       setIsEditModalOpen(true);
     }
   };
+
   const handleDeleteItem = (id: number) => setInventoryItems(prev => prev.filter(i => i.id !== id));
   const handleAddItem = () => setIsAddModalOpen(true);
   const handleAddCategory = () => setIsAddCategoryModalOpen(true);
@@ -118,11 +140,10 @@ const Inventory: React.FC = () => {
     console.log('Delete sale clicked for ID:', id);
   };
 
-  const handleSaveCategory = (categoryName: string, color: string) =>
-    setCategoryColors(prev => ({ ...prev, [categoryName]: color }));
+  const handleSaveCategory = (categoryName: string, color: string) => setCategoryColors(prev => ({ ...prev, [categoryName]: color }));
 
   const handleViewProducts = (categoryName: string) => {
-    setActiveSection('inventory');
+    handleSectionChange('inventory');
     setSelectedCategory(categoryName);
   };
 
@@ -133,12 +154,7 @@ const Inventory: React.FC = () => {
       productName: data.productName,
       category: data.category,
       stock: data.quantity,
-      status:
-        data.quantity === 0
-          ? 'Out Of Stock'
-          : data.quantity <= 10
-          ? 'Low Stock'
-          : 'In Stock',
+      status: data.quantity === 0 ? 'Out Of Stock' : data.quantity <= 10 ? 'Low Stock' : 'In Stock',
       productPrice: data.productPrice,
       totalAmount,
     };
@@ -149,12 +165,7 @@ const Inventory: React.FC = () => {
     const totalAmount = updated.stock * updated.productPrice;
     const finalItem = {
       ...updated,
-      status:
-        updated.stock === 0
-          ? 'Out Of Stock'
-          : updated.stock <= 10
-          ? 'Low Stock'
-          : 'In Stock',
+      status: updated.stock === 0 ? 'Out Of Stock' : updated.stock <= 10 ? 'Low Stock' : 'In Stock',
       totalAmount,
     };
     setInventoryItems(prev => prev.map(i => (i.id === finalItem.id ? finalItem : i)));
@@ -167,6 +178,14 @@ const Inventory: React.FC = () => {
 
   const handlePageChange = (page: number) => setCurrentPage(page);
 
+  // Handle section change
+  const handleSectionChange = (section: string) => {
+    setLocalActiveSection(section);
+    if (onSectionChange) {
+      onSectionChange(section);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Stats */}
@@ -175,7 +194,7 @@ const Inventory: React.FC = () => {
       ) : activeSection === 'sales' ? (
         // Sales Stats
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Sales</h3>
             <p className="text-3xl font-bold text-gray-900">{salesRecords.length}</p>
           </div>
@@ -183,32 +202,36 @@ const Inventory: React.FC = () => {
       ) : (
         // Category stats
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Categories</h3>
             <p className="text-3xl font-bold text-gray-900">{categoryStats.totalItems}</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Products</h3>
             <p className="text-3xl font-bold text-gray-900">{categoryStats.totalProducts}</p>
             <p className="text-xs text-gray-400 mt-1">Across all categories</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Stock</h3>
             <p className="text-3xl font-bold text-gray-900">{categoryStats.totalStock}</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-black mb-2">Total Value</h3>
             <p className="text-3xl font-bold text-gray-900">₱{categoryStats.totalValue.toLocaleString()}</p>
           </div>
         </div>
       )}
 
-      <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={setActiveSection}>
+      <MainLayoutCard 
+        sections={sections} 
+        activeSection={activeSection} 
+        onSectionChange={handleSectionChange}
+      >
         {/* Inventory Section */}
         {activeSection === 'inventory' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-0">
-              <InventoryFilters
+              <InventoryFilters 
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
                 selectedCategory={selectedCategory}
@@ -219,19 +242,19 @@ const Inventory: React.FC = () => {
                 onAddItem={handleAddItem}
                 totalItems={filteredItems.length}
                 activeSection={activeSection}
+                setActiveSection={handleSectionChange}
                 onAddCategory={handleAddCategory}
                 showTabsAndTitle={false}
+                sections={sections} // Pass sections configuration
               />
             </div>
-
-            <InventoryTable
+            <InventoryTable 
               items={filteredItems}
               onViewItem={(id) => console.log('View item', id)}
               onEditItem={handleEditItem}
               onDeleteItem={handleDeleteItem}
             />
-
-            <InventoryActions
+            <InventoryActions 
               currentPage={currentPage}
               totalPages={Math.ceil(filteredItems.length / 10)}
               filteredCount={filteredItems.length}
@@ -245,7 +268,7 @@ const Inventory: React.FC = () => {
         {activeSection === 'category' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-0">
-              <InventoryFilters
+              <InventoryFilters 
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
                 selectedCategory={selectedCategory}
@@ -256,12 +279,13 @@ const Inventory: React.FC = () => {
                 onAddItem={handleAddCategory}
                 totalItems={categoryData.length}
                 activeSection={activeSection}
+                setActiveSection={handleSectionChange}
                 onAddCategory={handleAddCategory}
                 showTabsAndTitle={false}
+                sections={sections} // Pass sections configuration
               />
             </div>
-
-            <CategoryContent
+            <CategoryContent 
               categories={categoryData}
               currentPage={currentPage}
               totalPages={Math.ceil(categoryData.length / 10)}
@@ -277,19 +301,19 @@ const Inventory: React.FC = () => {
         {/* Sales Section */}
         {activeSection === 'sales' && (
           <div className="space-y-6">
-            <SalesFilters
+            <SalesFilters 
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
               onAddSale={handleAddSale}
             />
-            <SalesTable
+            <SalesTable 
               salesRecords={salesRecords}
               onEditSale={handleEditSale}
               onDeleteSale={handleDeleteSale}
             />
-            <SalesActions
+            <SalesActions 
               currentPage={currentPage}
               totalPages={Math.ceil(salesRecords.length / 10)}
               filteredCount={salesRecords.length}
@@ -301,22 +325,20 @@ const Inventory: React.FC = () => {
       </MainLayoutCard>
 
       {/* Modals */}
-      <AddProductModal
+      <AddProductModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddProduct={handleAddProduct}
         categories={categories}
       />
-
-      <EditProductModal
+      <EditProductModal 
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         onSave={handleSaveProduct}
         initialData={editingItem}
         categories={categories}
       />
-
-      <AddCategoryModal
+      <AddCategoryModal 
         isOpen={isAddCategoryModalOpen}
         onClose={() => setIsAddCategoryModalOpen(false)}
         onAddCategory={handleSaveCategory}

@@ -9,7 +9,7 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({ stats }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
       {/* Total Items */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+      <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-medium font-bold text-black">Total Products</h3>
         </div>
@@ -20,7 +20,7 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({ stats }) => {
       </div>
 
       {/* Inventory Value */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+      <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-medium font-bold text-black">Inventory Value</h3>
         </div>
@@ -31,7 +31,7 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({ stats }) => {
       </div>
 
       {/* Low Stock Items */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+      <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-medium font-bold text-black">Low Stock Items</h3>
         </div>
@@ -44,7 +44,7 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({ stats }) => {
       </div>
 
       {/* Out of Stock Items */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+      <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-medium font-bold text-black">Out of Stock Items</h3>
         </div>

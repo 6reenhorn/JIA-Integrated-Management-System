@@ -15,6 +15,11 @@ interface InventoryFiltersProps {
   setActiveSection?: (section: string) => void;
   onAddCategory?: () => void;
   showTabsAndTitle?: boolean;
+  sections?: Array<{
+    id: string;
+    label: string;
+    key: string;
+  }>;
 }
 
 const InventoryFilters: React.FC<InventoryFiltersProps> = ({
@@ -29,6 +34,11 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
   setActiveSection = () => {},
   onAddCategory = () => {},
   showTabsAndTitle = true,
+  sections = [
+    { id: 'inventory', label: 'Inventory', key: 'inventory' },
+    { id: 'sales', label: 'Sales', key: 'sales' },
+    { id: 'category', label: 'Categories', key: 'category' },
+  ],
 }) => {
   // Handle add button click
   const handleAddClick = () => {
@@ -39,91 +49,103 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
     }
   };
 
-  // Add Button Text
-  const addButtonText =
-    activeSection === 'inventory'
-      ? 'Add Product'
-      : 'Add Category';
+  // Dynamic configuration based on active section
+  const getSectionConfig = () => {
+    const currentSection = sections.find(section => section.id === activeSection);
+    
+    switch (activeSection) {
+      case 'inventory':
+        return {
+          addButtonText: 'Add Product',
+          searchPlaceholder: 'Q search',
+          title: `Inventory (${totalItems} items)`,
+          showCategoryFilter: true,
+        };
+      case 'sales':
+        return {
+          addButtonText: 'Add Sale',
+          searchPlaceholder: 'Q search',
+          title: 'Sales',
+          showCategoryFilter: false,
+        };
+      case 'category':
+        return {
+          addButtonText: 'Add Category',
+          searchPlaceholder: 'Q search',
+          title: 'Categories',
+          showCategoryFilter: false,
+        };
+      default:
+        return {
+          addButtonText: currentSection?.label ? `Add ${currentSection.label}` : 'Add Item',
+          searchPlaceholder: 'Q search',
+          title: currentSection?.label || 'Items',
+          showCategoryFilter: activeSection === 'inventory',
+        };
+    }
+  };
 
-  // Search Placeholder Text
-  const searchPlaceholder =
-    activeSection === 'inventory'
-      ? 'Search Items'
-      : 'Search Categories';
+  const config = getSectionConfig();
 
   return (
     <div className="mb-6">
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs - Only show if explicitly requested */}
       {showTabsAndTitle && (
         <div className="border-b border-gray-200 mb-6">
           <nav className="flex space-x-8">
-            <button
-              onClick={() => setActiveSection('inventory')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors focus:outline-none rounded-t ${
-                activeSection === 'inventory'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Inventory
-            </button>
-
-            <button
-              onClick={() => setActiveSection('sales')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors focus:outline-none rounded-t ${
-                activeSection === 'sales'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Sales
-            </button>
-
-            <button
-              onClick={() => setActiveSection('category')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors focus:outline-none rounded-t ${
-                activeSection === 'category'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Categories
-            </button>
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors focus:outline-none rounded-t ${
+                  activeSection === section.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {section.label}
+              </button>
+            ))}
           </nav>
         </div>
       )}
 
       {/* Header Section */}
       <div className="flex items-center justify-between py-4">
-        {/* Title */}
-        {showTabsAndTitle && (
-          <h2 className="text-xl font-semibold text-gray-900">
-            {activeSection === 'inventory'
-              ? `Inventory (${totalItems} items)`
-              : 'Categories'}
-          </h2>
-        )}
+        {/* Left side: Title and Search */}
+        <div className="flex items-center gap-6">
+          {/* Title - Always show for inventory section */}
+          {activeSection === 'inventory' ? (
+            <h2 className="text-xl font-semibold text-gray-900 whitespace-nowrap">
+              {config.title}
+            </h2>
+          ) : showTabsAndTitle ? (
+            <h2 className="text-xl font-semibold text-gray-900 whitespace-nowrap">
+              {config.title}
+            </h2>
+          ) : null}
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          {/* Search */}
+          {/* Search - Moved to left side */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder={searchPlaceholder}
+              placeholder={config.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none w-64 transition-all bg-gray-50"
+              className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:outline-none w-64 transition-all bg-gray-50"
             />
           </div>
+        </div>
 
-          {/* Category Filter - only for inventory */}
-          {activeSection === 'inventory' && (
+        {/* Right side: Category Filter and Add Button */}
+        <div className="flex items-center gap-3">
+          {/* Category Filter - conditionally shown */}
+          {config.showCategoryFilter && (
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-white focus:outline-none bg-blue-600 text-white font-medium transition-all appearance-none cursor-pointer"
+              className="px-4 py-2.5 border border-[#02367B] rounded-md focus:ring-2 focus:ring-[#02367B] focus:border-white focus:outline-none bg-[#02367B] text-white font-medium transition-all appearance-none cursor-pointer"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                 backgroundPosition: 'right 0.5rem center',
@@ -144,10 +166,10 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
           {/* Add Button */}
           <button
             onClick={handleAddClick}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#02367B] text-white rounded-md hover:bg-[#022a5c] transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2 font-medium"
           >
             <Plus className="w-4 h-4" />
-            {addButtonText}
+            {config.addButtonText}
           </button>
         </div>
       </div>

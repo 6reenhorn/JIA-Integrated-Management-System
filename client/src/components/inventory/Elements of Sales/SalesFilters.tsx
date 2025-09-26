@@ -27,7 +27,7 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-md 
-            focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+            focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B]
             focus:outline-none w-64 transition-all bg-gray-50"
         />
       </div>
@@ -41,16 +41,16 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             className="px-4 py-2.5 border border-gray-300 rounded-md 
-              focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+              focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B]
               focus:outline-none transition-all bg-white font-medium"
           />
         </div>
 
         <button
           onClick={onAddSale}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 
-            text-white rounded-md hover:bg-blue-700 transition-colors 
-            focus:outline-none focus:ring-2 focus:ring-blue-500 
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#02367B]
+            text-white rounded-md hover:bg-[#02367B] transition-colors 
+            focus:outline-none focus:ring-2 focus:ring-[#02367B] 
             focus:ring-offset-2 font-medium"
         >
           <Plus className="w-4 h-4" />

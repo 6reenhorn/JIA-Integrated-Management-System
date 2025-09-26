@@ -80,7 +80,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
                   placeholder="Enter category name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all bg-gray-50"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:outline-none transition-all bg-gray-50"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -97,7 +97,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                     key={index}
                     type="button"
                     onClick={() => setSelectedColor(color)}
-                    className={`w-10 h-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                    className={`w-10 h-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#02367B] ${
                       selectedColor === color 
                         ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' 
                         : 'hover:scale-105'
@@ -114,14 +114,14 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="px-6 py-3 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B] transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-2"
               >
                 Add Category
               </button>
