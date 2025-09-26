@@ -154,202 +154,184 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Background overlay - same as AddStaff modal */}
+            {/* Background overlay with blur effect - UPDATED */}
             <div 
-                className="absolute inset-0 bg-black bg-opacity-50"
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                 onClick={onClose}
+                style={{
+                    backdropFilter: 'blur(4px)',
+                    WebkitBackdropFilter: 'blur(4px)'
+                }}
             />
 
-            {/* Modal content - using AddStaff modal design */}
-            <div className="bg-gray-100 shadow-md rounded-lg p-6 w-[460px] max-h-[850px] relative z-10">
+            {/* Modal content */}
+            <div 
+                ref={modalRef}
+                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div>
-                    <h3 className="text-[20px] font-bold">Add New GCash Record</h3>
-                    <p className="text-[12px]">Record GCash cash-in, GCash cash-out, service charge, and charge MOP.</p>
+                    <h3 className="text-[20px] font-bold text-gray-900">Add New GCash Record</h3>
+                    <p className="text-[12px] text-gray-600">Record GCash cash-in, GCash cash-out, service charge, and charge MOP.</p>
                 </div>
                 
-                <div className="overflow-y-auto max-h-[650px] mt-4 text-[12px]">
+                <div className="overflow-y-auto max-h-[60vh] mt-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     <form onSubmit={handleSubmit} className='flex flex-col gap-3'>
                         {/* Transaction Details Section */}
-                        <div className="shadow-md shadow-gray-200 rounded-lg m-1 p-4">
-                            <h3 className="text-[16px] font-bold">Transaction Details</h3>
-                            <div>
-                                <div className="grid grid-cols-2 gap-4 mt-2">
-                                    <div className="flex flex-col justify-center">
-                                        <label htmlFor="amount" className="text-[12px] font-bold">Amount (₱)</label>
-                                        <input 
-                                            type="number" 
-                                            step="0.01"
-                                            id="amount" 
-                                            name="amount" 
-                                            placeholder='₱0.00' 
-                                            value={formData.amount} 
-                                            onChange={(e) => handleInputChange('amount', e.target.value)} 
-                                            className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" 
-                                            required
-                                        />
-                                    </div>
-                                    <div className="flex flex-col justify-center">
-                                        <label htmlFor="serviceCharge" className="text-[12px] font-bold">Service Charge (₱)</label>
-                                        <input 
-                                            type="number" 
-                                            step="0.01"
-                                            id="serviceCharge" 
-                                            name="serviceCharge" 
-                                            placeholder='₱0.00' 
-                                            value={formData.serviceCharge} 
-                                            onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
-                                            className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" 
-                                        />
-                                    </div>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h3 className="text-[16px] font-bold text-gray-800 mb-3">Transaction Details</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="amount" className="text-[12px] font-bold text-gray-700 mb-1">Amount (₱)</label>
+                                    <input 
+                                        type="number" 
+                                        step="0.01"
+                                        id="amount" 
+                                        name="amount" 
+                                        placeholder='₱0.00' 
+                                        value={formData.amount} 
+                                        onChange={(e) => handleInputChange('amount', e.target.value)} 
+                                        className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white" 
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="serviceCharge" className="text-[12px] font-bold text-gray-700 mb-1">Service Charge (₱)</label>
+                                    <input 
+                                        type="number" 
+                                        step="0.01"
+                                        id="serviceCharge" 
+                                        name="serviceCharge" 
+                                        placeholder='₱0.00' 
+                                        value={formData.serviceCharge} 
+                                        onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
+                                        className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white" 
+                                    />
                                 </div>
                             </div>
                         </div>
 
                         {/* Transaction Type and MOP Section */}
-                        <div className="shadow-md shadow-gray-200 rounded-lg m-1 p-4 text-[12px]">
-                            <h3 className="text-[16px] font-bold">Transaction Information</h3>
-                            <div className='flex gap-4 text-[12px] relative mt-2'>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h3 className="text-[16px] font-bold text-gray-800 mb-3">Transaction Information</h3>
+                            <div className='grid grid-cols-2 gap-4'>
                                 {/* Transaction Type Dropdown */}
                                 <div className="dropdown relative" ref={transactionTypeRef}>
-                                    <p className="text-[12px] font-bold">Transaction Type</p>
+                                    <label className="text-[12px] font-bold text-gray-700 mb-1 block">Transaction Type</label>
                                     <div
-                                        className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-lg px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                                        className="dropdown-selected relative flex items-center justify-between bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
                                         onClick={() => handleDropdownToggle('transactionType')}
                                     >
-                                        {formData.transactionType || 'Select Transaction Type'}
+                                        <span className={formData.transactionType ? 'text-gray-900' : 'text-gray-500'}>
+                                            {formData.transactionType || 'Select Transaction Type'}
+                                        </span>
                                         <svg
                                             width="16"
                                             height="16"
                                             viewBox="0 0 16 16"
                                             fill="none"
-                                            className={`transition-transform ${dropdowns.transactionType ? 'rotate-180' : ''}`}
+                                            className={`transition-transform duration-200 ${dropdowns.transactionType ? 'rotate-180' : ''}`}
                                         >
                                             <polygon points="4,6 12,6 8,12" fill="currentColor" />
                                         </svg>
                                     </div>
-                                    <div
-                                        className="dropdown-options"
-                                        style={{
-                                            display: dropdowns.transactionType ? 'block' : 'none',
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            right: 0,
-                                            backgroundColor: 'white',
-                                            border: '1px solid #ccc',
-                                            zIndex: 10,
-                                            boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                                            width: '100%',
-                                            maxWidth: '100%',
-                                            boxSizing: 'border-box'
-                                        }}
-                                    >
-                                        {transactionTypeOptions.map((option) => (
-                                            <div
-                                                key={option}
-                                                className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                onClick={() => handleDropdownSelect('transactionType', option)}
-                                            >
-                                                {option}
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {dropdowns.transactionType && (
+                                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
+                                            {transactionTypeOptions.map((option) => (
+                                                <div
+                                                    key={option}
+                                                    className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
+                                                    onClick={() => handleDropdownSelect('transactionType', option)}
+                                                >
+                                                    {option}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Charge MOP Dropdown */}
                                 <div className="dropdown relative" ref={chargeMOPRef}>
-                                    <p className="text-[12px] font-bold">Charge MOP</p>
+                                    <label className="text-[12px] font-bold text-gray-700 mb-1 block">Charge MOP</label>
                                     <div
-                                        className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-lg px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                                        className="dropdown-selected relative flex items-center justify-between bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
                                         onClick={() => handleDropdownToggle('chargeMOP')}
                                     >
-                                        {formData.chargeMOP || 'Select MOP'}
+                                        <span className={formData.chargeMOP ? 'text-gray-900' : 'text-gray-500'}>
+                                            {formData.chargeMOP || 'Select MOP'}
+                                        </span>
                                         <svg
                                             width="16"
                                             height="16"
                                             viewBox="0 0 16 16"
                                             fill="none"
-                                            className={`transition-transform ${dropdowns.chargeMOP ? 'rotate-180' : ''}`}
+                                            className={`transition-transform duration-200 ${dropdowns.chargeMOP ? 'rotate-180' : ''}`}
                                         >
                                             <polygon points="4,6 12,6 8,12" fill="currentColor" />
                                         </svg>
                                     </div>
-                                    <div
-                                        className="dropdown-options"
-                                        style={{
-                                            display: dropdowns.chargeMOP ? 'block' : 'none',
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            right: 0,
-                                            backgroundColor: 'white',
-                                            border: '1px solid #ccc',
-                                            zIndex: 10,
-                                            boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                                            width: '100%',
-                                            maxWidth: '100%',
-                                            boxSizing: 'border-box'
-                                        }}
-                                    >
-                                        {chargeMOPOptions.map((option) => (
-                                            <div
-                                                key={option}
-                                                className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                onClick={() => handleDropdownSelect('chargeMOP', option)}
-                                            >
-                                                {option}
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {dropdowns.chargeMOP && (
+                                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
+                                            {chargeMOPOptions.map((option) => (
+                                                <div
+                                                    key={option}
+                                                    className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
+                                                    onClick={() => handleDropdownSelect('chargeMOP', option)}
+                                                >
+                                                    {option}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
                         {/* Additional Information Section */}
-                        <div className="shadow-md shadow-gray-200 rounded-lg m-1 p-4 text-[12px]">
-                            <h3 className="text-[16px] font-bold">Additional Information</h3>
-                            <div>
-                                <div className="grid grid-cols-2 gap-4 mt-2">
-                                    <div className="flex flex-col justify-center">
-                                        <label htmlFor="referenceNumber" className="text-[12px] font-bold">Reference Number</label>
-                                        <input 
-                                            type="text" 
-                                            id="referenceNumber" 
-                                            name="referenceNumber" 
-                                            placeholder="Enter reference number" 
-                                            value={formData.referenceNumber} 
-                                            onChange={(e) => handleInputChange('referenceNumber', e.target.value)} 
-                                            className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" 
-                                        />
-                                    </div>
-                                    <div className="flex flex-col justify-center">
-                                        <label htmlFor="date" className="text-[12px] font-bold">Date</label>
-                                        <input 
-                                            type="date" 
-                                            id="date" 
-                                            name="date" 
-                                            value={formData.date} 
-                                            onChange={(e) => handleInputChange('date', e.target.value)} 
-                                            className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" 
-                                            required
-                                        />
-                                    </div>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h3 className="text-[16px] font-bold text-gray-800 mb-3">Additional Information</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="referenceNumber" className="text-[12px] font-bold text-gray-700 mb-1">Reference Number</label>
+                                    <input 
+                                        type="text" 
+                                        id="referenceNumber" 
+                                        name="referenceNumber" 
+                                        placeholder="Enter reference number" 
+                                        value={formData.referenceNumber} 
+                                        onChange={(e) => handleInputChange('referenceNumber', e.target.value)} 
+                                        className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white" 
+                                    />
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
+                                    <input 
+                                        type="date" 
+                                        id="date" 
+                                        name="date" 
+                                        value={formData.date} 
+                                        onChange={(e) => handleInputChange('date', e.target.value)} 
+                                        className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-white" 
+                                        required
+                                    />
                                 </div>
                             </div>
                         </div>
                     </form>
                 </div>
                 
-                {/* Action Buttons - same style as AddStaff modal */}
-                <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
+                {/* Action Buttons */}
+                <div className="w-full flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                     <button 
-                        className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
+                        type="button"
+                        className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm"
                         onClick={handleCancel}
                     >
                         Cancel
                     </button>
                     <button 
-                        className="border border-gray-300 rounded-md px-3 py-1 bg-[#02367B] hover:bg-[#016CA5] text-white" 
+                        type="submit"
+                        className="px-4 py-2 bg-[#02367B] hover:bg-[#01285a] text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm" 
                         onClick={handleSubmit}
                     >
                         Add Record
