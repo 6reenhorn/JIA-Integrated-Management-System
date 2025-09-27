@@ -235,7 +235,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                                         {transactionTypeOptions.map((option) => (
                                             <div
                                                 key={option}
-                                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
+                                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
                                                 onClick={() => handleDropdownSelect('transactionType', option)}
                                             >
                                                 {option}
@@ -270,7 +270,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                                         {chargeMOPOptions.map((option) => (
                                             <div
                                                 key={option}
-                                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
+                                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
                                                 onClick={() => handleDropdownSelect('chargeMOP', option)}
                                             >
                                                 {option}
