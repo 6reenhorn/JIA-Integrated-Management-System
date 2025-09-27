@@ -7,7 +7,6 @@ import EWallet from './EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
-import type { EWalletTab } from '../types/ewallet_types';
 
 // Define the section information type
 interface SectionInfo {
@@ -40,14 +39,15 @@ const Dashboard: React.FC = () => {
     }
   }, [currentSection, activeItem]);
 
-  const handleEWalletTabChange = (tab: EWalletTab) => {
-    const tabToActiveItem: Record<EWalletTab, string> = {
+  const handleEWalletSectionChange = (section: string) => {
+    const sectionToActiveItem: Record<string, string> = {
       'Overview': 'e-wallet',
       'GCash': 'e-wallet-gcash',
       'PayMaya': 'e-wallet-paymaya',
       'JuanPay': 'e-wallet-juanpay'
     };
-    setActiveItem(tabToActiveItem[tab]);
+    setActiveItem(sectionToActiveItem[section] || 'e-wallet');
+    updateCurrentSection('e-wallet', section);
   };
 
   const handleEmployeeSectionChange = (section: string) => {
@@ -67,7 +67,10 @@ const Dashboard: React.FC = () => {
     const sectionMapping: Record<string, {page: string, section: string}> = {
       'inventory-categories': { page: 'inventory', section: 'sales' },
       'inventory-stock-levels': { page: 'inventory', section: 'category' },
-      'employees-attendance': { page: 'employees', section: 'attendance' }
+      'employees-attendance': { page: 'employees', section: 'attendance' },
+      'e-wallet-gcash': { page: 'e-wallet', section: 'GCash' },
+      'e-wallet-paymaya': { page: 'e-wallet', section: 'PayMaya' },
+      'e-wallet-juanpay': { page: 'e-wallet', section: 'JuanPay' }
     };
 
     // If it's a known section ID, set the current section
@@ -79,6 +82,9 @@ const Dashboard: React.FC = () => {
     } else if (itemId === 'employees') {
       // If it's the main employees item, default to staff section
       setCurrentSection({ page: 'employees', section: 'staff' });
+    } else if (itemId === 'e-wallet') {
+      // If it's the main e-wallet item, default to Overview section
+      setCurrentSection({ page: 'e-wallet', section: 'Overview' });
     } else {
       // For other pages, reset the section
       setCurrentSection({ page: itemId, section: undefined });
@@ -93,30 +99,26 @@ const Dashboard: React.FC = () => {
   const renderContent = (): React.ReactNode => {
     // Handle E-Wallet sections
     if (activeItem.startsWith('e-wallet')) {
-      if (activeItem === 'e-wallet') {
-        // Default E-Wallet shows Overview tab
-        return (
-          <EWallet key={activeItem} initialTab="Overview" onTabChange={handleEWalletTabChange} />
-        );
-      }
-      const section = activeItem.replace('e-wallet-', '');
-      // Map section IDs to E-Wallet tab names
-      let initialTab: EWalletTab = 'Overview';
+      const section = activeItem === 'e-wallet' ? 'Overview' : activeItem.replace('e-wallet-', '');
+      let mappedSection = section;
       switch (section) {
         case 'gcash':
-          initialTab = 'GCash';
+          mappedSection = 'GCash';
           break;
         case 'paymaya':
-          initialTab = 'PayMaya';
+          mappedSection = 'PayMaya';
           break;
         case 'juanpay':
-          initialTab = 'JuanPay';
+          mappedSection = 'JuanPay';
           break;
         default:
-          initialTab = 'Overview';
+          mappedSection = 'Overview';
       }
       return (
-        <EWallet key={activeItem} initialTab={initialTab} onTabChange={handleEWalletTabChange} />
+        <EWallet 
+          activeSection={mappedSection} 
+          onSectionChange={handleEWalletSectionChange} 
+        />
       );
     }
 
@@ -141,10 +143,6 @@ const Dashboard: React.FC = () => {
     switch (activeItem) {
       case 'dashboard':
         return <Overview />;
-      case 'e-wallet':
-        return (
-          <EWallet onTabChange={handleEWalletTabChange} />
-        );
       case 'settings':
         return <Settings />;
       case 'about':
