@@ -92,6 +92,7 @@ Developed for **JIA Business Center** as the final project for the **Software En
 
 * Currently in **early development** – more features and improvements will be added.
 * Uses **SQLite** for local data storage (no external DB setup required).
+* Uses **Postgres** for remote data storage.
 * Written in **TypeScript** for better maintainability and fewer runtime errors.
 
 ---
