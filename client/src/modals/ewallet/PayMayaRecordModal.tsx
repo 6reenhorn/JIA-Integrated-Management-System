@@ -1,22 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-interface AddGCashRecordModalProps {
+interface AddPayMayaRecordModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAddRecord: (record: GCashRecord) => void;
+    onAddRecord: (record: PayMayaRecord) => void;
 }
 
-export interface GCashRecord {
+export interface PayMayaRecord {
     id: string;
     amount: number;
     serviceCharge: number;
     transactionType: 'Cash-In' | 'Cash-Out';
-    chargeMOP: 'Cash' | 'GCash';
+    chargeMOP: 'Cash' | 'PayMaya';
     referenceNumber: string;
     date: string;
 }
 
-const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
+const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     isOpen,
     onClose,
     onAddRecord,
@@ -41,7 +41,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
 
     // Transaction type options
     const transactionTypeOptions = ['Cash-In', 'Cash-Out'];
-    const chargeMOPOptions = ['Cash', 'GCash'];
+    const chargeMOPOptions = ['Cash', 'PayMaya'];
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -62,7 +62,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                handleCancel();
+                onClose();
             }
         };
 
@@ -76,7 +76,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
             document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen]);
+    }, [isOpen, onClose]);
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({
@@ -112,12 +112,12 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
             return;
         }
 
-        const newRecord: GCashRecord = {
+        const newRecord: PayMayaRecord = {
             id: Date.now().toString(),
             amount: parseFloat(formData.amount),
             serviceCharge: parseFloat(formData.serviceCharge) || 0,
             transactionType: formData.transactionType as 'Cash-In' | 'Cash-Out',
-            chargeMOP: formData.chargeMOP as 'Cash' | 'GCash',
+            chargeMOP: formData.chargeMOP as 'Cash' | 'PayMaya',
             referenceNumber: formData.referenceNumber,
             date: formData.date,
         };
@@ -157,6 +157,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
             {/* Background overlay with blur effect */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                onClick={onClose}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -170,8 +171,8 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>
-                    <h3 className="text-[20px] font-bold text-gray-900">Add New GCash Record</h3>
-                    <p className="text-[12px] text-gray-600">Record GCash cash-in, GCash cash-out, service charge, and charge MOP.</p>
+                    <h3 className="text-[20px] font-bold text-gray-900">Add New PayMaya Record</h3>
+                    <p className="text-[12px] text-gray-600">Record PayMaya cash-in, PayMaya cash-out, service charge, and charge MOP.</p>
                 </div>
                 
                 <div className="overflow-y-auto max-h-[60vh] mt-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
@@ -332,4 +333,4 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     );
 };
 
-export default AddGCashRecordModal;
+export default AddPayMayaRecordModal;
