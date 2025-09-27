@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import type { EWalletTab } from '../../types/ewallet_types';
-import LayoutCard from '../layout/LayoutCard';
+import type { EWalletTab } from '../types/ewallet_types';
+import LayoutCard from '../components/layout/LayoutCard';
 
-import Overview from './Overview/Overview';
-import GCash from './Gcash/Gcash';
-import PayMaya from './Paymaya/PayMaya';
-import JuanPay from './JuanPay/JuanPay';
+import Overview from '../components/e-wallet/Overview/Overview';
+import GCash from '../components/e-wallet/Gcash/Gcash';
+import PayMaya from '../components/e-wallet/Paymaya/PayMaya';
+import JuanPay from '../components/e-wallet/JuanPay/JuanPay';
 
 interface EWalletProps {
   initialTab?: EWalletTab;

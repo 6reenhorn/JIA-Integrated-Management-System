@@ -3,7 +3,7 @@ import Sidebar from '../sidebar/Sidebar';
 import Overview from '../components/dashboard/Overview';
 import Inventory from './Inventory';
 import Employees from './Employees';
-import EWallet from '../components/e-wallet/EWallet';
+import EWallet from './EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
@@ -17,7 +17,7 @@ interface SectionInfo {
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(true);
   const [currentSection, setCurrentSection] = useState<SectionInfo>({ 
     page: 'dashboard', 
     section: undefined 
@@ -28,11 +28,11 @@ const Dashboard: React.FC = () => {
     // Sync sidebar with inventory sections
     if (currentSection.page === 'inventory' && currentSection.section) {
       const sectionToSidebarId: Record<string, string> = {
-        'inventory': 'inventory-inventory',
+        'inventory': 'inventory',
         'sales': 'inventory-categories',
         'category': 'inventory-stock-levels'
       };
-      
+
       const sidebarId = sectionToSidebarId[currentSection.section];
       if (sidebarId && activeItem !== sidebarId) {
         setActiveItem(sidebarId);
@@ -65,7 +65,6 @@ const Dashboard: React.FC = () => {
     
     // Enhanced section mapping
     const sectionMapping: Record<string, {page: string, section: string}> = {
-      'inventory-inventory': { page: 'inventory', section: 'inventory' },
       'inventory-categories': { page: 'inventory', section: 'sales' },
       'inventory-stock-levels': { page: 'inventory', section: 'category' },
       'employees-attendance': { page: 'employees', section: 'attendance' }
