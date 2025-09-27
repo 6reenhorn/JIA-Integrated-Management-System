@@ -29,6 +29,37 @@ export interface RecentTransactionsProps {
   transactions: TransactionItem[];
 }
 
+// E-Wallet Record Interfaces
+export interface GCashRecord {
+  id: string;
+  amount: number;
+  serviceCharge: number;
+  transactionType: 'Cash-In' | 'Cash-Out';
+  chargeMOP: 'Cash' | 'GCash';
+  referenceNumber: string;
+  date: string;
+}
+
+export interface PayMayaRecord {
+  id: string;
+  amount: number;
+  serviceCharge: number;
+  transactionType: 'Cash-In' | 'Cash-Out';
+  chargeMOP: 'Cash' | 'PayMaya';
+  referenceNumber: string;
+  date: string;
+}
+
+export interface JuanPayRecord {
+  id: string;
+  amount: number;
+  serviceCharge: number;
+  transactionType: 'Bill Payment' | 'Transfer' | 'Remittance';
+  chargeMOP: 'Cash' | 'JuanPay';
+  referenceNumber: string;
+  date: string;
+}
+
 // E-Wallet specific data interfaces
 export interface GCashData {
   balance: string;
