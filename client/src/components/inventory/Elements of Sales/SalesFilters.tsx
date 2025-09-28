@@ -16,15 +16,14 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
   selectedDate,
   setSelectedDate,
   onAddSale,
-  salesRecordsCount,
 }) => {
   return (
     <div className="flex items-center justify-between py-4 w-full">
       {/* Sales Record Count + Search Bar */}
       <div className="flex items-center gap-4">
         {/* Sales Record Count */}
-        <div className="text-lg font-bold text-black">
-          Sales Record ({salesRecordsCount} entries)
+        <div className="text-lg font-semibold text-gray-900">
+          Sales Record
         </div>
 
         {/* Search Bar */}
