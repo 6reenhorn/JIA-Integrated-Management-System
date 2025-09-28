@@ -76,17 +76,14 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
 
       {/* Categories Section */}
       <div className="bg-none rounded-l p-6">
-        {/* Header with Category Counter, Search, and Add Button */}
+        {/* Header with Category Title, Search, and Add Button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          {/* Left side - Category Counter */}
-          <div>
+          {/* Left side - Category Title and Search Bar */}
+          <div className="flex items-center gap-4">
             <h3 className="text-lg font-semibold text-gray-900">
-              Category ({categories.length} Categories)
+              Category
             </h3>
-          </div>
-          
-          {/* Right side - Search and Add Button */}
-          <div className="flex items-center gap-3">
+            
             {/* Search Bar */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -102,7 +99,10 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                 className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent w-64"
               />
             </div>
-            
+          </div>
+          
+          {/* Right side - Add Button only */}
+          <div className="flex items-center">
             {/* Add Category Button */}
             {onAddCategory && (
               <button

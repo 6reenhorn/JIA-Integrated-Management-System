@@ -29,7 +29,6 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
   setSelectedCategory,
   categories,
   onAddItem,
-  totalItems = 0,
   activeSection = 'inventory',
   setActiveSection = () => {},
   onAddCategory = () => {},
@@ -84,7 +83,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
         return {
           addButtonText: 'Add Product',
           searchPlaceholder: 'Search Items',
-          title: `Inventory (${totalItems} items)`,
+          title: `Inventory`,
           showCategoryFilter: true,
         };
       case 'sales':

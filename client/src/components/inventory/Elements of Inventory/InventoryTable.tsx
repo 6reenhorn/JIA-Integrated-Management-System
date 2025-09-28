@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import type { InventoryItem } from '../../../types/inventory_types';
 import { getStatusColor } from '../../../utils/inventory_utils';
@@ -15,8 +15,55 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
   onEditItem,
   onDeleteItem
 }) => {
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+  const handleDeleteClick = (id: number, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setDeleteConfirmId(id);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteConfirmId !== null) {
+      onDeleteItem(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmId(null);
+  };
+
+  const renderDeleteConfirmation = (itemId: number) => {
+    if (deleteConfirmId !== itemId) return null;
+
+    return (
+      <div className="absolute top-0 right-0 mt-2 mr-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 w-80">
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold text-gray-900">Confirm Delete</h3>
+          <p className="text-xs text-gray-600 mt-1">
+            Are you sure you want to delete this inventory item?
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleCancelDelete}
+            className="flex-1 px-3 py-1.5 text-gray-700 bg-gray-100 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
+          >
+            No
+          </button>
+          <button
+            onClick={handleConfirmDelete}
+            className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
+          >
+            Yes
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto relative">
       <table className="w-full bg-white">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
@@ -31,7 +78,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
         </thead>
         <tbody className="divide-y divide-gray-100">
           {items.map((item) => (
-            <tr key={item.id} className="hover:bg-gray-50">
+            <tr key={item.id} className="hover:bg-gray-50 relative">
               <td className="py-4 px-6 text-sm font-medium text-gray-900">
                 {item.productName}
               </td>
@@ -57,7 +104,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
               <td className="py-4 px-6 text-sm text-gray-900 font-medium">
                 ₱{item.totalAmount.toFixed(2)}
               </td>
-              <td className="py-4 px-6">
+              <td className="py-4 px-6 relative">
                 <div className="flex items-center gap-1">
                   <button 
                     onClick={() => onEditItem(item.id)}
@@ -67,13 +114,14 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                     <Edit className="w-4 h-4 text-gray-600" />
                   </button>
                   <button 
-                    onClick={() => onDeleteItem(item.id)}
+                    onClick={(e) => handleDeleteClick(item.id, e)}
                     className="p-1.5 hover:bg-gray-100 rounded transition-colors" 
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4 text-gray-600" />
                   </button>
                 </div>
+                {renderDeleteConfirmation(item.id)}
               </td>
             </tr>
           ))}

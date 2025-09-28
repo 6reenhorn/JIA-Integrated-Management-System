@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import type { EWalletTab } from '../types/ewallet_types';
-import LayoutCard from '../components/layout/LayoutCard';
+import React, { useState } from 'react';
+import MainLayoutCard from '../components/layout/MainLayoutCard';
 
 import Overview from '../components/e-wallet/Overview/Overview';
 import GCash from '../components/e-wallet/Gcash/Gcash';
@@ -8,65 +7,61 @@ import PayMaya from '../components/e-wallet/Paymaya/PayMaya';
 import JuanPay from '../components/e-wallet/JuanPay/JuanPay';
 
 interface EWalletProps {
-  initialTab?: EWalletTab;
-  onTabChange?: (tab: EWalletTab) => void;
+  activeSection?: string;
+  onSectionChange?: (section: string) => void;
 }
 
-const EWallet: React.FC<EWalletProps> = ({ initialTab = 'Overview', onTabChange }) => {
-  const [activeTab, setActiveTab] = useState<EWalletTab>(initialTab);
+const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
+  const [internalActiveSection, setInternalActiveSection] = useState('Overview');
 
-  // Update activeTab when initialTab changes (useful for sidebar navigation)
-  useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
+  const activeSection = propActiveSection ?? internalActiveSection;
 
-  const tabs: EWalletTab[] = ['Overview', 'GCash', 'PayMaya', 'JuanPay'];
+  // Define sections similar to Employees component
+  const sections = [
+    { label: 'Overview', key: 'Overview' },
+    { label: 'GCash', key: 'GCash' },
+    { label: 'PayMaya', key: 'PayMaya' },
+    { label: 'JuanPay', key: 'JuanPay' }
+  ];
 
-  const handleTabChange = (tab: EWalletTab) => {
-    setActiveTab(tab);
-    if (onTabChange) {
-      onTabChange(tab);
-    }
-  };
-
-  const renderContent = (): React.ReactNode => {
-    switch (activeTab) {
-      case 'Overview':
-        return <Overview />;
-      case 'GCash':
-        return <GCash />;
-      case 'PayMaya':
-        return <PayMaya />;
-      case 'JuanPay':
-        return <JuanPay />;
-      default:
-        return <Overview />;
+  const handleSectionChange = (section: string) => {
+    if (onSectionChange) {
+      onSectionChange(section);
+    } else {
+      setInternalActiveSection(section);
     }
   };
 
   return (
-    <LayoutCard>
-      <div className="mb-4">
-        <div className="flex space-x-8 border-b border-gray-300">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              className={`py-3 px-4 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === tab
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+    <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={handleSectionChange}>
+      {/* Overview Section */}
+      {activeSection === 'Overview' && (
+        <div className="space-y-6">
+          <Overview />
         </div>
-      </div>
+      )}
 
-      {/* Dynamic Content */}
-      {renderContent()}
-    </LayoutCard>
+      {/* GCash Section */}
+      {activeSection === 'GCash' && (
+        <div className="space-y-6">
+          <GCash />
+        </div>
+      )}
+
+      {/* PayMaya Section */}
+      {activeSection === 'PayMaya' && (
+        <div className="space-y-6">
+          <PayMaya />
+        </div>
+      )}
+
+      {/* JuanPay Section */}
+      {activeSection === 'JuanPay' && (
+        <div className="space-y-6">
+          <JuanPay />
+        </div>
+      )}
+    </MainLayoutCard>
   );
 };
 
