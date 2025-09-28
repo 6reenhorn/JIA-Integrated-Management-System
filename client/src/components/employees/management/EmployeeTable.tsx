@@ -18,7 +18,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 }) => {
   return (
     <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-md">
-      <table className="table-fixed w-full">
+      <table className="table-fixed w-full bg-[#EDEDED]">
         <thead className="border-[#E5E7EB] border-b">
           <tr>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[200px]">Staff Member</th>

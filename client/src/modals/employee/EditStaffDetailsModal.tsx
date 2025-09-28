@@ -388,7 +388,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1">
             Cancel
           </button>
-          <button type="submit" form="edit-employee-form" className="border border-gray-300 rounded-md px-3 py-1 bg-[#02367B] hover:bg-[#016CA5] text-white">
+          <button type="submit" form="edit-employee-form" className="border border-gray-300 rounded-md px-3 py-1 bg-[#02367B] hover:bg-[#1C4A9E] text-white">
             Save Changes
           </button>
         </div>
