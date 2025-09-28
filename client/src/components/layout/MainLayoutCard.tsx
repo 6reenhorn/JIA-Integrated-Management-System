@@ -9,8 +9,8 @@ export interface MainLayoutCardProps {
 }
 
 const MainLayoutCard: React.FC<MainLayoutCardProps> = ({ sections, activeSection, onSectionChange, children, className = "" }) => (
-  <div className='border-2 border-[#E5E7EB] rounded-lg min-h-[650px]'>
-    <div className={`bg-gray-100 py-6 rounded-lg min-h-[150px] ${className}`}>
+  <div className='border-2 border-[#E5E7EB] rounded-[12px] shadow-sm min-h-[650px]'>
+    <div className={`bg-gray-100 py-6 rounded-[12px] min-h-[150px] ${className}`}>
         {sections && sections.length > 0 ? (
           <div className="flex space-x-4 px-6 mb-2">
             {sections.map((section) => (
@@ -19,7 +19,7 @@ const MainLayoutCard: React.FC<MainLayoutCardProps> = ({ sections, activeSection
                 onClick={() => onSectionChange?.(section.key)}
                 className={`text-[14px] font-semibold px-3 py-1 rounded ${
                   activeSection === section.key
-                    ? 'section-navigation-underline text-[#03285F]'
+                    ? 'section-navigation-underline text-[#02367B]'
                     : 'text-[#6B7280] hover:bg-gray-200'
                 }`}
               >

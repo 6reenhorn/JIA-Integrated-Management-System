@@ -1,14 +1,5 @@
 import React from 'react';
-
-export interface GCashRecord {
-    id: string;
-    amount: number;
-    serviceCharge: number;
-    transactionType: 'Cash-In' | 'Cash-Out';
-    chargeMOP: 'Cash' | 'GCash';
-    referenceNumber: string;
-    date: string;
-}
+import type { GCashRecord } from '../../../types/ewallet_types';
 
 interface GCashRecordsTableProps {
     records: GCashRecord[];

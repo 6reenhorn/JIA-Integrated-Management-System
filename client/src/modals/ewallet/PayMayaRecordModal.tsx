@@ -1,19 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import type { PayMayaRecord } from '../../types/ewallet_types';
 
 interface AddPayMayaRecordModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAddRecord: (record: PayMayaRecord) => void;
-}
-
-export interface PayMayaRecord {
-    id: string;
-    amount: number;
-    serviceCharge: number;
-    transactionType: 'Cash-In' | 'Cash-Out';
-    chargeMOP: 'Cash' | 'PayMaya';
-    referenceNumber: string;
-    date: string;
 }
 
 const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
@@ -62,7 +53,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onClose();
+                handleCancel();
             }
         };
 
@@ -76,7 +67,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
             document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({
@@ -157,7 +148,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
             {/* Background overlay with blur effect */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={onClose}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'

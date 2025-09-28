@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import MainLayoutCard from '../../layout/MainLayoutCard';
+import LayoutCard from '../../layout/LayoutCard';
 
 interface Category {
   name: string;
@@ -6,6 +8,16 @@ interface Category {
   totalStock: number;
   totalValue: number;
   color?: string;
+}
+
+interface InventoryItem {
+  id: number;
+  productName: string;
+  category: string;
+  stock: number;
+  status: string;
+  productPrice: number;
+  totalAmount: number;
 }
 
 interface CategoryContentProps {
@@ -20,6 +32,12 @@ interface CategoryContentProps {
   onAddCategory?: () => void;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  // New props for MainLayoutCard integration
+  sections?: { label: string; key: string }[];
+  activeSection?: string;
+  onSectionChange?: (key: string) => void;
+  // Pass inventory items to calculate stats
+  inventoryItems?: InventoryItem[];
 }
 
 const CategoryContent: React.FC<CategoryContentProps> = ({
@@ -32,50 +50,34 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
   showHeaderStats = true,
   onAddCategory,
   searchQuery = '',
-  onSearchChange
+  onSearchChange,
+  // MainLayoutCard props
+  sections,
+  activeSection,
+  onSectionChange,
+  inventoryItems = []
 }) => {
   const defaultColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'];
   
-  const totalProducts = categories.reduce((sum, category) => sum + category.productCount, 0);
+  // Calculate category stats from inventory items
+  const categoryStats = useMemo(() => {
+    const totalCategories = Array.from(new Set(inventoryItems.map(item => item.category))).length;
+    const totalProducts = inventoryItems.length;
+    const totalStock = inventoryItems.reduce((sum, item) => sum + item.stock, 0);
+    const totalValue = inventoryItems.reduce((sum, item) => sum + item.totalAmount, 0);
+    
+    return {
+      totalCategories,
+      totalProducts,
+      totalStock,
+      totalValue
+    };
+  }, [inventoryItems]);
 
-  return (
+  const categoryContent = (
     <>
-      {/* Header Stats Cards - Only show if showHeaderStats is true */}
-      {showHeaderStats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          {/* Total Categories Card */}
-          <div className="bg-gray-100 rounded-lg border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Categories</h3>
-            <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
-          </div>
-
-          {/* Total Products Card */}
-          <div className="bg-gray-100 rounded-lg border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Products</h3>
-            <p className="text-3xl font-bold text-gray-900">{totalProducts}</p>
-            <p className="text-xs text-gray-400 mt-1">Across all categories</p>
-          </div>
-
-          {/* Total Stock Card */}
-          <div className="bg-gray-100 rounded-lg border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Stock</h3>
-            <p className="text-3xl font-bold text-gray-900">
-              {categories.reduce((sum, category) => sum + category.totalStock, 0)}
-            </p>
-          </div>
-
-          {/* Total Value Card */}
-          <div className="bg-gray-100 rounded-lg border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
-            <p className="text-3xl font-bold text-gray-900">
-              ₱{categories.reduce((sum, category) => sum + category.totalValue, 0).toLocaleString()}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Categories Section */}
-      <div className="bg-none rounded-l p-6">
+      <div className="bg-none rounded-l p-0 mt-4">
         {/* Header with Category Title, Search, and Add Button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           {/* Left side - Category Title and Search Bar */}
@@ -118,10 +120,12 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
           </div>
         </div>
         
-        {/* Category Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {/* Category Cards Grid - Now using LayoutCard */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-1 mb-8">
           {categories.map((category, index) => (
-            <div key={index} className="bg-gray-100 rounded-2xl p-6 shadow-sm transition-shadow border border-gray-200">
+            <LayoutCard 
+              key={index} 
+            >
               {/* Category Header with Color Dot */}
               <div className="flex items-center gap-3 mb-6">
                 <div 
@@ -147,7 +151,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
               </div>
               
               {/* Category Value */}
-              <div className="border-t border-gray-200 pt-4">
+              <div className="pt-4">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm text-gray-500">Category Value</span>
                   <span className="text-lg font-semibold text-gray-900">
@@ -165,12 +169,12 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                   </button>
                 )}
               </div>
-            </div>
+            </LayoutCard>
           ))}
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-none pt-6">
+        <div className="flex items-center justify-between pt-6">
           <div className="text-sm text-gray-500">
             Page {currentPage} of {totalPages}
           </div>
@@ -212,6 +216,50 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
           </div>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Header Stats Cards - Only show if showHeaderStats is true */}
+      {showHeaderStats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          {/* Total Categories Card */}
+          <LayoutCard>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Categories</h3>
+            <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
+          </LayoutCard>
+
+          {/* Total Products Card */}
+          <LayoutCard>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Products</h3>
+            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalProducts}</p>
+            <p className="text-xs text-gray-400 mt-1">Across all categories</p>
+          </LayoutCard>
+
+          {/* Total Stock Card */}
+          <LayoutCard>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Stock</h3>
+            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalStock}</p>
+          </LayoutCard>
+
+          {/* Total Value Card */}
+          <LayoutCard>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
+            <p className="text-3xl font-bold text-gray-900">
+              ₱{categoryStats.totalValue.toLocaleString()}
+            </p>
+          </LayoutCard>
+        </div>
+      )}
+      
+      <MainLayoutCard
+        sections={sections}
+        activeSection={activeSection}
+        onSectionChange={onSectionChange}
+      >
+        {categoryContent}
+      </MainLayoutCard>
     </>
   );
 };

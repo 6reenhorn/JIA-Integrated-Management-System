@@ -1,18 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import InventoryStats from '../components/inventory/Elements of Inventory/InventoryStats';
-import InventoryFilters from '../components/inventory/Elements of Inventory/InventoryFilters';
 import InventoryTable from '../components/inventory/Elements of Inventory/InventoryTable';
-import InventoryActions from '../components/inventory/Elements of Inventory/InventoryActions';
 import AddProductModal from '../modals/Inventory/AddProductModal';
 import EditProductModal from '../modals/Inventory/EditProductModal';
 import AddCategoryModal from '../modals/Inventory/AddCategoryModal';
 import AddSalesModal from '../modals/Inventory/AddSalesModal';
-import MainLayoutCard from '../components/layout/MainLayoutCard';
 import CategoryContent from '../components/inventory/Elements of Category/CategoryContent';
-import SalesFilters from '../components/inventory/Elements of Sales/SalesFilters';
-import SalesTable from '../components/inventory/Elements of Sales/SalesTable';
 import SalesStats from '../components/inventory/Elements of Sales/SalesStats';
-import SalesActions from '../components/inventory/Elements of Sales/SalesActions';
 import EditSaleModal from '../modals/Inventory/EditSaleModal';
 import type { InventoryItem, ProductFormData } from '../types/inventory_types';
 import { filterInventoryItems, calculateStats } from '../utils/inventory_utils';
@@ -119,13 +113,6 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
 
   // Stats
   const inventoryStats = useMemo(() => calculateStats(inventoryItems), [inventoryItems]);
-  const categoryStats = useMemo(() => {
-    const totalCategories = Array.from(new Set(inventoryItems.map(item => item.category))).length;
-    const totalProducts = inventoryItems.length;
-    const totalStock = inventoryItems.reduce((sum, item) => sum + item.stock, 0);
-    const totalValue = inventoryItems.reduce((sum, item) => sum + item.totalAmount, 0);
-    return { totalItems: totalCategories, totalProducts, totalStock, totalValue, lowStockItems: 0, outOfStockItems: 0 };
-  }, [inventoryItems]);
 
   // Filters
   const filteredItems = useMemo(
@@ -279,122 +266,82 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
 
   return (
     <div className="space-y-6">
-      {/* Header Stats */}
-      {activeSection === 'inventory' ? (
-        <InventoryStats stats={inventoryStats} />
-      ) : activeSection === 'sales' ? (
+      {/* Inventory Section - Now InventoryStats handles the MainLayoutCard */}
+      {activeSection === 'inventory' && (
+        <InventoryStats 
+          stats={inventoryStats}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          categories={categories}
+          filterOpen={filterOpen}
+          setFilterOpen={setFilterOpen}
+          onAddItem={handleAddItem}
+          totalItems={filteredItems.length}
+          activeSection={activeSection}
+          setActiveSection={handleSectionChange}
+          onAddCategory={handleAddCategory}
+          sections={sections}
+        >
+          <InventoryTable 
+            items={filteredItems}
+            onViewItem={(id) => console.log('View item', id)}
+            onEditItem={handleEditItem}
+            onDeleteItem={handleDeleteItem}
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredItems.length / 10)}
+            filteredCount={filteredItems.length}
+            totalCount={inventoryItems.length}
+            onPageChange={handlePageChange}
+          />
+        </InventoryStats>
+      )}
+
+      {/* Category Section - Now fully handled by CategoryContent */}
+      {activeSection === 'category' && (
+        <CategoryContent 
+          categories={filteredCategoryData}
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredCategoryData.length / 10)}
+          filteredCount={filteredCategoryData.length}
+          totalCount={categoryData.length}
+          onPageChange={handlePageChange}
+          onViewProducts={handleViewProducts}
+          showHeaderStats={true} // Enable header stats in CategoryContent
+          onAddCategory={handleAddCategory}
+          searchQuery={categorySearchTerm}
+          onSearchChange={setCategorySearchTerm}
+          sections={sections}
+          activeSection={activeSection}
+          onSectionChange={handleSectionChange}
+          // Pass inventory items so CategoryContent can calculate its own stats
+          inventoryItems={inventoryItems}
+        />
+      )}
+
+      {/* Sales Section - Now handled by SalesStats */}
+      {activeSection === 'sales' && (
         <SalesStats 
           totalSales={salesStats.totalSales}
           totalAmount={salesStats.totalAmount}
           averageSale={salesStats.averageSale}
           totalItemsSold={salesStats.totalItemsSold}
+          sections={sections}
+          activeSection={activeSection}
+          onSectionChange={handleSectionChange}
+          salesRecords={salesRecords}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          onAddSale={handleAddSale}
+          onEditSale={handleEditSale}
+          onDeleteSale={handleDeleteSale}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
         />
-      ) : (
-        // Category stats
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-sm font-bold text-black mb-2">Total Categories</h3>
-            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalItems}</p>
-          </div>
-          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-sm font-bold text-black mb-2">Total Products</h3>
-            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalProducts}</p>
-            <p className="text-xs text-gray-400 mt-1">Across all categories</p>
-          </div>
-          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-sm font-bold text-black mb-2">Total Stock</h3>
-            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalStock}</p>
-          </div>
-          <div className="bg-gray-100 rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-sm font-bold text-black mb-2">Total Value</h3>
-            <p className="text-3xl font-bold text-gray-900">₱{categoryStats.totalValue.toLocaleString()}</p>
-          </div>
-        </div>
       )}
-
-      <MainLayoutCard 
-        sections={sections} 
-        activeSection={activeSection} 
-        onSectionChange={handleSectionChange}
-      >
-        {/* Inventory Section */}
-        {activeSection === 'inventory' && (
-          <div className="space-y-6">
-            <InventoryFilters 
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              categories={categories}
-              filterOpen={filterOpen}
-              setFilterOpen={setFilterOpen}
-              onAddItem={handleAddItem}
-              totalItems={filteredItems.length}
-              activeSection={activeSection}
-              setActiveSection={handleSectionChange}
-              onAddCategory={handleAddCategory}
-              showTabsAndTitle={false}
-              sections={sections}
-            />
-            <InventoryTable 
-              items={filteredItems}
-              onViewItem={(id) => console.log('View item', id)}
-              onEditItem={handleEditItem}
-              onDeleteItem={handleDeleteItem}
-            />
-            <InventoryActions 
-              currentPage={currentPage}
-              totalPages={Math.ceil(filteredItems.length / 10)}
-              filteredCount={filteredItems.length}
-              totalCount={inventoryItems.length}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        )}
-
-        {/* Category Section */}
-        {activeSection === 'category' && (
-          <CategoryContent 
-            categories={filteredCategoryData}
-            currentPage={currentPage}
-            totalPages={Math.ceil(filteredCategoryData.length / 10)}
-            filteredCount={filteredCategoryData.length}
-            totalCount={categoryData.length}
-            onPageChange={handlePageChange}
-            onViewProducts={handleViewProducts}
-            showHeaderStats={false}
-            onAddCategory={handleAddCategory}
-            searchQuery={categorySearchTerm}
-            onSearchChange={setCategorySearchTerm}
-          />
-        )}
-
-        {/* Sales Section */}
-        {activeSection === 'sales' && (
-          <div className="space-y-6">
-           <SalesFilters
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-              onAddSale={handleAddSale}
-              salesRecordsCount={salesRecords.length}
-            />
-            <SalesTable 
-              salesRecords={salesRecords}
-              onEditSale={handleEditSale}
-              onDeleteSale={handleDeleteSale}
-            />
-            <SalesActions 
-              currentPage={currentPage}
-              totalPages={Math.ceil(salesRecords.length / 10)}
-              filteredCount={salesRecords.length}
-              totalCount={salesRecords.length}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        )}
-      </MainLayoutCard>
 
       {/* All Modals */}
       <AddProductModal 
