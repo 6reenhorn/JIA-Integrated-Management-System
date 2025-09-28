@@ -193,7 +193,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
         {/* Tooltip - now shows even when active */}
         {showTooltip && (
           <div className="absolute left-12 top-1/2 transform -translate-y-1/2 ml-2 z-50">
-            <div className="bg-[#016CA5] text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap shadow-lg border border-[#02367B]">
+            <div className="bg-[#00355D] text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap shadow-lg border border-[#00355D]">
               {item.label}
               {/* Arrow pointing to the button */}
               <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1">
@@ -214,9 +214,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
     if (!item) return null;
     
     return (
-      <div className="bg-[#012F6C] text-white h-full flex flex-col shadow-lg overflow-hidden">
+      <div className="bg-[#002B4D] text-white h-full flex flex-col shadow-lg overflow-hidden">
         <div>
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-[#E2E8F0] flex-shrink-0 w-full">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-[#E9EBF080] flex-shrink-0 w-full">
             <div className="w-8 h-8 bg-[#016CA5] rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 cursor-pointer">
               <span className="text-sm font-bold">L</span>
             </div>
@@ -293,7 +293,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
   return (
     <div className="relative flex h-screen">
       {/* Collapsed sidebar with icons only */}
-      <div className="bg-[#02367B] text-white w-16 min-h-screen flex flex-col py-4 space-y-2 flex-shrink-0 border-r border-[#E2E8F0]">
+      <div className="bg-[#00355D] text-white w-16 min-h-screen flex flex-col py-4 space-y-2 flex-shrink-0 border-r border-[#E9EBF080]">
         <div 
           className="w-8 h-8 flex items-center justify-center mb-4 rounded-lg transition-colors duration-200 mx-auto cursor-pointer" 
           onClick={() => {
@@ -345,7 +345,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
       
       {/* Animated expandable sidebar */}
       <div 
-        className={`bg-[#012F6C] text-white min-h-screen transition-all duration-150 ease-out overflow-hidden ${
+        className={`bg-[#002B4D] text-white min-h-screen transition-all duration-150 ease-out overflow-hidden ${
           shouldShowExpanded ? 'w-64' : 'w-0'
         }`}
       >
