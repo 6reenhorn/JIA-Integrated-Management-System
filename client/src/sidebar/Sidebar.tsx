@@ -291,7 +291,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
   const shouldShowExpanded = expanded && !isCollapsed;
 
   return (
-    <div className="relative flex h-screen border-r">
+    <div className="relative flex h-screen">
       {/* Collapsed sidebar with icons only */}
       <div className="bg-[#02367B] text-white w-16 min-h-screen flex flex-col py-4 space-y-2 flex-shrink-0 border-r border-[#E2E8F0]">
         <div 
