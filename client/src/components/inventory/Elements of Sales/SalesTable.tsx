@@ -40,9 +40,9 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
     if (deleteConfirmId !== recordId) return null;
 
     return (
-      <div className="absolute top-0 right-0 mt-2 mr-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 w-80">
-        <div className="mb-3">
-          <h3 className="text-sm font-semibold text-gray-900">Confirm Delete</h3>
+      <div className="absolute top-0 right-0 mt-2 mr-2 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-64">
+        <div className="mb-2">
+          <h3 className="text-xs font-semibold text-gray-900">Confirm Delete</h3>
           <p className="text-xs text-gray-600 mt-1">
             Are you sure you want to delete this sales record?
           </p>
@@ -50,13 +50,13 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
         <div className="flex gap-2">
           <button
             onClick={handleCancelDelete}
-            className="flex-1 px-3 py-1.5 text-gray-700 bg-gray-100 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
+            className="flex-1 px-2 py-1 text-gray-700 bg-gray-100 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
           >
             No
           </button>
           <button
             onClick={handleConfirmDelete}
-            className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
+            className="flex-1 px-2 py-1 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
           >
             Yes
           </button>
@@ -77,7 +77,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Method</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -89,8 +89,8 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
                 <td className="px-6 py-4 text-sm text-gray-900">₱{record.price.toFixed(2)}</td>
                 <td className="px-6 py-4 text-sm text-gray-900">₱{record.total.toFixed(2)}</td>
                 <td className="px-6 py-4 text-sm text-gray-900">{record.paymentMethod}</td>
-                <td className="px-6 py-4 text-right text-sm relative">
-                  <div className="flex justify-end space-x-2">
+                <td className="px-6 py-4 text-left text-sm relative">
+                  <div className="flex justify-start space-x-2">
                     <button
                       onClick={() => onEditSale(record.id)}
                       className="text-black hover:text-black p-1 rounded-full hover:bg-gray-100"

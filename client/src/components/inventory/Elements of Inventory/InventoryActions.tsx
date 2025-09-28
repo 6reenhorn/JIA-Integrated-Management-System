@@ -11,14 +11,12 @@ interface InventoryActionsProps {
 const InventoryActions: React.FC<InventoryActionsProps> = ({
   currentPage,
   totalPages,
-  filteredCount,
-  totalCount,
   onPageChange
 }) => {
   return (
     <div className="flex items-center justify-between mt-6">
       <div className="text-sm text-gray-500">
-        Page {currentPage} of {totalPages} • Showing {filteredCount} of {totalCount} items
+        Page {currentPage} of {totalPages}
       </div>
       <div className="flex items-center gap-1">
         <button
