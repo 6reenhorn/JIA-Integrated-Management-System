@@ -344,7 +344,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
           onClick={onClose}>
           Cancel
         </button>
-        <button className="border border-gray-300 rounded-md px-3 py-1 bg-[#02367B] hover:bg-[#016CA5] text-white" onClick={() => {
+        <button className="border border-gray-300 rounded-md px-3 py-1 bg-[#02367B] hover:bg-[#1C4A9E] text-white" onClick={() => {
           if (onAddEmployee) {
             onAddEmployee({
               name: `${firstName} ${lastName}`,
