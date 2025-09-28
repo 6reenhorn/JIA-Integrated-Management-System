@@ -37,9 +37,9 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     if (deleteConfirmId !== itemId) return null;
 
     return (
-      <div className="absolute top-0 right-0 mt-2 mr-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 w-80">
-        <div className="mb-3">
-          <h3 className="text-sm font-semibold text-gray-900">Confirm Delete</h3>
+      <div className="absolute top-0 right-0 mt-2 mr-2 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-64">
+        <div className="mb-2">
+          <h3 className="text-xs font-semibold text-gray-900">Confirm Delete</h3>
           <p className="text-xs text-gray-600 mt-1">
             Are you sure you want to delete this inventory item?
           </p>
@@ -47,13 +47,13 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
         <div className="flex gap-2">
           <button
             onClick={handleCancelDelete}
-            className="flex-1 px-3 py-1.5 text-gray-700 bg-gray-100 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
+            className="flex-1 px-2 py-1 text-gray-700 bg-gray-100 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
           >
             No
           </button>
           <button
             onClick={handleConfirmDelete}
-            className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
+            className="flex-1 px-2 py-1 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
           >
             Yes
           </button>

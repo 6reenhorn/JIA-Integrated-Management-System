@@ -60,7 +60,7 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
             text-white text-sm font-medium rounded-lg hover:bg-[#01295a] transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add Sale
+          Add Sales
         </button>
       </div>
     </div>

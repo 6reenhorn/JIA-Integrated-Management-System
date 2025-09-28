@@ -176,7 +176,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={toggleDropdown}
-                className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent bg-white cursor-pointer min-w-[140px] justify-between"
+                className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent bg-gray-100 cursor-pointer min-w-[140px] justify-between"
               >
                 <span className="truncate">{getDisplayText()}</span>
                 <ChevronDown 
@@ -188,7 +188,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-100 border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
                   <button
                     onClick={() => handleCategorySelect('all')}
                     className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors ${
