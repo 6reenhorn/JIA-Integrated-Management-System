@@ -7,9 +7,10 @@ interface EmployeeFiltersProps {
   statusFilter: string;
   onRoleChange: (role: string) => void;
   onStatusChange: (status: string) => void;
+  onReset: () => void;
 }
 
-const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, onStatusChange }: EmployeeFiltersProps) => {
+const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, onStatusChange, onReset }: EmployeeFiltersProps) => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
@@ -80,7 +81,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
         </button>
         {isFiltersOpen && (
           <div ref={filtersRef} className="absolute top-full mt-2 -right-[1px] z-10">
-            <div className="bg-white p-4 rounded-md shadow-md flex flex-col gap-4">
+            <div className="bg-white p-4 rounded-md shadow-md flex flex-col gap-2">
               <div className="dropdown relative text-[15px]" ref={roleDropdownRef}>
                 <div
                   className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[185px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -158,17 +159,25 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
                     boxSizing: 'border-box'
                   }}
                 >
-                  {statusOptions.map((option) => (
-                    <div
-                      key={option}
-                      className="option text-[14px] px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => handleStatusOptionClick(option)}
-                    >
-                      {option}
-                    </div>
-                  ))}
-                </div>
+                {statusOptions.map((option) => (
+                  <div
+                    key={option}
+                    className="option text-[14px] px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleStatusOptionClick(option)}
+                  >
+                    {option}
+                  </div>
+                ))}
               </div>
+
+              {/* Reset Button */}
+              <button
+                onClick={onReset}
+                className="w-full text-sm px-4 mt-4 py-2 bg-gray-500 border-2 border-gray-600 text-white rounded-sm hover:bg-gray-600 focus:outline-none flex-shrink-0"
+              >
+                Reset Filters
+              </button>
+            </div>
             </div>
           </div>
         )}

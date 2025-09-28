@@ -11,9 +11,9 @@ interface DateRange {
 const Attendance: React.FC = () => {
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [filterType, setFilterType] = useState<'preset' | 'relative' | 'custom'>('preset');
+  const [filterType, setFilterType] = useState<'preset' | 'custom'>('preset');
   const [selectedPreset, setSelectedPreset] = useState('Today');
-  const [selectedRelative, setSelectedRelative] = useState('Last 7 days');
+
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
@@ -23,6 +23,14 @@ const Attendance: React.FC = () => {
     setDateRange(range);
     // Here you can add logic to filter attendance data based on the date range
     console.log('Applied date range:', range);
+  };
+
+  const handleReset = () => {
+    setFilterType('preset');
+    setSelectedPreset('Today');
+    setCustomStart('');
+    setCustomEnd('');
+    setDateRange(null);
   };
 
   const toggleFilters = () => {
@@ -80,13 +88,12 @@ const Attendance: React.FC = () => {
                 onFilterTypeChange={setFilterType}
                 selectedPreset={selectedPreset}
                 onSelectedPresetChange={setSelectedPreset}
-                selectedRelative={selectedRelative}
-                onSelectedRelativeChange={setSelectedRelative}
                 customStart={customStart}
                 onCustomStartChange={setCustomStart}
                 customEnd={customEnd}
                 onCustomEndChange={setCustomEnd}
                 onApply={handleApply}
+                onReset={handleReset}
               />
             </div>
           )}

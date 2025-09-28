@@ -223,6 +223,11 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setDeleteId(null);
   };
 
+  const handleResetFilters = () => {
+    setRoleFilter('All Roles');
+    setStatusFilter('All Status');
+  };
+
   // No scroll lock needed when using a portal-rendered overlay
   useEffect(() => {}, [showConfirm]);
 
@@ -243,12 +248,13 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
           <div className="space-y-6">
             <div className='flex justify-between items-center mb-0'>
               <EmployeeSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-              <EmployeeFilters 
-                onAddStaff={toggleModal} 
+              <EmployeeFilters
+                onAddStaff={toggleModal}
                 roleFilter={roleFilter}
                 statusFilter={statusFilter}
                 onRoleChange={setRoleFilter}
                 onStatusChange={setStatusFilter}
+                onReset={handleResetFilters}
               />
             </div>
 
