@@ -44,3 +44,48 @@
   transition: width 0.5s;
 }
 
+/* Filter navigation underline effect */
+.filter-type-active {
+  display: inline-block;
+  position: relative;
+}
+.filter-type-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #03285F;
+  transition: width 0.5s;
+}
+
+/* DatePicker styles */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+.react-datepicker__input-container {
+  width: 100%;
+}
+.react-datepicker__input-container input {
+  width: 100%;
+}
+
+/* Calendar positioning - below and centered */
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+.react-datepicker {
+  border: 1px solid #ccc !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Below and centered calendar positioning */
+.datepicker-below-center {
+  transform: translateX(-15%) !important;
+  margin-top: 53px !important;
+}
+.datepicker-below-center .react-datepicker {
+  margin-left: 0 !important;
+}
