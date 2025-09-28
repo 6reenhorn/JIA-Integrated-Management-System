@@ -13,14 +13,14 @@ const CustomTitleBar: React.FC = () => {
                     className="w-12 h-8 flex items-center justify-center hover:bg-gray-600"
                 >
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <rect x="5" y="10" width="10" height="1" fill="white"/>
+                        <rect x="5" y="10" width="13" height="1" fill="white"/>
                     </svg>
                 </button>
                 <button 
                     onClick={() => window.electronAPI.maximize()}
                     className="w-12 h-8 flex items-center justify-center hover:bg-gray-600"
                 >
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                         <rect x="4" y="4" width="12" height="12" stroke="white" strokeWidth="1" fill="none"/>
                     </svg>
                 </button>
@@ -28,7 +28,7 @@ const CustomTitleBar: React.FC = () => {
                     onClick={() => window.electronAPI.close()}
                     className="w-12 h-8 flex items-center justify-center hover:bg-red-600"
                 >
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                         <line x1="4" y1="4" x2="16" y2="16" stroke="white" strokeWidth="1"/>
                         <line x1="16" y1="4" x2="4" y2="16" stroke="white" strokeWidth="1"/>
                     </svg>

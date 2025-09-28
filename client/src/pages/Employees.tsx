@@ -9,9 +9,9 @@ import { filterEmployees, calculateStats } from '../utils/employee_utils';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
 import EmployeeSearchBar from '../components/employees/management/EmployeeSearchBar';
 import AddStaffModal from '../modals/employee/AddStaffModal';
-import EmployeeAttendance from '../components/employees/attendance/EmployeeAttendance';
-
+import AttendanceSearchBar from '../components/employees/attendance/AttendanceSearchBar';
 import EditStaffDetailsModal from '../modals/employee/EditStaffDetailsModal';
+import AttendanceStats from '../components/employees/attendance/AttendanceStats';
 
 const PAGE_SIZE = 5;
 
@@ -229,7 +229,13 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   return (
     <div className="space-y-6">
       {/* Employee Stats Section */}
-      <EmployeeStats stats={stats} />
+      {activeSection === 'staff' && (
+        <EmployeeStats stats={stats} />
+      )}
+      {/* Attendance Stats Section */}
+      {activeSection === 'attendance' && (
+        <AttendanceStats />
+      )}
 
       <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={handleSectionChange}>
         {/* Staff Management Section */}
@@ -266,7 +272,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         )}
         {/* Attendance Management Section */}
         {activeSection === 'attendance' && (
-          <EmployeeAttendance />
+          <AttendanceSearchBar />
         )}
       </MainLayoutCard>
 
