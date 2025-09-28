@@ -215,15 +215,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
     
     return (
       <div className="bg-[#012F6C] text-white h-full flex flex-col shadow-lg overflow-hidden">
-        <div className='flex pl-1'>
-          <div className="flex justify-start items-center gap-2 p-4 border-b border-[#E9EBF080] flex-shrink-0">
-            <div 
-              className="w-8 h-8 bg-[#016CA5] rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 mx-auto cursor-pointer" 
-              onClick={() => {
-                setExpanded(null);
-                onToggle(); // Call onToggle to collapse the sidebar
-              }}
-            >
+        <div>
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-[#E2E8F0] flex-shrink-0 w-full">
+            <div className="w-8 h-8 bg-[#016CA5] rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 cursor-pointer">
               <span className="text-sm font-bold">L</span>
             </div>
             <span className="font-bold text-lg whitespace-nowrap">JIA <span className="text-sm">Integrated System</span></span>
@@ -297,9 +291,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
   const shouldShowExpanded = expanded && !isCollapsed;
 
   return (
-    <div className="relative flex h-screen">
+    <div className="relative flex h-screen border-r">
       {/* Collapsed sidebar with icons only */}
-      <div className="bg-[#02367B] text-white w-16 min-h-screen flex flex-col py-4 space-y-2 flex-shrink-0">
+      <div className="bg-[#02367B] text-white w-16 min-h-screen flex flex-col py-4 space-y-2 flex-shrink-0 border-r border-[#E2E8F0]">
         <div 
           className="w-8 h-8 flex items-center justify-center mb-4 rounded-lg transition-colors duration-200 mx-auto cursor-pointer" 
           onClick={() => {
