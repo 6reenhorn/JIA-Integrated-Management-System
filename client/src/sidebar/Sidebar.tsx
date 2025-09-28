@@ -183,8 +183,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
               onItemClick(item.id);
             }
           }}
-          className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 hover:bg-gray-600 ${
-            isActive ? 'bg-gray-600 text-white' : 'text-gray-300'
+          className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 hover:bg-[#FFFFFF33] ${
+            isActive ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300'
           }`}
         >
           <span className="flex-shrink-0">{item.icon}</span>
@@ -193,7 +193,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
         {/* Tooltip - now shows even when active */}
         {showTooltip && (
           <div className="absolute left-12 top-1/2 transform -translate-y-1/2 ml-2 z-50">
-            <div className="bg-gray-700 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap shadow-lg border border-gray-600">
+            <div className="bg-[#00355D] text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap shadow-lg border border-[#00355D]">
               {item.label}
               {/* Arrow pointing to the button */}
               <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1">
@@ -214,16 +214,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
     if (!item) return null;
     
     return (
-      <div className="bg-gray-900 text-white h-full flex flex-col shadow-lg overflow-hidden">
-        <div className='flex pl-1'>
-          <div className="flex justify-start items-center gap-2 p-4 border-b border-gray-700 flex-shrink-0">
-            <div 
-              className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 mx-auto cursor-pointer" 
-              onClick={() => {
-                setExpanded(null);
-                onToggle(); // Call onToggle to collapse the sidebar
-              }}
-            >
+      <div className="bg-[#002B4D] text-white h-full flex flex-col shadow-lg overflow-hidden">
+        <div>
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-[#E9EBF080] flex-shrink-0 w-full">
+            <div className="w-8 h-8 bg-[#016CA5] rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 cursor-pointer">
               <span className="text-sm font-bold">L</span>
             </div>
             <span className="font-bold text-lg whitespace-nowrap">JIA <span className="text-sm">Integrated System</span></span>
@@ -247,7 +241,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
                 setExpanded(itemId);
               }}
               className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 ${
-                (activeItem === itemId && (itemId !== 'inventory' || !currentSection || currentSection === 'inventory')) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
+                (activeItem === itemId && (itemId !== 'inventory' || !currentSection || currentSection === 'inventory')) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300 hover:bg-[#FFFFFF33]'
               }`}
             >
               <span className="flex-shrink-0">{item.icon}</span>
@@ -275,8 +269,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
                         }
                       }}
                       className={`w-full flex items-center gap-3 py-2 px-4 text-left rounded-lg transition-all duration-200 text-sm ${
-                        isItemActive(section.id) ? 'bg-gray-700 text-white' : 'text-gray-300'
-                      } ${isSectionFunctional(section.id) ? 'hover:bg-gray-700 cursor-pointer' : 'cursor-default opacity-60'}`}
+                        isItemActive(section.id) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300'
+                      } ${isSectionFunctional(section.id) ? 'hover:bg-[#FFFFFF33] cursor-pointer' : 'cursor-default opacity-60'}`}
                     >
                       <span className="whitespace-nowrap">+ {section.label}</span>
                       {!isSectionFunctional(section.id) && (
@@ -299,7 +293,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
   return (
     <div className="relative flex h-screen">
       {/* Collapsed sidebar with icons only */}
-      <div className="bg-gray-800 text-white w-16 min-h-screen flex flex-col py-4 space-y-2 flex-shrink-0">
+      <div className="bg-[#00355D] text-white w-16 min-h-screen flex flex-col py-4 space-y-2 flex-shrink-0 border-r border-[#E9EBF080]">
         <div 
           className="w-8 h-8 flex items-center justify-center mb-4 rounded-lg transition-colors duration-200 mx-auto cursor-pointer" 
           onClick={() => {
@@ -351,7 +345,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
       
       {/* Animated expandable sidebar */}
       <div 
-        className={`bg-gray-900 text-white min-h-screen transition-all duration-150 ease-out overflow-hidden ${
+        className={`bg-[#002B4D] text-white min-h-screen transition-all duration-150 ease-out overflow-hidden ${
           shouldShowExpanded ? 'w-64' : 'w-0'
         }`}
       >

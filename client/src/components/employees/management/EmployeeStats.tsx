@@ -1,6 +1,6 @@
 import React from 'react';
 import { User, Plus } from 'lucide-react';
-import DashboardCard from '../../layout/LayoutCard';
+import LayoutCard from '../../layout/LayoutCard';
 import type { EmployeeStats as EmployeeStatsType } from '../../../types/employee_types';
 
 interface EmployeeStatsProps {
@@ -10,7 +10,7 @@ interface EmployeeStatsProps {
 const EmployeeStats: React.FC<EmployeeStatsProps> = ({ stats }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <DashboardCard title="Total Employees">
+      <LayoutCard title="Total Employees">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-gray-900">{stats.totalEmployees}</p>
@@ -18,9 +18,9 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({ stats }) => {
           </div>
           <User className="w-8 h-8 text-blue-500" />
         </div>
-      </DashboardCard>
+      </LayoutCard>
       
-      <DashboardCard title="Active Staff">
+      <LayoutCard title="Active Staff">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-gray-900">{stats.activeEmployees}</p>
@@ -30,9 +30,9 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({ stats }) => {
             <span className="text-green-600 font-semibold">{stats.activeEmployees}</span>
           </div>
         </div>
-      </DashboardCard>
+      </LayoutCard>
       
-      <DashboardCard title="Recent Logins">
+      <LayoutCard title="Recent Logins">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-gray-900">{stats.newHires}</p>
@@ -40,7 +40,7 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({ stats }) => {
           </div>
           <Plus className="w-8 h-8 text-purple-500" />
         </div>
-      </DashboardCard>
+      </LayoutCard>
     </div>
   );
 };
