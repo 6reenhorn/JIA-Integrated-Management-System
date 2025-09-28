@@ -9,7 +9,7 @@ export interface MainLayoutCardProps {
 }
 
 const MainLayoutCard: React.FC<MainLayoutCardProps> = ({ sections, activeSection, onSectionChange, children, className = "" }) => (
-  <div className='border-2 border-[#E5E7EB] rounded-[12px] min-h-[650px]'>
+  <div className='border-2 border-[#E5E7EB] rounded-[12px] shadow-sm min-h-[650px]'>
     <div className={`bg-gray-100 py-6 rounded-[12px] min-h-[150px] ${className}`}>
         {sections && sections.length > 0 ? (
           <div className="flex space-x-4 px-6 mb-2">
