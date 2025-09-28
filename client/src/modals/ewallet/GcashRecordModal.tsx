@@ -1,19 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import type { GCashRecord } from '../../types/ewallet_types';
 
 interface AddGCashRecordModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAddRecord: (record: GCashRecord) => void;
-}
-
-export interface GCashRecord {
-    id: string;
-    amount: number;
-    serviceCharge: number;
-    transactionType: 'Cash-In' | 'Cash-Out';
-    chargeMOP: 'Cash' | 'GCash';
-    referenceNumber: string;
-    date: string;
 }
 
 const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({

@@ -1,19 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import type { PayMayaRecord } from '../../types/ewallet_types';
 
 interface AddPayMayaRecordModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAddRecord: (record: PayMayaRecord) => void;
-}
-
-export interface PayMayaRecord {
-    id: string;
-    amount: number;
-    serviceCharge: number;
-    transactionType: 'Cash-In' | 'Cash-Out';
-    chargeMOP: 'Cash' | 'PayMaya';
-    referenceNumber: string;
-    date: string;
 }
 
 const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({

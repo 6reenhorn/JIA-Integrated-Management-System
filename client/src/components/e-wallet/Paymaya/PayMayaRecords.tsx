@@ -1,14 +1,5 @@
 import React from 'react';
-
-export interface PayMayaRecord {
-    id: string;
-    amount: number;
-    serviceCharge: number;
-    transactionType: 'Cash-In' | 'Cash-Out';
-    chargeMOP: 'Cash' | 'PayMaya';
-    referenceNumber: string;
-    date: string;
-}
+import type { PayMayaRecord } from '../../../types/ewallet_types';
 
 interface PayMayaRecordsTableProps {
     records: PayMayaRecord[];

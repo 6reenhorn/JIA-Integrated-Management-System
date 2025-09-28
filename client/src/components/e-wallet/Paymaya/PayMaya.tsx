@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import LayoutCard from '../../layout/LayoutCard';
 import { Search, Plus } from 'lucide-react';
 import AddPayMayaRecordModal from '../../../modals/ewallet/PayMayaRecordModal';
-import type { PayMayaRecord } from '../../../modals/ewallet/PayMayaRecordModal';
+import type { PayMayaRecord } from '../../../types/ewallet_types';
 import PayMayaRecordsTable from './PayMayaRecords';
 
 const PayMaya: React.FC = () => {
