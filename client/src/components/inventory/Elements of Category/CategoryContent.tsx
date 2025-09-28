@@ -121,7 +121,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
         {/* Category Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {categories.map((category, index) => (
-            <div key={index} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+            <div key={index} className="bg-gray-100 rounded-2xl p-6 shadow-sm transition-shadow border border-gray-200">
               {/* Category Header with Color Dot */}
               <div className="flex items-center gap-3 mb-6">
                 <div 
