@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Plus, ChevronDown } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 
 interface InventoryFiltersProps {
   searchTerm: string;
@@ -176,14 +176,20 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={toggleDropdown}
-                className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent bg-gray-100 cursor-pointer min-w-[140px] justify-between"
+                className="flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent bg-gray-100 cursor-pointer min-w-[140px]"
               >
                 <span className="truncate">{getDisplayText()}</span>
-                <ChevronDown 
-                  className={`w-3 h-3 transition-transform duration-200 ${
-                    isDropdownOpen ? 'rotate-180' : 'rotate-0'
+                <svg 
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className={`text-gray-500 transition-transform duration-200 ease-in-out flex-shrink-0 ml-2 ${
+                    isDropdownOpen ? 'rotate-180' : ''
                   }`}
-                />
+                >
+                  <polygon points="4,6 12,6 8,12" fill="currentColor" />
+                </svg>
               </button>
               
               {/* Dropdown Menu */}

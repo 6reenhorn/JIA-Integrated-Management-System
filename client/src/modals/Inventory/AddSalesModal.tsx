@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Calendar } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X } from 'lucide-react';
+import CustomDatePicker from '../../components/common/CustomDatePicker';
 
 interface AddSalesModalProps {
   isOpen: boolean;
@@ -27,6 +28,22 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isPaymentMethodOpen, setIsPaymentMethodOpen] = useState(false);
+  const paymentMethodRef = useRef<HTMLDivElement>(null);
+
+  const paymentMethodOptions = ['Cash', 'Gcash', 'PayMaya', 'Card'];
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (paymentMethodRef.current && !paymentMethodRef.current.contains(event.target as Node)) {
+        setIsPaymentMethodOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
@@ -181,16 +198,46 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Payment Method
                 </label>
-                <select
-                  value={formData.paymentMethod}
-                  onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
-                >
-                  <option value="Cash">Cash</option>
-                  <option value="Gcash">Gcash</option>
-                  <option value="PayMaya">PayMaya</option>
-                  <option value="Card">Card</option>
-                </select>
+                <div className="relative" ref={paymentMethodRef}>
+                  <div
+                    onClick={() => setIsPaymentMethodOpen(!isPaymentMethodOpen)}
+                    className="w-full px-3 py-1.5 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none cursor-pointer flex items-center justify-between text-sm"
+                  >
+                    <span>{formData.paymentMethod}</span>
+                    <svg 
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className={`text-gray-500 transition-transform duration-200 ease-in-out flex-shrink-0 ml-2 ${
+                        isPaymentMethodOpen ? 'rotate-180' : ''
+                      }`}
+                    >
+                      <polygon points="4,6 12,6 8,12" fill="currentColor" />
+                    </svg>
+                  </div>
+                  
+                  {/* Dropdown Menu */}
+                  {isPaymentMethodOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
+                      {paymentMethodOptions.map((method) => (
+                        <button
+                          key={method}
+                          type="button"
+                          onClick={() => {
+                            handleInputChange('paymentMethod', method);
+                            setIsPaymentMethodOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors ${
+                            formData.paymentMethod === method ? 'bg-blue-50 text-blue-600' : ''
+                          }`}
+                        >
+                          {method}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Sale Date */}
@@ -198,17 +245,11 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Sale Date
                 </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => handleInputChange('date', e.target.value)}
-                    className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none ${
-                      errors.date ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
-                </div>
+                <CustomDatePicker
+                  selected={formData.date ? new Date(formData.date) : null}
+                  onChange={(date: Date | null) => handleInputChange('date', date ? date.toISOString().split('T')[0] : '')}
+                  className={errors.date ? 'border-red-300' : ''}
+                />
                 {errors.date && (
                   <p className="text-red-500 text-xs mt-1">{errors.date}</p>
                 )}

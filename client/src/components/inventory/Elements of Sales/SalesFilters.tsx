@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Plus } from 'lucide-react';
+import CustomDatePicker from '../../../components/common/CustomDatePicker';
 
 interface SalesFiltersProps {
   searchTerm: string;
@@ -44,14 +45,13 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
       {/* Date + Add Sale */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Filter By Date:</span>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm
-              focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent"
-          />
+          <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Filter By Date:</span>
+          <div className="w-40">
+            <CustomDatePicker
+              selected={selectedDate ? new Date(selectedDate) : null}
+              onChange={(date: Date | null) => setSelectedDate(date ? date.toISOString().split('T')[0] : '')}
+            />
+          </div>
         </div>
 
         <button
