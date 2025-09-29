@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import LayoutCard from '../../layout/LayoutCard';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, X } from 'lucide-react';
 import AddPayMayaRecordModal from '../../../modals/ewallet/PayMayaRecordModal';
 import type { PayMayaRecord } from '../../../types/ewallet_types';
 import PayMayaRecordsTable from './PayMayaRecords';
+import CustomDatePicker from '../../common/CustomDatePicker';
 
 const PayMaya: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [paymayaRecords, setPaymayaRecords] = useState<PayMayaRecord[]>([]);
+  const [filterDate, setFilterDate] = useState<Date | null>(null);
 
   const recordsPerPage = 10;
 
@@ -19,12 +21,22 @@ const PayMaya: React.FC = () => {
     console.log('New PayMaya record added:', newRecord);
   };
 
-  // Filter records based on search term
-  const filteredRecords = paymayaRecords.filter(record =>
-    record.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.transactionType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.chargeMOP.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter records based on search term and date
+  const filteredRecords = paymayaRecords.filter(record => {
+    const matchesSearch = record.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.transactionType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.chargeMOP.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesDate = !filterDate || (() => {
+      const recordDate = new Date(record.date);
+      const filterDateLocal = new Date(filterDate);
+      return recordDate.getFullYear() === filterDateLocal.getFullYear() &&
+            recordDate.getMonth() === filterDateLocal.getMonth() &&
+            recordDate.getDate() === filterDateLocal.getDate();
+    })();
+    
+    return matchesSearch && matchesDate;
+  });
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
@@ -38,10 +50,10 @@ const PayMaya: React.FC = () => {
     }
   };
 
-  // Reset to page 1 when search term changes
+  // Reset to page 1 when search term or filter date changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, filterDate]);
 
   return (
     <div className="space-y-6 mt-5">
@@ -92,14 +104,40 @@ const PayMaya: React.FC = () => {
             </div>
           </div>
 
-          {/* Right side: Add Button */}
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]/90 transition-colors whitespace-nowrap"
-          >
-            <Plus className="w-4 h-4" />
-            Add PayMaya Record
-          </button>
+          {/* Right side: Date Filter + Add Button */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                Filter By Date:
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="w-[140px]">
+                  <CustomDatePicker
+                    selected={filterDate}
+                    onChange={(date: Date | null) => setFilterDate(date)}
+                    className="text-sm"
+                  />
+                </div>
+                {filterDate && (
+                  <button
+                    onClick={() => setFilterDate(null)}
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    title="Clear date filter"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]/90 transition-colors whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4" />
+              Add Record
+            </button>
+          </div>
         </div>
       </div>
 
