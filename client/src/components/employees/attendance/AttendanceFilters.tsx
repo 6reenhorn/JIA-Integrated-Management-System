@@ -255,23 +255,27 @@ const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
               />
             </div>
           </div>
-          {/* Apply Button */}
-          <button
-            onClick={handleApply}
-            className="w-full text-sm px-4 py-2 bg-[#02367B] border-2 border-[#1C4A9E] text-white rounded-sm hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
-          >
-            Apply Filter
-          </button>
         </>
       )}
 
-      {/* Reset Button */}
-      <button
-        onClick={onReset}
-        className="w-full text-sm px-4 py-2 bg-gray-500 border-2 border-gray-600 text-white rounded-sm hover:bg-gray-600 focus:outline-none flex-shrink-0"
-      >
-        Reset Filters
-      </button>
+      <div className='flex gap-2'>
+        {/* Apply Button */}
+        {filterType === 'custom' && (
+          <button
+            onClick={handleApply}
+            className="flex-1 text-sm px-4 py-2 bg-[#02367B] border-2 border-[#1C4A9E] text-white rounded-sm hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
+          >
+            Apply Filter
+          </button>
+        )}
+        {/* Reset Button */}
+        <button
+          onClick={onReset}
+          className="flex-1 text-sm px-4 py-2 bg-gray-500 border-2 border-gray-600 text-white rounded-sm hover:bg-gray-600 focus:outline-none flex-shrink-0"
+        >
+          Reset Filters
+        </button>
+      </div>
     </div>
     </>
   );

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Filter } from 'lucide-react';
 import AttendanceSearchBar from "../../components/employees/attendance/AttendanceSearchBar";
 import AttendanceFilters from "../../components/employees/attendance/AttendanceFilters";
 
