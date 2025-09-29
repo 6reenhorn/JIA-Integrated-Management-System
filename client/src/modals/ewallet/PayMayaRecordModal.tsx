@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { PayMayaRecord } from '../../types/ewallet_types';
-import CustomDatePicker from '../../components/layout/CustomDatePicker';
+import CustomDatePicker from '../../components/common/CustomDatePicker';
 
 interface AddPayMayaRecordModalProps {
     isOpen: boolean;
