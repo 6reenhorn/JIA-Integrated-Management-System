@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { PayMayaRecord } from '../../types/ewallet_types';
+import CustomDatePicker from '../../components/layout/CustomDatePicker';
 
 interface AddPayMayaRecordModalProps {
     isOpen: boolean;
@@ -288,14 +289,9 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                         {/* Date */}
                         <div className="flex flex-col">
                             <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
-                            <input 
-                                type="date" 
-                                id="date" 
-                                name="date" 
-                                value={formData.date} 
-                                onChange={(e) => handleInputChange('date', e.target.value)} 
-                                className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
-                                required
+                            <CustomDatePicker
+                                selected={formData.date ? new Date(formData.date) : null}
+                                onChange={(date: Date | null) => handleInputChange('date', date ? date.toISOString().split('T')[0] : '')}
                             />
                         </div>
                     </form>
