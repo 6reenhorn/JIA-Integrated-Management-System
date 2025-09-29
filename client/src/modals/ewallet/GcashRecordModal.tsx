@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { GCashRecord } from '../../types/ewallet_types';
-import CustomDatePicker from '../../components/layout/CustomDatePicker';
+import CustomDatePicker from '../../components/common/CustomDatePicker';
 
 interface AddGCashRecordModalProps {
     isOpen: boolean;
