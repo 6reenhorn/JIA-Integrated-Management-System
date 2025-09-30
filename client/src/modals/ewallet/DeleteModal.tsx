@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
-import type { GCashRecord } from '../../components/e-wallet/Gcash/GcashRecords';
+import type { GCashRecord } from '../../components/e-wallet/Gcash/GcashRecordsTable';
 
 //Delete modal
 
