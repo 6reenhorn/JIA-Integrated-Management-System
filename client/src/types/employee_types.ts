@@ -15,3 +15,14 @@ export interface EmployeeStats {
   activeEmployees: number;
   newHires: number;
 }
+
+export interface AttendanceRecord {
+  attendanceId: number;
+  name: string;
+  empId: string;
+  role: string;
+  date: string;
+  timeIn: string;
+  timeOut: string;
+  status: 'Present' | 'Absent' | 'On Leave' | 'Remote';
+}
