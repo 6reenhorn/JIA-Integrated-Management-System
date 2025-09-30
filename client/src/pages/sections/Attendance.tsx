@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import AttendanceSearchBar from "../../components/employees/attendance/AttendanceSearchBar";
 import AttendanceFilters from "../../components/employees/attendance/AttendanceFilters";
-import MainLayoutCard from '../../components/layout/MainLayoutCard';
 import AttendanceTable from '../../components/employees/attendance/AttendanceTable';
+import type { AttendanceRecord } from "../../types/employee_types";
 
 interface DateRange {
   start: Date;
@@ -19,6 +19,70 @@ const Attendance: React.FC = () => {
   const [customEnd, setCustomEnd] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Temporary mock employees data for attendance section
+  const [employees] = useState<AttendanceRecord[]>([
+    {
+      attendanceId: 1,
+      name: "Glenn Mark Anino",
+      empId: "EMP001",
+      role: "Developer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 2,
+      name: "Den Jester Antonio",
+      empId: "EMP002",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 3,
+      name: "John Jaybird Casia",
+      empId: "EMP003",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 4,
+      name: "John Cyril Espina",
+      empId: "EMP004",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 5,
+      name: "Sophia Marie Flores",
+      empId: "EMP005",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 6,
+      name: "Julien Marabe",
+      empId: "EMP006",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "On Leave",
+    },
+  ]);
 
   const handleApply = (range: DateRange | null) => {
     setDateRange(range);
@@ -55,7 +119,7 @@ const Attendance: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex justify-between items-center pt-5 relative">
         <AttendanceSearchBar />
         <div className="relative">
@@ -109,7 +173,7 @@ const Attendance: React.FC = () => {
       )}
       
       {/* Attendance Table */}
-      <AttendanceTable />
+      <AttendanceTable employees={employees} />
     </div>
   );
 }
