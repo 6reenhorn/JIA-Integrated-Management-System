@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Filter } from 'lucide-react';
 import AttendanceSearchBar from "../../components/employees/attendance/AttendanceSearchBar";
 import AttendanceFilters from "../../components/employees/attendance/AttendanceFilters";
+import MainLayoutCard from '../../components/layout/MainLayoutCard';
+import AttendanceTable from '../../components/employees/attendance/AttendanceTable';
 
 interface DateRange {
   start: Date;
@@ -55,7 +56,7 @@ const Attendance: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center py-5 relative">
+      <div className="flex justify-between items-center pt-5 relative">
         <AttendanceSearchBar />
         <div className="relative">
           <button
@@ -106,7 +107,9 @@ const Attendance: React.FC = () => {
           </p>
         </div>
       )}
-      {/* Attendance table or list would go here, filtered by dateRange */}
+      
+      {/* Attendance Table */}
+      <AttendanceTable />
     </div>
   );
 }
