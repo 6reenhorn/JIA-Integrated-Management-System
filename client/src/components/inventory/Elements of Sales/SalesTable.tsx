@@ -73,12 +73,12 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
           <table className="table-fixed bg-[#EDEDED] w-full">
             <thead className="border-[#E5E7EB] border-b">
               <tr>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Date</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Product Name</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Date</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Product Name</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Quantity</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Price</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Total</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Payment Method</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Total</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Payment Method</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
               </tr>
             </thead>
@@ -102,12 +102,12 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
         <table className="table-fixed bg-[#EDEDED] w-full">
           <thead className="border-[#E5E7EB] border-b">
             <tr>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Date</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Product Name</th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Date</th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Product Name</th>
               <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Quantity</th>
               <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Price</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Total</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Payment Method</th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Total</th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Payment Method</th>
               <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
             </tr>
           </thead>
@@ -118,12 +118,12 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
             <tbody className="divide-y divide-gray-200">
               {salesRecords.map((record) => (
                 <tr key={record.id} className="hover:bg-gray-50 relative">
-                  <td className="py-4 px-6 w-[140px]">
+                  <td className="py-4 px-6 w-[180px]">
                     <div className="text-sm text-gray-900 truncate">
                       {record.date}
                     </div>
                   </td>
-                  <td className="py-4 px-6 w-[180px]">
+                  <td className="py-4 px-6 w-[140px]">
                     <div className="text-sm font-medium text-gray-900 truncate">
                       {record.productName}
                     </div>
@@ -134,10 +134,10 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
                   <td className="py-4 px-6 text-sm text-gray-900 w-[120px]">
                     ₱{record.price.toFixed(2)}
                   </td>
-                  <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[120px]">
+                  <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
                     ₱{record.total.toFixed(2)}
                   </td>
-                  <td className="py-4 px-6 text-sm text-gray-900 w-[140px]">
+                  <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
                     <div className="truncate">
                       {record.paymentMethod}
                     </div>
