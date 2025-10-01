@@ -1,8 +1,12 @@
 import type { Employee } from '../types/employee_types';
 
+export const EMPLOYEE_STATUSES = ['Active', 'Inactive'] as const;
+
+export type EmployeeStatus = typeof EMPLOYEE_STATUSES[number];
+
 export const getStatusColor = (status: Employee['status']): string => {
-  return status === 'Active' 
-    ? 'bg-green-100 text-green-800' 
+  return status === 'Active'
+    ? 'bg-green-100 text-green-800'
     : 'bg-red-100 text-red-800';
 };
 
