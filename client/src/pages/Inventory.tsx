@@ -71,11 +71,30 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     { id: 5, date: '2025-09-25', productName: '1 whole paper', quantity: 1, price: 50.00, total: 50.00, paymentMethod: 'Cash' },
   ]);
 
-  // Calculate sales stats
+  // Filter sales records by date and search term
+  const filteredSalesRecords = useMemo(() => {
+    let filtered = salesRecords;
+    
+    // Filter by date if a date is selected
+    if (selectedDate) {
+      filtered = filtered.filter(record => record.date === selectedDate);
+    }
+    
+    // Filter by search term (searches product name)
+    if (searchTerm) {
+      filtered = filtered.filter(record => 
+        record.productName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  }, [salesRecords, selectedDate, searchTerm]);
+
+  // Calculate sales stats from filtered records
   const salesStats = useMemo(() => {
-    const totalSales = salesRecords.length;
-    const totalAmount = salesRecords.reduce((sum, record) => sum + record.total, 0);
-    const totalItemsSold = salesRecords.reduce((sum, record) => sum + record.quantity, 0);
+    const totalSales = filteredSalesRecords.length;
+    const totalAmount = filteredSalesRecords.reduce((sum, record) => sum + record.total, 0);
+    const totalItemsSold = filteredSalesRecords.reduce((sum, record) => sum + record.quantity, 0);
     const averageSale = totalSales > 0 ? totalAmount / totalSales : 0;
     
     return {
@@ -84,7 +103,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       averageSale,
       totalItemsSold
     };
-  }, [salesRecords]);
+  }, [filteredSalesRecords]);
 
   // Category colors
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({
@@ -308,14 +327,13 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           totalCount={categoryData.length}
           onPageChange={handlePageChange}
           onViewProducts={handleViewProducts}
-          showHeaderStats={true} // Enable header stats in CategoryContent
+          showHeaderStats={true}
           onAddCategory={handleAddCategory}
           searchQuery={categorySearchTerm}
           onSearchChange={setCategorySearchTerm}
           sections={sections}
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
-          // Pass inventory items so CategoryContent can calculate its own stats
           inventoryItems={inventoryItems}
         />
       )}
@@ -330,7 +348,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           sections={sections}
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
-          salesRecords={salesRecords}
+          salesRecords={filteredSalesRecords}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           selectedDate={selectedDate}

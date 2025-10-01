@@ -26,7 +26,7 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({ stats }) => {
             <p className="text-2xl font-bold text-gray-900">{stats.activeEmployees}</p>
             <p className="text-sm text-gray-600">Currently working</p>
           </div>
-          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
             <span className="text-green-600 font-semibold">{stats.activeEmployees}</span>
           </div>
         </div>
