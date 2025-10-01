@@ -127,7 +127,7 @@ const Attendance: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex justify-between items-center pt-5 relative">
         <AttendanceSearchBar />
         <div className="relative">
@@ -183,8 +183,10 @@ const Attendance: React.FC = () => {
       {/* Attendance Table */}
       <AttendanceTable employees={paginatedEmployees} />
 
-      {/* Pagination Actions */}
-      <AttendanceActions currentPage={currentPage} pageCount={pageCount} onPageChange={handlePageChange} />
+      <div className='pt-1'>
+        {/* Pagination Actions */}
+        <AttendanceActions currentPage={currentPage} pageCount={pageCount} onPageChange={handlePageChange} />
+      </div>
     </div>
   );
 }
