@@ -148,7 +148,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                     {item.stock} Units
                   </td>
                   <td className="py-4 px-6 w-[120px]">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    <span className={`inline-flex px-2 text-xs font-semibold rounded-full ${
                       item.status === 'In Stock' ? 'bg-green-100 text-green-800' :
                       item.status === 'Low Stock' ? 'bg-yellow-100 text-yellow-800' :
                       item.status === 'Out Of Stock' ? 'bg-red-100 text-red-800' :
