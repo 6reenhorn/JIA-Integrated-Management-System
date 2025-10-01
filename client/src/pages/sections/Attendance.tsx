@@ -3,6 +3,7 @@ import AttendanceSearchBar from "../../components/employees/attendance/Attendanc
 import AttendanceFilters from "../../components/employees/attendance/AttendanceFilters";
 import AttendanceTable from '../../components/employees/attendance/AttendanceTable';
 import type { AttendanceRecord } from "../../types/employee_types";
+import AttendanceActions from '../../components/employees/attendance/AttendanceActions';
 
 interface DateRange {
   start: Date;
@@ -84,6 +85,13 @@ const Attendance: React.FC = () => {
     },
   ]);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const pageCount = Math.ceil(employees.length / pageSize);
+  const handlePageChange = (page: number) => setCurrentPage(page);
+  const paginatedEmployees = employees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   const handleApply = (range: DateRange | null) => {
     setDateRange(range);
     // Here you can add logic to filter attendance data based on the date range
@@ -119,7 +127,7 @@ const Attendance: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex justify-between items-center pt-5 relative">
         <AttendanceSearchBar />
         <div className="relative">
@@ -173,7 +181,10 @@ const Attendance: React.FC = () => {
       )}
       
       {/* Attendance Table */}
-      <AttendanceTable employees={employees} />
+      <AttendanceTable employees={paginatedEmployees} />
+
+      {/* Pagination Actions */}
+      <AttendanceActions currentPage={currentPage} pageCount={pageCount} onPageChange={handlePageChange} />
     </div>
   );
 }

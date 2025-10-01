@@ -1,3 +1,8 @@
-- [x] Implement AttendanceFilters.tsx with date filter options (preset ranges, relative filters, custom range)
-- [x] Update Attendance.tsx to include AttendanceFilters and handle date range state
-- [ ] Test the date filters functionality
+# TODO: Implement Attendance Pagination
+
+- [x] Add pagination state (currentPage) in Attendance.tsx
+- [x] Define pageSize constant (10)
+- [x] Calculate pageCount based on employees length and pageSize
+- [x] Implement handlePageChange function
+- [x] Paginate employees data before passing to AttendanceTable
+- [x] Pass correct props to AttendanceActions component

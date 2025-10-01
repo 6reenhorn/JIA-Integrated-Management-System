@@ -12,7 +12,7 @@ const AttendanceTable: React.FC<EmployeeTableProps> = ({ employees }) => {
             <table className="table-fixed bg-[#EDEDED] w-full">
                 <thead className="border-[#E5E7EB] border-b">
                     <tr>
-                        <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm">Employee Name</th>
+                        <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[400px]">Employee Name</th>
                         <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm">Date</th>
                         <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm">Time In</th>
                         <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm">Time Out</th>
@@ -25,7 +25,7 @@ const AttendanceTable: React.FC<EmployeeTableProps> = ({ employees }) => {
                     <tbody className="divide-y divide-gray-200">
                         {employees.map((employee) => (
                             <tr key={employee.attendanceId} className="hover:bg-gray-50">
-                                <td className="py-[26px] px-6">
+                                <td className="py-[26px] px-6 w-[400px]">
                                     <div className="flex items-center">
                                         <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                                             <User className="w-5 h-5 text-gray-500" />
@@ -36,10 +36,26 @@ const AttendanceTable: React.FC<EmployeeTableProps> = ({ employees }) => {
                                         </div>
                                     </div>
                                 </td>
-                                <td className="py-4 px-6">-</td>
-                                <td className="py-4 px-6">-</td>
-                                <td className="py-4 px-6">-</td>
-                                <td className="py-4 px-6">-</td>
+                                <td className="py-4 px-6">
+                                    <div>
+                                        {employee.date}
+                                    </div>
+                                </td>
+                                <td className="py-4 px-6">
+                                    <div>
+                                        {employee.timeIn}
+                                    </div>
+                                </td>
+                                <td className="py-4 px-6">
+                                    <div>
+                                        {employee.timeOut}
+                                    </div>
+                                </td>
+                                <td className="py-4 px-6">
+                                    <div>
+                                        {employee.status}
+                                    </div>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
