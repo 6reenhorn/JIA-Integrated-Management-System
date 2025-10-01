@@ -1,12 +1,13 @@
 import React from "react";
 import { User } from "lucide-react";
 import type { AttendanceRecord } from "../../../types/employee_types";
+import { getAttendanceStatusColor } from "../../../utils/attendance_utils";
 
-interface EmployeeTableProps {
+interface AttendanceTableProps {
     employees: AttendanceRecord[];
 }
 
-const AttendanceTable: React.FC<EmployeeTableProps> = ({ employees }) => {
+const AttendanceTable: React.FC<AttendanceTableProps> = ({ employees }) => {
     return (
         <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-md">
             <table className="table-fixed bg-[#EDEDED] w-full">
@@ -36,7 +37,7 @@ const AttendanceTable: React.FC<EmployeeTableProps> = ({ employees }) => {
                                     </div>
                                 </div>
                             </td>
-                            <td className="py-4 px-6 text-sm w-[150px] min-w-[150px]">
+                            <td className="py-4 px-6 text-sm w-[150px] min-w-[150px] text-gray-600">
                                 <div>
                                     {employee.date}
                                 </div>
@@ -52,9 +53,9 @@ const AttendanceTable: React.FC<EmployeeTableProps> = ({ employees }) => {
                                 </div>
                             </td>
                             <td className="py-4 px-6 w-[100px] min-w-[100px] pl-9">
-                                <div className="text-xs font-semibold">
+                                <span className={`text-xs font-semibold px-2 py-1 rounded-md ${getAttendanceStatusColor(employee.status)}`}>
                                     {employee.status}
-                                </div>
+                                </span>
                             </td>
                         </tr>
                     ))}
