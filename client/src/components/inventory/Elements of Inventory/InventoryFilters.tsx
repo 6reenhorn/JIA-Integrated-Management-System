@@ -119,10 +119,10 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
   };
 
   return (
-    <div className="mb-6">
+    <div className="w-full">
       {/* Navigation Tabs - Only show if explicitly requested */}
       {showTabsAndTitle && (
-        <div className="border-b border-gray-200 mb-6">
+        <div className="border-b border-gray-200 mt-6">
           <nav className="flex space-x-8">
             {sections.map((section) => (
               <button
@@ -142,7 +142,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
       )}
 
       {/* Header Section */}
-      <div className="flex items-center justify-between py-4 w-full">
+      <div className="flex items-center justify-between mt-6 w-full">
         {/* Left side: Title and Search */}
         <div className="flex items-center gap-4">
           {/* Title - Always show for inventory section */}
