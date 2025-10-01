@@ -6,11 +6,7 @@ interface EmployeeActionsProps {
   onPageChange: (page: number) => void;
 }
 
-const EmployeeActions: React.FC<EmployeeActionsProps> = ({
-  currentPage,
-  pageCount,
-  onPageChange
-}) => {
+const EmployeeActions: React.FC<EmployeeActionsProps> = ({ currentPage, pageCount, onPageChange }) => {
   return (
     <div className="flex items-center justify-between pt-1">
       <div className="text-sm text-gray-500">
