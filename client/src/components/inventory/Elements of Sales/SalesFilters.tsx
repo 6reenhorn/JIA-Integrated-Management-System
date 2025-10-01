@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, X } from 'lucide-react';
 import CustomDatePicker from '../../../components/common/CustomDatePicker';
 
 interface SalesFiltersProps {
@@ -19,9 +19,9 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
   onAddSale,
 }) => {
   return (
-    <div className="mb-6">
+    <div className="w-full">
       {/* Header Section */}
-      <div className="flex items-center justify-between py-4 w-full">
+      <div className="flex items-center justify-between mt-6 w-full">
         {/* Left side: Title and Search */}
         <div className="flex items-center gap-4">
           {/* Title */}
@@ -47,11 +47,23 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
           {/* Date Filter */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Filter By Date:</span>
-            <div className="w-40">
-              <CustomDatePicker
-                selected={selectedDate ? new Date(selectedDate) : null}
-                onChange={(date: Date | null) => setSelectedDate(date ? date.toISOString().split('T')[0] : '')}
-              />
+            <div className="flex items-center gap-2">
+              <div className="w-[140px]">
+                <CustomDatePicker
+                  selected={selectedDate ? new Date(selectedDate) : null}
+                  onChange={(date: Date | null) => setSelectedDate(date ? date.toISOString().split('T')[0] : '')}
+                  className="text-sm"
+                />
+              </div>
+              {selectedDate && (
+                <button
+                  onClick={() => setSelectedDate('')}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  title="Clear date filter"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
 
