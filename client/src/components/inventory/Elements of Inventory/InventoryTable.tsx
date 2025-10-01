@@ -77,32 +77,32 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
   return (
     <div className="space-y-6">
       {/* Table */}
-      <div className="overflow-x-auto relative">
-        <table className="w-full bg-white">
-          <thead className="bg-gray-50 border-b border-gray-200">
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Product Name</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Category</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Stock</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Status</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Product Price</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Total Amount</th>
-              <th className="text-left py-3 px-6 text-sm font-medium text-gray-500">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Price</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="bg-white divide-y divide-gray-200">
             {items.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-50 relative">
-                <td className="py-4 px-6 text-sm font-medium text-gray-900">
+              <tr key={item.id} className="relative">
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">
                   {item.productName}
                 </td>
-                <td className="py-4 px-6 text-sm text-gray-600">
+                <td className="px-6 py-4 text-sm text-gray-900">
                   {item.category}
                 </td>
-                <td className="py-4 px-6 text-sm text-gray-600">
+                <td className="px-6 py-4 text-sm text-gray-900">
                   {item.stock} Units
                 </td>
-                <td className="py-4 px-6">
+                <td className="px-6 py-4">
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                     item.status === 'In Stock' ? 'bg-green-100 text-green-800' :
                     item.status === 'Low Stock' ? 'bg-yellow-100 text-yellow-800' :
@@ -112,27 +112,27 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                     {item.status}
                   </span>
                 </td>
-                <td className="py-4 px-6 text-sm text-gray-900">
+                <td className="px-6 py-4 text-sm text-gray-900">
                   ₱{item.productPrice.toFixed(2)}
                 </td>
-                <td className="py-4 px-6 text-sm text-gray-900 font-medium">
+                <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                   ₱{item.totalAmount.toFixed(2)}
                 </td>
-                <td className="py-4 px-6 relative">
-                  <div className="flex items-center gap-1">
+                <td className="px-6 py-4 text-left text-sm relative">
+                  <div className="flex justify-start space-x-2">
                     <button 
                       onClick={() => onEditItem(item.id)}
-                      className="p-1.5 hover:bg-gray-100 rounded transition-colors" 
+                      className="text-black hover:text-black p-1 rounded-full hover:bg-gray-100" 
                       title="Edit"
                     >
-                      <Edit className="w-4 h-4 text-gray-600" />
+                      <Edit className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={(e) => handleDeleteClick(item.id, e)}
-                      className="p-1.5 hover:bg-gray-100 rounded transition-colors" 
+                      className="text-black hover:text-black p-1 rounded-full hover:bg-gray-100" 
                       title="Delete"
                     >
-                      <Trash2 className="w-4 h-4 text-gray-600" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                   {renderDeleteConfirmation(item.id)}
