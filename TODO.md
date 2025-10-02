@@ -1,0 +1,3 @@
+- [x] Restructure EmployeeTable.tsx to use a single table with sticky header for consistent column alignment
+- [x] Update empty state to use proper table structure
+- [x] Test the table alignment and scrolling

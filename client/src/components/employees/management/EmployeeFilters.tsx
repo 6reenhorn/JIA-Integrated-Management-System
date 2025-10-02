@@ -80,7 +80,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
           Custom Filters
         </button>
         {isFiltersOpen && (
-          <div ref={filtersRef} className="absolute top-full mt-2 -right-[1px] z-10">
+          <div ref={filtersRef} className="absolute top-full mt-2 -right-[1px] z-50">
             <div className="bg-white p-4 rounded-md shadow-md flex flex-col gap-2">
               <div className="dropdown relative text-[15px]" ref={roleDropdownRef}>
                 <div

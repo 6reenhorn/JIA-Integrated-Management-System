@@ -9,7 +9,7 @@ interface EmployeeActionsProps {
 const EmployeeActions: React.FC<EmployeeActionsProps> = ({ currentPage, pageCount, onPageChange }) => {
   const getVisiblePages = () => {
     const pages: (number | string)[] = [];
-    const maxVisible = 7;
+    const maxVisible = 4;
 
     if (pageCount <= maxVisible) {
       for (let i = 1; i <= pageCount; i++) {
