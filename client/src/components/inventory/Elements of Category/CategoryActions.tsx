@@ -1,17 +1,15 @@
 import React from 'react';
 
-interface SalesActionsProps {
+interface CategoryActionsProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  filteredCount: number;
-  totalCount: number;
 }
 
-const SalesActions: React.FC<SalesActionsProps> = ({
+const CategoryActions: React.FC<CategoryActionsProps> = ({
   currentPage,
   totalPages,
-  onPageChange,
+  onPageChange
 }) => {
   const getVisiblePages = () => {
     const pages: (number | string)[] = [];
@@ -50,7 +48,7 @@ const SalesActions: React.FC<SalesActionsProps> = ({
   const visiblePages = getVisiblePages();
 
   return (
-    <div className="flex items-center justify-between mt-6">
+    <div className="flex items-center justify-between pt-6">
       <div className="text-sm text-gray-500">
         Page {currentPage} of {totalPages}
       </div>
@@ -93,4 +91,4 @@ const SalesActions: React.FC<SalesActionsProps> = ({
   );
 };
 
-export default SalesActions;
+export default CategoryActions;
