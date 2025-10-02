@@ -146,10 +146,17 @@ const Attendance: React.FC = () => {
   ]);
 
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = localStorage.getItem('attendanceCurrentPage');
+    return saved ? parseInt(saved, 10) : 1;
+  });
+  const pageSize = 4;
   const pageCount = Math.ceil(employees.length / pageSize);
   const handlePageChange = (page: number) => setCurrentPage(page);
+
+  useEffect(() => {
+    localStorage.setItem('attendanceCurrentPage', currentPage.toString());
+  }, [currentPage]);
   const paginatedEmployees = employees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleApply = (range: DateRange | null) => {
@@ -215,7 +222,7 @@ const Attendance: React.FC = () => {
             Custom Filters
           </button>
           {isFiltersOpen && (
-            <div ref={filterRef} className="absolute top-full mt-2 right-0 z-10">
+            <div ref={filterRef} className="absolute top-full mt-2 right-0 z-50">
               <AttendanceFilters
                 filterType={filterType}
                 onFilterTypeChange={setFilterType}

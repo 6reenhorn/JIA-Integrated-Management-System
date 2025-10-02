@@ -22,8 +22,8 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
         pages.push('...');
       }
 
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(pageCount - 1, currentPage + 1);
+      const start = Math.max(2, currentPage - 2);
+      const end = Math.min(pageCount - 1, currentPage + 2);
 
       for (let i = start; i <= end; i++) {
         pages.push(i);

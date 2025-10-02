@@ -76,7 +76,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[150px]">
               Last Login
             </th>
-            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px] pl-8">
               Actions
             </th>
           </tr>
@@ -100,22 +100,22 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   {employee.role}
                 </span>
               </td>
-              <td className="py-4 px-6 w-[180px] pl-8">
+              <td className="py-4 px-6 w-[180px]">
                 <div className="text-sm text-gray-900 whitespace-pre-line">
                   {employee.contact}
                 </div>
               </td>
-              <td className="py-4 px-6 w-[100px] pl-7">
+              <td className="py-4 px-6 w-[100px]">
                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-md ${getStatusColor(employee.status)}`}>
                   {employee.status}
                 </span>
               </td>
-              <td className="py-4 px-6 w-[150px] text-sm text-gray-600 pl-8">
+              <td className="py-4 px-6 w-[150px] text-sm text-gray-600">
                 {employee.lastLogin}
               </td>
-              <td className="py-4 px-6 w-[120px] pl-7">
+              <td className="py-4 px-6 w-[120px]">
                 <div className="flex items-center gap-2">
-                  <button
+                  <button 
                     onClick={() => onViewEmployee(employee.id)}
                     className="p-1 hover:bg-gray-100 rounded transition-colors"
                     title="View"
