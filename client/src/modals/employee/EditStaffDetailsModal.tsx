@@ -25,6 +25,9 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
   const [isRelationshipDropdownOpen, setIsRelationshipDropdownOpen] = useState(false);
   const [selectedRelationship, setSelectedRelationship] = useState('');
   const [selectedRelationshipText, setSelectedRelationshipText] = useState('Select Relationship');
+  const [focusedStatusOption, setFocusedStatusOption] = useState(0);
+  const [focusedRoleOption, setFocusedRoleOption] = useState(0);
+  const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
@@ -55,10 +58,14 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
 
   const toggleStatusDropdown = () => {
     setIsStatusDropdownOpen(!isStatusDropdownOpen);
+    setIsRoleDropdownOpen(false);
+    setIsRelationshipDropdownOpen(false);
   };
 
   const toggleRoleDropdown = () => {
     setIsRoleDropdownOpen(!isRoleDropdownOpen);
+    setIsStatusDropdownOpen(false);
+    setIsRelationshipDropdownOpen(false);
   };
 
   const handleStatusOptionClick = (value: string, text: string) => {
@@ -75,6 +82,8 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
 
   const toggleRelationshipDropdown = () => {
     setIsRelationshipDropdownOpen(!isRelationshipDropdownOpen);
+    setIsStatusDropdownOpen(false);
+    setIsRoleDropdownOpen(false);
   };
 
   const handleRelationshipOptionClick = (value: string, text: string) => {
@@ -173,6 +182,13 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                 <div
                   className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
                   onClick={toggleStatusDropdown}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      toggleStatusDropdown();
+                      e.preventDefault();
+                    }
+                  }}
+                  tabIndex={0}
                 >
                   {selectedStatusText}
                   <svg
@@ -201,18 +217,50 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                     maxWidth: '100%',
                     boxSizing: 'border-box'
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setFocusedStatusOption((prev) => (prev + 1) % 2);
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setFocusedStatusOption((prev) => (prev - 1 + 2) % 2);
+                    } else if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (focusedStatusOption === 0) {
+                        handleStatusOptionClick('active', 'Active');
+                      } else {
+                        handleStatusOptionClick('inactive', 'Inactive');
+                      }
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setIsStatusDropdownOpen(false);
+                    }
+                  }}
+                  tabIndex={isStatusDropdownOpen ? 0 : -1}
                 >
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedStatusOption === 0 ? 'bg-blue-100' : ''}`}
                     data-value="active"
                     onClick={() => handleStatusOptionClick('active', 'Active')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleStatusOptionClick('active', 'Active');
+                      }
+                    }}
+                    tabIndex={isStatusDropdownOpen ? 0 : -1}
                   >
                     Active
                   </div>
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedStatusOption === 1 ? 'bg-blue-100' : ''}`}
                     data-value="inactive"
                     onClick={() => handleStatusOptionClick('inactive', 'Inactive')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleStatusOptionClick('inactive', 'Inactive');
+                      }
+                    }}
+                    tabIndex={isStatusDropdownOpen ? 0 : -1}
                   >
                     Inactive
                   </div>
@@ -223,6 +271,13 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                 <div
                   className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
                   onClick={toggleRoleDropdown}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      toggleRoleDropdown();
+                      e.preventDefault();
+                    }
+                  }}
+                  tabIndex={0}
                 >
                   {selectedRoleText}
                   <svg
@@ -251,39 +306,93 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                     maxWidth: '100%',
                     boxSizing: 'border-box'
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setFocusedRoleOption((prev) => (prev + 1) % 5);
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setFocusedRoleOption((prev) => (prev - 1 + 5) % 5);
+                    } else if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const roles = [
+                        { value: 'manager', text: 'Manager' },
+                        { value: 'admin', text: 'Admin' },
+                        { value: 'sales_associates', text: 'Sales Associate' },
+                        { value: 'cashier', text: 'Cashier' },
+                        { value: 'maintenance', text: 'Maintenance' }
+                      ];
+                      const selected = roles[focusedRoleOption];
+                      handleRoleOptionClick(selected.value, selected.text);
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setIsRoleDropdownOpen(false);
+                    }
+                  }}
+                  tabIndex={isRoleDropdownOpen ? 0 : -1}
                 >
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 0 ? 'bg-blue-100' : ''}`}
                     data-value="manager"
                     onClick={() => handleRoleOptionClick('manager', 'Manager')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRoleOptionClick('manager', 'Manager');
+                      }
+                    }}
+                    tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
                     Manager
                   </div>
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 1 ? 'bg-blue-100' : ''}`}
                     data-value="admin"
                     onClick={() => handleRoleOptionClick('admin', 'Admin')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRoleOptionClick('admin', 'Admin');
+                      }
+                    }}
+                    tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
                     Admin
                   </div>
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 2 ? 'bg-blue-100' : ''}`}
                     data-value="sales_associates"
                     onClick={() => handleRoleOptionClick('sales_associates', 'Sales Associate')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRoleOptionClick('sales_associates', 'Sales Associate');
+                      }
+                    }}
+                    tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
                     Sales Associate
                   </div>
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 3 ? 'bg-blue-100' : ''}`}
                     data-value="cashier"
                     onClick={() => handleRoleOptionClick('cashier', 'Cashier')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRoleOptionClick('cashier', 'Cashier');
+                      }
+                    }}
+                    tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
                     Cashier
                   </div>
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 4 ? 'bg-blue-100' : ''}`}
                     data-value="maintenance"
                     onClick={() => handleRoleOptionClick('maintenance', 'Maintenance')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRoleOptionClick('maintenance', 'Maintenance');
+                      }
+                    }}
+                    tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
                     Maintenance
                   </div>
@@ -313,6 +422,13 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                 <div
                   className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
                   onClick={toggleRelationshipDropdown}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      toggleRelationshipDropdown();
+                      e.preventDefault();
+                    }
+                  }}
+                  tabIndex={0}
                 >
                   {selectedRelationshipText}
                   <svg
@@ -341,39 +457,93 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                     maxWidth: '100%',
                     boxSizing: 'border-box'
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setFocusedRelationshipOption((prev) => (prev + 1) % 5);
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setFocusedRelationshipOption((prev) => (prev - 1 + 5) % 5);
+                    } else if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const relationships = [
+                        { value: 'spouse', text: 'Spouse' },
+                        { value: 'parent', text: 'Parent' },
+                        { value: 'sibling', text: 'Sibling' },
+                        { value: 'friend', text: 'Friend' },
+                        { value: 'other', text: 'Other' }
+                      ];
+                      const selected = relationships[focusedRelationshipOption];
+                      handleRelationshipOptionClick(selected.value, selected.text);
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setIsRelationshipDropdownOpen(false);
+                    }
+                  }}
+                  tabIndex={isRelationshipDropdownOpen ? 0 : -1}
                 >
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 0 ? 'bg-blue-100' : ''}`}
                     data-value="spouse"
                     onClick={() => handleRelationshipOptionClick('spouse', 'Spouse')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRelationshipOptionClick('spouse', 'Spouse');
+                      }
+                    }}
+                    tabIndex={isRelationshipDropdownOpen ? 0 : -1}
                   >
                     Spouse
                   </div>
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 1 ? 'bg-blue-100' : ''}`}
                     data-value="parent"
                     onClick={() => handleRelationshipOptionClick('parent', 'Parent')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRelationshipOptionClick('parent', 'Parent');
+                      }
+                    }}
+                    tabIndex={isRelationshipDropdownOpen ? 0 : -1}
                   >
                     Parent
                   </div>
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 2 ? 'bg-blue-100' : ''}`}
                     data-value="sibling"
                     onClick={() => handleRelationshipOptionClick('sibling', 'Sibling')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRelationshipOptionClick('sibling', 'Sibling');
+                      }
+                    }}
+                    tabIndex={isRelationshipDropdownOpen ? 0 : -1}
                   >
                     Sibling
                   </div>
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 3 ? 'bg-blue-100' : ''}`}
                     data-value="friend"
                     onClick={() => handleRelationshipOptionClick('friend', 'Friend')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRelationshipOptionClick('friend', 'Friend');
+                      }
+                    }}
+                    tabIndex={isRelationshipDropdownOpen ? 0 : -1}
                   >
                     Friend
                   </div>
                   <div
-                    className="option px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 4 ? 'bg-blue-100' : ''}`}
                     data-value="other"
                     onClick={() => handleRelationshipOptionClick('other', 'Other')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRelationshipOptionClick('other', 'Other');
+                      }
+                    }}
+                    tabIndex={isRelationshipDropdownOpen ? 0 : -1}
                   >
                     Other
                   </div>

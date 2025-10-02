@@ -83,7 +83,7 @@ const Attendance: React.FC = () => {
       timeOut: "05:00 PM",
       status: "On Leave",
     },
-        {
+    {
       attendanceId: 7,
       name: "Glenn Mark Anino",
       empId: "EMP001",
@@ -143,6 +143,7 @@ const Attendance: React.FC = () => {
       timeOut: "05:00 PM",
       status: "On Leave",
     },
+    
   ]);
 
   // Pagination state
