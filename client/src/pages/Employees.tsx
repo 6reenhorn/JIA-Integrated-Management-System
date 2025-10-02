@@ -13,7 +13,7 @@ import EditStaffDetailsModal from '../modals/employee/EditStaffDetailsModal';
 import AttendanceStats from '../components/employees/attendance/AttendanceStats';
 import Attendance from './sections/Attendance';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 4;
 
 interface EmployeesProps {
   activeSection?: string;
