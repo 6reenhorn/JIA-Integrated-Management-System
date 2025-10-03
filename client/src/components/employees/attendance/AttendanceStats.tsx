@@ -2,7 +2,7 @@ import LayoutCard from "../../layout/LayoutCard";
 
 const AttendanceStats = () => {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <LayoutCard title="Present">
                 <div className="text-2xl font-bold text-gray-900">
                     5
@@ -13,7 +13,12 @@ const AttendanceStats = () => {
                     4
                 </div>
             </LayoutCard>
-            <LayoutCard title="Partial">
+            <LayoutCard title="On Leave">
+                <div className="text-2xl font-bold text-gray-900">
+                    0
+                </div>
+            </LayoutCard>
+            <LayoutCard title="Remote">
                 <div className="text-2xl font-bold text-gray-900">
                     0
                 </div>
