@@ -1,18 +1,22 @@
-import React from "react";
+import React from 'react';
 
-interface AttendanceActionsProps {
+interface CategoryActionsProps {
   currentPage: number;
-  pageCount: number;
+  totalPages: number;
   onPageChange: (page: number) => void;
 }
 
-const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, pageCount, onPageChange }) => {
+const CategoryActions: React.FC<CategoryActionsProps> = ({
+  currentPage,
+  totalPages,
+  onPageChange
+}) => {
   const getVisiblePages = () => {
     const pages: (number | string)[] = [];
     const maxVisible = 10;
 
-    if (pageCount <= maxVisible) {
-      for (let i = 1; i <= pageCount; i++) {
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
@@ -23,18 +27,18 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
       }
 
       const start = Math.max(2, currentPage - 2);
-      const end = Math.min(pageCount - 1, currentPage + 2);
+      const end = Math.min(totalPages - 1, currentPage + 2);
 
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
 
-      if (currentPage < pageCount - 3) {
+      if (currentPage < totalPages - 3) {
         pages.push('...');
       }
 
-      if (pageCount > 1) {
-        pages.push(pageCount);
+      if (totalPages > 1) {
+        pages.push(totalPages);
       }
     }
 
@@ -44,9 +48,9 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
   const visiblePages = getVisiblePages();
 
   return (
-    <div className="flex items-center justify-between pt-1">
+    <div className="flex items-center justify-between pt-6">
       <div className="text-sm text-gray-500">
-        Page {currentPage} of {pageCount}
+        Page {currentPage} of {totalPages}
       </div>
       <div className="flex items-center gap-2">
         <button
@@ -60,7 +64,11 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
           typeof page === 'number' ? (
             <button
               key={idx}
-              className={`px-3 py-1 text-sm rounded ${currentPage === page ? 'bg-[#02367B] text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
+              className={`px-3 py-1 text-sm rounded ${
+                currentPage === page 
+                  ? 'bg-[#02367B] text-white' 
+                  : 'border border-gray-300 hover:bg-gray-50'
+              }`}
               onClick={() => onPageChange(page)}
             >
               {page}
@@ -72,7 +80,7 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
           )
         ))}
         <button
-          disabled={currentPage === pageCount}
+          disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
           className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -83,4 +91,4 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
   );
 };
 
-export default AttendanceActions;
+export default CategoryActions;

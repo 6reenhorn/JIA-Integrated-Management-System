@@ -3,6 +3,7 @@ import AttendanceSearchBar from "../../components/employees/attendance/Attendanc
 import AttendanceFilters from "../../components/employees/attendance/AttendanceFilters";
 import AttendanceTable from '../../components/employees/attendance/AttendanceTable';
 import type { AttendanceRecord } from "../../types/employee_types";
+import AttendanceActions from '../../components/employees/attendance/AttendanceActions';
 
 interface DateRange {
   start: Date;
@@ -82,7 +83,82 @@ const Attendance: React.FC = () => {
       timeOut: "05:00 PM",
       status: "On Leave",
     },
+    {
+      attendanceId: 7,
+      name: "Glenn Mark Anino",
+      empId: "EMP001",
+      role: "Developer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 8,
+      name: "Den Jester Antonio",
+      empId: "EMP002",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 9,
+      name: "John Jaybird Casia",
+      empId: "EMP003",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 10,
+      name: "John Cyril Espina",
+      empId: "EMP004",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 11,
+      name: "Sophia Marie Flores",
+      empId: "EMP005",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "Present",
+    },
+    {
+      attendanceId: 12,
+      name: "Julien Marabe",
+      empId: "EMP006",
+      role: "Designer",
+      date: "2024-10-01",
+      timeIn: "09:00 AM",
+      timeOut: "05:00 PM",
+      status: "On Leave",
+    },
+    
   ]);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = localStorage.getItem('attendanceCurrentPage');
+    return saved ? parseInt(saved, 10) : 1;
+  });
+  const pageSize = 4;
+  const pageCount = Math.ceil(employees.length / pageSize);
+  const handlePageChange = (page: number) => setCurrentPage(page);
+
+  useEffect(() => {
+    localStorage.setItem('attendanceCurrentPage', currentPage.toString());
+  }, [currentPage]);
+  const paginatedEmployees = employees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleApply = (range: DateRange | null) => {
     setDateRange(range);
@@ -147,7 +223,7 @@ const Attendance: React.FC = () => {
             Custom Filters
           </button>
           {isFiltersOpen && (
-            <div ref={filterRef} className="absolute top-full mt-2 right-0 z-10">
+            <div ref={filterRef} className="absolute top-full mt-2 right-0 z-50">
               <AttendanceFilters
                 filterType={filterType}
                 onFilterTypeChange={setFilterType}
@@ -173,7 +249,12 @@ const Attendance: React.FC = () => {
       )}
       
       {/* Attendance Table */}
-      <AttendanceTable employees={employees} />
+      <AttendanceTable employees={paginatedEmployees} />
+
+      <div className='pt-1'>
+        {/* Pagination Actions */}
+        <AttendanceActions currentPage={currentPage} pageCount={pageCount} onPageChange={handlePageChange} />
+      </div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ import EditStaffDetailsModal from '../modals/employee/EditStaffDetailsModal';
 import AttendanceStats from '../components/employees/attendance/AttendanceStats';
 import Attendance from './sections/Attendance';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 4;
 
 interface EmployeesProps {
   activeSection?: string;
@@ -149,6 +149,11 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setCurrentPage(page);
   };
 
+  // Get paginated employees
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE;
+  const paginatedEmployees = filteredEmployees.slice(startIndex, endIndex);
+
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   }
@@ -259,7 +264,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
             </div>
 
             <EmployeeTable
-              employees={filteredEmployees}
+              employees={paginatedEmployees}
               onViewEmployee={() => {}}
               onEditEmployee={(id: number) => {
                 const emp = employees.find(e => e.id === id) || null;

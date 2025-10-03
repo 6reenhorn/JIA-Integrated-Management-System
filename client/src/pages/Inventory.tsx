@@ -28,12 +28,18 @@ interface InventoryProps {
 }
 
 const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
+  // Search states for each section
   const [searchTerm, setSearchTerm] = useState('');
+  const [salesSearchTerm, setSalesSearchTerm] = useState('');
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
+  
+  // UI states
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDate, setSelectedDate] = useState('');
+  
+  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
@@ -81,14 +87,14 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
     
     // Filter by search term (searches product name)
-    if (searchTerm) {
+    if (salesSearchTerm) {
       filtered = filtered.filter(record => 
-        record.productName.toLowerCase().includes(searchTerm.toLowerCase())
+        record.productName.toLowerCase().includes(salesSearchTerm.toLowerCase())
       );
     }
     
     return filtered;
-  }, [salesRecords, selectedDate, searchTerm]);
+  }, [salesRecords, selectedDate, salesSearchTerm]);
 
   // Calculate sales stats from filtered records
   const salesStats = useMemo(() => {
@@ -349,8 +355,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
           salesRecords={filteredSalesRecords}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          searchTerm={salesSearchTerm}
+          setSearchTerm={setSalesSearchTerm}
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
           onAddSale={handleAddSale}

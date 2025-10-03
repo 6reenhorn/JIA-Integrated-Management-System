@@ -1,3 +1,0 @@
-- [x] Implement AttendanceFilters.tsx with date filter options (preset ranges, relative filters, custom range)
-- [x] Update Attendance.tsx to include AttendanceFilters and handle date range state
-- [ ] Test the date filters functionality
