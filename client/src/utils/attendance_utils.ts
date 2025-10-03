@@ -1,6 +1,6 @@
 import type { AttendanceRecord } from '../types/employee_types';
 
-export const ATTENDANCE_STATUSES = ['Present', 'Absent', 'On Leave', 'Remote'] as const;
+export const ATTENDANCE_STATUSES = ['Present', 'Absent', 'On Leave'] as const;
 
 export type AttendanceStatus = typeof ATTENDANCE_STATUSES[number];
 
@@ -12,8 +12,6 @@ export const getAttendanceStatusColor = (status: AttendanceRecord['status']): st
       return 'bg-red-100 text-red-800';
     case 'On Leave':
       return 'bg-yellow-100 text-yellow-800';
-    case 'Remote':
-      return 'bg-blue-100 text-blue-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }

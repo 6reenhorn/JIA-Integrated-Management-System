@@ -24,5 +24,5 @@ export interface AttendanceRecord {
   date: string;
   timeIn: string;
   timeOut: string;
-  status: 'Present' | 'Absent' | 'On Leave' | 'Remote';
+  status: 'Present' | 'Absent' | 'On Leave';
 }
