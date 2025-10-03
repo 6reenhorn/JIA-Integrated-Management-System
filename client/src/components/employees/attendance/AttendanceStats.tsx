@@ -18,11 +18,6 @@ const AttendanceStats = () => {
                     0
                 </div>
             </LayoutCard>
-            <LayoutCard title="Remote">
-                <div className="text-2xl font-bold text-gray-900">
-                    0
-                </div>
-            </LayoutCard>
         </div>
     );
 }
