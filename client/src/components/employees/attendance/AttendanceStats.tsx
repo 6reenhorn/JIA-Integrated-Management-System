@@ -2,7 +2,7 @@ import LayoutCard from "../../layout/LayoutCard";
 
 const AttendanceStats = () => {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <LayoutCard title="Present">
                 <div className="text-2xl font-bold text-gray-900">
                     5
