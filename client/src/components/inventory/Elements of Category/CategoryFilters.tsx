@@ -21,7 +21,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
   showTitle = true,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 mt-6">
       {/* Left side - Category Title and Search Bar */}
       <div className="flex items-center gap-4">
         {showTitle && (
