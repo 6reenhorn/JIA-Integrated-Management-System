@@ -92,7 +92,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
         />
         
         {/* Category Cards Grid - Scrollable Container */}
-        <div className="h-[392px] overflow-y-auto border-2 border-[#E5E7EB] rounded-lg p-4 mt-1 mb-8">
+        <div className="h-[392px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((category, index) => (
               <LayoutCard 
@@ -202,3 +202,5 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
 };
 
 export default CategoryContent;
+
+// line 95, OLD: <div className="h-[392px] overflow-y-auto border-2 border-[#E5E7EB] rounded-lg p-4 mt-1 mb-8">
