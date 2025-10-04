@@ -50,7 +50,7 @@ const SalesActions: React.FC<SalesActionsProps> = ({
   const visiblePages = getVisiblePages();
 
   return (
-    <div className="flex items-center justify-between mt-6">
+    <div className="flex items-center justify-between mt-8">
       <div className="text-sm text-gray-500">
         Page {currentPage} of {totalPages}
       </div>
