@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
 import Portal from '../components/common/Portal';
-
 import Overview from '../components/e-wallet/Overview/Overview';
 import GCash from '../components/e-wallet/Gcash/Gcash';
 import PayMaya from '../components/e-wallet/Paymaya/PayMaya';
 import JuanPay from '../components/e-wallet/JuanPay/JuanPay';
-
 import AddGCashRecordModal from '../modals/ewallet/GcashRecordModal';
 import AddPayMayaRecordModal from '../modals/ewallet/PayMayaRecordModal';
-
 import type { GCashRecord, PayMayaRecord } from '../types/ewallet_types';
 
 interface EWalletProps {
