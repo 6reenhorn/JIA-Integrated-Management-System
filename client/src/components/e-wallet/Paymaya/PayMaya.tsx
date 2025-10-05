@@ -1,28 +1,24 @@
 import React, { useState } from 'react';
 import LayoutCard from '../../layout/LayoutCard';
 import { Search, Plus, X } from 'lucide-react';
-import AddPayMayaRecordModal from '../../../modals/ewallet/PayMayaRecordModal';
 import type { PayMayaRecord } from '../../../types/ewallet_types';
 import PayMayaRecordsTable from './PayMayaRecords';
 import CustomDatePicker from '../../common/CustomDatePicker';
 
-const PayMaya: React.FC = () => {
+interface PayMayaProps {
+  records: PayMayaRecord[];
+  onOpenModal: () => void;
+}
+
+const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [paymayaRecords, setPaymayaRecords] = useState<PayMayaRecord[]>([]);
   const [filterDate, setFilterDate] = useState<Date | null>(null);
 
   const recordsPerPage = 10;
 
-  // Handler to add new record
-  const handleAddRecord = (newRecord: PayMayaRecord) => {
-    setPaymayaRecords(prev => [...prev, newRecord]);
-    console.log('New PayMaya record added:', newRecord);
-  };
-
   // Filter records based on search term and date
-  const filteredRecords = paymayaRecords.filter(record => {
+  const filteredRecords = records.filter(record => {
     const matchesSearch = record.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.transactionType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.chargeMOP.toLowerCase().includes(searchTerm.toLowerCase());
@@ -131,7 +127,7 @@ const PayMaya: React.FC = () => {
             </div>
             
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={onOpenModal}
               className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]/90 transition-colors whitespace-nowrap"
             >
               <Plus className="w-4 h-4" />
@@ -198,13 +194,6 @@ const PayMaya: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Modal */}
-      <AddPayMayaRecordModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAddRecord={handleAddRecord}
-      />
     </div>
   );
 };
