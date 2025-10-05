@@ -1,28 +1,24 @@
 import React, { useState } from 'react';
 import LayoutCard from '../../layout/LayoutCard';
 import { Search, Plus, X } from 'lucide-react';
-import AddGCashRecordModal from '../../../modals/ewallet/GcashRecordModal';
 import type { GCashRecord } from '../../../types/ewallet_types';
 import GCashRecordsTable from './GcashRecords';
 import CustomDatePicker from '../../common/CustomDatePicker';
 
-const GCash: React.FC = () => {
+interface GCashProps {
+  records: GCashRecord[];
+  onOpenModal: () => void;
+}
+
+const GCash: React.FC<GCashProps> = ({ records, onOpenModal }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [gcashRecords, setGcashRecords] = useState<GCashRecord[]>([]);
   const [filterDate, setFilterDate] = useState<Date | null>(null);
 
   const recordsPerPage = 10;
 
-  // Handler to add new record
-  const handleAddRecord = (newRecord: GCashRecord) => {
-    setGcashRecords(prev => [...prev, newRecord]);
-    console.log('New GCash record added:', newRecord);
-  };
-
   // Filter records based on search term
-  const filteredRecords = gcashRecords.filter(record => {
+  const filteredRecords = records.filter(record => {
     const matchesSearch = record.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.transactionType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.chargeMOP.toLowerCase().includes(searchTerm.toLowerCase());
@@ -131,7 +127,7 @@ const GCash: React.FC = () => {
             </div>
             
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={onOpenModal}
               className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]/90 transition-colors whitespace-nowrap"
             >
               <Plus className="w-4 h-4" />
@@ -198,13 +194,6 @@ const GCash: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Modal */}
-      <AddGCashRecordModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAddRecord={handleAddRecord}
-      />
     </div>
   );
 };
