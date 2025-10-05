@@ -43,7 +43,7 @@ const JuanPay: React.FC = () => {
   const totalPages = Math.ceil(mockTransactions.length / 10);
 
   return (
-    <div className="space-y-6 mt-5">
+    <div className="space-y-6 mt-5 h-[698px]">
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 border-gray-500 min-h-[120px]">
@@ -102,7 +102,7 @@ const JuanPay: React.FC = () => {
       </div>
 
       {/* Transaction Table */}
-      <div className="overflow-x-auto border-2 border-gray-200 rounded-lg">
+      <div className="overflow-x-auto border-2 border-gray-200 h-[392px] rounded-lg">
         <table className="w-full">
           <thead className="border-b border-gray-200" style={{ backgroundColor: '#EDEDED' }}>
             <tr>
