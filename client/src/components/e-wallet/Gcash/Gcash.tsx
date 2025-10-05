@@ -147,7 +147,7 @@ const GCash: React.FC = () => {
       />
 
       {/* Pagination */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex items-center justify-between pt-2 pb-1">
         <div className="text-sm text-gray-500">
           Page {currentPage} of {totalPages} • Showing {currentRecords.length} of {filteredRecords.length} records
         </div>
