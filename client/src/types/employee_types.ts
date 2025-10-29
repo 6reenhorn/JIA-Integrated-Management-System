@@ -3,7 +3,6 @@ export interface Employee {
   name: string;
   empId: string;
   role: string;
-  department: string;
   contact: string;
   status: 'Active' | 'Inactive';
   lastLogin: string;

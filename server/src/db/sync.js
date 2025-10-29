@@ -7,7 +7,6 @@ const createEmployeesTable = async () => {
       emp_id VARCHAR(10) UNIQUE NOT NULL,
       name VARCHAR(255) NOT NULL,
       role VARCHAR(100) NOT NULL,
-      department VARCHAR(100),
       contact TEXT,
       status VARCHAR(10) CHECK (status IN ('Active', 'Inactive')) DEFAULT 'Active',
       last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -105,15 +104,14 @@ const insertSampleEmployees = async () => {
   try {
     for (const employee of sampleEmployees) {
       const insertQuery = `
-        INSERT INTO employees (emp_id, name, role, department, contact, status, last_login, address, salary, contact_name, contact_number, relationship)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        INSERT INTO employees (emp_id, name, role, contact, status, last_login, address, salary, contact_name, contact_number, relationship)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         ON CONFLICT (emp_id) DO NOTHING;
       `;
       const values = [
         employee.emp_id,
         employee.name,
         employee.role,
-        employee.department,
         employee.contact,
         employee.status,
         employee.last_login,

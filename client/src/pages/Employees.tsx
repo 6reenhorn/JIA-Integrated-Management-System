@@ -25,7 +25,6 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [roleFilter, setRoleFilter] = useState('All Roles');
-  const [departmentFilter, setDepartmentFilter] = useState('All Departments');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -52,23 +51,16 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   };
 
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Fetch employees on mount
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        setLoading(true);
         const response = await axios.get('http://localhost:3001/api/employees');
         setEmployees(Array.isArray(response.data) ? response.data : []);
-        setError(null);
       } catch (err) {
         console.error('Error fetching employees:', err);
-        setError('Failed to load employees');
         setEmployees([]);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -79,9 +71,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const stats = useMemo(() => calculateStats(employees), [employees]);
 
   // Filter employees based on search and filters
-  const filteredEmployees = useMemo(() => 
-    filterEmployees(employees, searchTerm, roleFilter, departmentFilter, statusFilter),
-    [employees, searchTerm, roleFilter, departmentFilter, statusFilter]
+  const filteredEmployees = useMemo(() =>
+    filterEmployees(employees, searchTerm, roleFilter, statusFilter),
+    [employees, searchTerm, roleFilter, statusFilter]
   );
 
   // Pagination logic
@@ -90,7 +82,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   // Reset to first page when filters/search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, roleFilter, departmentFilter, statusFilter]);
+  }, [searchTerm, roleFilter, statusFilter]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
