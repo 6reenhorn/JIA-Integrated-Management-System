@@ -8,6 +8,11 @@ export interface Employee {
   status: 'Active' | 'Inactive';
   lastLogin: string;
   avatar?: string;
+  address: string;
+  salary: string;
+  contactName: string;
+  contactNumber: string;
+  relationship: string;
 }
 
 export interface EmployeeStats {
