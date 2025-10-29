@@ -103,11 +103,11 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       prevEmployees.map(emp =>
         emp.id === updatedEmployee.id ? {
           ...updatedEmployee,
-          address: (updatedEmployee as any).address,
-          salary: (updatedEmployee as any).salary,
-          contactName: (updatedEmployee as any).contactName,
-          contactNumber: (updatedEmployee as any).contactNumber,
-          relationship: (updatedEmployee as any).relationship
+          address: updatedEmployee.address,
+          salary: updatedEmployee.salary,
+          contactName: updatedEmployee.contactName,
+          contactNumber: updatedEmployee.contactNumber,
+          relationship: updatedEmployee.relationship
         } : emp
       )
     );
