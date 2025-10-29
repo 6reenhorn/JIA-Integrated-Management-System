@@ -12,7 +12,6 @@ router.get('/', async (req, res) => {
       empId: row.emp_id,
       name: row.name,
       role: row.role,
-      department: row.department,
       contact: row.contact,
       status: row.status,
       lastLogin: row.last_login ? row.last_login.toISOString().slice(0, 16).replace('T', ' ') : 'Never',
@@ -35,7 +34,6 @@ router.post('/', async (req, res) => {
   const {
     name,
     role,
-    department,
     contact,
     status,
     avatar,
@@ -53,15 +51,14 @@ router.post('/', async (req, res) => {
     const empId = `EMP${String(maxId).padStart(3, '0')}`;
 
     const query = `
-      INSERT INTO employees (emp_id, name, role, department, contact, status, avatar, address, salary, contact_name, contact_number, relationship)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO employees (emp_id, name, role, contact, status, avatar, address, salary, contact_name, contact_number, relationship)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
     const values = [
       empId,
       name,
       role,
-      department || '',
       contact,
       status || 'Active',
       avatar,
@@ -80,7 +77,6 @@ router.post('/', async (req, res) => {
       empId: newEmployee.emp_id,
       name: newEmployee.name,
       role: newEmployee.role,
-      department: newEmployee.department,
       contact: newEmployee.contact,
       status: newEmployee.status,
       lastLogin: 'Never',

@@ -19,10 +19,8 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<'Active' | 'Inactive'>('Active');
   const [selectedStatusText, setSelectedStatusText] = useState('Select Status');
-  const [selectedRole, setSelectedRole] = useState('');
   const [selectedRoleText, setSelectedRoleText] = useState('Select Role');
   const [isRelationshipDropdownOpen, setIsRelationshipDropdownOpen] = useState(false);
-  const [selectedRelationship, setSelectedRelationship] = useState('');
   const [selectedRelationshipText, setSelectedRelationshipText] = useState('Select Relationship');
   const [isFormValid, setIsFormValid] = useState(false);
   const [focusedStatusOption, setFocusedStatusOption] = useState(0);
@@ -50,8 +48,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
     setIsStatusDropdownOpen(false);
   };
 
-  const handleRoleOptionClick = (value: string, text: string) => {
-    setSelectedRole(value);
+  const handleRoleOptionClick = (_value: string, text: string) => {
     setSelectedRoleText(text);
     setIsRoleDropdownOpen(false);
   };
@@ -62,8 +59,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
     setIsRoleDropdownOpen(false);
   };
 
-  const handleRelationshipOptionClick = (value: string, text: string) => {
-    setSelectedRelationship(value);
+  const handleRelationshipOptionClick = (_value: string, text: string) => {
     setSelectedRelationshipText(text);
     setIsRelationshipDropdownOpen(false);
   };
@@ -528,7 +524,6 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
               onAddEmployee({
                 name: `${firstName} ${lastName}`,
                 role: selectedRoleText,
-                department: '',
                 contact: `${email}\n${phone}\n${address}`,
                 status: selectedStatus,
                 avatar: undefined,

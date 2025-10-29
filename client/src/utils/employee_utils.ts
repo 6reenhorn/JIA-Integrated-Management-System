@@ -25,33 +25,29 @@ export const filterEmployees = (
   employees: Employee[],
   searchTerm: string,
   roleFilter: string,
-  departmentFilter: string,
   statusFilter: string
 ): Employee[] => {
   return employees.filter(employee => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.empId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.contact.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesRole = roleFilter === 'All Roles' || employee.role === roleFilter;
-    const matchesDepartment = departmentFilter === 'All Departments' || employee.department === departmentFilter;
     const matchesStatus = statusFilter === 'All Status' || employee.status === statusFilter;
 
-    return matchesSearch && matchesRole && matchesDepartment && matchesStatus;
+    return matchesSearch && matchesRole && matchesStatus;
   });
 };
 
 export const calculateStats = (employees: Employee[]): {
   totalEmployees: number;
   activeEmployees: number;
-  departments: number;
   newHires: number;
 } => {
   const totalEmployees = employees.length;
   const activeEmployees = employees.filter(emp => emp.status === 'Active').length;
-  const departments = [...new Set(employees.map(emp => emp.department))].length;
-  
+
   const newHires = employees.filter(emp => {
     const loginDate = new Date(emp.lastLogin);
     const weekAgo = new Date();
@@ -62,7 +58,6 @@ export const calculateStats = (employees: Employee[]): {
   return {
     totalEmployees,
     activeEmployees,
-    departments,
     newHires
   };
 };

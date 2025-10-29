@@ -18,12 +18,9 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
   const [contactNumber, setContactNumber] = useState('');
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedStatusText, setSelectedStatusText] = useState('Select Status');
-  const [selectedRole, setSelectedRole] = useState('');
   const [selectedRoleText, setSelectedRoleText] = useState('Select Role');
   const [isRelationshipDropdownOpen, setIsRelationshipDropdownOpen] = useState(false);
-  const [selectedRelationship, setSelectedRelationship] = useState('');
   const [selectedRelationshipText, setSelectedRelationshipText] = useState('Select Relationship');
   const [focusedStatusOption, setFocusedStatusOption] = useState(0);
   const [focusedRoleOption, setFocusedRoleOption] = useState(0);
@@ -47,12 +44,10 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
           setSalary((employee as any).salary || '50000');
           setContactName((employee as any).contactName || 'N/A');
           setContactNumber((employee as any).contactNumber || 'N/A');
-          setSelectedStatus(employee.status.toLowerCase());
           setSelectedStatusText(employee.status);
-          setSelectedRole(employee.role.toLowerCase());
           setSelectedRoleText(employee.role);
-          setSelectedRelationship(((employee as any).relationship || 'spouse').toLowerCase());
-          setSelectedRelationshipText((employee as any).relationship || 'Spouse');
+          const relationshipText = (employee as any).relationship || 'Spouse';
+          setSelectedRelationshipText(relationshipText);
         }
       }, [employee]);
 
@@ -68,14 +63,12 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
     setIsRelationshipDropdownOpen(false);
   };
 
-  const handleStatusOptionClick = (value: string, text: string) => {
-    setSelectedStatus(value);
+  const handleStatusOptionClick = (text: string) => {
     setSelectedStatusText(text);
     setIsStatusDropdownOpen(false);
   };
 
-  const handleRoleOptionClick = (value: string, text: string) => {
-    setSelectedRole(value);
+  const handleRoleOptionClick = (_value: string, text: string) => {
     setSelectedRoleText(text);
     setIsRoleDropdownOpen(false);
   };
@@ -86,9 +79,8 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
     setIsRoleDropdownOpen(false);
   };
 
-  const handleRelationshipOptionClick = (value: string, text: string) => {
-    setSelectedRelationship(value);
-    setSelectedRelationshipText(text);
+  const handleRelationshipOptionClick = (_text: string) => {
+    setSelectedRelationshipText(_text);
     setIsRelationshipDropdownOpen(false);
   };
 
@@ -227,9 +219,9 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                     } else if (e.key === 'Enter') {
                       e.preventDefault();
                       if (focusedStatusOption === 0) {
-                        handleStatusOptionClick('active', 'Active');
+                        handleStatusOptionClick('Active');
                       } else {
-                        handleStatusOptionClick('inactive', 'Inactive');
+                        handleStatusOptionClick('Inactive');
                       }
                     } else if (e.key === 'Escape') {
                       e.preventDefault();
@@ -241,10 +233,10 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedStatusOption === 0 ? 'bg-blue-100' : ''}`}
                     data-value="active"
-                    onClick={() => handleStatusOptionClick('active', 'Active')}
+                    onClick={() => handleStatusOptionClick('Active')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleStatusOptionClick('active', 'Active');
+                        handleStatusOptionClick('Active');
                       }
                     }}
                     tabIndex={isStatusDropdownOpen ? 0 : -1}
@@ -254,10 +246,10 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedStatusOption === 1 ? 'bg-blue-100' : ''}`}
                     data-value="inactive"
-                    onClick={() => handleStatusOptionClick('inactive', 'Inactive')}
+                    onClick={() => handleStatusOptionClick('Inactive')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleStatusOptionClick('inactive', 'Inactive');
+                        handleStatusOptionClick('Inactive');
                       }
                     }}
                     tabIndex={isStatusDropdownOpen ? 0 : -1}
@@ -474,7 +466,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                         { value: 'other', text: 'Other' }
                       ];
                       const selected = relationships[focusedRelationshipOption];
-                      handleRelationshipOptionClick(selected.value, selected.text);
+                      handleRelationshipOptionClick(selected.text);
                     } else if (e.key === 'Escape') {
                       e.preventDefault();
                       setIsRelationshipDropdownOpen(false);
@@ -485,10 +477,10 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 0 ? 'bg-blue-100' : ''}`}
                     data-value="spouse"
-                    onClick={() => handleRelationshipOptionClick('spouse', 'Spouse')}
+                    onClick={() => handleRelationshipOptionClick('Spouse')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRelationshipOptionClick('spouse', 'Spouse');
+                        handleRelationshipOptionClick('Spouse');
                       }
                     }}
                     tabIndex={isRelationshipDropdownOpen ? 0 : -1}
@@ -498,10 +490,10 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 1 ? 'bg-blue-100' : ''}`}
                     data-value="parent"
-                    onClick={() => handleRelationshipOptionClick('parent', 'Parent')}
+                    onClick={() => handleRelationshipOptionClick('Parent')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRelationshipOptionClick('parent', 'Parent');
+                        handleRelationshipOptionClick('Parent');
                       }
                     }}
                     tabIndex={isRelationshipDropdownOpen ? 0 : -1}
@@ -511,10 +503,10 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 2 ? 'bg-blue-100' : ''}`}
                     data-value="sibling"
-                    onClick={() => handleRelationshipOptionClick('sibling', 'Sibling')}
+                    onClick={() => handleRelationshipOptionClick('Sibling')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRelationshipOptionClick('sibling', 'Sibling');
+                        handleRelationshipOptionClick('Sibling');
                       }
                     }}
                     tabIndex={isRelationshipDropdownOpen ? 0 : -1}
@@ -524,10 +516,10 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 3 ? 'bg-blue-100' : ''}`}
                     data-value="friend"
-                    onClick={() => handleRelationshipOptionClick('friend', 'Friend')}
+                    onClick={() => handleRelationshipOptionClick('Friend')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRelationshipOptionClick('friend', 'Friend');
+                        handleRelationshipOptionClick('Friend');
                       }
                     }}
                     tabIndex={isRelationshipDropdownOpen ? 0 : -1}
@@ -537,10 +529,10 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 4 ? 'bg-blue-100' : ''}`}
                     data-value="other"
-                    onClick={() => handleRelationshipOptionClick('other', 'Other')}
+                    onClick={() => handleRelationshipOptionClick('Other')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRelationshipOptionClick('other', 'Other');
+                        handleRelationshipOptionClick('Other');
                       }
                     }}
                     tabIndex={isRelationshipDropdownOpen ? 0 : -1}
