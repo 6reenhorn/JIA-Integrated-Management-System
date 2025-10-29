@@ -14,7 +14,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
   const [address, setAddress] = useState('');
   const [salary, setSalary] = useState('');
   const [contactName, setContactName] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
+  const [contactNumber, setContactNumber] = useState(''); 
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<'Active' | 'Inactive'>('Active');

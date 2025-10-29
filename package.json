@@ -13,9 +13,10 @@
   },
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "npm-run-all --parallel dev:react dev:electron",
+    "dev": "npm-run-all --parallel dev:react dev:electron dev:server",
     "dev:react": "vite --config client/vite.config.ts",
     "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
+    "dev:server": "cd server && npm run dev",
     "build": "tsc -b && vite build --config client/vite.config.ts",
     "lint": "eslint .",
     "preview": "vite preview --config client/vite.config.ts",
@@ -26,6 +27,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.13",
+    "axios": "^1.13.1",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-datepicker": "^8.7.0",
