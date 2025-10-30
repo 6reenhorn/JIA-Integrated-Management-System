@@ -95,4 +95,87 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PUT /api/employees/:id - Update an employee
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    role,
+    contact,
+    status,
+    avatar,
+    address,
+    salary,
+    contactName,
+    contactNumber,
+    relationship
+  } = req.body;
+
+  try {
+    const query = `
+      UPDATE employees
+      SET name = $1, role = $2, contact = $3, status = $4, avatar = $5, address = $6, salary = $7, contact_name = $8, contact_number = $9, relationship = $10
+      WHERE id = $11
+      RETURNING *
+    `;
+    const values = [
+      name,
+      role,
+      contact,
+      status,
+      avatar,
+      address,
+      salary,
+      contactName,
+      contactNumber,
+      relationship,
+      id
+    ];
+
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    const updatedEmployee = result.rows[0];
+    const employee = {
+      id: updatedEmployee.id,
+      empId: updatedEmployee.emp_id,
+      name: updatedEmployee.name,
+      role: updatedEmployee.role,
+      contact: updatedEmployee.contact,
+      status: updatedEmployee.status,
+      lastLogin: updatedEmployee.last_login ? updatedEmployee.last_login.toISOString().slice(0, 16).replace('T', ' ') : 'Never',
+      avatar: updatedEmployee.avatar,
+      address: updatedEmployee.address,
+      salary: updatedEmployee.salary,
+      contactName: updatedEmployee.contact_name,
+      contactNumber: updatedEmployee.contact_number,
+      relationship: updatedEmployee.relationship
+    };
+
+    res.json(employee);
+  } catch (err) {
+    console.error('Error updating employee:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/employees/:id - Delete an employee
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM employees WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    res.json({ message: 'Employee deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting employee:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
