@@ -97,22 +97,19 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setIsModalOpen(!isModalOpen);
   }
 
-  const handleSaveEmployee = (updatedEmployee: Employee) => {
-    // Temporarily update the employee in the state (since no backend yet)
-    setEmployees(prevEmployees =>
-      prevEmployees.map(emp =>
-        emp.id === updatedEmployee.id ? {
-          ...updatedEmployee,
-          address: updatedEmployee.address,
-          salary: updatedEmployee.salary,
-          contactName: updatedEmployee.contactName,
-          contactNumber: updatedEmployee.contactNumber,
-          relationship: updatedEmployee.relationship
-        } : emp
-      )
-    );
-    console.log('Saving employee:', updatedEmployee);
-    setIsEditModalOpen(false);
+  const handleSaveEmployee = async (updatedEmployee: Employee) => {
+    try {
+      const response = await axios.put(`http://localhost:3001/api/employees/${updatedEmployee.id}`, updatedEmployee);
+      setEmployees(prevEmployees =>
+        prevEmployees.map(emp =>
+          emp.id === updatedEmployee.id ? response.data : emp
+        )
+      );
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error('Error updating employee:', err);
+      // Handle error (could show a toast or alert)
+    }
   }
 
   const handleAddEmployee = async (newEmployee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string }) => {
@@ -143,9 +140,15 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setShowConfirm(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (deleteId !== null) {
-      setEmployees(prev => prev.filter(emp => emp.id !== deleteId));
+      try {
+        await axios.delete(`http://localhost:3001/api/employees/${deleteId}`);
+        setEmployees(prev => prev.filter(emp => emp.id !== deleteId));
+      } catch (err) {
+        console.error('Error deleting employee:', err);
+        // Handle error (could show a toast or alert)
+      }
     }
     setShowConfirm(false);
     setDeleteId(null);
