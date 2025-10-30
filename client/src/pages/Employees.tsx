@@ -32,6 +32,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: -0, left: 0 });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [internalActiveSection, setInternalActiveSection] = useState('staff');
 
@@ -51,6 +52,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   };
 
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch employees on mount
   useEffect(() => {
@@ -61,6 +63,8 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       } catch (err) {
         console.error('Error fetching employees:', err);
         setEmployees([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -142,12 +146,15 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
   const handleConfirmDelete = async () => {
     if (deleteId !== null) {
+      setIsDeleting(true);
       try {
         await axios.delete(`http://localhost:3001/api/employees/${deleteId}`);
         setEmployees(prev => prev.filter(emp => emp.id !== deleteId));
       } catch (err) {
         console.error('Error deleting employee:', err);
         // Handle error (could show a toast or alert)
+      } finally {
+        setIsDeleting(false);
       }
     }
     setShowConfirm(false);
@@ -196,6 +203,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
             <EmployeeTable
               employees={paginatedEmployees}
+              isLoading={isLoading}
               onViewEmployee={() => {}}
               onEditEmployee={(id: number) => {
                 const emp = employees.find(e => e.id === id) || null;
@@ -262,13 +270,15 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
             <div className="flex gap-2 justify-end w-full">
               <button
                 onClick={handleConfirmDelete}
-                className="px-5 py-1 bg-red-500 text-white text-[10px] rounded hover:bg-red-600"
+                className={`px-5 py-1 text-white text-[10px] rounded ${isDeleting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'}`}
+                disabled={isDeleting}
               >
-                Yes
+                {isDeleting ? 'Deleting...' : 'Yes'}
               </button>
               <button
                 onClick={handleCancelDelete}
                 className="px-5 py-1 bg-gray-500 text-white text-[10px] rounded hover:bg-gray-600"
+                disabled={isDeleting}
               >
                 No
               </button>

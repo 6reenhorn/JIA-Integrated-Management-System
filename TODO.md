@@ -1,7 +1,11 @@
-# TODO: Implement DELETE and EDIT methods for employees
+# TODO: Improve Employee Table Pagination
 
-- [x] Add PUT /api/employees/:id route in server/src/routes/employees.ts to update an employee by ID
-- [x] Add DELETE /api/employees/:id route in server/src/routes/employees.ts to delete an employee by ID
-- [x] Update handleSaveEmployee in client/src/pages/Employees.tsx to make PUT request to /api/employees/:id and update local state on success
-- [x] Update handleConfirmDelete in client/src/pages/Employees.tsx to make DELETE request to /api/employees/:id and update local state on success
-- [x] Test the edit and delete functionality to ensure data persists in the database and UI updates correctly
+## Tasks
+- [x] Modify getVisiblePages logic in EmployeeActions.tsx to show at most 4 page numbers with fixed display (1 2 3 4, then 1 ... 3 4, etc.)
+- [x] Add "First" button to jump to page 1
+- [x] Add "Last" button to jump to the last page
+- [x] Ensure buttons are disabled appropriately (First when on page 1, Last when on last page)
+
+## Notes
+- Changed to maxVisible = 4 with fixed pagination that doesn't move the buttons.
+- Add First and Last buttons before Previous and after Next respectively.

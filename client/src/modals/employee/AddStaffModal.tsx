@@ -26,6 +26,7 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
   const [focusedStatusOption, setFocusedStatusOption] = useState(0);
   const [focusedRoleOption, setFocusedRoleOption] = useState(0);
   const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
@@ -520,7 +521,8 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
         <button
           className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E]' : 'bg-gray-400 cursor-not-allowed'}`}
           onClick={() => {
-            if (isFormValid && onAddEmployee) {
+            if (isFormValid && !isSaving && onAddEmployee) {
+              setIsSaving(true);
               onAddEmployee({
                 name: `${firstName} ${lastName}`,
                 role: selectedRoleText,
@@ -535,9 +537,9 @@ const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
               });
             }
           }}
-          disabled={!isFormValid}
+          disabled={!isFormValid || isSaving}
         >
-          Add Employee
+          {isSaving ? 'Adding...' : 'Add Employee'}
         </button>
       </div>
     </div>

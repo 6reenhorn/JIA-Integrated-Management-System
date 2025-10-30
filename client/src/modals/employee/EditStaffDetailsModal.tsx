@@ -25,6 +25,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
   const [focusedStatusOption, setFocusedStatusOption] = useState(0);
   const [focusedRoleOption, setFocusedRoleOption] = useState(0);
   const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
@@ -106,6 +107,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsSaving(true);
     const updatedEmployee: Employee & {
       email: string;
       phone: string;
@@ -550,8 +552,8 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1">
             Cancel
           </button>
-          <button type="submit" form="edit-employee-form" className="border border-gray-300 rounded-md px-3 py-1 bg-[#02367B] hover:bg-[#1C4A9E] text-white">
-            Save Changes
+          <button type="submit" form="edit-employee-form" className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </div>
