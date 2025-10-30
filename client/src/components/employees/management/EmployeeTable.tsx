@@ -5,6 +5,7 @@ import { getStatusColor, getRoleColor } from '../../../utils/employee_utils';
 
 interface EmployeeTableProps {
   employees: Employee[];
+  isLoading: boolean;
   onViewEmployee: (id: number) => void;
   onEditEmployee: (id: number) => void;
   onRequestDelete: (id: number, event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -12,10 +13,22 @@ interface EmployeeTableProps {
 
 const EmployeeTable: React.FC<EmployeeTableProps> = ({
   employees,
+  isLoading,
   onViewEmployee,
   onEditEmployee,
   onRequestDelete
 }) => {
+  if (isLoading) {
+    return (
+      <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-500">Loading employees...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (employees.length === 0) {
     return (
       <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-md min-h-[429px]">
