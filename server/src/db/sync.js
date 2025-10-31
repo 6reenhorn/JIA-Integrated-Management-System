@@ -27,6 +27,28 @@ const createEmployeesTable = async () => {
   }
 };
 
+const createGCashRecordsTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS gcash_records (
+      id SERIAL PRIMARY KEY,
+      amount DECIMAL(10, 2) NOT NULL,
+      service_charge DECIMAL(10, 2) DEFAULT 0,
+      transaction_type VARCHAR(20) CHECK (transaction_type IN ('Cash-In', 'Cash-Out')) NOT NULL,
+      charge_mop VARCHAR(20) CHECK (charge_mop IN ('Cash', 'GCash')) NOT NULL,
+      reference_number VARCHAR(100),
+      date DATE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  try {
+    await pool.query(query);
+    console.log('GCash records table created or already exists');
+  } catch (err) {
+    console.error('Error creating gcash_records table:', err);
+  }
+};
+
 const insertSampleEmployees = async () => {
   const sampleEmployees = [
     {
@@ -132,6 +154,7 @@ const insertSampleEmployees = async () => {
 const syncDatabase = async () => {
   await createEmployeesTable();
   await insertSampleEmployees();
+  await createGCashRecordsTable();
 };
 
 module.exports = { syncDatabase };
