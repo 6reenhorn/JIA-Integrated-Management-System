@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import LayoutCard from '../../layout/LayoutCard';
 import { Search, Plus, X } from 'lucide-react';
 import type { GCashRecord } from '../../../types/ewallet_types';
@@ -7,34 +6,16 @@ import GCashRecordsTable from './GcashRecords';
 import CustomDatePicker from '../../common/CustomDatePicker';
 
 interface GCashProps {
+  records: GCashRecord[];
   onOpenModal: () => void;
+  isLoading: boolean;
 }
 
-const GCash: React.FC<GCashProps> = ({ onOpenModal }) => {
+const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
-  const [records, setRecords] = useState<GCashRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
   const recordsPerPage = 10;
-
-  // Fetch GCash records on mount
-  useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const response = await axios.get('http://localhost:3001/api/gcash');
-        setRecords(Array.isArray(response.data) ? response.data : []);
-      } catch (err) {
-        console.error('Error fetching GCash records:', err);
-        setRecords([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRecords();
-  }, []);
 
   // Filter records based on search term and date filter
   const filteredRecords = records.filter(record => {

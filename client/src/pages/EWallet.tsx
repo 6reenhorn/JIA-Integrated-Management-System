@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
 import Portal from '../components/common/Portal';
@@ -23,7 +23,24 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const [isPayMayaModalOpen, setIsPayMayaModalOpen] = useState(false);
   
   // Records states
+  const [gcashRecords, setGcashRecords] = useState<GCashRecord[]>([]);
   const [paymayaRecords, setPaymayaRecords] = useState<PayMayaRecord[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  // Fetch GCash records on mount
+  useEffect(() => {
+    const fetchGcashRecords = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/gcash');
+        setGcashRecords(response.data);
+      } catch (err) {
+        console.error('Error fetching GCash records:', err);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+    fetchGcashRecords();
+  }, []);
 
   const activeSection = propActiveSection ?? internalActiveSection;
 
@@ -45,8 +62,8 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   // Handler for adding GCash record
   const handleAddGCashRecord = async (newRecord: Omit<GCashRecord, 'id'>) => {
     try {
-      await axios.post('http://localhost:3001/api/gcash', newRecord);
-      // Trigger refresh by closing and reopening (GCash component will refetch)
+      const response = await axios.post('http://localhost:3001/api/gcash', newRecord);
+      setGcashRecords(prev => [...prev, response.data]);
       setIsGCashModalOpen(false);
       console.log('GCash record added successfully');
     } catch (err) {
@@ -74,7 +91,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
         {activeSection === 'GCash' && (
           <div className="space-y-6">
             <GCash 
+              records={gcashRecords}
               onOpenModal={() => setIsGCashModalOpen(true)}
+              isLoading={isInitialLoading}
             />
           </div>
         )}
