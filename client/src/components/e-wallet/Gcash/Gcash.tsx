@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import LayoutCard from '../../layout/LayoutCard';
 import { Search, Plus, X } from 'lucide-react';
 import type { GCashRecord } from '../../../types/ewallet_types';
@@ -6,31 +7,52 @@ import GCashRecordsTable from './GcashRecords';
 import CustomDatePicker from '../../common/CustomDatePicker';
 
 interface GCashProps {
-  records: GCashRecord[];
   onOpenModal: () => void;
 }
 
-const GCash: React.FC<GCashProps> = ({ records, onOpenModal }) => {
+const GCash: React.FC<GCashProps> = ({ onOpenModal }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
+  const [records, setRecords] = useState<GCashRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const recordsPerPage = 10;
 
-  // Filter records based on search term
+  // Fetch GCash records on mount
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/gcash');
+        setRecords(Array.isArray(response.data) ? response.data : []);
+      } catch (err) {
+        console.error('Error fetching GCash records:', err);
+        setRecords([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecords();
+  }, []);
+
+  // Filter records based on search term and date filter
   const filteredRecords = records.filter(record => {
-    const matchesSearch = record.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.transactionType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.chargeMOP.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = searchTerm.trim().toLowerCase();
+    const matchesSearch = !term || (
+      (record.referenceNumber || '')?.toLowerCase().includes(term) ||
+      (record.transactionType || '')?.toLowerCase().includes(term) ||
+      (record.chargeMOP || '')?.toLowerCase().includes(term)
+    );
 
     const matchesDate = !filterDate || (() => {
       const recordDate = new Date(record.date);
-      const filterDateLocal = new Date(filterDate);
+      const filterDateLocal = new Date(filterDate as Date);
       return recordDate.getFullYear() === filterDateLocal.getFullYear() &&
             recordDate.getMonth() === filterDateLocal.getMonth() &&
             recordDate.getDate() === filterDateLocal.getDate();
     })();
-    
+
     return matchesSearch && matchesDate;
   });
 
@@ -49,7 +71,7 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal }) => {
   // Reset to page 1 when search term changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, filterDate]);
 
   return (
     <div className="space-y-6 mt-5">
@@ -140,6 +162,7 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal }) => {
       {/* Records Table */}
       <GCashRecordsTable
         records={currentRecords}
+        isLoading={isLoading}
       />
 
       {/* Pagination */}

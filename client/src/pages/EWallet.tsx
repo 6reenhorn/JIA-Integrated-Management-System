@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
 import Portal from '../components/common/Portal';
 import Overview from '../components/e-wallet/Overview/Overview';
@@ -22,7 +23,6 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const [isPayMayaModalOpen, setIsPayMayaModalOpen] = useState(false);
   
   // Records states
-  const [gcashRecords, setGcashRecords] = useState<GCashRecord[]>([]);
   const [paymayaRecords, setPaymayaRecords] = useState<PayMayaRecord[]>([]);
 
   const activeSection = propActiveSection ?? internalActiveSection;
@@ -43,9 +43,15 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   };
 
   // Handler for adding GCash record
-  const handleAddGCashRecord = (newRecord: GCashRecord) => {
-    setGcashRecords(prev => [...prev, newRecord]);
-    console.log('New GCash record added:', newRecord);
+  const handleAddGCashRecord = async (newRecord: Omit<GCashRecord, 'id'>) => {
+    try {
+      await axios.post('http://localhost:3001/api/gcash', newRecord);
+      // Trigger refresh by closing and reopening (GCash component will refetch)
+      setIsGCashModalOpen(false);
+      console.log('GCash record added successfully');
+    } catch (err) {
+      console.error('Error adding GCash record:', err);
+    }
   };
 
   // Handler for adding PayMaya record
@@ -68,7 +74,6 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
         {activeSection === 'GCash' && (
           <div className="space-y-6">
             <GCash 
-              records={gcashRecords}
               onOpenModal={() => setIsGCashModalOpen(true)}
             />
           </div>

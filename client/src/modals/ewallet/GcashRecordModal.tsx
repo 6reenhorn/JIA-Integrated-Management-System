@@ -5,7 +5,7 @@ import CustomDatePicker from '../../components/common/CustomDatePicker';
 interface AddGCashRecordModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAddRecord: (record: GCashRecord) => void;
+    onAddRecord: (record: Omit<GCashRecord, 'id'>) => void;
 }
 
 const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
@@ -104,8 +104,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
             return;
         }
 
-        const newRecord: GCashRecord = {
-            id: Date.now().toString(),
+        const newRecord: Omit<GCashRecord, 'id'> = {
             amount: parseFloat(formData.amount),
             serviceCharge: parseFloat(formData.serviceCharge) || 0,
             transactionType: formData.transactionType as 'Cash-In' | 'Cash-Out',

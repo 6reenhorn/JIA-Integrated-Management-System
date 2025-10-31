@@ -3,10 +3,12 @@ import type { GCashRecord } from '../../../types/ewallet_types';
 
 interface GCashRecordsTableProps {
     records: GCashRecord[];
+    isLoading: boolean;
 }
 
 const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
     records,
+    isLoading,
 }) => {
     const formatCurrency = (amount: number): string => {
         return `₱${amount.toFixed(2)}`;
@@ -32,6 +34,17 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
             ? 'bg-blue-100 text-blue-800'
             : 'bg-purple-100 text-purple-800';
     };
+
+    if (isLoading) {
+        return (
+            <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
+                <div className="flex flex-col items-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                    <p className="mt-4 text-gray-500">Loading GCash records...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (records.length === 0) {
         return (
