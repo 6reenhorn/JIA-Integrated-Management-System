@@ -36,10 +36,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var express_1 = require("express");
-var jsonwebtoken_1 = require("jsonwebtoken");
-var postgres_1 = require("../db/postgres");
-var router = express_1.default.Router();
+const express = require("express");
+const jsonwebtoken_1 = require("jsonwebtoken");
+const postgres_1 = require("../db/postgres");
+const router = express.Router();
 // Example login route
 router.post('/login', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, username, password, result, user, token, error_1;
@@ -78,4 +78,4 @@ router.get('/protected', function (req, res) {
     // In a real app, you'd verify JWT here
     res.json({ message: 'This is a protected route' });
 });
-exports.default = router;
+module.exports = router;

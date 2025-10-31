@@ -1,7 +1,8 @@
-import { Router } from 'express';
-import pool from '../db/postgres';
+"use strict";
+const express = require('express');
+const pool = require('../db/postgres');
 
-const router = Router();
+const router = express.Router();
 
 // GET /api/employees - Fetch all employees
 router.get('/', async (req, res) => {
@@ -100,7 +101,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/employees/:id - Update an employee
-router.put('/:id', async (req, res): Promise<void> => {
+router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const {
     name,
@@ -172,7 +173,7 @@ router.put('/:id', async (req, res): Promise<void> => {
 });
 
 // DELETE /api/employees/:id - Delete an employee
-router.delete('/:id', async (req, res): Promise<void> => {
+router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -191,4 +192,6 @@ router.delete('/:id', async (req, res): Promise<void> => {
   }
 });
 
-export default router;
+module.exports = router;
+
+
