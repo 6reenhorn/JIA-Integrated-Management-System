@@ -13,13 +13,28 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     onClose,
     onAddRecord,
 }) => {
+    const getLocalISODate = (date: Date) => {
+        const tzOffset = date.getTimezoneOffset() * 60000;
+        const local = new Date(date.getTime() - tzOffset);
+        return local.toISOString().split('T')[0];
+    };
+    const parseLocalDate = (dateString: string) => {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+            const y = Number(parts[0]);
+            const m = Number(parts[1]) - 1;
+            const d = Number(parts[2]);
+            return new Date(y, m, d);
+        }
+        return new Date(dateString);
+    };
     const [formData, setFormData] = useState({
         amount: '',
         serviceCharge: '',
         transactionType: '',
         chargeMOP: '',
         referenceNumber: '',
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalISODate(new Date()),
     });
 
     const [dropdowns, setDropdowns] = useState({
@@ -122,7 +137,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
             transactionType: '',
             chargeMOP: '',
             referenceNumber: '',
-            date: new Date().toISOString().split('T')[0],
+            date: getLocalISODate(new Date()),
         });
         
         onClose();
@@ -136,7 +151,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
             transactionType: '',
             chargeMOP: '',
             referenceNumber: '',
-            date: new Date().toISOString().split('T')[0],
+            date: getLocalISODate(new Date()),
         });
         onClose();
     };
@@ -289,8 +304,8 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                         <div className="flex flex-col">
                             <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
                             <CustomDatePicker
-                                selected={formData.date ? new Date(formData.date) : null}
-                                onChange={(date: Date | null) => handleInputChange('date', date ? date.toISOString().split('T')[0] : '')}
+                                selected={formData.date ? parseLocalDate(formData.date) : null}
+                                onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
                             />
                         </div>
                     </form>

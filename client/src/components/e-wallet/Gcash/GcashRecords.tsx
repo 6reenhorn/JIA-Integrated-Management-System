@@ -15,6 +15,19 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
     };
 
     const formatDate = (dateString: string): string => {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+            const year = Number(parts[0]);
+            const month = Number(parts[1]) - 1;
+            const day = Number(parts[2]);
+            const localDate = new Date(year, month, day);
+            return localDate.toLocaleDateString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric',
+            });
+        }
+        // Fallback
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
             month: '2-digit',
