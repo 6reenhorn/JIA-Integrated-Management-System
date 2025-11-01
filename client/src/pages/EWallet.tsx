@@ -26,8 +26,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const [gcashRecords, setGcashRecords] = useState<GCashRecord[]>([]);
   const [paymayaRecords, setPaymayaRecords] = useState<PayMayaRecord[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isInitialLoadingPayMaya, setIsInitialLoadingPayMaya] = useState(true);
 
-  // Fetch GCash records on mount
+  // Fetch records on mount
   useEffect(() => {
     const fetchGcashRecords = async () => {
       try {
@@ -41,6 +42,20 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     };
     fetchGcashRecords();
   }, []);
+
+  useEffect(() => {
+    const fetchPayMayaRecords = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/paymaya');
+        setPaymayaRecords(response.data);
+      } catch (err) {
+        console.error('Error fetching PayMaya records:', err);
+      } finally {
+        setIsInitialLoadingPayMaya(false);
+      }
+    };
+    fetchPayMayaRecords();
+  }, []); 
 
   const activeSection = propActiveSection ?? internalActiveSection;
 
@@ -59,7 +74,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     }
   };
 
-  // Handler for adding GCash record
+  // Handler for adding record
   const handleAddGCashRecord = async (newRecord: Omit<GCashRecord, 'id'>) => {
     try {
       const response = await axios.post('http://localhost:3001/api/gcash', newRecord);
@@ -71,11 +86,16 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     }
   };
 
-  // Handler for adding PayMaya record
-  const handleAddPayMayaRecord = (newRecord: PayMayaRecord) => {
-    setPaymayaRecords(prev => [...prev, newRecord]);
-    console.log('New PayMaya record added:', newRecord);
-  };
+  const handleAddPayMayaRecord = async (newRecord: Omit<PayMayaRecord, 'id'>) => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/paymaya', newRecord);
+      setPaymayaRecords(prev => [...prev, response.data]);
+      setIsPayMayaModalOpen(false);
+      console.log('PayMaya record added successfully');
+    } catch (err) {
+      console.error('Error adding PayMaya record:', err);
+    }
+  };  
 
   return (
     <>
@@ -104,6 +124,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
             <PayMaya 
               records={paymayaRecords}
               onOpenModal={() => setIsPayMayaModalOpen(true)}
+              isLoading={isInitialLoadingPayMaya}
             />
           </div>
         )}

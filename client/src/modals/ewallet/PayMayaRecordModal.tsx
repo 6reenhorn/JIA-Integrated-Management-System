@@ -159,6 +159,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
             {/* Background overlay with blur effect */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                onClick={onClose}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'

@@ -3,10 +3,12 @@ import type { PayMayaRecord } from '../../../types/ewallet_types';
 
 interface PayMayaRecordsTableProps {
     records: PayMayaRecord[];
+    isLoading?: boolean;
 }
 
 const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
     records,
+    isLoading = false,
 }) => {
     const formatCurrency = (amount: number): string => {
         return `₱${amount.toFixed(2)}`;
@@ -32,6 +34,17 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
             ? 'bg-blue-100 text-blue-800'
             : 'bg-purple-100 text-purple-800';
     };
+
+    if (isLoading) {
+    return (
+        <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            <p className="mt-4 text-gray-500">Loading PayMaya records...</p>
+        </div>
+        </div>
+    );
+    }
 
     if (records.length === 0) {
         return (
