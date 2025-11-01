@@ -317,6 +317,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                             <CustomDatePicker
                                 selected={formData.date ? parseLocalDate(formData.date) : null}
                                 onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
+                                maxDate={new Date()}
                             />
                         </div>
                     </form>
