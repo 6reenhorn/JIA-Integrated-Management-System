@@ -27,6 +27,8 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
         chargeMOP: false,
     });
 
+    const [isFormValid, setIsFormValid] = useState(false);
+
     const transactionTypeRef = useRef<HTMLDivElement>(null);
     const chargeMOPRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -34,6 +36,15 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     // Transaction type options
     const transactionTypeOptions = ['Cash-In', 'Cash-Out'];
     const chargeMOPOptions = ['Cash', 'PayMaya'];
+
+    // Validate form
+    useEffect(() => {
+        const valid = formData.amount.trim() !== '' && 
+                    formData.transactionType !== '' && 
+                    formData.chargeMOP !== '' && 
+                    formData.date !== '';
+        setIsFormValid(valid);
+    }, [formData.amount, formData.transactionType, formData.chargeMOP, formData.date]);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -99,8 +110,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
         e.preventDefault();
         
         // Validation
-        if (!formData.amount || !formData.transactionType || !formData.chargeMOP || !formData.date) {
-            alert('Please fill in all required fields');
+        if (!isFormValid) {
             return;
         }
 
@@ -308,8 +318,13 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                     </button>
                     <button 
                         type="submit"
-                        className="px-4 py-2 bg-[#02367B] hover:bg-[#01285a] text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm" 
+                        className={`px-4 py-2 rounded-md transition-colors duration-200 font-medium text-sm shadow-sm ${
+                            isFormValid 
+                                ? 'bg-[#02367B] hover:bg-[#01285a] text-white' 
+                                : 'bg-gray-400 text-white cursor-not-allowed'
+                        }`}
                         onClick={handleSubmit}
+                        disabled={!isFormValid}
                     >
                         Add Record
                     </button>
