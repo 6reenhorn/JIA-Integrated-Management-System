@@ -303,6 +303,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                             <CustomDatePicker
                                 selected={formData.date ? new Date(formData.date) : null}
                                 onChange={(date: Date | null) => handleInputChange('date', date ? date.toISOString().split('T')[0] : '')}
+                                maxDate={new Date()}
                             />
                         </div>
                     </form>

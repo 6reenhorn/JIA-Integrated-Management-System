@@ -41,12 +41,14 @@ const CustomDateInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttrib
     selected: Date | null;
     onChange: (date: Date | null) => void;
     className?: string;
+    maxDate?: Date;
     }
 
     const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     selected,
     onChange,
-    className = ''
+    className = '',
+    maxDate,
     }) => {
     return (
         <>
@@ -61,6 +63,7 @@ const CustomDateInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttrib
         <DatePicker
             selected={selected}
             onChange={onChange}
+            maxDate={maxDate}
             customInput={<CustomDateInput />}
             className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100 ${className}`}
             dateFormat="yyyy-MM-dd"
