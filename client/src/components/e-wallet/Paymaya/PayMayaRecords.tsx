@@ -87,7 +87,7 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
 
     return (
         <div className="border-2 border-[#E5E7EB] rounded-lg">
-            <div className="h-[390px] overflow-auto">
+            <div className="h-[390px] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <table className="table-fixed w-full">
                     <thead className="bg-[#EDEDED] border-[#E5E7EB] border-b sticky top-0 z-10">
                         <tr>
