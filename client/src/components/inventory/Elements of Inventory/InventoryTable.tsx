@@ -9,7 +9,6 @@ interface InventoryTableProps {
   onEditItem: (id: number) => void;
   onDeleteItem: (id: number) => void;
   currentPage: number;
-  totalPages: number;
   filteredCount: number;
   totalCount: number;
   onPageChange: (page: number) => void;
@@ -20,12 +19,12 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
   onEditItem,
   onDeleteItem,
   currentPage,
-  totalPages,
   filteredCount,
   totalCount,
   onPageChange
 }) => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const ITEMS_PER_PAGE = 10;
 
   const handleDeleteClick = (id: number, event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -72,6 +71,14 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     );
   };
 
+  // Paginate items - get only items for current page
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedItems = items.slice(startIndex, endIndex);
+
+  // Calculate actual total pages based on items length - ensure at least 1 page
+  const actualTotalPages = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+
   if (items.length === 0) {
     return (
       <div className="space-y-6">
@@ -101,8 +108,8 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
 
         {/* Pagination Actions */}
         <InventoryActions 
-          currentPage={currentPage}
-          totalPages={totalPages}
+          currentPage={0} // Always show page 1 when no items
+          totalPages={0} // Always show 1 total page when no items
           filteredCount={filteredCount}
           totalCount={totalCount}
           onPageChange={onPageChange}
@@ -132,7 +139,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
         <div className="h-[335px] overflow-y-auto">
           <table className="table-fixed w-full h-full">
             <tbody className="divide-y divide-gray-200">
-              {items.map((item) => (
+              {paginatedItems.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 relative">
                   <td className="py-4 px-6 w-[180px]">
                     <div className="text-sm font-medium text-gray-900 truncate">
@@ -184,7 +191,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                   </td>
                 </tr>
               ))}
-              {items.length < 10 && (
+              {paginatedItems.length < ITEMS_PER_PAGE && (
                 <tr className="h-full">
                   <td colSpan={7} className="h-full"></td>
                 </tr>
@@ -197,7 +204,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
       {/* Pagination Actions */}
       <InventoryActions 
         currentPage={currentPage}
-        totalPages={totalPages}
+        totalPages={actualTotalPages}
         filteredCount={filteredCount}
         totalCount={totalCount}
         onPageChange={onPageChange}

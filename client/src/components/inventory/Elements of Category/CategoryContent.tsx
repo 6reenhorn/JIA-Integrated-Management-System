@@ -91,60 +91,70 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
           showTitle={true}
         />
         
-        {/* Category Cards Grid - Scrollable Container */}
-        <div className="h-[392px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category, index) => (
-              <LayoutCard 
-                key={index} 
-              >
-                {/* Category Header with Color Dot */}
-                <div className="flex items-center gap-3 mb-6">
-                  <div 
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: category.color || defaultColors[index % defaultColors.length] }}
-                  />
-                  <h4 className="text-lg font-semibold text-gray-900">{category.name}</h4>
-                </div>
-                
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-6 mb-6">
-                  {/* Product Count */}
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-gray-900 mb-1">{category.productCount}</p>
-                    <p className="text-sm text-gray-500">Product{category.productCount !== 1 ? 's' : ''}</p>
-                  </div>
-                  
-                  {/* Total Stock */}
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-gray-900 mb-1">{category.totalStock}</p>
-                    <p className="text-sm text-gray-500">Total Stock</p>
-                  </div>
-                </div>
-                
-                {/* Category Value */}
-                <div className="pt-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm text-gray-500">Category Value</span>
-                    <span className="text-lg font-semibold text-gray-900">
-                      ₱{category.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  
-                  {/* View Products Button */}
-                  {onViewProducts && (
-                    <button
-                      onClick={() => onViewProducts(category.name)}
-                      className="w-full text-[#02367B] hover:text-[#01295a] text-sm font-medium underline transition-colors"
-                    >
-                      View Products
-                    </button>
-                  )}
-                </div>
-              </LayoutCard>
-            ))}
+        {/* Category Cards Grid - Scrollable Container or Empty State */}
+        {categories.length === 0 ? (
+          /* Empty State Content with Fixed Height */
+          <div className="h-[392px] flex items-center justify-center border-t border-b border-gray-200 mt-1 mb-8">
+            <p className="text-gray-500">
+              No categories found. Add your first category to get started.
+            </p>
           </div>
-        </div>
+        ) : (
+          /* Category Cards Grid - Scrollable Container */
+          <div className="h-[392px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categories.map((category, index) => (
+                <LayoutCard 
+                  key={index} 
+                >
+                  {/* Category Header with Color Dot */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: category.color || defaultColors[index % defaultColors.length] }}
+                    />
+                    <h4 className="text-lg font-semibold text-gray-900">{category.name}</h4>
+                  </div>
+                  
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-6 mb-6">
+                    {/* Product Count */}
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-gray-900 mb-1">{category.productCount}</p>
+                      <p className="text-sm text-gray-500">Product{category.productCount !== 1 ? 's' : ''}</p>
+                    </div>
+                    
+                    {/* Total Stock */}
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-gray-900 mb-1">{category.totalStock}</p>
+                      <p className="text-sm text-gray-500">Total Stock</p>
+                    </div>
+                  </div>
+                  
+                  {/* Category Value */}
+                  <div className="pt-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-sm text-gray-500">Category Value</span>
+                      <span className="text-lg font-semibold text-gray-900">
+                        ₱{category.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    
+                    {/* View Products Button */}
+                    {onViewProducts && (
+                      <button
+                        onClick={() => onViewProducts(category.name)}
+                        className="w-full text-[#02367B] hover:text-[#01295a] text-sm font-medium underline transition-colors"
+                      >
+                        View Products
+                      </button>
+                    )}
+                  </div>
+                </LayoutCard>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Pagination - Now using CategoryActions component */}
         <CategoryActions
@@ -202,5 +212,3 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
 };
 
 export default CategoryContent;
-
-// line 95, OLD: <div className="h-[392px] overflow-y-auto border-2 border-[#E5E7EB] rounded-lg p-4 mt-1 mb-8">

@@ -28,8 +28,6 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   });
 
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-  const [showAddCategory, setShowAddCategory] = useState(false);
-  const [newCategory, setNewCategory] = useState('');
   const [description, setDescription] = useState('');
   const [minimumStock, setMinimumStock] = useState(0);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
@@ -55,7 +53,6 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
         setIsSelectOpen(false);
-        setShowAddCategory(false);
       }
     };
 
@@ -75,16 +72,6 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
 
   const toggleCategoryDropdown = () => {
     setIsSelectOpen(!isSelectOpen);
-    setShowAddCategory(false);
-  };
-
-  const handleAddCategory = () => {
-    if (newCategory.trim() && !categories.includes(newCategory.trim())) {
-      setFormData(prev => ({ ...prev, category: newCategory.trim() }));
-      setNewCategory('');
-      setShowAddCategory(false);
-      setIsSelectOpen(false);
-    }
   };
 
   const handleCategorySelect = (category: string) => {
@@ -213,7 +200,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                       }}
                     >
                       <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-center text-sm">
-                        Select Category +
+                        Select Category
                       </div>
                       
                       {categories.map((category, index) => (
@@ -229,47 +216,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                           {category}
                         </div>
                       ))}
-                      
-                      <div
-                        onClick={() => setShowAddCategory(true)}
-                        className="px-4 py-2 text-left hover:bg-blue-50 text-[#02367B] border-t border-gray-200 cursor-pointer transition-colors"
-                      >
-                        + Add New Category
-                      </div>
                     </div>
                   </div>
-
-                  {showAddCategory && (
-                    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <input
-                        type="text"
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                        placeholder="Enter new category name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:outline-none mb-2"
-                        onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={handleAddCategory}
-                          className="px-3 py-1.5 bg-[#02367B] text-white text-xs rounded-md hover:bg-[#02367B]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 font-medium"
-                        >
-                          Add
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowAddCategory(false);
-                            setNewCategory('');
-                          }}
-                          className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded-md hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 font-medium"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Price */}

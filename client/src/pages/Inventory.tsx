@@ -33,9 +33,11 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [salesSearchTerm, setSalesSearchTerm] = useState('');
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
   
-  // UI states
+  // UI states - SEPARATE PAGE STATE FOR EACH SECTION
   const [filterOpen, setFilterOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [inventoryCurrentPage, setInventoryCurrentPage] = useState(1);
+  const [salesCurrentPage, setSalesCurrentPage] = useState(1);
+  const [categoryCurrentPage, setCategoryCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDate, setSelectedDate] = useState('');
   
@@ -68,14 +70,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   }, [propActiveSection, activeSection]);
 
-  // Sales records state with sample data - Updated with IDs
-  const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([
-    { id: 1, date: '2025-09-25', productName: 'Platos', quantity: 2, price: 15.00, total: 30.00, paymentMethod: 'Cash' },
-    { id: 2, date: '2025-09-25', productName: 'Nova', quantity: 2, price: 16.00, total: 32.00, paymentMethod: 'Gcash' },
-    { id: 3, date: '2025-09-25', productName: 'Mobee', quantity: 1, price: 8.00, total: 8.00, paymentMethod: 'PayMaya' },
-    { id: 4, date: '2025-09-25', productName: 'Pencil', quantity: 2, price: 6.00, total: 12.00, paymentMethod: 'Cash' },
-    { id: 5, date: '2025-09-25', productName: '1 whole paper', quantity: 1, price: 50.00, total: 50.00, paymentMethod: 'Cash' },
-  ]);
+  // Sales records state - Empty initially
+  const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
 
   // Filter sales records by date and search term
   const filteredSalesRecords = useMemo(() => {
@@ -111,23 +107,14 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     };
   }, [filteredSalesRecords]);
 
-  // Category colors
-  const [categoryColors, setCategoryColors] = useState<Record<string, string>>({
-    'Category 1': '#3B82F6',
-    'Category 2': '#EF4444',
-    'Category 3': '#10B981',
-    'Category 4': '#F59E0B',
-    'Category 5': '#EC4899',
-  });
+  // Categories state - Empty initially
+  const [allCategories, setAllCategories] = useState<string[]>([]);
 
-  // Inventory data
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([
-    { id: 1, productName: 'Product 1', category: 'Category 1', stock: 69, status: 'In Stock', productPrice: 69.69, totalAmount: 69 * 69.69 },
-    { id: 2, productName: 'Product 2', category: 'Category 2', stock: 10, status: 'Low Stock', productPrice: 20.20, totalAmount: 10 * 20.20 },
-    { id: 3, productName: 'Product 3', category: 'Category 3', stock: 5, status: 'Low Stock', productPrice: 50.00, totalAmount: 5 * 50.00 },
-    { id: 4, productName: 'Product 4', category: 'Category 4', stock: 0, status: 'Out Of Stock', productPrice: 5.00, totalAmount: 0 },
-    { id: 5, productName: 'Product 5', category: 'Category 5', stock: 69, status: 'In Stock', productPrice: 30.00, totalAmount: 69 * 30.00 },
-  ]);
+  // Category colors - Empty initially
+  const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
+
+  // Inventory data - Empty initially
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   // for changing the name of tabs
   const sections = [
@@ -145,30 +132,35 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     [inventoryItems, searchTerm, selectedCategory]
   );
 
-  const categories = useMemo(
-    () => Array.from(new Set(inventoryItems.map(item => item.category))),
-    [inventoryItems]
-  );
+  // Use allCategories
+  const categories = allCategories;
 
   const categoryData = useMemo(() => {
     const map = new Map();
-    inventoryItems.forEach(item => {
-      if (!map.has(item.category)) {
-        map.set(item.category, {
-          name: item.category,
-          productCount: 0,
-          totalStock: 0,
-          totalValue: 0,
-          color: categoryColors[item.category] || '#6B7280',
-        });
-      }
-      const category = map.get(item.category);
-      category.productCount++;
-      category.totalStock += item.stock;
-      category.totalValue += item.totalAmount;
+    
+    // Initialize all categories with zero counts
+    allCategories.forEach(categoryName => {
+      map.set(categoryName, {
+        name: categoryName,
+        productCount: 0,
+        totalStock: 0,
+        totalValue: 0,
+        color: categoryColors[categoryName] || '#6B7280',
+      });
     });
+    
+    // Update with actual inventory data
+    inventoryItems.forEach(item => {
+      if (map.has(item.category)) {
+        const category = map.get(item.category);
+        category.productCount++;
+        category.totalStock += item.stock;
+        category.totalValue += item.totalAmount;
+      }
+    });
+    
     return Array.from(map.values());
-  }, [inventoryItems, categoryColors]);
+  }, [inventoryItems, categoryColors, allCategories]);
 
   // Filter categories based on search term
   const filteredCategoryData = useMemo(() => {
@@ -187,7 +179,21 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   };
 
-  const handleDeleteItem = (id: number) => setInventoryItems(prev => prev.filter(i => i.id !== id));
+  // REMOVED window.confirm - Delete happens immediately
+  const handleDeleteItem = (id: number) => {
+    setInventoryItems(prev => {
+      const filtered = prev.filter(i => i.id !== id);
+      // Reset to page 1 if current page is now empty
+      const totalPages = Math.ceil(filtered.length / 10);
+      if (inventoryCurrentPage > totalPages && totalPages > 0) {
+        setInventoryCurrentPage(totalPages);
+      } else if (filtered.length === 0) {
+        setInventoryCurrentPage(1);
+      }
+      return filtered;
+    });
+  };
+
   const handleAddItem = () => setIsAddModalOpen(true);
   const handleAddCategory = () => setIsAddCategoryModalOpen(true);
   const handleAddSale = () => setIsAddSalesModalOpen(true);
@@ -201,10 +207,19 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   };
 
+  // REMOVED window.confirm - Delete happens immediately
   const handleDeleteSale = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this sale record?')) {
-      setSalesRecords(prev => prev.filter(record => record.id !== id));
-    }
+    setSalesRecords(prev => {
+      const filtered = prev.filter(record => record.id !== id);
+      // Reset to page 1 if current page is now empty
+      const totalPages = Math.ceil(filtered.length / 10);
+      if (salesCurrentPage > totalPages && totalPages > 0) {
+        setSalesCurrentPage(totalPages);
+      } else if (filtered.length === 0) {
+        setSalesCurrentPage(1);
+      }
+      return filtered;
+    });
   };
 
   const handleSaveSale = (updatedSale: SalesRecord) => {
@@ -235,6 +250,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     };
     
     setSalesRecords(prev => [...prev, newSale]);
+    // Reset to page 1 after adding
+    setSalesCurrentPage(1);
     setIsAddSalesModalOpen(false);
   };
 
@@ -243,7 +260,19 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     setEditingSale(null);
   };
 
-  const handleSaveCategory = (categoryName: string, color: string) => setCategoryColors(prev => ({ ...prev, [categoryName]: color }));
+  // Update both categoryColors and allCategories
+  const handleSaveCategory = (categoryName: string, color: string) => {
+    // Add to categories list if not already present
+    if (!allCategories.includes(categoryName)) {
+      setAllCategories(prev => [...prev, categoryName]);
+    }
+    // Add/update color
+    setCategoryColors(prev => ({ ...prev, [categoryName]: color }));
+    // Reset to page 1 after adding
+    setCategoryCurrentPage(1);
+    // Close modal after saving
+    setIsAddCategoryModalOpen(false);
+  };
 
   const handleViewProducts = (categoryName: string) => {
     handleSectionChange('inventory');
@@ -262,6 +291,10 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       totalAmount,
     };
     setInventoryItems(prev => [...prev, newProduct]);
+    // Reset to page 1 after adding
+    setInventoryCurrentPage(1);
+    // Close modal after adding
+    setIsAddModalOpen(false);
   };
 
   const handleSaveProduct = (updated: InventoryItem) => {
@@ -272,6 +305,9 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       totalAmount,
     };
     setInventoryItems(prev => prev.map(i => (i.id === finalItem.id ? finalItem : i)));
+    // Close modal and reset editing item
+    setIsEditModalOpen(false);
+    setEditingItem(undefined);
   };
 
   const handleCloseEditModal = () => {
@@ -279,7 +315,22 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     setEditingItem(undefined);
   };
 
-  const handlePageChange = (page: number) => setCurrentPage(page);
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+  const handleCloseCategoryModal = () => {
+    setIsAddCategoryModalOpen(false);
+  };
+
+  const handleCloseSalesModal = () => {
+    setIsAddSalesModalOpen(false);
+  };
+
+  // Separate page change handlers for each section
+  const handleInventoryPageChange = (page: number) => setInventoryCurrentPage(page);
+  const handleSalesPageChange = (page: number) => setSalesCurrentPage(page);
+  const handleCategoryPageChange = (page: number) => setCategoryCurrentPage(page);
 
   // Handle section change - enhanced to properly notify parent
   const handleSectionChange = (section: string) => {
@@ -314,11 +365,10 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
             onViewItem={(id) => console.log('View item', id)}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}
-            currentPage={currentPage}
-            totalPages={Math.ceil(filteredItems.length / 10)}
+            currentPage={inventoryCurrentPage}
             filteredCount={filteredItems.length}
             totalCount={inventoryItems.length}
-            onPageChange={handlePageChange}
+            onPageChange={handleInventoryPageChange}
           />
         </InventoryStats>
       )}
@@ -327,11 +377,11 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       {activeSection === 'category' && (
         <CategoryContent 
           categories={filteredCategoryData}
-          currentPage={currentPage}
+          currentPage={categoryCurrentPage}
           totalPages={Math.ceil(filteredCategoryData.length / 10)}
           filteredCount={filteredCategoryData.length}
           totalCount={categoryData.length}
-          onPageChange={handlePageChange}
+          onPageChange={handleCategoryPageChange}
           onViewProducts={handleViewProducts}
           showHeaderStats={true}
           onAddCategory={handleAddCategory}
@@ -362,15 +412,15 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           onAddSale={handleAddSale}
           onEditSale={handleEditSale}
           onDeleteSale={handleDeleteSale}
-          currentPage={currentPage}
-          onPageChange={handlePageChange}
+          currentPage={salesCurrentPage}
+          onPageChange={handleSalesPageChange}
         />
       )}
 
       {/* All Modals */}
       <AddProductModal 
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={handleCloseAddModal}
         onAddProduct={handleAddProduct}
         categories={categories}
       />
@@ -383,7 +433,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       />
       <AddCategoryModal 
         isOpen={isAddCategoryModalOpen}
-        onClose={() => setIsAddCategoryModalOpen(false)}
+        onClose={handleCloseCategoryModal}
         onAddCategory={handleSaveCategory}
       />
       
@@ -398,7 +448,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       {/* Add Sales Modal */}
       <AddSalesModal
         isOpen={isAddSalesModalOpen}
-        onClose={() => setIsAddSalesModalOpen(false)}
+        onClose={handleCloseSalesModal}
         onAddSale={handleAddNewSale}
       />
     </div>
