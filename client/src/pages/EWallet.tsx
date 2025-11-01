@@ -28,7 +28,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isInitialLoadingPayMaya, setIsInitialLoadingPayMaya] = useState(true);
 
-  // Fetch records on mount
+  // Fetch GCash records on mount
   useEffect(() => {
     const fetchGcashRecords = async () => {
       try {
@@ -43,6 +43,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     fetchGcashRecords();
   }, []);
 
+  // Fetch PayMaya records on mount
   useEffect(() => {
     const fetchPayMayaRecords = async () => {
       try {
@@ -74,11 +75,25 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     }
   };
 
-  // Handler for adding record
+  // Handler for adding GCash record with sorting
   const handleAddGCashRecord = async (newRecord: Omit<GCashRecord, 'id'>) => {
     try {
       const response = await axios.post('http://localhost:3001/api/gcash', newRecord);
-      setGcashRecords(prev => [...prev, response.data]);
+      
+      // Add the new record and sort by date (newest first)
+      setGcashRecords(prev => {
+        const updated = [...prev, response.data];
+        return updated.sort((a, b) => {
+          // Sort by date descending (newest first)
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          if (dateB !== dateA) return dateB - dateA;
+          
+          // If dates are equal, sort by id descending
+          return Number(b.id) - Number(a.id);
+        });
+      });
+      
       setIsGCashModalOpen(false);
       console.log('GCash record added successfully');
     } catch (err) {
@@ -86,10 +101,25 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     }
   };
 
+  // Handler for adding PayMaya record with sorting
   const handleAddPayMayaRecord = async (newRecord: Omit<PayMayaRecord, 'id'>) => {
     try {
       const response = await axios.post('http://localhost:3001/api/paymaya', newRecord);
-      setPaymayaRecords(prev => [...prev, response.data]);
+      
+      // Add the new record and sort by date (newest first)
+      setPaymayaRecords(prev => {
+        const updated = [...prev, response.data];
+        return updated.sort((a, b) => {
+          // Sort by date descending (newest first)
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          if (dateB !== dateA) return dateB - dateA;
+          
+          // If dates are equal, sort by id descending
+          return Number(b.id) - Number(a.id);
+        });
+      });
+      
       setIsPayMayaModalOpen(false);
       console.log('PayMaya record added successfully');
     } catch (err) {
