@@ -8,9 +8,10 @@ import CustomDatePicker from '../../common/CustomDatePicker';
 interface PayMayaProps {
   records: PayMayaRecord[];
   onOpenModal: () => void;
+  isLoading?: boolean;
 }
 
-const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal }) => {
+const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
@@ -57,22 +58,22 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 border-gray-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">PayMaya Balance</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,010.00</div>
-          <div className="text-sm text-gray-500">Available Funds</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱0</div>
+          <div className="text-sm text-gray-500">Available Funds (<span className="text-red-500">Under Development</span>)</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Total Cash-In</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,500.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱0</div>
           <div className="text-sm text-gray-500">This Month</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Total Cash-Out</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱500.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱0</div>
           <div className="text-sm text-gray-500">This Month</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Service Charges</h3>
-          <div className="text-3xl font-bold text-red-500 mb-1">₱10.00</div>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱0</div>
           <div className="text-sm text-gray-500">Monthly Fee</div>
         </LayoutCard>
       </div>
@@ -84,7 +85,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal }) => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">PayMaya Records</h3>
-              <span className="text-sm text-gray-500">({filteredRecords.length} entries)</span>
+              {/* <span className="text-sm text-gray-500">({filteredRecords.length} entries)</span> */}
             </div>
 
             {/* Search */}
@@ -140,6 +141,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal }) => {
       {/* Records Table */}
       <PayMayaRecordsTable
         records={currentRecords}
+        isLoading={isLoading}
       />
 
       {/* Pagination */}

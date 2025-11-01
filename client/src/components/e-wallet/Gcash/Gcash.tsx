@@ -60,22 +60,22 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 border-gray-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Total Cash</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,380.00</div>
-          <div className="text-sm text-gray-500 opacity-80">Money In</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱0</div>
+          <div className="text-sm text-gray-500">Money In (<span className="text-red-500">Under Development</span>)</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Total Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱75.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱0</div>
           <div className="text-sm text-gray-500">Transaction Fees</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Place Holder</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱7,380.00</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱0</div>
           <div className="text-sm text-gray-500">Total Revenue</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Place Holder</h3>
-          <div className="text-3xl font-bold text-red-500 mb-1">0</div>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱0</div>
           <div className="text-sm text-gray-500">Active Today</div>
         </LayoutCard>
       </div>
@@ -87,7 +87,7 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading }) => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">GCash Records</h3>
-              <span className="text-sm text-gray-500">({filteredRecords.length} entries)</span>
+              {/* <span className="text-sm text-gray-500">({filteredRecords.length} entries)</span> */}
             </div>
 
             {/* Search */}

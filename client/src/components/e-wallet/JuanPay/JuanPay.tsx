@@ -75,7 +75,7 @@ const JuanPay: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">JuanPay Records</h3>
-              <span className="text-sm text-gray-500">({mockTransactions.length} entries)</span>
+              {/* <span className="text-sm text-gray-500">({mockTransactions.length} entries)</span> */}
             </div>
 
             {/* Search */}
