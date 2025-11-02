@@ -48,6 +48,8 @@ const InventoryActions: React.FC<InventoryActionsProps> = ({
   };
 
   const visiblePages = getVisiblePages();
+  const isPreviousDisabled = currentPage === 1 || totalPages === 0;
+  const isNextDisabled = currentPage === totalPages || totalPages === 0;
 
   return (
     <div className="flex items-center justify-between mt-8">
@@ -56,9 +58,13 @@ const InventoryActions: React.FC<InventoryActionsProps> = ({
       </div>
       <div className="flex items-center gap-2">
         <button
-          disabled={currentPage === 1}
-          onClick={() => onPageChange(currentPage - 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isPreviousDisabled}
+          onClick={() => !isPreviousDisabled && onPageChange(currentPage - 1)}
+          className={`px-3 py-1 text-sm border border-gray-300 rounded transition-colors ${
+            isPreviousDisabled
+              ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400'
+              : 'hover:bg-gray-50 cursor-pointer'
+          }`}
         >
           Previous
         </button>
@@ -66,12 +72,13 @@ const InventoryActions: React.FC<InventoryActionsProps> = ({
           typeof page === 'number' ? (
             <button
               key={idx}
-              className={`px-3 py-1 text-sm rounded ${
+              className={`px-3 py-1 text-sm rounded transition-colors ${
                 currentPage === page 
-                  ? 'bg-[#02367B] text-white' 
-                  : 'border border-gray-300 hover:bg-gray-50'
+                  ? 'bg-[#02367B] text-white cursor-default' 
+                  : 'border border-gray-300 hover:bg-gray-50 cursor-pointer'
               }`}
-              onClick={() => onPageChange(page)}
+              onClick={() => currentPage !== page && onPageChange(page)}
+              disabled={currentPage === page}
             >
               {page}
             </button>
@@ -82,9 +89,13 @@ const InventoryActions: React.FC<InventoryActionsProps> = ({
           )
         ))}
         <button
-          disabled={currentPage === totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isNextDisabled}
+          onClick={() => !isNextDisabled && onPageChange(currentPage + 1)}
+          className={`px-3 py-1 text-sm border border-gray-300 rounded transition-colors ${
+            isNextDisabled
+              ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400'
+              : 'hover:bg-gray-50 cursor-pointer'
+          }`}
         >
           Next
         </button>

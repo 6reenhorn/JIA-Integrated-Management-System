@@ -87,7 +87,7 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
           {/* Empty State Content with Fixed Height */}
           <div className="h-[335px] flex items-center justify-center">
             <p className="text-gray-500">
-              No sales records found for this date.
+              No sales records found. Add your first sales to get started.
             </p>
           </div>
         </div>
