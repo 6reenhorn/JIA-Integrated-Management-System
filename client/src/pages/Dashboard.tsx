@@ -53,7 +53,8 @@ const Dashboard: React.FC = () => {
   const handleEmployeeSectionChange = (section: string) => {
     const sectionToActiveItem: Record<string, string> = {
       'staff': 'employees',
-      'attendance': 'employees-attendance'
+      'attendance': 'employees-attendance',
+      'payroll': 'employees-payroll'
     };
     setActiveItem(sectionToActiveItem[section] || 'employees');
     updateCurrentSection('employees', section);
@@ -68,6 +69,7 @@ const Dashboard: React.FC = () => {
       'inventory-categories': { page: 'inventory', section: 'sales' },
       'inventory-stock-levels': { page: 'inventory', section: 'category' },
       'employees-attendance': { page: 'employees', section: 'attendance' },
+      'employees-payroll': { page: 'employees', section: 'payroll' },
       'e-wallet-gcash': { page: 'e-wallet', section: 'GCash' },
       'e-wallet-paymaya': { page: 'e-wallet', section: 'PayMaya' },
       'e-wallet-juanpay': { page: 'e-wallet', section: 'JuanPay' }
@@ -124,7 +126,12 @@ const Dashboard: React.FC = () => {
 
     // Handle Employees sections
     if (activeItem.startsWith('employees')) {
-      const section = activeItem === 'employees-attendance' ? 'attendance' : 'staff';
+      let section = 'staff';
+      if (activeItem === 'employees-attendance') {
+        section = 'attendance';
+      } else if (activeItem === 'employees-payroll') {
+        section = 'payroll';
+      }
       return <Employees
         activeSection={section}
         onSectionChange={handleEmployeeSectionChange}
@@ -189,6 +196,8 @@ const Dashboard: React.FC = () => {
     if (activeItem.startsWith('employees')) {
       if (activeItem === 'employees-attendance') {
         return 'Attendance';
+      } else if (activeItem === 'employees-payroll') {
+        return 'Payroll Records';
       }
       return 'Employees';
     }
@@ -249,6 +258,8 @@ const Dashboard: React.FC = () => {
     if (activeItem.startsWith('employees')) {
       if (activeItem === 'employees-attendance') {
         return 'Track employee attendance and schedules';
+      } else if (activeItem === 'employees-payroll') {
+        return 'Manage employee payroll records and payments';
       }
       return 'Manage your team members and roles';
     }
