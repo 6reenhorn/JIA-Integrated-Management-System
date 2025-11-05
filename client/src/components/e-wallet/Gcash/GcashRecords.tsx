@@ -1,14 +1,19 @@
 import React from 'react';
 import type { GCashRecord } from '../../../types/ewallet_types';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface GCashRecordsTableProps {
     records: GCashRecord[];
     isLoading: boolean;
+    onEdit?: (record: GCashRecord) => void;
+    onDelete?: (record: GCashRecord) => void;
 }
 
 const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
     records,
     isLoading,
+    onEdit,
+    onDelete,
 }) => {
     const formatCurrency = (amount: number): string => {
         return `₱${amount.toFixed(2)}`;
@@ -83,6 +88,9 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
                                     Charge MOP
                                 </th>
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                     </table>
@@ -120,6 +128,9 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                             </th>
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
                                 Charge MOP
+                            </th>
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                                Actions
                             </th>
                         </tr>
                     </thead>
@@ -159,6 +170,24 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                                     >
                                         {record.chargeMOP}
                                     </span>
+                                </td>
+                                <td className="py-4 px-5 w-[100px]">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => onEdit && onEdit(record)}
+                                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Edit className="w-4 h-4 text-gray-600" />
+                                        </button>
+                                        <button
+                                            onClick={() => onDelete && onDelete(record)}
+                                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4 text-gray-600" />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
