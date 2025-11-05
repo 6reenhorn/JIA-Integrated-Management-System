@@ -108,8 +108,8 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
 
         {/* Pagination Actions */}
         <InventoryActions 
-          currentPage={0} // Always show page 1 when no items
-          totalPages={0} // Always show 1 total page when no items
+          currentPage={1} // Always show page 1 when no items
+          totalPages={1} // Always show 1 total page when no items
           filteredCount={filteredCount}
           totalCount={totalCount}
           onPageChange={onPageChange}

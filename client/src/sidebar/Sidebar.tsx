@@ -91,10 +91,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
         ];
       case 'about':
         return [
-          { id: 'about-company', label: 'Company Info' },
-          { id: 'about-version', label: 'Version' },
+          { id: 'about-version', label: 'Version Info' },
           { id: 'about-support', label: 'Support' },
-          { id: 'about-license', label: 'License' }
+          { id: 'about-license', label: 'License & Credits' }
         ];
       default:
         return [];
@@ -114,6 +113,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
     return sectionId.startsWith('inventory-');
   };
 
+  const isAboutSection = (sectionId: string) => {
+    return sectionId.startsWith('about-');
+  };
+
   // Function to check if a section is actually implemented/functional
   const isSectionFunctional = (sectionId: string) => {
     // E-Wallet sections are functional
@@ -124,6 +127,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
     
     // Inventory sections are functional
     if (isInventorySection(sectionId)) return true;
+    
+    // About sections are functional
+    if (isAboutSection(sectionId)) return true;
     
     // Dashboard main section is functional
     if (sectionId === 'dashboard') return true;
@@ -154,6 +160,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
       if (mappedSectionId && itemId === mappedSectionId) {
         return true;
       }
+    }
+    
+    // Handle About sections - all about sections should activate the main about item
+    if (itemId === 'about' && activeItem.startsWith('about')) {
+      return true;
     }
     
     return activeItem === itemId || activeItem.startsWith(itemId + '-');
@@ -235,13 +246,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
                     return;
                   }
                   onItemClick('inventory');
+                } else if (itemId === 'about') {
+                  // For about, clicking the main button should go to about-main section
+                  onItemClick('about-main');
                 } else {
                   onItemClick(itemId);
                 }
                 setExpanded(itemId);
               }}
               className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 ${
-                (activeItem === itemId && (itemId !== 'inventory' || !currentSection || currentSection === 'inventory')) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300 hover:bg-[#FFFFFF33]'
+                (activeItem === itemId || (itemId === 'about' && activeItem.startsWith('about'))) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300 hover:bg-[#FFFFFF33]'
               }`}
             >
               <span className="flex-shrink-0">{item.icon}</span>
@@ -306,6 +320,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
                 setExpanded('employees');
               } else if (activeItem.startsWith('e-wallet')) {
                 setExpanded('e-wallet');
+              } else if (activeItem.startsWith('about')) {
+                setExpanded('about');
               } else {
                 setExpanded(activeItem || 'dashboard');
               }
@@ -320,9 +336,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
               <path d="M0 0 C91.74 0 183.48 0 278 0 C278 14.19 278 28.38 278 43 C186.26 43 94.52 43 0 43 C0 28.81 0 14.62 0 0 Z" fill="currentColor" transform="translate(64,341)"/>
               <path d="M0 0 C91.74 0 183.48 0 278 0 C278 14.19 278 28.38 278 43 C186.26 43 94.52 43 0 43 C0 28.81 0 14.62 0 0 Z" fill="currentColor" transform="translate(64,128)"/>
               <path d="M0 0 C4.175 1.92 7.099 4.758 10.332 7.961 10.928 8.548 11.524 9.135 12.138 9.74 13.392 10.98 14.644 12.222 15.892 13.467 17.811 15.374 19.748 17.261 21.686 19.148 22.902 20.356 24.118 21.564 25.332 22.773 25.915 23.337 26.498 23.901 27.099 24.482 28.698 26.099 28.698 26.099 31 29 30.707 32.301 29.41 33.963 27.108 36.252 26.185 37.182 26.185 37.182 25.243 38.13 24.564 38.799 23.885 39.467 23.185 40.155 22.473 40.868 21.761 41.58 21.027 42.315 18.67 44.67 16.302 47.015 13.934 49.36 12.298 50.99 10.662 52.621 9.028 54.252 4.722 58.546 0.408 62.831 -3.909 67.115 -8.311 71.486 -12.705 75.867 -17.1 80.246 -25.725 88.839 -34.359 97.423 -43 106 -41.687 108.905 -40.288 110.955 -38.019 113.188 -37.409 113.793 -36.799 114.399 -36.171 115.022 -35.503 115.675 -34.836 116.328 -34.148 117 -33.091 118.045 -33.091 118.045 -32.014 119.11 -30.486 120.621 -28.956 122.129 -27.424 123.635 -25.003 126.016 -22.589 128.405 -20.178 130.797 -13.322 137.595 -6.457 144.383 0.424 151.156 4.632 155.3 8.827 159.456 13.016 163.619 14.617 165.206 16.222 166.788 17.833 168.365 20.079 170.566 22.309 172.781 24.536 175 25.546 175.979 25.546 175.979 26.577 176.978 27.179 177.583 27.781 178.189 28.4 178.813 29.194 179.596 29.194 179.596 30.004 180.395 31 182 31 182 30.736 184.103 29.897 186.265 28.964 187.399 27.316 189.024 26.756 189.585 26.195 190.145 25.618 190.722 25.01 191.314 24.403 191.906 23.777 192.516 23.157 193.131 22.537 193.747 21.898 194.382 19.918 196.345 17.928 198.298 15.938 200.25 14.592 201.58 13.248 202.911 11.904 204.242 8.611 207.503 5.308 210.754 2 214 -1.498 212.501 -3.752 210.495 -6.429 207.811 -7.75 206.495 -7.75 206.495 -9.098 205.151 -10.066 204.176 -11.033 203.201 -12 202.226 -13.026 201.201 -14.051 200.176 -15.077 199.151 -17.858 196.371 -20.632 193.584 -23.406 190.797 -26.307 187.884 -29.213 184.976 -32.119 182.068 -37.619 176.561 -43.114 171.05 -48.608 165.536 -54.863 159.259 -61.123 152.988 -67.384 146.717 -80.262 133.817 -93.134 120.911 -106 108 -104.501 104.502 -102.495 102.248 -99.811 99.571 -98.495 98.25 -98.495 98.25 -97.151 96.902 -96.176 95.934 -95.201 94.967 -94.226 93.999 -93.201 92.974 -92.176 91.949 -91.151 90.923 -88.371 88.142 -85.584 85.368 -82.797 82.594 -79.884 79.693 -76.976 76.787 -74.068 73.881 -68.561 68.381 -63.05 62.886 -57.536 57.392 -51.259 51.137 -44.988 44.877 -38.717 38.616 -25.817 25.738 -12.911 12.866 0 0 Z" fill="currentColor" transform="translate(417,149)"/>
-            <path d="M0 0 C70.62 0 141.24 0 214 0 C214 14.52 214 29.04 214 44 C143.38 44 72.76 44 0 44 C0 29.48 0 14.96 0 0 Z" fill="currentColor" transform="translate(64,234)"/>
-          </svg>
-
+              <path d="M0 0 C70.62 0 141.24 0 214 0 C214 14.52 214 29.04 214 44 C143.38 44 72.76 44 0 44 C0 29.48 0 14.96 0 0 Z" fill="currentColor" transform="translate(64,234)"/>
+            </svg>
           ) : (
             <Menu size={24} className="text-white" />
           )}

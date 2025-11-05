@@ -64,14 +64,19 @@ const Dashboard: React.FC = () => {
     setActiveItem(itemId);
     
     // Enhanced section mapping
-    const sectionMapping: Record<string, {page: string, section: string}> = {
-      'inventory-categories': { page: 'inventory', section: 'sales' },
-      'inventory-stock-levels': { page: 'inventory', section: 'category' },
-      'employees-attendance': { page: 'employees', section: 'attendance' },
-      'e-wallet-gcash': { page: 'e-wallet', section: 'GCash' },
-      'e-wallet-paymaya': { page: 'e-wallet', section: 'PayMaya' },
-      'e-wallet-juanpay': { page: 'e-wallet', section: 'JuanPay' }
-    };
+const sectionMapping: Record<string, {page: string, section: string}> = {
+  'inventory-categories': { page: 'inventory', section: 'sales' },
+  'inventory-stock-levels': { page: 'inventory', section: 'category' },
+  'employees-attendance': { page: 'employees', section: 'attendance' },
+  'e-wallet-gcash': { page: 'e-wallet', section: 'GCash' },
+  'e-wallet-paymaya': { page: 'e-wallet', section: 'PayMaya' },
+  'e-wallet-juanpay': { page: 'e-wallet', section: 'JuanPay' },
+  // Add About sections
+  'about-main': { page: 'about', section: 'main' },
+  'about-version': { page: 'about', section: 'version' },
+  'about-support': { page: 'about', section: 'support' },
+  'about-license': { page: 'about', section: 'license' }
+};
 
     // If it's a known section ID, set the current section
     if (sectionMapping[itemId]) {
