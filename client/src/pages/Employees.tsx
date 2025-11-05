@@ -12,7 +12,9 @@ import EmployeeSearchBar from '../components/employees/management/EmployeeSearch
 import AddStaffModal from '../modals/employee/AddStaffModal';
 import EditStaffDetailsModal from '../modals/employee/EditStaffDetailsModal';
 import AttendanceStats from '../components/employees/attendance/AttendanceStats';
-import Attendance from './sections/Attendance';
+import Attendance from './employee-sections/Attendance';
+import PayrollRecords from './employee-sections/PayrollRecords';
+import PayrollStats from '../components/employees/payroll/PayrollStats';
 
 const PAGE_SIZE = 4;
 
@@ -40,7 +42,8 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
   const sections = [
     { label: 'Staff Management', key: 'staff' },
-    { label: 'Attendance', key: 'attendance' }
+    { label: 'Attendance', key: 'attendance' },
+    { label: 'Payroll Records', key: 'payroll' }
   ];
 
   const handleSectionChange = (section: string) => {
@@ -184,6 +187,10 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       {activeSection === 'attendance' && (
         <AttendanceStats />
       )}
+      {/* Payroll Records Section */}
+      {activeSection === 'payroll' && (
+        <PayrollStats />
+      )}
 
       <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={handleSectionChange}>
         {/* Staff Management Section */}
@@ -223,6 +230,10 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         {/* Attendance Management Section */}
         {activeSection === 'attendance' && (
           <Attendance />
+        )}
+        {/* Payroll Records Section */}
+        {activeSection === 'payroll' && (
+          <PayrollRecords />
         )}
       </MainLayoutCard>
 
