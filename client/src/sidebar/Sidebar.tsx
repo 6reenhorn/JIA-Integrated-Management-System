@@ -78,7 +78,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
         ];
       case 'employees':
         return [
-          { id: 'employees-attendance', label: 'Attendance' }
+          { id: 'employees-attendance', label: 'Attendance' },
+          { id: 'employees-payroll', label: 'Payroll Records' }
         ];
       case 'e-wallet':
         return getEWalletSections();

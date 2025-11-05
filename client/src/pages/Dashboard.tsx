@@ -53,7 +53,8 @@ const Dashboard: React.FC = () => {
   const handleEmployeeSectionChange = (section: string) => {
     const sectionToActiveItem: Record<string, string> = {
       'staff': 'employees',
-      'attendance': 'employees-attendance'
+      'attendance': 'employees-attendance',
+      'payroll': 'employees-payroll'
     };
     setActiveItem(sectionToActiveItem[section] || 'employees');
     updateCurrentSection('employees', section);
@@ -64,19 +65,19 @@ const Dashboard: React.FC = () => {
     setActiveItem(itemId);
     
     // Enhanced section mapping
-const sectionMapping: Record<string, {page: string, section: string}> = {
-  'inventory-categories': { page: 'inventory', section: 'sales' },
-  'inventory-stock-levels': { page: 'inventory', section: 'category' },
-  'employees-attendance': { page: 'employees', section: 'attendance' },
-  'e-wallet-gcash': { page: 'e-wallet', section: 'GCash' },
-  'e-wallet-paymaya': { page: 'e-wallet', section: 'PayMaya' },
-  'e-wallet-juanpay': { page: 'e-wallet', section: 'JuanPay' },
-  // Add About sections
-  'about-main': { page: 'about', section: 'main' },
-  'about-version': { page: 'about', section: 'version' },
-  'about-support': { page: 'about', section: 'support' },
-  'about-license': { page: 'about', section: 'license' }
-};
+    const sectionMapping: Record<string, {page: string, section: string}> = {
+      'inventory-categories': { page: 'inventory', section: 'sales' },
+      'inventory-stock-levels': { page: 'inventory', section: 'category' },
+      'employees-attendance': { page: 'employees', section: 'attendance' },
+      'employees-payroll': { page: 'employees', section: 'payroll' },
+      'e-wallet-gcash': { page: 'e-wallet', section: 'GCash' },
+      'e-wallet-paymaya': { page: 'e-wallet', section: 'PayMaya' },
+      'e-wallet-juanpay': { page: 'e-wallet', section: 'JuanPay' },
+      'about-main': { page: 'about', section: 'main' },
+      'about-version': { page: 'about', section: 'version' },
+      'about-support': { page: 'about', section: 'support'},
+      'about-licenses': { page: 'about', section: 'licenses' }
+    };
 
     // If it's a known section ID, set the current section
     if (sectionMapping[itemId]) {
@@ -129,7 +130,12 @@ const sectionMapping: Record<string, {page: string, section: string}> = {
 
     // Handle Employees sections
     if (activeItem.startsWith('employees')) {
-      const section = activeItem === 'employees-attendance' ? 'attendance' : 'staff';
+      let section = 'staff';
+      if (activeItem === 'employees-attendance') {
+        section = 'attendance';
+      } else if (activeItem === 'employees-payroll') {
+        section = 'payroll';
+      }
       return <Employees
         activeSection={section}
         onSectionChange={handleEmployeeSectionChange}
@@ -144,6 +150,19 @@ const sectionMapping: Record<string, {page: string, section: string}> = {
       />;
     }
 
+    // Handle About sections
+    if (activeItem.startsWith('about')) {
+      let section = 'main';
+      if (activeItem === 'about-version') {
+        section = 'version';
+      } else if (activeItem === 'about-support') {
+        section = 'support';
+      } else if (activeItem === 'about-license') {
+        section = 'licenses';
+      }
+      return <About activeSection={section} />;
+    }
+
     // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
@@ -151,7 +170,7 @@ const sectionMapping: Record<string, {page: string, section: string}> = {
       case 'settings':
         return <Settings />;
       case 'about':
-        return <About />;
+        return <About activeSection="main" />;
       default:
         return <Overview />;
     }
@@ -194,6 +213,8 @@ const sectionMapping: Record<string, {page: string, section: string}> = {
     if (activeItem.startsWith('employees')) {
       if (activeItem === 'employees-attendance') {
         return 'Attendance';
+      } else if (activeItem === 'employees-payroll') {
+        return 'Payroll Records';
       }
       return 'Employees';
     }
@@ -254,6 +275,8 @@ const sectionMapping: Record<string, {page: string, section: string}> = {
     if (activeItem.startsWith('employees')) {
       if (activeItem === 'employees-attendance') {
         return 'Track employee attendance and schedules';
+      } else if (activeItem === 'employees-payroll') {
+        return 'Manage employee payroll records and payments';
       }
       return 'Manage your team members and roles';
     }
