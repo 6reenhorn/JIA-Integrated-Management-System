@@ -1,11 +1,10 @@
 import React from 'react';
 import type { GCashRecord } from '../../../types/ewallet_types';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface GCashRecordsTableProps {
     records: GCashRecord[];
     isLoading: boolean;
-    onView?: (record: GCashRecord) => void;
     onEdit?: (record: GCashRecord) => void;
     onDelete?: (record: GCashRecord) => void;
 }
@@ -13,7 +12,6 @@ interface GCashRecordsTableProps {
 const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
     records,
     isLoading,
-    onView,
     onEdit,
     onDelete,
 }) => {
@@ -173,15 +171,8 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                                         {record.chargeMOP}
                                     </span>
                                 </td>
-                                <td className="py-4 px-4 w-[100px]">
+                                <td className="py-4 px-5 w-[100px]">
                                     <div className="flex items-center gap-2">
-                                        <button 
-                                            onClick={() => onView && onView(record)}
-                                            className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                            title="View"
-                                        >
-                                            <Eye className="w-4 h-4 text-gray-600" />
-                                        </button>
                                         <button
                                             onClick={() => onEdit && onEdit(record)}
                                             className="p-1 hover:bg-gray-100 rounded transition-colors"
