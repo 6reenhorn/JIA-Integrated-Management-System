@@ -9,6 +9,7 @@ import JuanPay from '../components/e-wallet/JuanPay/JuanPay';
 import AddGCashRecordModal from '../modals/ewallet/GcashRecordModal';
 import AddPayMayaRecordModal from '../modals/ewallet/PayMayaRecordModal';
 import type { GCashRecord, PayMayaRecord } from '../types/ewallet_types';
+import DeleteGCashRecordModal from '../modals/ewallet/DeleteGcashModal';
 
 interface EWalletProps {
   activeSection?: string;
@@ -27,6 +28,11 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const [paymayaRecords, setPaymayaRecords] = useState<PayMayaRecord[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isInitialLoadingPayMaya, setIsInitialLoadingPayMaya] = useState(true);
+
+  // Action states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<GCashRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch GCash records on mount
   useEffect(() => {
@@ -75,7 +81,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     }
   };
 
-  // Handler for adding GCash record with sorting
+  // Handler for adding GCash record 
   const handleAddGCashRecord = async (newRecord: Omit<GCashRecord, 'id'>) => {
     try {
       const response = await axios.post('http://localhost:3001/api/gcash', newRecord);
@@ -101,7 +107,31 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     }
   };
 
-  // Handler for adding PayMaya record with sorting
+  const handleDeleteGCashRecord = async (id: string) => {
+    setIsDeleting(true);
+    try {
+      await axios.delete(`http://localhost:3001/api/gcash/${id}`);
+      
+      // Remove the deleted record from state
+      setGcashRecords(prev => prev.filter(record => record.id !== id));
+      
+      setIsDeleteModalOpen(false);
+      setRecordToDelete(null);
+      console.log('GCash record deleted successfully');
+    } catch (err) {
+      console.error('Error deleting GCash record:', err);
+      alert('Failed to delete record. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleOpenDeleteModal = (record: GCashRecord) => {
+    setRecordToDelete(record);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Handler for adding PayMaya record 
   const handleAddPayMayaRecord = async (newRecord: Omit<PayMayaRecord, 'id'>) => {
     try {
       const response = await axios.post('http://localhost:3001/api/paymaya', newRecord);
@@ -144,6 +174,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
               records={gcashRecords}
               onOpenModal={() => setIsGCashModalOpen(true)}
               isLoading={isInitialLoading}
+              onDelete={handleOpenDeleteModal}
             />
           </div>
         )}
@@ -182,6 +213,26 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
                 onAddRecord={handleAddGCashRecord}
               />
             </div>
+          </div>
+        </Portal>
+      )}
+
+      {/* GCash Delete Modal */}
+      {isDeleteModalOpen && (
+        <Portal>
+          <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
+            <DeleteGCashRecordModal
+              isOpen={isDeleteModalOpen}
+              onClose={() => {
+                if (!isDeleting) {
+                  setIsDeleteModalOpen(false);
+                  setRecordToDelete(null);
+                }
+              }}
+              onConfirmDelete={handleDeleteGCashRecord}
+              record={recordToDelete}
+              isDeleting={isDeleting}
+            />
           </div>
         </Portal>
       )}
