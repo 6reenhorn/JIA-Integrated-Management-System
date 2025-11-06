@@ -231,7 +231,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
       <div className="space-y-5">
         {/* Payroll stats are rendered in Employees page above the main layout */}
         <div className="flex justify-between items-center pt-5 relative">
-          <PayrollSearchBar />
+          <PayrollSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
           <div className="flex items-center gap-4">
             <div className="relative">
               <button

@@ -18,24 +18,28 @@ const PayrollStats: React.FC<PayrollStatsProps> = ({
     {
       title: 'Total Payroll',
       value: `₱${totalPayroll.toLocaleString()}`,
+      subtext: 'Total net payroll',
       color: 'text-black',
       bgColor: 'bg-blue-50',
     },
     {
       title: 'Paid',
       value: `₱${paidPayroll.toLocaleString()}`,
+      subtext: 'Paid this period',
       color: 'text-black',
       bgColor: 'bg-green-50',
     },
     {
       title: 'Pending',
       value: `₱${pendingPayroll.toLocaleString()}`,
+      subtext: 'Pending payment',
       color: 'text-black',
       bgColor: 'bg-yellow-50',
     },
     {
       title: 'Overdue',
       value: `₱${overduePayroll.toLocaleString()}`,
+      subtext: 'Past due',
       color: 'text-black',
       bgColor: 'bg-red-50',
     },
@@ -48,6 +52,7 @@ const PayrollStats: React.FC<PayrollStatsProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+            <p className="text-sm text-gray-600">{stat.subtext}</p>
             </div>
             <div className={`w-12 h-12 ${stat.bgColor} rounded-full flex items-center justify-center`}>
               <svg className={`w-6 h-6 ${stat.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
