@@ -11,6 +11,7 @@ import AddPayMayaRecordModal from '../modals/ewallet/PayMayaRecordModal';
 import type { GCashRecord, PayMayaRecord } from '../types/ewallet_types';
 import DeleteGCashRecordModal from '../modals/ewallet/DeleteGcashModal';
 import DeletePayMayaRecordModal from '../modals/ewallet/DeletePayMayaModal';
+import EditGCashRecordModal from '../modals/ewallet/EditGcashModal';
 
 interface EWalletProps {
   activeSection?: string;
@@ -34,6 +35,11 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<GCashRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Action states for GCash editing
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [recordToEdit, setRecordToEdit] = useState<GCashRecord | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Action states for PayMaya deletion
   const [isDeletePayMayaModalOpen, setIsDeletePayMayaModalOpen] = useState(false);
@@ -132,6 +138,40 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     }
   };
 
+  const handleEditGCashRecord = async (id: string, updatedRecord: Omit<GCashRecord, 'id'>) => {
+    setIsEditing(true);
+    try {
+      await axios.put(`http://localhost:3001/api/gcash/${id}`, updatedRecord);
+      
+      // Update the record in state
+      setGcashRecords(prev => {
+        const updated = prev.map(record => 
+          record.id === id ? { ...updatedRecord, id } : record
+        );
+        return updated.sort((a, b) => {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          if (dateB !== dateA) return dateB - dateA;
+          return Number(b.id) - Number(a.id);
+        });
+      });
+      
+      setIsEditModalOpen(false);
+      setRecordToEdit(null);
+      console.log('GCash record updated successfully');
+    } catch (err) {
+      console.error('Error updating GCash record:', err);
+      alert('Failed to update record. Please try again.');
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  const handleOpenEditModal = (record: GCashRecord) => {
+    setRecordToEdit(record);
+    setIsEditModalOpen(true);
+  };
+
   const handleOpenDeleteModal = (record: GCashRecord) => {
     setRecordToDelete(record);
     setIsDeleteModalOpen(true);
@@ -205,6 +245,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
               onOpenModal={() => setIsGCashModalOpen(true)}
               isLoading={isInitialLoading}
               onDelete={handleOpenDeleteModal}
+              onEdit={handleOpenEditModal}
             />
           </div>
         )}
@@ -263,6 +304,26 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
               onConfirmDelete={handleDeleteGCashRecord}
               record={recordToDelete}
               isDeleting={isDeleting}
+            />
+          </div>
+        </Portal>
+      )}
+
+      {/* GCash Edit Modal */}
+      {isEditModalOpen && (
+        <Portal>
+          <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
+            <EditGCashRecordModal
+              isOpen={isEditModalOpen}
+              onClose={() => {
+                if (!isEditing) {
+                  setIsEditModalOpen(false);
+                  setRecordToEdit(null);
+                }
+              }}
+              onEditRecord={handleEditGCashRecord}
+              record={recordToEdit}
+              isEditing={isEditing}
             />
           </div>
         </Portal>
