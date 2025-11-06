@@ -1,14 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
-import type { GCashRecord } from '../../components/e-wallet/Gcash/GcashRecordsTable';
-
-//delete modal
+import type { GCashRecord } from '../../types/ewallet_types';
 
 interface DeleteGCashRecordModalProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirmDelete: (id: string) => void;
     record: GCashRecord | null;
+    isDeleting?: boolean;
 }
 
 const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
@@ -16,20 +15,19 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
     onClose,
     onConfirmDelete,
     record,
+    isDeleting = false
 }) => {
     const modalRef = useRef<HTMLDivElement>(null);
 
-    // Close modal on escape key
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
+            if (event.key === 'Escape' && !isDeleting) {
                 onClose();
             }
         };
 
         if (isOpen) {
             document.addEventListener('keydown', handleEscape);
-            // Prevent body scroll
             document.body.style.overflow = 'hidden';
         }
 
@@ -37,13 +35,12 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
             document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, isDeleting]);
 
     const handleConfirm = () => {
-        if (record) {
+        if (record && !isDeleting) {
             onConfirmDelete(record.id);
         }
-        onClose();
     };
 
     const formatCurrency = (amount: number): string => {
@@ -51,6 +48,18 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
     };
 
     const formatDate = (dateString: string): string => {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+            const year = Number(parts[0]);
+            const month = Number(parts[1]) - 1;
+            const day = Number(parts[2]);
+            const localDate = new Date(year, month, day);
+            return localDate.toLocaleDateString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric',
+            });
+        }
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
             month: '2-digit',
@@ -63,23 +72,20 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Background overlay with blur effect */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={onClose}
+                onClick={!isDeleting ? onClose : undefined}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
                 }}
             />
 
-            {/* Modal content */}
             <div 
                 ref={modalRef}
                 className="bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
                         <div className="p-2 bg-red-100 rounded-full">
@@ -92,25 +98,20 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        disabled={isDeleting}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <X size={20} className="text-gray-500" />
                     </button>
                 </div>
 
-                {/* Warning Message */}
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                     <p className="text-sm text-red-800 mb-2 font-medium">
                         You are about to permanently delete this GCash record:
                     </p>
                     
-                    {/* Record Summary */}
                     <div className="bg-white rounded-lg p-3 mt-3 border border-red-100">
                         <div className="grid grid-cols-2 gap-3 text-xs">
-                            <div>
-                                <span className="text-gray-600 font-medium">Record ID:</span>
-                                <div className="font-mono text-gray-900">#{record.id}</div>
-                            </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Date:</span>
                                 <div className="text-gray-900">{formatDate(record.date)}</div>
@@ -123,39 +124,50 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
                                 <span className="text-gray-600 font-medium">Amount:</span>
                                 <div className="text-gray-900 font-semibold">{formatCurrency(record.amount)}</div>
                             </div>
+                            <div>
+                                <span className="text-gray-600 font-medium">Service Charge:</span>
+                                <div className="text-gray-900">{formatCurrency(record.serviceCharge)}</div>
+                            </div>
                             {record.referenceNumber && (
                                 <div className="col-span-2">
                                     <span className="text-gray-600 font-medium">Reference:</span>
-                                    <div className="font-mono text-gray-900 text-xs">{record.referenceNumber}</div>
+                                    <div className="font-mono text-gray-900 text-xs truncate">{record.referenceNumber}</div>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
 
-                {/* Confirmation Message */}
                 <div className="mb-6">
                     <p className="text-sm text-gray-700">
-                        Are you sure you want to delete this record? This will permanently remove the transaction 
-                        from your records and cannot be recovered.
+                        Are you sure you want to delete this record? This will remove the transaction 
+                        from your records permanently.
                     </p>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex justify-end space-x-3">
                     <button 
                         type="button"
-                        className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm"
+                        className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={onClose}
+                        disabled={isDeleting}
                     >
                         Cancel
                     </button>
                     <button 
                         type="button"
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm"
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         onClick={handleConfirm}
+                        disabled={isDeleting}
                     >
-                        Delete Record
+                        {isDeleting ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Deleting...
+                            </>
+                        ) : (
+                            'Delete Record'
+                        )}
                     </button>
                 </div>
             </div>
