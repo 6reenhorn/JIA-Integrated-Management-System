@@ -23,17 +23,59 @@ interface PayrollTableProps {
 const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading }) => {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6">
-          <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-4 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
+      <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-md min-h-[429px]">
+        <table className="table-fixed w-full">
+          <thead className="border-[#E5E7EB] border-b sticky top-0 bg-[#EDEDED] z-10">
+            <tr>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[165px] min-w-[165px]">Employee Name</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[150px] min-w-[150px]">Period</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px] min-w-[120px]">Basic Salary</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px] min-w-[120px]">Deductions</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[100px] min-w-[100px]">Net Salary</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[100px] min-w-[100px]">Status</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px] min-w-[120px]">Payment Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colSpan={7} className="text-center py-4 h-[350px] align-middle">
+                <div className="flex flex-col items-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                  <p className="mt-4 text-gray-500">Loading Records...</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  if (payrollRecords.length === 0) {
+    return (
+      <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-md min-h-[429px]">
+        <table className="table-fixed w-full">
+          <thead className="border-[#E5E7EB] border-b sticky top-0 bg-[#EDEDED] z-10">
+            <tr>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[165px] min-w-[165px]">Employee Name</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[150px] min-w-[150px]">Period</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px] min-w-[120px]">Basic Salary</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px] min-w-[120px]">Deductions</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[100px] min-w-[100px]">Net Salary</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[100px] min-w-[100px]">Status</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px] min-w-[120px]">Payment Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colSpan={7} className="text-center py-4 h-[350px] align-middle">
+                <p className="text-gray-500">
+                  No Payroll records found. Add your first record to get started.
+                </p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     );
   }

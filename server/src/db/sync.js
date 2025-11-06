@@ -138,6 +138,31 @@ const createSalesRecordsTable = async () => {
   }
 };
 
+const createPayrollRecordsTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS payroll_records (
+      id SERIAL PRIMARY KEY,
+      employee_name VARCHAR(255),
+      emp_id VARCHAR(10),
+      role VARCHAR(100),
+      month INTEGER,
+      year INTEGER,
+      basic_salary DECIMAL(10, 2),
+      deductions DECIMAL(10, 2),
+      net_salary DECIMAL(10, 2),
+      status VARCHAR(20),
+      payment_date DATE
+    );
+  `;
+
+  try {
+    await pool.query(query);
+    console.log('Payroll records table created or already exists');
+  } catch (err) {
+    console.error('Error creating payroll_records table:', err);
+  }
+};
+
 const insertSampleEmployees = async () => {
   const sampleEmployees = [
     {
@@ -248,6 +273,7 @@ const syncDatabase = async () => {
   await createInventoryTable();
   await createCategoriesTable();
   await createSalesRecordsTable();
+  await createPayrollRecordsTable();
 };
 
 module.exports = { syncDatabase };
