@@ -256,7 +256,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
                 setExpanded(itemId);
               }}
               className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 ${
-                (activeItem === itemId || (itemId === 'about' && activeItem.startsWith('about'))) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300 hover:bg-[#FFFFFF33]'
+                (activeItem === itemId || (itemId === 'about' && activeItem === 'about-main')) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300 hover:bg-[#FFFFFF33]'
               }`}
             >
               <span className="flex-shrink-0">{item.icon}</span>
