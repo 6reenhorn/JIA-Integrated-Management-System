@@ -137,6 +137,21 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   // Calculate stats
   const stats = useMemo(() => calculateStats(employees), [employees]);
 
+  // Calculate payroll stats (for display above main layout)
+  const payrollStats = useMemo(() => {
+    const toNumber = (value: unknown) => {
+      const n = typeof value === 'number' ? value : Number(value);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const totalPayroll = payrollRecords.reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+    const paidPayroll = payrollRecords.filter(r => r.status === 'Paid').reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+    const pendingPayroll = payrollRecords.filter(r => r.status === 'Pending').reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+    const overduePayroll = payrollRecords.filter(r => r.status === 'Overdue').reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+
+    return { totalPayroll, paidPayroll, pendingPayroll, overduePayroll };
+  }, [payrollRecords]);
+
   // Filter employees based on search and filters
   const filteredEmployees = useMemo(() =>
     filterEmployees(employees, searchTerm, roleFilter, statusFilter),
@@ -247,9 +262,14 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       {activeSection === 'attendance' && (
         <AttendanceStats />
       )}
-      {/* Payroll Records Section */}
+      {/* Payroll Stats Section */}
       {activeSection === 'payroll' && (
-        <PayrollStats />
+        <PayrollStats
+          totalPayroll={payrollStats.totalPayroll}
+          paidPayroll={payrollStats.paidPayroll}
+          pendingPayroll={payrollStats.pendingPayroll}
+          overduePayroll={payrollStats.overduePayroll}
+        />
       )}
 
       <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={handleSectionChange}>
