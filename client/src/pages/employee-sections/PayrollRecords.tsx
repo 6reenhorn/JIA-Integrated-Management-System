@@ -4,7 +4,10 @@ import PayrollFilters from '../../components/employees/payroll/PayrollFilters';
 import PayrollTable from '../../components/employees/payroll/PayrollTable';
 import PayrollActions from '../../components/employees/payroll/PayrollActions';
 import PayrollStats from '../../components/employees/payroll/PayrollStats';
+import AddPayrollModal from '../../modals/employee/AddPayrollModal';
+import type { Employee } from '../../types/employee_types';
 import { Plus } from 'lucide-react';
+import Portal from '../../components/common/Portal'; // ensure this import path matches your project
 
 interface PayrollRecord {
   id: number;
@@ -29,9 +32,26 @@ const PayrollRecords: React.FC = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // prevent background scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = isAddModalOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isAddModalOpen]);
+
+  // Mock employees data
+  const [employees] = useState<Employee[]>([
+    { id: 1, name: 'Glenn Mark Anino', empId: 'EMP001', role: 'Developer', contact: 'glenn@example.com', status: 'Active', lastLogin: '2024-10-01', address: 'Manila', salary: '50000', contactName: 'John Doe', contactNumber: '123-456-7890', relationship: 'Brother' },
+    { id: 2, name: 'Den Jester Antonio', empId: 'EMP002', role: 'Designer', contact: 'den@example.com', status: 'Active', lastLogin: '2024-10-02', address: 'Quezon City', salary: '45000', contactName: 'Jane Doe', contactNumber: '123-456-7891', relationship: 'Sister' },
+    { id: 3, name: 'John Jaybird Casia', empId: 'EMP003', role: 'Designer', contact: 'john@example.com', status: 'Active', lastLogin: '2024-10-03', address: 'Makati', salary: '45000', contactName: 'Bob Smith', contactNumber: '123-456-7892', relationship: 'Father' },
+    { id: 4, name: 'John Cyril Espina', empId: 'EMP004', role: 'Designer', contact: 'cyril@example.com', status: 'Active', lastLogin: '2024-10-04', address: 'Pasig', salary: '45000', contactName: 'Alice Johnson', contactNumber: '123-456-7893', relationship: 'Mother' },
+    { id: 5, name: 'Sophia Marie Flores', empId: 'EMP005', role: 'Designer', contact: 'sophia@example.com', status: 'Active', lastLogin: '2024-10-05', address: 'Taguig', salary: '45000', contactName: 'Charlie Brown', contactNumber: '123-456-7894', relationship: 'Friend' },
+    { id: 6, name: 'Julien Marabe', empId: 'EMP006', role: 'Designer', contact: 'julien@example.com', status: 'Active', lastLogin: '2024-10-06', address: 'Alabang', salary: '45000', contactName: 'Diana Prince', contactNumber: '123-456-7895', relationship: 'Colleague' },
+  ]);
 
   // Mock payroll data
-  const [payrollRecords] = useState<PayrollRecord[]>([
+  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([
     {
       id: 1,
       employeeName: 'Glenn Mark Anino',
@@ -168,6 +188,12 @@ const PayrollRecords: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleAddPayroll = (newPayroll: Omit<PayrollRecord, 'id'>) => {
+    const payrollWithId = { ...newPayroll, id: payrollRecords.length + 1 };
+    setPayrollRecords(prev => [...prev, payrollWithId]);
+    setIsAddModalOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-5">
@@ -213,7 +239,7 @@ const PayrollRecords: React.FC = () => {
               )}
             </div>
             <button
-              onClick={() => {}}
+              onClick={() => setIsAddModalOpen(true)}
               className="flex items-center gap-2 text-[14px] h-[36px] bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -229,6 +255,26 @@ const PayrollRecords: React.FC = () => {
           pageCount={pageCount}
           onPageChange={handlePageChange}
         />
+
+        {/* Add Payroll Modal using Portal + overlay */}
+        {isAddModalOpen && (
+          <Portal>
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+              <div
+                className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+                style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+                onClick={() => setIsAddModalOpen(false)}
+              />
+              <div className="relative z-[1010]">
+                <AddPayrollModal
+                  employees={employees}
+                  onClose={() => setIsAddModalOpen(false)}
+                  onAddPayroll={(newPayroll) => handleAddPayroll(newPayroll)}
+                />
+              </div>
+            </div>
+          </Portal>
+        )}
       </div>
     </div>
   );
