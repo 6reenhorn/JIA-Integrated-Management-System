@@ -8,18 +8,34 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM payroll_records ORDER BY id');
+
+    // Reverse month map
+    const reverseMonthMap = {
+      1: 'January', 2: 'February', 3: 'March', 4: 'April',
+      5: 'May', 6: 'June', 7: 'July', 8: 'August',
+      9: 'September', 10: 'October', 11: 'November', 12: 'December'
+    };
+
     const payrollRecords = result.rows.map(row => ({
       id: row.id,
       employeeName: row.employee_name,
       empId: row.emp_id,
       role: row.role,
-      month: row.month,
+      month: reverseMonthMap[row.month] || row.month,
       year: row.year,
       basicSalary: row.basic_salary,
       deductions: row.deductions,
       netSalary: row.net_salary,
       status: row.status,
-      paymentDate: row.payment_date
+      paymentDate: row.payment_date ? (() => {
+        const date = new Date(row.payment_date);
+        const YY = date.getFullYear() % 100;
+        const DD = String(date.getDate()).padStart(2, '0');
+        const MM = String(date.getMonth() + 1).padStart(2, '0');
+        const Hr = String(date.getHours()).padStart(2, '0');
+        const Min = String(date.getMinutes()).padStart(2, '0');
+        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
+      })() : null
     }));
     res.json(payrollRecords);
   } catch (err) {
@@ -85,7 +101,15 @@ router.post('/', async (req, res) => {
       deductions: newRecord.deductions,
       netSalary: newRecord.net_salary,
       status: newRecord.status,
-      paymentDate: newRecord.payment_date
+      paymentDate: newRecord.payment_date ? (() => {
+        const date = new Date(newRecord.payment_date);
+        const YY = date.getFullYear() % 100;
+        const DD = String(date.getDate()).padStart(2, '0');
+        const MM = String(date.getMonth() + 1).padStart(2, '0');
+        const Hr = String(date.getHours()).padStart(2, '0');
+        const Min = String(date.getMinutes()).padStart(2, '0');
+        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
+      })() : null
     };
 
     res.status(201).json(payrollRecord);
@@ -96,6 +120,29 @@ router.post('/', async (req, res) => {
       error: 'Internal server error',
       message: err.message 
     });
+  }
+});
+
+// DELETE /api/payroll/:id - Delete a payroll record by ID
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  const idNum = parseInt(String(id), 10);
+  if (Number.isNaN(idNum)) {
+    return res.status(400).json({ error: 'Invalid payroll record id' });
+  }
+
+  try {
+    const query = 'DELETE FROM payroll_records WHERE id = $1 RETURNING *';
+    const result = await pool.query(query, [idNum]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Payroll record not found' });
+    }
+
+    res.json({ message: 'Payroll record deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting payroll record:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

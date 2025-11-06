@@ -15,7 +15,22 @@ import AttendanceStats from '../components/employees/attendance/AttendanceStats'
 import Attendance from './employee-sections/Attendance';
 import PayrollRecords from './employee-sections/PayrollRecords';
 import PayrollStats from '../components/employees/payroll/PayrollStats';
-import DeleteEmployeeModal from '../modals/employee/DeleteEmployeeModal';
+import DeleteEmployeeModal from '../modals/employee/DeleteStaffModal';
+import AddPayrollModal from '../modals/employee/AddPayrollModal';
+
+interface PayrollRecord {
+  id: number;
+  employeeName: string;
+  empId: string;
+  role: string;
+  month: string;
+  year: string;
+  basicSalary: number;
+  deductions: number;
+  netSalary: number;
+  status: 'Paid' | 'Pending' | 'Overdue';
+  paymentDate?: string;
+}
 
 const PAGE_SIZE = 4;
 
@@ -58,12 +73,40 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
+  const [payrollLoading, setPayrollLoading] = useState(true);
+
+  // Fetch payroll records function
+  const fetchPayrollRecords = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/payroll');
+      const data = Array.isArray(response.data) ? response.data : [];
+      setPayrollRecords(data);
+    } catch (err) {
+      console.error('Error fetching payroll records:', err);
+      setPayrollRecords([]);
+    } finally {
+      setPayrollLoading(false);
+    }
+  };
+
+  // Always fetch payroll records on mount and clear any stale local storage
+  useEffect(() => {
+    try {
+      localStorage.removeItem('payrollRecords');
+    } catch (_) {
+      // ignore storage errors
+    }
+    fetchPayrollRecords();
+  }, []);
+
   // Fetch employees on mount
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/employees');
-        setEmployees(Array.isArray(response.data) ? response.data : []);
+        const data = Array.isArray(response.data) ? response.data : [];
+        setEmployees(data);
       } catch (err) {
         console.error('Error fetching employees:', err);
         setEmployees([]);
@@ -71,9 +114,25 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         setIsLoading(false);
       }
     };
-
     fetchEmployees();
   }, []);
+
+  // Update localStorage when employees change
+  useEffect(() => {
+    if (employees.length > 0) {
+      localStorage.setItem('employees', JSON.stringify(employees));
+    }
+  }, [employees]);
+
+  // Ensure payroll shows a loading state when navigating to the Payroll section
+  useEffect(() => {
+    if (activeSection === 'payroll' && payrollRecords.length === 0) {
+      setPayrollLoading(true);
+      fetchPayrollRecords();
+    }
+  }, [activeSection]);
+
+  // Removed localStorage persistence for payroll to avoid stale data
 
   // Calculate stats
   const stats = useMemo(() => calculateStats(employees), [employees]);
@@ -234,7 +293,12 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         )}
         {/* Payroll Records Section */}
         {activeSection === 'payroll' && (
-          <PayrollRecords />
+          <PayrollRecords
+            payrollRecords={payrollRecords}
+            payrollLoading={payrollLoading}
+            onUpdatePayrollRecords={setPayrollRecords}
+            onRefetchPayrollRecords={fetchPayrollRecords}
+          />
         )}
       </MainLayoutCard>
 
