@@ -7,7 +7,7 @@ const router = express.Router();
 // GET /api/gcash - Fetch all GCash records
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM gcash_records ORDER BY date DESC, id DESC');
+    const result = await pool.query('SELECT * FROM gcash_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
     const records = result.rows.map(row => {
       const d = row.date;
       const year = d.getFullYear();
@@ -76,6 +76,32 @@ router.post('/', async (req, res) => {
     res.status(201).json(record);
   } catch (err) {
     console.error('Error adding GCash record:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Soft delete a GCash record by ID
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = `
+      UPDATE gcash_records
+      SET deleted_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND deleted_at IS NULL
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [id]);
+    
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'GCash record not found or already deleted' });
+      return;
+    }
+
+    res.json({ message: 'GCash record deleted successfully', id: result.rows[0].id });
+  } catch (err) {
+    console.error('Error deleting GCash record:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
