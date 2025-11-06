@@ -9,6 +9,7 @@ interface EmployeeTableProps {
   onViewEmployee: (id: number) => void;
   onEditEmployee: (id: number) => void;
   onRequestDelete: (id: number, event: React.MouseEvent<HTMLButtonElement>) => void;
+  startIndex?: number; // for sequential display IDs across pages
 }
 
 const EmployeeTable: React.FC<EmployeeTableProps> = ({
@@ -16,7 +17,8 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   isLoading,
   onViewEmployee,
   onEditEmployee,
-  onRequestDelete
+  onRequestDelete,
+  startIndex = 0
 }) => {
   if (isLoading) {
     return (
@@ -95,7 +97,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {employees.map((employee) => (
+          {employees.map((employee, index) => (
             <tr key={employee.id} className="hover:bg-gray-50">
               <td className="py-4 px-6 w-[220px]">
                 <div className="flex items-center">
@@ -104,7 +106,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-gray-900">{employee.name}</div>
-                    <div className="text-sm text-gray-500">{employee.empId}</div>
+                    <div className="text-sm text-gray-500">{`EMP${String(startIndex + index + 1).padStart(3, '0')}`}</div>
                   </div>
                 </div>
               </td>
