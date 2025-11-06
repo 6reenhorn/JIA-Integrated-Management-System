@@ -25,18 +25,21 @@ const About: React.FC<AboutProps> = ({ activeSection = 'main' }) => {
 
   const highlightedSection = getSectionId();
 
+  // Highlight class to apply
+  const getHighlightClass = (sectionId: string) => {
+    return highlightedSection === sectionId
+      ? 'ring-4 ring-[#02367B] ring-opacity-50'
+      : '';
+  };
+
   return (
     <div className="space-y-6">
       {/* Main About Section */}
-      <div
-        id="about-main-section"
-        className={`transition-all duration-200 ${
-          highlightedSection === 'about-main-section'
-            ? 'ring-4 ring-blue-500 ring-opacity-50 rounded-lg'
-            : ''
-        }`}
-      >
-        <DashboardCard title="About JIMS">
+      <div id="about-main-section">
+        <DashboardCard 
+          title="About JIMS"
+          className={getHighlightClass('about-main-section')}
+        >
           <p className="text-gray-600 mb-4">
             JIA Integrated Management System (JIMS) is a comprehensive software solution designed to 
             digitalize and streamline business operations for JIA Business Center.
@@ -65,39 +68,18 @@ const About: React.FC<AboutProps> = ({ activeSection = 'main' }) => {
       
       {/* Version Info and Support Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div
-          id="version-info-section"
-          className={`transition-all duration-200 ${
-            highlightedSection === 'version-info-section'
-              ? 'ring-4 ring-blue-500 ring-opacity-50 rounded-lg'
-              : ''
-          }`}
-        >
-          <VersionInfo />
+        <div id="version-info-section">
+          <VersionInfo isHighlighted={highlightedSection === 'version-info-section'} />
         </div>
         
-        <div
-          id="support-section"
-          className={`transition-all duration-200 ${
-            highlightedSection === 'support-section'
-              ? 'ring-4 ring-blue-500 ring-opacity-50 rounded-lg'
-              : ''
-          }`}
-        >
-          <Support />
+        <div id="support-section">
+          <Support isHighlighted={highlightedSection === 'support-section'} />
         </div>
       </div>
       
       {/* License and Credits Section */}
-      <div
-        id="licenses-section"
-        className={`transition-all duration-200 ${
-          highlightedSection === 'licenses-section'
-            ? 'ring-4 ring-blue-500 ring-opacity-50 rounded-lg'
-            : ''
-        }`}
-      >
-        <LicenseAndCredits />
+      <div id="licenses-section">
+        <LicenseAndCredits isHighlighted={highlightedSection === 'licenses-section'} />
       </div>
     </div>
   );

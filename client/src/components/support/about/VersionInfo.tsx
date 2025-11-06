@@ -1,8 +1,15 @@
 import React from 'react';
 import DashboardCard from '../../layout/LayoutCard';
 
-const VersionInfo: React.FC = () => (
-  <DashboardCard title="Version Info">
+interface VersionInfoProps {
+  isHighlighted?: boolean;
+}
+
+const VersionInfo: React.FC<VersionInfoProps> = ({ isHighlighted = false }) => (
+  <DashboardCard 
+    title="Version Info"
+    className={isHighlighted ? 'ring-4 ring-[#02367B] ring-opacity-50' : ''}
+  >
     <div className="space-y-3">
       <div>
         <h4 className="text-sm font-medium text-gray-500">Current Version</h4>

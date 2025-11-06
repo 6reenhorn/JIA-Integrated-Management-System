@@ -1,8 +1,15 @@
 import React from 'react';
 import DashboardCard from '../../layout/LayoutCard';
 
-const LicenseAndCredits: React.FC = () => (
-  <DashboardCard title="License & Credits">
+interface LicenseAndCreditsProps {
+  isHighlighted?: boolean;
+}
+
+const LicenseAndCredits: React.FC<LicenseAndCreditsProps> = ({ isHighlighted = false }) => (
+  <DashboardCard 
+    title="License & Credits"
+    className={isHighlighted ? 'ring-4 ring-[#02367B] ring-opacity-50' : ''}
+  >
     <div className="space-y-4">
       <div>
         <h4 className="text-sm font-medium text-gray-500 mb-2">Software License</h4>

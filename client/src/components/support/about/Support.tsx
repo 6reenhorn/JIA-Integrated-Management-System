@@ -1,8 +1,15 @@
 import React from 'react';
 import DashboardCard from '../../layout/LayoutCard';
 
-const Support: React.FC = () => (
-  <DashboardCard title="Support">
+interface SupportProps {
+  isHighlighted?: boolean;
+}
+
+const Support: React.FC<SupportProps> = ({ isHighlighted = false }) => (
+  <DashboardCard 
+    title="Support"
+    className={isHighlighted ? 'ring-4 ring-[#02367B] ring-opacity-50' : ''}
+  >
     <div className="space-y-4">
       <p className="text-gray-600">
         For technical support, bug reports, or feature requests, please contact the development team.
