@@ -72,7 +72,11 @@ const Dashboard: React.FC = () => {
       'employees-payroll': { page: 'employees', section: 'payroll' },
       'e-wallet-gcash': { page: 'e-wallet', section: 'GCash' },
       'e-wallet-paymaya': { page: 'e-wallet', section: 'PayMaya' },
-      'e-wallet-juanpay': { page: 'e-wallet', section: 'JuanPay' }
+      'e-wallet-juanpay': { page: 'e-wallet', section: 'JuanPay' },
+      'about-main': { page: 'about', section: 'main' },
+      'about-version': { page: 'about', section: 'version' },
+      'about-support': { page: 'about', section: 'support'},
+      'about-license': { page: 'about', section: 'licenses' }
     };
 
     // If it's a known section ID, set the current section
@@ -146,6 +150,19 @@ const Dashboard: React.FC = () => {
       />;
     }
 
+    // Handle About sections
+    if (activeItem.startsWith('about')) {
+      let section = 'main';
+      if (activeItem === 'about-version') {
+        section = 'version';
+      } else if (activeItem === 'about-support') {
+        section = 'support';
+      } else if (activeItem === 'about-license') {
+        section = 'licenses';
+      }
+      return <About activeSection={section} />;
+    }
+
     // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
@@ -153,7 +170,7 @@ const Dashboard: React.FC = () => {
       case 'settings':
         return <Settings />;
       case 'about':
-        return <About />;
+        return <About activeSection="main" />;
       default:
         return <Overview />;
     }
@@ -200,6 +217,26 @@ const Dashboard: React.FC = () => {
         return 'Payroll Records';
       }
       return 'Employees';
+    }
+
+    // Handle About sections
+    if (activeItem.startsWith('about')) {
+      if (activeItem === 'about') {
+        return 'About';
+      }
+      const section = activeItem.replace('about-', '');
+      switch (section) {
+        case 'main':
+          return 'About';
+        case 'version':
+          return 'Version Info';
+        case 'support':
+          return 'Support';
+        case 'license':
+          return 'License & Credits';
+        default:
+          return 'About';
+      }
     }
 
     // Handle main menu items
@@ -262,6 +299,26 @@ const Dashboard: React.FC = () => {
         return 'Manage employee payroll records and payments';
       }
       return 'Manage your team members and roles';
+    }
+
+    // Handle About sections
+    if (activeItem.startsWith('about')) {
+      if (activeItem === 'about') {
+        return 'Learn more about JIMS and its features';
+      }
+      const section = activeItem.replace('about-', '');
+      switch (section) {
+        case 'main':
+          return 'Learn more about JIMS and its features';
+        case 'version':
+          return 'View version information and release notes';
+        case 'support':
+          return 'Get help and contact the development team';
+        case 'license':
+          return 'View licenses, credits, and acknowledgments';
+        default:
+          return 'Learn more about JIMS';
+      }
     }
 
     // Handle main menu items
