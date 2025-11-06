@@ -107,10 +107,21 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
 
   // Calculate stats
   const stats = useMemo(() => {
-    const totalPayroll = filteredRecords.reduce((sum, record) => sum + record.netSalary, 0);
-    const paidPayroll = filteredRecords.filter(r => r.status === 'Paid').reduce((sum, record) => sum + record.netSalary, 0);
-    const pendingPayroll = filteredRecords.filter(r => r.status === 'Pending').reduce((sum, record) => sum + record.netSalary, 0);
-    const overduePayroll = filteredRecords.filter(r => r.status === 'Overdue').reduce((sum, record) => sum + record.netSalary, 0);
+    const toNumber = (value: unknown) => {
+      const n = typeof value === 'number' ? value : Number(value);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const totalPayroll = filteredRecords.reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+    const paidPayroll = filteredRecords
+      .filter(r => r.status === 'Paid')
+      .reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+    const pendingPayroll = filteredRecords
+      .filter(r => r.status === 'Pending')
+      .reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+    const overduePayroll = filteredRecords
+      .filter(r => r.status === 'Overdue')
+      .reduce((sum, record) => sum + toNumber(record.netSalary), 0);
 
     return { totalPayroll, paidPayroll, pendingPayroll, overduePayroll };
   }, [filteredRecords]);
@@ -218,8 +229,9 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   return (
     <div className="space-y-6">
       <div className="space-y-5">
+        {/* Payroll stats are rendered in Employees page above the main layout */}
         <div className="flex justify-between items-center pt-5 relative">
-          <PayrollSearchBar />
+          <PayrollSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
           <div className="flex items-center gap-4">
             <div className="relative">
               <button
