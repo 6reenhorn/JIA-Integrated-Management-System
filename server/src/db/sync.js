@@ -74,6 +74,70 @@ const createPayMayaRecordsTable = async () => {
   }
 };
 
+const createInventoryTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS inventory_items (
+      id SERIAL PRIMARY KEY,
+      product_name VARCHAR(255) NOT NULL,
+      category VARCHAR(100) NOT NULL,
+      stock INTEGER NOT NULL DEFAULT 0,
+      status VARCHAR(20) CHECK (status IN ('In Stock', 'Low Stock', 'Out Of Stock')) DEFAULT 'In Stock',
+      product_price DECIMAL(10, 2) NOT NULL,
+      total_amount DECIMAL(10, 2) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  try {
+    await pool.query(query);
+    console.log('Inventory items table created or already exists');
+  } catch (err) {
+    console.error('Error creating inventory_items table:', err);
+  }
+};
+
+const createCategoriesTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS categories (
+      id SERIAL PRIMARY KEY,
+      category_name VARCHAR(100) UNIQUE NOT NULL,
+      color VARCHAR(7) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  try {
+    await pool.query(query);
+    console.log('Categories table created or already exists');
+  } catch (err) {
+    console.error('Error creating categories table:', err);
+  }
+};
+
+const createSalesRecordsTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS sales_records (
+      id SERIAL PRIMARY KEY,
+      date DATE NOT NULL,
+      product_name VARCHAR(255) NOT NULL,
+      quantity INTEGER NOT NULL,
+      price DECIMAL(10, 2) NOT NULL,
+      total DECIMAL(10, 2) NOT NULL,
+      payment_method VARCHAR(20) CHECK (payment_method IN ('Cash', 'Gcash', 'PayMaya', 'Card')) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  try {
+    await pool.query(query);
+    console.log('Sales records table created or already exists');
+  } catch (err) {
+    console.error('Error creating sales_records table:', err);
+  }
+};
+
 const insertSampleEmployees = async () => {
   const sampleEmployees = [
     {
@@ -181,6 +245,9 @@ const syncDatabase = async () => {
   await insertSampleEmployees();
   await createGCashRecordsTable();
   await createPayMayaRecordsTable();
+  await createInventoryTable();
+  await createCategoriesTable();
+  await createSalesRecordsTable();
 };
 
 module.exports = { syncDatabase };

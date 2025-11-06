@@ -15,6 +15,7 @@ import AttendanceStats from '../components/employees/attendance/AttendanceStats'
 import Attendance from './employee-sections/Attendance';
 import PayrollRecords from './employee-sections/PayrollRecords';
 import PayrollStats from '../components/employees/payroll/PayrollStats';
+import DeleteEmployeeModal from '../modals/employee/DeleteEmployeeModal';
 
 const PAGE_SIZE = 4;
 
@@ -272,28 +273,20 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       {/* Delete Confirmation Modal */}
       {showConfirm && (
         <Portal>
-          <div
-            className="fixed bg-white border border-gray-300 rounded-md shadow-xl px-4 py-2 z-[1100] w-64"
-            style={{ top: popoverPosition.top, left: popoverPosition.left, position: 'fixed' }}
-          >
-            <h3 className="text-[12px] font-semibold mb-2">Confirm Delete</h3>
-            <p className="text-[10px] mb-4">Are you sure you want to delete this employee?</p>
-            <div className="flex gap-2 justify-end w-full">
-              <button
-                onClick={handleConfirmDelete}
-                className={`px-5 py-1 text-white text-[10px] rounded ${isDeleting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'}`}
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Deleting...' : 'Yes'}
-              </button>
-              <button
-                onClick={handleCancelDelete}
-                className="px-5 py-1 bg-gray-500 text-white text-[10px] rounded hover:bg-gray-600"
-                disabled={isDeleting}
-              >
-                No
-              </button>
-            </div>
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+            <DeleteEmployeeModal
+              isOpen={showConfirm}
+              employeeId={deleteId}
+              employeeName={employees.find(emp => emp.id === deleteId)?.name}
+              isDeleting={isDeleting}
+              onClose={() => {
+                if (!isDeleting) {
+                  setShowConfirm(false);
+                  setDeleteId(null);
+                }
+              }}
+              onConfirmDelete={handleConfirmDelete}
+            />
           </div>
         </Portal>
       )}

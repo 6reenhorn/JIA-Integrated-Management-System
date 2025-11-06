@@ -39,7 +39,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading }
   }
 
   return (
-    <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] max-h-[429px]">
+    <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] max-h-[429px] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <table className="table-fixed w-full">
         <thead className="border-[#E5E7EB] border-b sticky top-0 bg-[#EDEDED] z-10">
           <tr>

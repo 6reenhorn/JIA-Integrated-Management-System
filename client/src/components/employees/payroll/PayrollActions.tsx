@@ -40,7 +40,7 @@ const PayrollActions: React.FC<PayrollActionsProps> = ({
   const visiblePages = getVisiblePages();
 
   return (
-    <div className="flex items-center justify-between pt-1">
+    <div className="flex items-center justify-between pt-2">
       <div className="text-sm text-gray-500">
         Page {currentPage} of {pageCount}
       </div>
