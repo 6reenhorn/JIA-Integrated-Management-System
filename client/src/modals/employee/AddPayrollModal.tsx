@@ -452,7 +452,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                     style={{
                       display: isStatusDropdownOpen ? 'block' : 'none',
                       position: 'absolute',
-                      top: '100%',
+                      top: '-225%',
                       left: 0,
                       right: 0,
                       backgroundColor: 'white',
