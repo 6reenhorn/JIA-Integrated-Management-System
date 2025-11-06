@@ -278,6 +278,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
                 setIsEditModalOpen(true);
               }}
               onRequestDelete={handleRequestDelete}
+              startIndex={startIndex}
             />
 
             <EmployeeActions
