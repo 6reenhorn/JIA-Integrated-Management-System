@@ -122,10 +122,12 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
     };
 
     const handleDropdownToggle = (dropdown: 'transactionType' | 'chargeMOP') => {
-        setDropdowns(prev => ({
-            ...prev,
-            [dropdown]: !prev[dropdown],
-        }));
+        if (!isEditing) {
+            setDropdowns(prev => ({
+                ...prev,
+                [dropdown]: !prev[dropdown],
+            }));
+        }
     };
 
     const handleDropdownSelect = (dropdown: 'transactionType' | 'chargeMOP', value: string) => {
@@ -184,7 +186,7 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
             >
                 <div>
                     <h3 className="text-[20px] font-bold text-gray-900">Edit GCash Record</h3>
-                    <p className="text-[12px] text-gray-600">Update GCash transaction details.</p>
+                    <p className="text-[12px] text-gray-600">Record GCash cash-in, GCash cash-out, service charge, and charge MOP.</p>
                 </div>
                 
                 <div className="overflow-y-auto max-h-[60vh] mt-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
@@ -227,8 +229,8 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
                             <div className="dropdown relative" ref={transactionTypeRef}>
                                 <label className="text-[12px] font-bold text-gray-700 mb-1 block">Transaction Type</label>
                                 <div
-                                    className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 transition-all duration-200 min-h-[38px] ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
-                                    onClick={() => !isEditing && handleDropdownToggle('transactionType')}
+                                    className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 transition-all duration-200 min-h-[38px] ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'cursor-not-allowed'}`}
+                                    onClick={() => handleDropdownToggle('transactionType')}
                                 >
                                     <span className={formData.transactionType ? 'text-gray-900' : 'text-gray-500'}>
                                         {formData.transactionType || 'Select Transaction Type'}
@@ -261,8 +263,8 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
                             <div className="dropdown relative" ref={chargeMOPRef}>
                                 <label className="text-[12px] font-bold text-gray-700 mb-1 block">Charge MOP (₱)</label>
                                 <div
-                                    className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 transition-all duration-200 min-h-[38px] ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
-                                    onClick={() => !isEditing && handleDropdownToggle('chargeMOP')}
+                                    className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 transition-all duration-200 min-h-[38px] ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'cursor-not-allowed'}`}
+                                    onClick={() => handleDropdownToggle('chargeMOP')}
                                 >
                                     <span className={formData.chargeMOP ? 'text-gray-900' : 'text-gray-500'}>
                                         {formData.chargeMOP || 'Select MOP'}
@@ -325,7 +327,7 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
                 <div className="w-full flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                     <button 
                         type="button"
-                        className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm"
                         onClick={handleCancel}
                         disabled={isEditing}
                     >
@@ -333,7 +335,7 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
                     </button>
                     <button 
                         type="submit"
-                        className={`px-4 py-2 rounded-md transition-colors duration-200 font-medium text-sm shadow-sm flex items-center gap-2 ${
+                        className={`px-4 py-2 rounded-md transition-colors duration-200 font-medium text-sm shadow-sm ${
                             isFormValid && !isEditing
                                 ? 'bg-[#02367B] hover:bg-[#01285a] text-white' 
                                 : 'bg-gray-400 text-white cursor-not-allowed'
@@ -343,7 +345,7 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
                     >
                         {isEditing ? (
                             <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                                 Updating...
                             </>
                         ) : (
