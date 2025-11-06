@@ -23,7 +23,19 @@ interface PayrollRecord {
   paymentDate?: string;
 }
 
-const PayrollRecords: React.FC = () => {
+interface PayrollRecordsProps {
+  payrollRecords?: PayrollRecord[];
+  payrollLoading?: boolean;
+  onUpdatePayrollRecords?: React.Dispatch<React.SetStateAction<PayrollRecord[]>>;
+  onRefetchPayrollRecords?: () => void;
+}
+
+const PayrollRecords: React.FC<PayrollRecordsProps> = ({
+  payrollRecords: propPayrollRecords,
+  payrollLoading: propPayrollLoading,
+  onUpdatePayrollRecords,
+  onRefetchPayrollRecords
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [monthFilter, setMonthFilter] = useState('All Months');
@@ -33,8 +45,13 @@ const PayrollRecords: React.FC = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!propPayrollRecords);
   const [error, setError] = useState<string | null>(null);
+
+  // Use props if provided, otherwise use local state
+  const [localPayrollRecords, setLocalPayrollRecords] = useState<PayrollRecord[]>([]);
+  const payrollRecords = propPayrollRecords || localPayrollRecords;
+  const payrollLoading = propPayrollLoading !== undefined ? propPayrollLoading : isLoading;
 
   // prevent background scroll when modal is open
   useEffect(() => {
@@ -42,24 +59,28 @@ const PayrollRecords: React.FC = () => {
     return () => { document.body.style.overflow = ''; };
   }, [isAddModalOpen]);
 
-  // Fetch payroll records function
-  // const fetchPayrollRecords = async () => {
-  //   try {
-  //     const response = await fetch('http://localhost:3001/api/payroll');
-  //     if (!response.ok) throw new Error('Failed to fetch payroll records');
-  //     const data = await response.json();
-  //     setPayrollRecords(data);
-  //   } catch (err) {
-  //     setError(err instanceof Error ? err.message : 'An error occurred');
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+  // Fetch payroll records function (only if no props provided)
+  const fetchPayrollRecords = async () => {
+    if (propPayrollRecords) return; // Don't fetch if data is provided via props
 
-  // Fetch payroll records on component mount
-  // useEffect(() => {
-  //   fetchPayrollRecords();
-  // }, []);
+    try {
+      const response = await fetch('http://localhost:3001/api/payroll');
+      if (!response.ok) throw new Error('Failed to fetch payroll records');
+      const data = await response.json();
+      setLocalPayrollRecords(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch payroll records on component mount (only if no props)
+  useEffect(() => {
+    if (!propPayrollRecords) {
+      fetchPayrollRecords();
+    }
+  }, [propPayrollRecords]);
 
   // Mock employees data
   const [employees] = useState<Employee[]>([
@@ -70,8 +91,6 @@ const PayrollRecords: React.FC = () => {
     { id: 5, name: 'Sophia Marie Flores', empId: 'EMP005', role: 'Designer', contact: 'sophia@example.com', status: 'Active', lastLogin: '2024-10-05', address: 'Taguig', salary: '45000', contactName: 'Charlie Brown', contactNumber: '123-456-7894', relationship: 'Friend' },
     { id: 6, name: 'Julien Marabe', empId: 'EMP006', role: 'Designer', contact: 'julien@example.com', status: 'Active', lastLogin: '2024-10-06', address: 'Alabang', salary: '45000', contactName: 'Diana Prince', contactNumber: '123-456-7895', relationship: 'Colleague' },
   ]);
-
-  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
 
   // Filter payroll records
   const filteredRecords = useMemo(() => {
@@ -145,12 +164,54 @@ const PayrollRecords: React.FC = () => {
         throw new Error('Failed to add payroll record');
       }
 
-      // Refresh the payroll records after successful addition
-      // await fetchPayrollRecords();
+      const newRecord = await response.json();
+
+      // Update parent state if callback provided
+      if (onUpdatePayrollRecords) {
+        onUpdatePayrollRecords((prev: PayrollRecord[]) => [...prev, newRecord]);
+      } else {
+        // Update local state
+        setLocalPayrollRecords(prev => [...prev, newRecord]);
+      }
+
       setIsAddModalOpen(false);
     } catch (error) {
       console.error('Error adding payroll record:', error);
       // You might want to show an error message to the user here
+    }
+  };
+
+  const handleDeletePayroll = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/payroll/${encodeURIComponent(id as unknown as string)}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Payroll record not found on server.');
+        }
+        throw new Error('Failed to delete payroll record.');
+      }
+
+      // Update parent state if callback provided
+      if (onUpdatePayrollRecords) {
+        onUpdatePayrollRecords((prev: PayrollRecord[]) => prev.filter(record => record.id !== id));
+      } else {
+        // Update local state
+        setLocalPayrollRecords(prev => prev.filter(record => record.id !== id));
+      }
+
+      // Always refetch if a refetch callback is provided (keeps parent/DB in sync)
+      if (onRefetchPayrollRecords) {
+        await onRefetchPayrollRecords();
+      } else if (!propPayrollRecords) {
+        // If operating locally without props, refetch locally
+        await fetchPayrollRecords();
+      }
+    } catch (error) {
+      console.error('Error deleting payroll record:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete payroll record. Please try again.');
     }
   };
 
@@ -208,7 +269,7 @@ const PayrollRecords: React.FC = () => {
           </div>
         </div>
 
-        <PayrollTable payrollRecords={paginatedRecords} isLoading={false} />
+        <PayrollTable payrollRecords={paginatedRecords} isLoading={payrollLoading} onDelete={handleDeletePayroll} />
 
         <PayrollActions
           currentPage={currentPage}
