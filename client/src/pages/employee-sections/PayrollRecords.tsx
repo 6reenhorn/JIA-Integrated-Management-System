@@ -23,7 +23,19 @@ interface PayrollRecord {
   paymentDate?: string;
 }
 
-const PayrollRecords: React.FC = () => {
+interface PayrollRecordsProps {
+  payrollRecords?: PayrollRecord[];
+  payrollLoading?: boolean;
+  onUpdatePayrollRecords?: React.Dispatch<React.SetStateAction<PayrollRecord[]>>;
+  onRefetchPayrollRecords?: () => void;
+}
+
+const PayrollRecords: React.FC<PayrollRecordsProps> = ({
+  payrollRecords: propPayrollRecords,
+  payrollLoading: propPayrollLoading,
+  onUpdatePayrollRecords,
+  onRefetchPayrollRecords
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [monthFilter, setMonthFilter] = useState('All Months');
@@ -33,12 +45,42 @@ const PayrollRecords: React.FC = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(!propPayrollRecords);
+  const [error, setError] = useState<string | null>(null);
+
+  // Use props if provided, otherwise use local state
+  const [localPayrollRecords, setLocalPayrollRecords] = useState<PayrollRecord[]>([]);
+  const payrollRecords = propPayrollRecords || localPayrollRecords;
+  const payrollLoading = propPayrollLoading !== undefined ? propPayrollLoading : isLoading;
 
   // prevent background scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = isAddModalOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [isAddModalOpen]);
+
+  // Fetch payroll records function (only if no props provided)
+  const fetchPayrollRecords = async () => {
+    if (propPayrollRecords) return; // Don't fetch if data is provided via props
+
+    try {
+      const response = await fetch('http://localhost:3001/api/payroll');
+      if (!response.ok) throw new Error('Failed to fetch payroll records');
+      const data = await response.json();
+      setLocalPayrollRecords(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch payroll records on component mount (only if no props)
+  useEffect(() => {
+    if (!propPayrollRecords) {
+      fetchPayrollRecords();
+    }
+  }, [propPayrollRecords]);
 
   // Mock employees data
   const [employees] = useState<Employee[]>([
@@ -48,86 +90,6 @@ const PayrollRecords: React.FC = () => {
     { id: 4, name: 'John Cyril Espina', empId: 'EMP004', role: 'Designer', contact: 'cyril@example.com', status: 'Active', lastLogin: '2024-10-04', address: 'Pasig', salary: '45000', contactName: 'Alice Johnson', contactNumber: '123-456-7893', relationship: 'Mother' },
     { id: 5, name: 'Sophia Marie Flores', empId: 'EMP005', role: 'Designer', contact: 'sophia@example.com', status: 'Active', lastLogin: '2024-10-05', address: 'Taguig', salary: '45000', contactName: 'Charlie Brown', contactNumber: '123-456-7894', relationship: 'Friend' },
     { id: 6, name: 'Julien Marabe', empId: 'EMP006', role: 'Designer', contact: 'julien@example.com', status: 'Active', lastLogin: '2024-10-06', address: 'Alabang', salary: '45000', contactName: 'Diana Prince', contactNumber: '123-456-7895', relationship: 'Colleague' },
-  ]);
-
-  // Mock payroll data
-  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([
-    {
-      id: 1,
-      employeeName: 'Glenn Mark Anino',
-      empId: 'EMP001',
-      role: 'Developer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 50000,
-      deductions: 2500,
-      netSalary: 47500,
-      status: 'Paid',
-      paymentDate: '2024-10-30',
-    },
-    {
-      id: 2,
-      employeeName: 'Den Jester Antonio',
-      empId: 'EMP002',
-      role: 'Designer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Paid',
-      paymentDate: '2024-10-30',
-    },
-    {
-      id: 3,
-      employeeName: 'John Jaybird Casia',
-      empId: 'EMP003',
-      role: 'Designer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Pending',
-    },
-    {
-      id: 4,
-      employeeName: 'John Cyril Espina',
-      empId: 'EMP004',
-      role: 'Designer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Overdue',
-    },
-    {
-      id: 5,
-      employeeName: 'Sophia Marie Flores',
-      empId: 'EMP005',
-      role: 'Designer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Paid',
-      paymentDate: '2024-10-30',
-    },
-    {
-      id: 6,
-      employeeName: 'Julien Marabe',
-      empId: 'EMP006',
-      role: 'Designer',
-      month: 'September',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Paid',
-      paymentDate: '2024-09-30',
-    },
   ]);
 
   // Filter payroll records
@@ -145,10 +107,21 @@ const PayrollRecords: React.FC = () => {
 
   // Calculate stats
   const stats = useMemo(() => {
-    const totalPayroll = filteredRecords.reduce((sum, record) => sum + record.netSalary, 0);
-    const paidPayroll = filteredRecords.filter(r => r.status === 'Paid').reduce((sum, record) => sum + record.netSalary, 0);
-    const pendingPayroll = filteredRecords.filter(r => r.status === 'Pending').reduce((sum, record) => sum + record.netSalary, 0);
-    const overduePayroll = filteredRecords.filter(r => r.status === 'Overdue').reduce((sum, record) => sum + record.netSalary, 0);
+    const toNumber = (value: unknown) => {
+      const n = typeof value === 'number' ? value : Number(value);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const totalPayroll = filteredRecords.reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+    const paidPayroll = filteredRecords
+      .filter(r => r.status === 'Paid')
+      .reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+    const pendingPayroll = filteredRecords
+      .filter(r => r.status === 'Pending')
+      .reduce((sum, record) => sum + toNumber(record.netSalary), 0);
+    const overduePayroll = filteredRecords
+      .filter(r => r.status === 'Overdue')
+      .reduce((sum, record) => sum + toNumber(record.netSalary), 0);
 
     return { totalPayroll, paidPayroll, pendingPayroll, overduePayroll };
   }, [filteredRecords]);
@@ -188,17 +161,77 @@ const PayrollRecords: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleAddPayroll = (newPayroll: Omit<PayrollRecord, 'id'>) => {
-    const payrollWithId = { ...newPayroll, id: payrollRecords.length + 1 };
-    setPayrollRecords(prev => [...prev, payrollWithId]);
-    setIsAddModalOpen(false);
+  const handleAddPayroll = async (newPayroll: Omit<PayrollRecord, 'id'>) => {
+    try {
+      const response = await fetch('http://localhost:3001/api/payroll', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newPayroll),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add payroll record');
+      }
+
+      const newRecord = await response.json();
+
+      // Update parent state if callback provided
+      if (onUpdatePayrollRecords) {
+        onUpdatePayrollRecords((prev: PayrollRecord[]) => [...prev, newRecord]);
+      } else {
+        // Update local state
+        setLocalPayrollRecords(prev => [...prev, newRecord]);
+      }
+
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error('Error adding payroll record:', error);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  const handleDeletePayroll = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/payroll/${encodeURIComponent(id as unknown as string)}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Payroll record not found on server.');
+        }
+        throw new Error('Failed to delete payroll record.');
+      }
+
+      // Update parent state if callback provided
+      if (onUpdatePayrollRecords) {
+        onUpdatePayrollRecords((prev: PayrollRecord[]) => prev.filter(record => record.id !== id));
+      } else {
+        // Update local state
+        setLocalPayrollRecords(prev => prev.filter(record => record.id !== id));
+      }
+
+      // Always refetch if a refetch callback is provided (keeps parent/DB in sync)
+      if (onRefetchPayrollRecords) {
+        await onRefetchPayrollRecords();
+      } else if (!propPayrollRecords) {
+        // If operating locally without props, refetch locally
+        await fetchPayrollRecords();
+      }
+    } catch (error) {
+      console.error('Error deleting payroll record:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete payroll record. Please try again.');
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="space-y-5">
+        {/* Payroll stats are rendered in Employees page above the main layout */}
         <div className="flex justify-between items-center pt-5 relative">
-          <PayrollSearchBar />
+          <PayrollSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
           <div className="flex items-center gap-4">
             <div className="relative">
               <button
@@ -248,7 +281,7 @@ const PayrollRecords: React.FC = () => {
           </div>
         </div>
 
-        <PayrollTable payrollRecords={paginatedRecords} isLoading={false} />
+        <PayrollTable payrollRecords={paginatedRecords} isLoading={payrollLoading} onDelete={handleDeletePayroll} />
 
         <PayrollActions
           currentPage={currentPage}
