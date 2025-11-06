@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.13",
-    "axios": "^1.13.1",
+    "axios": "^1.13.2",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-datepicker": "^8.7.0",
