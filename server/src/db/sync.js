@@ -60,7 +60,8 @@ const createPayMayaRecordsTable = async () => {
       charge_mop VARCHAR(20) CHECK (charge_mop IN ('Cash', 'PayMaya')) NOT NULL,
       reference_number VARCHAR(100),
       date DATE NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      deleted_at TIMESTAMP DEFAULT NULL
     );
   `;
 

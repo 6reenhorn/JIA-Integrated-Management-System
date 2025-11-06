@@ -9,9 +9,10 @@ interface PayMayaProps {
   records: PayMayaRecord[];
   onOpenModal: () => void;
   isLoading?: boolean;
+  onDelete?: (record: PayMayaRecord) => void; 
 }
 
-const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = false }) => {
+const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = false, onDelete }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
@@ -142,6 +143,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
       <PayMayaRecordsTable
         records={currentRecords}
         isLoading={isLoading}
+        onDelete={onDelete}
       />
 
       {/* Pagination */}
