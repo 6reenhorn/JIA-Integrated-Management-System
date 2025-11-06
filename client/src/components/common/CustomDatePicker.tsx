@@ -42,6 +42,7 @@ const CustomDateInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttrib
     onChange: (date: Date | null) => void;
     className?: string;
     maxDate?: Date;
+    disabled?: boolean;
     }
 
     const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
@@ -49,6 +50,7 @@ const CustomDateInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttrib
     onChange,
     className = '',
     maxDate,
+    disabled = false,
     }) => {
     return (
         <>
@@ -63,6 +65,7 @@ const CustomDateInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttrib
         <DatePicker
             selected={selected}
             onChange={onChange}
+            disabled={disabled}
             maxDate={maxDate}
             customInput={<CustomDateInput />}
             className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100 ${className}`}
