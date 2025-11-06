@@ -16,8 +16,30 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
-
   const recordsPerPage = 10;
+
+  // Calculate today's statistics
+  const todayStats = React.useMemo(() => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    const todayRecords = records.filter(record => record.date === todayStr);
+    
+    const cashInRecords = todayRecords.filter(r => r.transactionType === 'Cash-In');
+    const cashOutRecords = todayRecords.filter(r => r.transactionType === 'Cash-Out');
+    
+    const totalCashIn = cashInRecords.reduce((sum, r) => sum + r.amount, 0);
+    const totalCashInCharges = cashInRecords.reduce((sum, r) => sum + r.serviceCharge, 0);
+    const totalCashOut = cashOutRecords.reduce((sum, r) => sum + r.amount, 0);
+    const totalCashOutCharges = cashOutRecords.reduce((sum, r) => sum + r.serviceCharge, 0);
+    
+    return {
+      cashIn: totalCashIn,
+      cashInCharges: totalCashInCharges,
+      cashOut: totalCashOut,
+      cashOutCharges: totalCashOutCharges
+    };
+  }, [records]);
 
   // Filter records based on search term and date
   const filteredRecords = records.filter(record => {
@@ -57,25 +79,25 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
     <div className="space-y-6 mt-5">
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <LayoutCard className="bg-blue-500 border-gray-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">PayMaya Balance</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱0</div>
-          <div className="text-sm text-gray-500">Available Funds (<span className="text-red-500">Under Development</span>)</div>
+        <LayoutCard className="bg-blue-500 min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Cash-In (Today)</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashIn.toFixed(2)}</div>
+          <div className="text-sm text-gray-500">Total Cash-In Amount</div>
         </LayoutCard>
-        <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash-In</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱0</div>
-          <div className="text-sm text-gray-500">This Month</div>
+        <LayoutCard className="bg-blue-500 min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Cash-In Charges</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashInCharges.toFixed(2)}</div>
+          <div className="text-sm text-gray-500">Service Fees (Cash-In)</div>
         </LayoutCard>
-        <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash-Out</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱0</div>
-          <div className="text-sm text-gray-500">This Month</div>
+        <LayoutCard className="bg-blue-500 min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Cash-Out (Today)</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashOut.toFixed(2)}</div>
+          <div className="text-sm text-gray-500">Total Cash-Out Amount</div>
         </LayoutCard>
-        <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Service Charges</h3>
-          <div className="text-3xl font-bold text-red-500 mb-1">₱0</div>
-          <div className="text-sm text-gray-500">Monthly Fee</div>
+        <LayoutCard className="bg-blue-500 min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Cash-Out Charges</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashOutCharges.toFixed(2)}</div>
+          <div className="text-sm text-gray-500">Service Fees (Cash-Out)</div>
         </LayoutCard>
       </div>
 
