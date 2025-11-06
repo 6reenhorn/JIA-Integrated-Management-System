@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import axios from 'axios';
 import InventoryStats from '../components/inventory/Elements of Inventory/InventoryStats';
 import InventoryTable from '../components/inventory/Elements of Inventory/InventoryTable';
 import AddProductModal from '../modals/Inventory/AddProductModal';
@@ -20,6 +21,14 @@ export type SalesRecord = {
   price: number;
   total: number;
   paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+};
+
+// Category type from backend
+type Category = {
+  id: number;
+  name: string;
+  color: string;
+  createdAt: string;
 };
 
 interface InventoryProps {
@@ -52,6 +61,11 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [isEditSaleModalOpen, setIsEditSaleModalOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<SalesRecord | null>(null);
   
+  // Loading states - removed since they're not used in child components yet
+  // const [isLoadingInventory, setIsLoadingInventory] = useState(true);
+  // const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  // const [isLoadingSales, setIsLoadingSales] = useState(true);
+  
   // Use prop if provided, otherwise use local state
   const [localActiveSection, setLocalActiveSection] = useState('inventory');
   const activeSection = propActiveSection || localActiveSection;
@@ -70,19 +84,72 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   }, [propActiveSection, activeSection]);
 
-  // Sales records state - Empty initially
+  // Data states
   const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
+  const [categoriesData, setCategoriesData] = useState<Category[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+
+  // Fetch Categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/inventory/categories');
+        setCategoriesData(response.data);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Fetch Inventory Items on mount
+  useEffect(() => {
+    const fetchInventoryItems = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/inventory');
+        setInventoryItems(response.data);
+      } catch (err) {
+        console.error('Error fetching inventory items:', err);
+      }
+    };
+    fetchInventoryItems();
+  }, []);
+
+  // Fetch Sales Records on mount
+  useEffect(() => {
+    const fetchSalesRecords = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/inventory/sales');
+        setSalesRecords(response.data);
+      } catch (err) {
+        console.error('Error fetching sales records:', err);
+      }
+    };
+    fetchSalesRecords();
+  }, []);
+
+  // Extract category names and colors from categoriesData
+  const allCategories = useMemo(() => 
+    categoriesData.map(cat => cat.name), 
+    [categoriesData]
+  );
+
+  const categoryColors = useMemo(() => {
+    const colors: Record<string, string> = {};
+    categoriesData.forEach(cat => {
+      colors[cat.name] = cat.color;
+    });
+    return colors;
+  }, [categoriesData]);
 
   // Filter sales records by date and search term
   const filteredSalesRecords = useMemo(() => {
     let filtered = salesRecords;
     
-    // Filter by date if a date is selected
     if (selectedDate) {
       filtered = filtered.filter(record => record.date === selectedDate);
     }
     
-    // Filter by search term (searches product name)
     if (salesSearchTerm) {
       filtered = filtered.filter(record => 
         record.productName.toLowerCase().includes(salesSearchTerm.toLowerCase())
@@ -106,15 +173,6 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       totalItemsSold
     };
   }, [filteredSalesRecords]);
-
-  // Categories state - Empty initially
-  const [allCategories, setAllCategories] = useState<string[]>([]);
-
-  // Category colors - Empty initially
-  const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
-
-  // Inventory data - Empty initially
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   // for changing the name of tabs
   const sections = [
@@ -170,7 +228,10 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     );
   }, [categoryData, categorySearchTerm]);
 
-  // Handlers
+  // ============================================
+  // INVENTORY ITEM HANDLERS
+  // ============================================
+
   const handleEditItem = (id: number) => {
     const item = inventoryItems.find(i => i.id === id);
     if (item) {
@@ -179,135 +240,66 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   };
 
-  // REMOVED window.confirm - Delete happens immediately
-  const handleDeleteItem = (id: number) => {
-    setInventoryItems(prev => {
-      const filtered = prev.filter(i => i.id !== id);
-      // Reset to page 1 if current page is now empty
-      const totalPages = Math.ceil(filtered.length / 10);
-      if (inventoryCurrentPage > totalPages && totalPages > 0) {
-        setInventoryCurrentPage(totalPages);
-      } else if (filtered.length === 0) {
-        setInventoryCurrentPage(1);
-      }
-      return filtered;
-    });
+  const handleDeleteItem = async (id: number) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/inventory/${id}`);
+      
+      setInventoryItems(prev => {
+        const filtered = prev.filter(i => i.id !== id);
+        const totalPages = Math.ceil(filtered.length / 10);
+        if (inventoryCurrentPage > totalPages && totalPages > 0) {
+          setInventoryCurrentPage(totalPages);
+        } else if (filtered.length === 0) {
+          setInventoryCurrentPage(1);
+        }
+        return filtered;
+      });
+      
+      console.log('Inventory item deleted successfully');
+    } catch (err) {
+      console.error('Error deleting inventory item:', err);
+      alert('Failed to delete item. Please try again.');
+    }
   };
 
   const handleAddItem = () => setIsAddModalOpen(true);
-  const handleAddCategory = () => setIsAddCategoryModalOpen(true);
-  const handleAddSale = () => setIsAddSalesModalOpen(true);
 
-  // Updated Sales Handlers
-  const handleEditSale = (id: number) => {
-    const sale = salesRecords.find(record => record.id === id);
-    if (sale) {
-      setEditingSale(sale);
-      setIsEditSaleModalOpen(true);
+  const handleAddProduct = async (data: ProductFormData) => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/inventory', {
+        productName: data.productName,
+        category: data.category,
+        stock: data.quantity,
+        productPrice: data.productPrice,
+      });
+      
+      setInventoryItems(prev => [...prev, response.data]);
+      setInventoryCurrentPage(1);
+      setIsAddModalOpen(false);
+      console.log('Product added successfully');
+    } catch (err) {
+      console.error('Error adding product:', err);
+      alert('Failed to add product. Please try again.');
     }
   };
 
-  // REMOVED window.confirm - Delete happens immediately
-  const handleDeleteSale = (id: number) => {
-    setSalesRecords(prev => {
-      const filtered = prev.filter(record => record.id !== id);
-      // Reset to page 1 if current page is now empty
-      const totalPages = Math.ceil(filtered.length / 10);
-      if (salesCurrentPage > totalPages && totalPages > 0) {
-        setSalesCurrentPage(totalPages);
-      } else if (filtered.length === 0) {
-        setSalesCurrentPage(1);
-      }
-      return filtered;
-    });
-  };
-
-  const handleSaveSale = (updatedSale: SalesRecord) => {
-    setSalesRecords(prev => 
-      prev.map(record => 
-        record.id === updatedSale.id ? updatedSale : record
-      )
-    );
-    setIsEditSaleModalOpen(false);
-    setEditingSale(null);
-  };
-
-  const handleAddNewSale = (saleData: {
-    productName: string;
-    quantity: number;
-    price: number;
-    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
-    date: string;
-  }) => {
-    const newSale: SalesRecord = {
-      id: Math.max(...salesRecords.map(s => s.id), 0) + 1,
-      date: saleData.date,
-      productName: saleData.productName,
-      quantity: saleData.quantity,
-      price: saleData.price,
-      total: saleData.quantity * saleData.price,
-      paymentMethod: saleData.paymentMethod,
-    };
-    
-    setSalesRecords(prev => [...prev, newSale]);
-    // Reset to page 1 after adding
-    setSalesCurrentPage(1);
-    setIsAddSalesModalOpen(false);
-  };
-
-  const handleCloseSaleModal = () => {
-    setIsEditSaleModalOpen(false);
-    setEditingSale(null);
-  };
-
-  // Update both categoryColors and allCategories
-  const handleSaveCategory = (categoryName: string, color: string) => {
-    // Add to categories list if not already present
-    if (!allCategories.includes(categoryName)) {
-      setAllCategories(prev => [...prev, categoryName]);
+  const handleSaveProduct = async (updated: InventoryItem) => {
+    try {
+      const response = await axios.put(`http://localhost:3001/api/inventory/${updated.id}`, {
+        productName: updated.productName,
+        category: updated.category,
+        stock: updated.stock,
+        productPrice: updated.productPrice,
+      });
+      
+      setInventoryItems(prev => prev.map(i => (i.id === response.data.id ? response.data : i)));
+      setIsEditModalOpen(false);
+      setEditingItem(undefined);
+      console.log('Product updated successfully');
+    } catch (err) {
+      console.error('Error updating product:', err);
+      alert('Failed to update product. Please try again.');
     }
-    // Add/update color
-    setCategoryColors(prev => ({ ...prev, [categoryName]: color }));
-    // Reset to page 1 after adding
-    setCategoryCurrentPage(1);
-    // Close modal after saving
-    setIsAddCategoryModalOpen(false);
-  };
-
-  const handleViewProducts = (categoryName: string) => {
-    handleSectionChange('inventory');
-    setSelectedCategory(categoryName);
-  };
-
-  const handleAddProduct = (data: ProductFormData) => {
-    const totalAmount = data.productPrice * data.quantity;
-    const newProduct: InventoryItem = {
-      id: Math.max(...inventoryItems.map(i => i.id), 0) + 1,
-      productName: data.productName,
-      category: data.category,
-      stock: data.quantity,
-      status: data.quantity === 0 ? 'Out Of Stock' : data.quantity <= 10 ? 'Low Stock' : 'In Stock',
-      productPrice: data.productPrice,
-      totalAmount,
-    };
-    setInventoryItems(prev => [...prev, newProduct]);
-    // Reset to page 1 after adding
-    setInventoryCurrentPage(1);
-    // Close modal after adding
-    setIsAddModalOpen(false);
-  };
-
-  const handleSaveProduct = (updated: InventoryItem) => {
-    const totalAmount = updated.stock * updated.productPrice;
-    const finalItem = {
-      ...updated,
-      status: updated.stock === 0 ? 'Out Of Stock' : updated.stock <= 10 ? 'Low Stock' : 'In Stock',
-      totalAmount,
-    };
-    setInventoryItems(prev => prev.map(i => (i.id === finalItem.id ? finalItem : i)));
-    // Close modal and reset editing item
-    setIsEditModalOpen(false);
-    setEditingItem(undefined);
   };
 
   const handleCloseEditModal = () => {
@@ -319,8 +311,127 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     setIsAddModalOpen(false);
   };
 
+  // ============================================
+  // CATEGORY HANDLERS
+  // ============================================
+
+  const handleAddCategory = () => setIsAddCategoryModalOpen(true);
+
+  const handleSaveCategory = async (categoryName: string, color: string) => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/inventory/categories', {
+        name: categoryName,
+        color: color,
+      });
+      
+      setCategoriesData(prev => [...prev, response.data]);
+      setCategoryCurrentPage(1);
+      setIsAddCategoryModalOpen(false);
+      console.log('Category added successfully');
+    } catch (err) {
+      console.error('Error adding category:', err);
+      alert('Failed to add category. Please try again.');
+    }
+  };
+
   const handleCloseCategoryModal = () => {
     setIsAddCategoryModalOpen(false);
+  };
+
+  const handleViewProducts = (categoryName: string) => {
+    handleSectionChange('inventory');
+    setSelectedCategory(categoryName);
+  };
+
+  // ============================================
+  // SALES HANDLERS
+  // ============================================
+
+  const handleAddSale = () => setIsAddSalesModalOpen(true);
+
+  const handleEditSale = (id: number) => {
+    const sale = salesRecords.find(record => record.id === id);
+    if (sale) {
+      setEditingSale(sale);
+      setIsEditSaleModalOpen(true);
+    }
+  };
+
+  const handleDeleteSale = async (id: number) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/inventory/sales/${id}`);
+      
+      setSalesRecords(prev => {
+        const filtered = prev.filter(record => record.id !== id);
+        const totalPages = Math.ceil(filtered.length / 10);
+        if (salesCurrentPage > totalPages && totalPages > 0) {
+          setSalesCurrentPage(totalPages);
+        } else if (filtered.length === 0) {
+          setSalesCurrentPage(1);
+        }
+        return filtered;
+      });
+      
+      console.log('Sales record deleted successfully');
+    } catch (err) {
+      console.error('Error deleting sales record:', err);
+      alert('Failed to delete sale. Please try again.');
+    }
+  };
+
+  const handleSaveSale = async (updatedSale: SalesRecord) => {
+    try {
+      const response = await axios.put(`http://localhost:3001/api/inventory/sales/${updatedSale.id}`, {
+        date: updatedSale.date,
+        productName: updatedSale.productName,
+        quantity: updatedSale.quantity,
+        price: updatedSale.price,
+        paymentMethod: updatedSale.paymentMethod,
+      });
+      
+      setSalesRecords(prev => 
+        prev.map(record => 
+          record.id === response.data.id ? response.data : record
+        )
+      );
+      setIsEditSaleModalOpen(false);
+      setEditingSale(null);
+      console.log('Sales record updated successfully');
+    } catch (err) {
+      console.error('Error updating sales record:', err);
+      alert('Failed to update sale. Please try again.');
+    }
+  };
+
+  const handleAddNewSale = async (saleData: {
+    productName: string;
+    quantity: number;
+    price: number;
+    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+    date: string;
+  }) => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/inventory/sales', {
+        date: saleData.date,
+        productName: saleData.productName,
+        quantity: saleData.quantity,
+        price: saleData.price,
+        paymentMethod: saleData.paymentMethod,
+      });
+      
+      setSalesRecords(prev => [...prev, response.data]);
+      setSalesCurrentPage(1);
+      setIsAddSalesModalOpen(false);
+      console.log('Sales record added successfully');
+    } catch (err) {
+      console.error('Error adding sales record:', err);
+      alert('Failed to add sale. Please try again.');
+    }
+  };
+
+  const handleCloseSaleModal = () => {
+    setIsEditSaleModalOpen(false);
+    setEditingSale(null);
   };
 
   const handleCloseSalesModal = () => {
