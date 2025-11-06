@@ -33,12 +33,33 @@ const PayrollRecords: React.FC = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // prevent background scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = isAddModalOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [isAddModalOpen]);
+
+  // Fetch payroll records function
+  // const fetchPayrollRecords = async () => {
+  //   try {
+  //     const response = await fetch('http://localhost:3001/api/payroll');
+  //     if (!response.ok) throw new Error('Failed to fetch payroll records');
+  //     const data = await response.json();
+  //     setPayrollRecords(data);
+  //   } catch (err) {
+  //     setError(err instanceof Error ? err.message : 'An error occurred');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // Fetch payroll records on component mount
+  // useEffect(() => {
+  //   fetchPayrollRecords();
+  // }, []);
 
   // Mock employees data
   const [employees] = useState<Employee[]>([
@@ -50,85 +71,7 @@ const PayrollRecords: React.FC = () => {
     { id: 6, name: 'Julien Marabe', empId: 'EMP006', role: 'Designer', contact: 'julien@example.com', status: 'Active', lastLogin: '2024-10-06', address: 'Alabang', salary: '45000', contactName: 'Diana Prince', contactNumber: '123-456-7895', relationship: 'Colleague' },
   ]);
 
-  // Mock payroll data
-  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([
-    {
-      id: 1,
-      employeeName: 'Glenn Mark Anino',
-      empId: 'EMP001',
-      role: 'Developer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 50000,
-      deductions: 2500,
-      netSalary: 47500,
-      status: 'Paid',
-      paymentDate: '2024-10-30',
-    },
-    {
-      id: 2,
-      employeeName: 'Den Jester Antonio',
-      empId: 'EMP002',
-      role: 'Designer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Paid',
-      paymentDate: '2024-10-30',
-    },
-    {
-      id: 3,
-      employeeName: 'John Jaybird Casia',
-      empId: 'EMP003',
-      role: 'Designer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Pending',
-    },
-    {
-      id: 4,
-      employeeName: 'John Cyril Espina',
-      empId: 'EMP004',
-      role: 'Designer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Overdue',
-    },
-    {
-      id: 5,
-      employeeName: 'Sophia Marie Flores',
-      empId: 'EMP005',
-      role: 'Designer',
-      month: 'October',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Paid',
-      paymentDate: '2024-10-30',
-    },
-    {
-      id: 6,
-      employeeName: 'Julien Marabe',
-      empId: 'EMP006',
-      role: 'Designer',
-      month: 'September',
-      year: '2024',
-      basicSalary: 45000,
-      deductions: 2250,
-      netSalary: 42750,
-      status: 'Paid',
-      paymentDate: '2024-09-30',
-    },
-  ]);
+  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
 
   // Filter payroll records
   const filteredRecords = useMemo(() => {
@@ -188,10 +131,27 @@ const PayrollRecords: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleAddPayroll = (newPayroll: Omit<PayrollRecord, 'id'>) => {
-    const payrollWithId = { ...newPayroll, id: payrollRecords.length + 1 };
-    setPayrollRecords(prev => [...prev, payrollWithId]);
-    setIsAddModalOpen(false);
+  const handleAddPayroll = async (newPayroll: Omit<PayrollRecord, 'id'>) => {
+    try {
+      const response = await fetch('http://localhost:3001/api/payroll', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newPayroll),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add payroll record');
+      }
+
+      // Refresh the payroll records after successful addition
+      // await fetchPayrollRecords();
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error('Error adding payroll record:', error);
+      // You might want to show an error message to the user here
+    }
   };
 
   return (
