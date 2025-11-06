@@ -1,14 +1,19 @@
 import React from 'react';
 import type { PayMayaRecord } from '../../../types/ewallet_types';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface PayMayaRecordsTableProps {
     records: PayMayaRecord[];
     isLoading?: boolean;
+    onEdit?: (record: PayMayaRecord) => void;
+    onDelete?: (record: PayMayaRecord) => void;
 }
 
 const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
     records,
     isLoading = false,
+    onEdit,
+    onDelete,
 }) => {
     const formatCurrency = (amount: number): string => {
         return `₱${amount.toFixed(2)}`;
@@ -36,14 +41,14 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
     };
 
     if (isLoading) {
-    return (
-        <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
-        <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-            <p className="mt-4 text-gray-500">Loading PayMaya records...</p>
-        </div>
-        </div>
-    );
+        return (
+            <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
+                <div className="flex flex-col items-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                    <p className="mt-4 text-gray-500">Loading PayMaya records...</p>
+                </div>
+            </div>
+        );
     }
 
     if (records.length === 0) {
@@ -70,6 +75,9 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
                                 </th>
                                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
                                     Charge MOP
+                                </th>
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                                    Actions
                                 </th>
                             </tr>
                         </thead>
@@ -109,6 +117,9 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
                                 Charge MOP
                             </th>
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                                Actions
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -147,6 +158,24 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
                                     >
                                         {record.chargeMOP}
                                     </span>
+                                </td>
+                                <td className="py-4 px-5 w-[100px]">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => onEdit && onEdit(record)}
+                                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Edit className="w-4 h-4 text-gray-600" />
+                                        </button>
+                                        <button
+                                            onClick={() => onDelete && onDelete(record)}
+                                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4 text-gray-600" />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
