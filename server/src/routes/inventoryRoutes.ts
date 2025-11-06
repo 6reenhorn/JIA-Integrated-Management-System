@@ -34,13 +34,17 @@ interface Category {
   createdAt?: Date;
 }
 
-// GET /api/inventory/categories - Fetch all categories (MOVED BEFORE /:id routes)
+// ============================================
+// CATEGORY ROUTES
+// ============================================
+
+// GET /api/inventory/categories - Fetch all categories
 router.get('/categories', async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query('SELECT * FROM categories ORDER BY name');
+    const result = await pool.query('SELECT * FROM categories ORDER BY category_name ASC');
     const categories: Category[] = result.rows.map((row): Category => ({
       id: row.id,
-      name: row.name,
+      name: row.category_name,
       color: row.color,
       createdAt: row.created_at
     }));
@@ -51,13 +55,18 @@ router.get('/categories', async (req: Request, res: Response): Promise<void> => 
   }
 });
 
-// POST /api/inventory/categories - Add a new category (MOVED BEFORE /:id routes)
+// POST /api/inventory/categories - Add a new category
 router.post('/categories', async (req: Request, res: Response): Promise<void> => {
   const { name, color }: { name: string; color?: string } = req.body;
 
+  if (!name) {
+    res.status(400).json({ error: 'Category name is required' });
+    return;
+  }
+
   try {
     const query = `
-      INSERT INTO categories (name, color)
+      INSERT INTO categories (category_name, color)
       VALUES ($1, $2)
       RETURNING *
     `;
@@ -68,7 +77,7 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
 
     const category: Category = {
       id: newCategory.id,
-      name: newCategory.name,
+      name: newCategory.category_name,
       color: newCategory.color,
       createdAt: newCategory.created_at
     };
@@ -80,7 +89,11 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
   }
 });
 
-// GET /api/inventory/sales - Fetch all sales records (MOVED BEFORE /:id routes)
+// ============================================
+// SALES ROUTES
+// ============================================
+
+// GET /api/inventory/sales - Fetch all sales records
 router.get('/sales', async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await pool.query('SELECT * FROM sales_records ORDER BY date DESC, id DESC');
@@ -101,7 +114,7 @@ router.get('/sales', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// POST /api/inventory/sales - Add a new sales record (MOVED BEFORE /:id routes)
+// POST /api/inventory/sales - Add a new sales record
 router.post('/sales', async (req: Request, res: Response): Promise<void> => {
   const {
     date,
@@ -117,6 +130,11 @@ router.post('/sales', async (req: Request, res: Response): Promise<void> => {
     paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
   } = req.body;
 
+  if (!date || !productName || !quantity || !price || !paymentMethod) {
+    res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
+
   try {
     const total = quantity * price;
 
@@ -125,14 +143,7 @@ router.post('/sales', async (req: Request, res: Response): Promise<void> => {
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `;
-    const values = [
-      date,
-      productName,
-      quantity,
-      price,
-      total,
-      paymentMethod
-    ];
+    const values = [date, productName, quantity, price, total, paymentMethod];
 
     const result = await pool.query(query, values);
     const newSale = result.rows[0];
@@ -155,7 +166,7 @@ router.post('/sales', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// PUT /api/inventory/sales/:id - Update a sales record (MOVED BEFORE generic /:id routes)
+// PUT /api/inventory/sales/:id - Update a sales record
 router.put('/sales/:id', async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const {
@@ -172,26 +183,25 @@ router.put('/sales/:id', async (req: Request, res: Response): Promise<void> => {
     paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
   } = req.body;
 
+  if (!date || !productName || !quantity || !price || !paymentMethod) {
+    res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
+
   try {
     const total = quantity * price;
 
     const query = `
       UPDATE sales_records
-      SET date = $1, product_name = $2, quantity = $3, price = $4, total = $5, payment_method = $6
+      SET date = $1, product_name = $2, quantity = $3, price = $4, total = $5, 
+          payment_method = $6, updated_at = CURRENT_TIMESTAMP
       WHERE id = $7
       RETURNING *
     `;
-    const values = [
-      date,
-      productName,
-      quantity,
-      price,
-      total,
-      paymentMethod,
-      id
-    ];
+    const values = [date, productName, quantity, price, total, paymentMethod, id];
 
     const result = await pool.query(query, values);
+    
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Sales record not found' });
       return;
@@ -216,12 +226,13 @@ router.put('/sales/:id', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// DELETE /api/inventory/sales/:id - Delete a sales record (MOVED BEFORE generic /:id routes)
+// DELETE /api/inventory/sales/:id - Delete a sales record
 router.delete('/sales/:id', async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   try {
     const result = await pool.query('DELETE FROM sales_records WHERE id = $1 RETURNING *', [id]);
+    
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Sales record not found' });
       return;
@@ -234,10 +245,14 @@ router.delete('/sales/:id', async (req: Request, res: Response): Promise<void> =
   }
 });
 
+// ============================================
+// INVENTORY ITEM ROUTES
+// ============================================
+
 // GET /api/inventory - Fetch all inventory items
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query('SELECT * FROM inventory_items ORDER BY id');
+    const result = await pool.query('SELECT * FROM inventory_items ORDER BY id ASC');
     const inventoryItems: InventoryItem[] = result.rows.map((row): InventoryItem => ({
       id: row.id,
       productName: row.product_name,
@@ -270,6 +285,11 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     productPrice: number;
   } = req.body;
 
+  if (!productName || !category || stock === undefined || !productPrice) {
+    res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
+
   try {
     // Calculate total amount and determine status
     const totalAmount = stock * productPrice;
@@ -280,14 +300,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `;
-    const values = [
-      productName,
-      category,
-      stock,
-      status,
-      productPrice,
-      totalAmount
-    ];
+    const values = [productName, category, stock, status, productPrice, totalAmount];
 
     const result = await pool.query(query, values);
     const newItem = result.rows[0];
@@ -326,6 +339,11 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     productPrice: number;
   } = req.body;
 
+  if (!productName || !category || stock === undefined || !productPrice) {
+    res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
+
   try {
     // Recalculate total amount and status
     const totalAmount = stock * productPrice;
@@ -333,21 +351,15 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
 
     const query = `
       UPDATE inventory_items
-      SET product_name = $1, category = $2, stock = $3, status = $4, product_price = $5, total_amount = $6, updated_at = CURRENT_TIMESTAMP
+      SET product_name = $1, category = $2, stock = $3, status = $4, 
+          product_price = $5, total_amount = $6, updated_at = CURRENT_TIMESTAMP
       WHERE id = $7
       RETURNING *
     `;
-    const values = [
-      productName,
-      category,
-      stock,
-      status,
-      productPrice,
-      totalAmount,
-      id
-    ];
+    const values = [productName, category, stock, status, productPrice, totalAmount, id];
 
     const result = await pool.query(query, values);
+    
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Inventory item not found' });
       return;
@@ -379,6 +391,7 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
 
   try {
     const result = await pool.query('DELETE FROM inventory_items WHERE id = $1 RETURNING *', [id]);
+    
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Inventory item not found' });
       return;

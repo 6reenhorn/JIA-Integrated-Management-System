@@ -5,6 +5,7 @@ const authRoutes = require("./auth");
 const employeeRoutes = require("./employees");
 const gcashRoutes = require("./gcash");
 const paymayaRoutes = require("./paymaya");
+const inventoryRoutes = require("./inventory");
 
 const router = express.Router();
 
@@ -12,7 +13,8 @@ const router = express.Router();
 router.use('/auth', authRoutes);
 router.use('/employees', employeeRoutes);
 router.use('/gcash', gcashRoutes);
-router.use('/paymaya', paymayaRoutes); 
+router.use('/paymaya', paymayaRoutes);
+router.use('/inventory', inventoryRoutes);
 
 // Add more routes here as needed
 module.exports = router;
