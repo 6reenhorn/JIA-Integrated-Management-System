@@ -8,8 +8,14 @@ const pool = new Pool({
   },
 });
 
-pool.on('connect', () => {
+pool.on('connect', async (client) => {
   console.log('Connected to the database');
+  try {
+    await client.query("SET TIME ZONE 'Asia/Manila'");
+//    console.log('Timezone set to Asia/Manila');
+  } catch (err) {
+    console.error('Error setting timezone:', err);
+  }
 });
 
 pool.on('error', (err) => {
