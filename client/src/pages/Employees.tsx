@@ -16,7 +16,6 @@ import Attendance from './employee-sections/Attendance';
 import PayrollRecords from './employee-sections/PayrollRecords';
 import PayrollStats from '../components/employees/payroll/PayrollStats';
 import DeleteEmployeeModal from '../modals/employee/DeleteStaffModal';
-import AddPayrollModal from '../modals/employee/AddPayrollModal';
 
 interface PayrollRecord {
   id: number;
@@ -39,6 +38,12 @@ interface EmployeesProps {
   onSectionChange?: (section: string) => void;
 }
 
+const sortEmployeesByNewest = (list: Employee[]) => [...list].sort((a, b) => {
+  const aId = typeof a.id === 'number' ? a.id : Number(a.id) || 0;
+  const bId = typeof b.id === 'number' ? b.id : Number(b.id) || 0;
+  return bId - aId;
+});
+
 const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,7 +54,6 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [popoverPosition, setPopoverPosition] = useState({ top: -0, left: 0 });
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Form states for AddStaffModal
@@ -119,8 +123,8 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     const fetchEmployees = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/employees');
-        const data = Array.isArray(response.data) ? response.data : [];
-        setEmployees(data);
+      const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
+      setEmployees(data);
       } catch (err) {
         console.error('Error fetching employees:', err);
         setEmployees([]);
@@ -227,7 +231,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setIsModalOpen(false); // Close modal immediately
     try {
       const response = await axios.post('http://localhost:3001/api/employees', newEmployee);
-      setEmployees(prevEmployees => [response.data, ...prevEmployees]);
+      setEmployees(prevEmployees => sortEmployeesByNewest([response.data, ...prevEmployees]));
     } catch (err) {
       console.error('Error adding employee:', err);
       // Handle error (could show a toast or alert)
@@ -237,19 +241,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     }
   }
 
-  const handleRequestDelete = (id: number, event: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const popoverHeight = 80;
-    const popoverWidth = 256;
-    let top = rect.top - popoverHeight - 20;
-    let left = rect.left + rect.width / 2 - popoverWidth / 2;
-
-    // Clamp to viewport
-    top = Math.max(10, Math.min(top, window.innerHeight - popoverHeight - 10));
-    left = Math.max(10, Math.min(left, window.innerWidth - popoverWidth - 10));
-
-    console.log('Modal position:', top, left);
-    setPopoverPosition({ top, left });
+  const handleRequestDelete = (id: number, _event: React.MouseEvent<HTMLButtonElement>) => {
     setDeleteId(id);
     setShowConfirm(true);
   };
@@ -269,11 +261,6 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         setIsDeleting(false);
       }
     }
-  };
-
-  const handleCancelDelete = () => {
-    setShowConfirm(false);
-    setDeleteId(null);
   };
 
   const handleResetFilters = () => {
