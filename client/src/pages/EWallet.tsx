@@ -31,6 +31,14 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isInitialLoadingPayMaya, setIsInitialLoadingPayMaya] = useState(true);
 
+  // Animation states for GCash
+  const [isAddingGCash, setIsAddingGCash] = useState(false);
+  const [isDeletingGCash, setIsDeletingGCash] = useState(false);
+  
+  // Animation states for PayMaya
+  const [isAddingPayMaya, setIsAddingPayMaya] = useState(false);
+  const [isDeletingPayMayaRecord, setIsDeletingPayMayaRecord] = useState(false);
+
   // Action states for GCash deletion
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<GCashRecord | null>(null);
@@ -95,6 +103,8 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
 
   // Handler for adding GCash record 
   const handleAddGCashRecord = async (newRecord: Omit<GCashRecord, 'id'>) => {
+    setIsGCashModalOpen(false);
+    setIsAddingGCash(true);
     try {
       const response = await axios.post('http://localhost:3001/api/gcash', newRecord);
       
@@ -116,25 +126,29 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
       console.log('GCash record added successfully');
     } catch (err) {
       console.error('Error adding GCash record:', err);
+    } finally {
+      setIsAddingGCash(false);
     }
   };
 
   const handleDeleteGCashRecord = async (id: string) => {
     setIsDeleting(true);
+    setIsDeletingGCash(true);
+    setIsDeleteModalOpen(false);
+    setRecordToDelete(null);
     try {
       await axios.delete(`http://localhost:3001/api/gcash/${id}`);
       
       // Remove the deleted record from state
       setGcashRecords(prev => prev.filter(record => record.id !== id));
       
-      setIsDeleteModalOpen(false);
-      setRecordToDelete(null);
       console.log('GCash record deleted successfully');
     } catch (err) {
       console.error('Error deleting GCash record:', err);
       alert('Failed to delete record. Please try again.');
     } finally {
       setIsDeleting(false);
+      setIsDeletingGCash(false);
     }
   };
 
@@ -179,6 +193,8 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
 
   // Handler for adding PayMaya record 
   const handleAddPayMayaRecord = async (newRecord: Omit<PayMayaRecord, 'id'>) => {
+    setIsPayMayaModalOpen(false);
+    setIsAddingPayMaya(true);
     try {
       const response = await axios.post('http://localhost:3001/api/paymaya', newRecord);
       
@@ -200,25 +216,29 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
       console.log('PayMaya record added successfully');
     } catch (err) {
       console.error('Error adding PayMaya record:', err);
+    } finally {
+      setIsAddingPayMaya(false);
     }
   };
 
   const handleDeletePayMayaRecord = async (id: string) => {
     setIsDeletingPayMaya(true);
+    setIsDeletingPayMayaRecord(true);
+    setIsDeletePayMayaModalOpen(false);
+    setPaymayaRecordToDelete(null);
     try {
       await axios.delete(`http://localhost:3001/api/paymaya/${id}`);
       
       // Remove the deleted record from state
       setPaymayaRecords(prev => prev.filter(record => record.id !== id));
       
-      setIsDeletePayMayaModalOpen(false);
-      setPaymayaRecordToDelete(null);
       console.log('PayMaya record deleted successfully');
     } catch (err) {
       console.error('Error deleting PayMaya record:', err);
       alert('Failed to delete record. Please try again.');
     } finally {
       setIsDeletingPayMaya(false);
+      setIsDeletingPayMayaRecord(false);
     }
   };
 
@@ -246,6 +266,8 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
               isLoading={isInitialLoading}
               onDelete={handleOpenDeleteModal}
               onEdit={handleOpenEditModal}
+              isAdding={isAddingGCash}
+              isDeleting={isDeletingGCash}
             />
           </div>
         )}
@@ -258,6 +280,8 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
               onOpenModal={() => setIsPayMayaModalOpen(true)}
               isLoading={isInitialLoadingPayMaya}
               onDelete={handleOpenDeletePayMayaModal}
+              isAdding={isAddingPayMaya}
+              isDeleting={isDeletingPayMayaRecord}
             />
           </div>
         )}

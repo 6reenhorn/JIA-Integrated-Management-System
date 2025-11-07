@@ -1,10 +1,11 @@
 import React from 'react';
 import MainLayoutCard from '../../layout/MainLayoutCard';
-import LayoutCard from '../../layout/LayoutCard'; // Add this import
+import LayoutCard from '../../layout/LayoutCard';
 import SalesFilters from './SalesFilters';
 import SalesTable from './SalesTable';
 import SalesActions from './SalesActions';
 
+// Fixed: 'Paymaya' → 'PayMaya' in the interface
 interface SalesStatsProps {
   totalSales: number;
   totalAmount: number;
@@ -21,7 +22,7 @@ interface SalesStatsProps {
     quantity: number;
     price: number;
     total: number;
-    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
   }>;
   searchTerm: string;
   setSearchTerm: (term: string) => void;

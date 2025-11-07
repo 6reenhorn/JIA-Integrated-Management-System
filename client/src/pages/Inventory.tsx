@@ -20,7 +20,7 @@ export type SalesRecord = {
   quantity: number;
   price: number;
   total: number;
-  paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+  paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
 };
 
 // Category type from backend
@@ -61,11 +61,6 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [isEditSaleModalOpen, setIsEditSaleModalOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<SalesRecord | null>(null);
   
-  // Loading states - removed since they're not used in child components yet
-  // const [isLoadingInventory, setIsLoadingInventory] = useState(true);
-  // const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  // const [isLoadingSales, setIsLoadingSales] = useState(true);
-  
   // Use prop if provided, otherwise use local state
   const [localActiveSection, setLocalActiveSection] = useState('inventory');
   const activeSection = propActiveSection || localActiveSection;
@@ -95,8 +90,15 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       try {
         const response = await axios.get('http://localhost:3001/api/inventory/categories');
         setCategoriesData(response.data);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Error fetching categories:', err);
+        if (axios.isAxiosError(err)) {
+          console.error('Error details:', err.response?.data);
+        } else if (err instanceof Error) {
+          console.error('Error message:', err.message);
+        } else {
+          console.error('Error details:', String(err));
+        }
       }
     };
     fetchCategories();
@@ -108,8 +110,15 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       try {
         const response = await axios.get('http://localhost:3001/api/inventory');
         setInventoryItems(response.data);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Error fetching inventory items:', err);
+        if (axios.isAxiosError(err)) {
+          console.error('Error details:', err.response?.data);
+        } else if (err instanceof Error) {
+          console.error('Error message:', err.message);
+        } else {
+          console.error('Error details:', String(err));
+        }
       }
     };
     fetchInventoryItems();
@@ -121,8 +130,15 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       try {
         const response = await axios.get('http://localhost:3001/api/inventory/sales');
         setSalesRecords(response.data);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Error fetching sales records:', err);
+        if (axios.isAxiosError(err)) {
+          console.error('Error details:', err.response?.data);
+        } else if (err instanceof Error) {
+          console.error('Error message:', err.message);
+        } else {
+          console.error('Error details:', String(err));
+        }
       }
     };
     fetchSalesRecords();
@@ -256,9 +272,24 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       });
       
       console.log('Inventory item deleted successfully');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error deleting inventory item:', err);
-      alert('Failed to delete item. Please try again.');
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+      let errorMessage = 'Unknown error';
+      if (axios.isAxiosError(err)) {
+        errorMessage = err.response?.data?.error || err.message || String(err);
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = String(err);
+      }
+      alert(`Failed to delete item: ${errorMessage}`);
     }
   };
 
@@ -266,6 +297,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
 
   const handleAddProduct = async (data: ProductFormData) => {
     try {
+      console.log('Adding product:', data);
+      
       const response = await axios.post('http://localhost:3001/api/inventory', {
         productName: data.productName,
         category: data.category,
@@ -273,18 +306,35 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         productPrice: data.productPrice,
       });
       
+      console.log('Product added:', response.data);
       setInventoryItems(prev => [...prev, response.data]);
       setInventoryCurrentPage(1);
       setIsAddModalOpen(false);
-      console.log('Product added successfully');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error adding product:', err);
-      alert('Failed to add product. Please try again.');
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+      let errorMessage = 'Unknown error';
+      if (axios.isAxiosError(err)) {
+        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = String(err);
+      }
+      alert(`Failed to add product: ${errorMessage}\n\nPlease check the console for more details.`);
     }
   };
 
   const handleSaveProduct = async (updated: InventoryItem) => {
     try {
+      console.log('Updating product:', updated);
+      
       const response = await axios.put(`http://localhost:3001/api/inventory/${updated.id}`, {
         productName: updated.productName,
         category: updated.category,
@@ -292,13 +342,28 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         productPrice: updated.productPrice,
       });
       
+      console.log('Product updated:', response.data);
       setInventoryItems(prev => prev.map(i => (i.id === response.data.id ? response.data : i)));
       setIsEditModalOpen(false);
       setEditingItem(undefined);
-      console.log('Product updated successfully');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error updating product:', err);
-      alert('Failed to update product. Please try again.');
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+      let errorMessage = 'Unknown error';
+      if (axios.isAxiosError(err)) {
+        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = String(err);
+      }
+      alert(`Failed to update product: ${errorMessage}\n\nPlease check the console for more details.`);
     }
   };
 
@@ -319,18 +384,35 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
 
   const handleSaveCategory = async (categoryName: string, color: string) => {
     try {
+      console.log('Adding category:', { categoryName, color });
+      
       const response = await axios.post('http://localhost:3001/api/inventory/categories', {
         name: categoryName,
         color: color,
       });
       
+      console.log('Category added:', response.data);
       setCategoriesData(prev => [...prev, response.data]);
       setCategoryCurrentPage(1);
       setIsAddCategoryModalOpen(false);
-      console.log('Category added successfully');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error adding category:', err);
-      alert('Failed to add category. Please try again.');
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+      let errorMessage = 'Unknown error';
+      if (axios.isAxiosError(err)) {
+        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = String(err);
+      }
+      alert(`Failed to add category: ${errorMessage}`);
     }
   };
 
@@ -373,14 +455,31 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       });
       
       console.log('Sales record deleted successfully');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error deleting sales record:', err);
-      alert('Failed to delete sale. Please try again.');
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+      let errorMessage = 'Unknown error';
+      if (axios.isAxiosError(err)) {
+        errorMessage = err.response?.data?.error || err.message || String(err);
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = String(err);
+      }
+      alert(`Failed to delete sale: ${errorMessage}`);
     }
   };
 
   const handleSaveSale = async (updatedSale: SalesRecord) => {
     try {
+      console.log('Updating sale:', updatedSale);
+      
       const response = await axios.put(`http://localhost:3001/api/inventory/sales/${updatedSale.id}`, {
         date: updatedSale.date,
         productName: updatedSale.productName,
@@ -389,6 +488,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         paymentMethod: updatedSale.paymentMethod,
       });
       
+      console.log('Sale updated:', response.data);
       setSalesRecords(prev => 
         prev.map(record => 
           record.id === response.data.id ? response.data : record
@@ -396,10 +496,24 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       );
       setIsEditSaleModalOpen(false);
       setEditingSale(null);
-      console.log('Sales record updated successfully');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error updating sales record:', err);
-      alert('Failed to update sale. Please try again.');
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+      let errorMessage = 'Unknown error';
+      if (axios.isAxiosError(err)) {
+        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = String(err);
+      }
+      alert(`Failed to update sale: ${errorMessage}\n\nPlease check the console for more details.`);
     }
   };
 
@@ -407,10 +521,12 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     productName: string;
     quantity: number;
     price: number;
-    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
     date: string;
   }) => {
     try {
+      console.log('Adding sale:', saleData);
+      
       const response = await axios.post('http://localhost:3001/api/inventory/sales', {
         date: saleData.date,
         productName: saleData.productName,
@@ -419,13 +535,28 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         paymentMethod: saleData.paymentMethod,
       });
       
+      console.log('Sale added:', response.data);
       setSalesRecords(prev => [...prev, response.data]);
       setSalesCurrentPage(1);
       setIsAddSalesModalOpen(false);
-      console.log('Sales record added successfully');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error adding sales record:', err);
-      alert('Failed to add sale. Please try again.');
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+      let errorMessage = 'Unknown error';
+      if (axios.isAxiosError(err)) {
+        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = String(err);
+      }
+      alert(`Failed to add sale: ${errorMessage}\n\nPlease check the console for more details.`);
     }
   };
 

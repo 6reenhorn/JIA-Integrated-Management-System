@@ -5,15 +5,24 @@ import type { GCashRecord } from '../../../types/ewallet_types';
 import GCashRecordsTable from './GcashRecords';
 import CustomDatePicker from '../../common/CustomDatePicker';
 
+const formatCurrency = (amount: number): string => {
+  return amount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 interface GCashProps {
   records: GCashRecord[];
   onOpenModal: () => void;
   isLoading: boolean;
   onDelete?: (record: GCashRecord) => void;
   onEdit?: (record: GCashRecord) => void;
+  isAdding?: boolean;
+  isDeleting?: boolean;
 }
 
-const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete, onEdit }) => {
+const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete, onEdit, isAdding = false, isDeleting = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
@@ -85,22 +94,22 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-In (Today)</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashIn.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashIn)}</div>
           <div className="text-sm text-gray-500">Total Cash-In Amount</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-In Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashInCharges.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-In)</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-Out (Today)</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashOut.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOut)}</div>
           <div className="text-sm text-gray-500">Total Cash-Out Amount</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-Out Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashOutCharges.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-Out)</div>
         </LayoutCard>
       </div>
@@ -171,6 +180,8 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
         isLoading={isLoading}
         onDelete={onDelete}
         onEdit={onEdit}
+        isAdding={isAdding}
+        isDeleting={isDeleting}
       />
 
       {/* Pagination */}
