@@ -5,6 +5,13 @@ import type { PayMayaRecord } from '../../../types/ewallet_types';
 import PayMayaRecordsTable from './PayMayaRecords';
 import CustomDatePicker from '../../common/CustomDatePicker';
 
+const formatCurrency = (amount: number): string => {
+  return amount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 interface PayMayaProps {
   records: PayMayaRecord[];
   onOpenModal: () => void;
@@ -81,22 +88,22 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-In (Today)</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashIn.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashIn)}</div>
           <div className="text-sm text-gray-500">Total Cash-In Amount</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-In Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashInCharges.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-In)</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-Out (Today)</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashOut.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOut)}</div>
           <div className="text-sm text-gray-500">Total Cash-Out Amount</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-Out Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{todayStats.cashOutCharges.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-Out)</div>
         </LayoutCard>
       </div>
