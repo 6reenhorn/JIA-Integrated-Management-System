@@ -26,10 +26,12 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
       if (!startDate && !endDate) return true;
 
       const recordYmd = record.date;
-
       const startStr = startDate ? toYMD(startDate) : null;
       const endStr = endDate ? toYMD(endDate) : null;
 
+      if (startStr && endStr && startStr > endStr) {
+        return false;
+      }
       if (startStr && endStr) {
         const s = startStr <= endStr ? startStr : endStr;
         const e = startStr <= endStr ? endStr : startStr;
