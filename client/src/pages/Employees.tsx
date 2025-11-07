@@ -52,6 +52,20 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const [popoverPosition, setPopoverPosition] = useState({ top: -0, left: 0 });
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Form states for AddStaffModal
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [salary, setSalary] = useState('');
+  const [contactName, setContactName] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [selectedRoleText, setSelectedRoleText] = useState('Select Role');
+  const [selectedStatus, setSelectedStatus] = useState<'Active' | 'Inactive'>('Active');
+  const [selectedRelationshipText, setSelectedRelationshipText] = useState('Select Relationship');
+  const [isAdding, setIsAdding] = useState(false);
+
   const [internalActiveSection, setInternalActiveSection] = useState('staff');
 
   const activeSection = propActiveSection ?? internalActiveSection;
@@ -194,14 +208,32 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     }
   }
 
+  const resetForm = () => {
+    setFirstName('');
+    setLastName('');
+    setEmail('');
+    setPhone('');
+    setAddress('');
+    setSalary('');
+    setContactName('');
+    setContactNumber('');
+    setSelectedRoleText('Select Role');
+    setSelectedStatus('Active');
+    setSelectedRelationshipText('Select Relationship');
+  };
+
   const handleAddEmployee = async (newEmployee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string }) => {
+    setIsAdding(true);
+    setIsModalOpen(false); // Close modal immediately
     try {
       const response = await axios.post('http://localhost:3001/api/employees', newEmployee);
       setEmployees(prevEmployees => [response.data, ...prevEmployees]);
-      setIsModalOpen(false);
     } catch (err) {
       console.error('Error adding employee:', err);
       // Handle error (could show a toast or alert)
+    } finally {
+      setIsAdding(false);
+      resetForm(); // Reset form after add
     }
   }
 
@@ -299,6 +331,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
               }}
               onRequestDelete={handleRequestDelete}
               startIndex={startIndex}
+              isAdding={isAdding}
             />
 
             <EmployeeActions
@@ -332,7 +365,33 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
               style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             </div>
             <div className='relative z-[1010]'>
-              <AddStaffModal onClose={toggleModal} onAddEmployee={handleAddEmployee} />
+              <AddStaffModal
+                onClose={toggleModal}
+                onAddEmployee={handleAddEmployee}
+                firstName={firstName}
+                setFirstName={setFirstName}
+                lastName={lastName}
+                setLastName={setLastName}
+                email={email}
+                setEmail={setEmail}
+                phone={phone}
+                setPhone={setPhone}
+                address={address}
+                setAddress={setAddress}
+                salary={salary}
+                setSalary={setSalary}
+                contactName={contactName}
+                setContactName={setContactName}
+                contactNumber={contactNumber}
+                setContactNumber={setContactNumber}
+                selectedRoleText={selectedRoleText}
+                setSelectedRoleText={setSelectedRoleText}
+                selectedStatus={selectedStatus}
+                setSelectedStatus={setSelectedStatus}
+                selectedRelationshipText={selectedRelationshipText}
+                setSelectedRelationshipText={setSelectedRelationshipText}
+                onResetForm={resetForm}
+              />
             </div>
           </div>
         </Portal>

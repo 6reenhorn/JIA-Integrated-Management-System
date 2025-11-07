@@ -10,6 +10,7 @@ interface EmployeeTableProps {
   onEditEmployee: (id: number) => void;
   onRequestDelete: (id: number, event: React.MouseEvent<HTMLButtonElement>) => void;
   startIndex?: number; // for sequential display IDs across pages
+  isAdding?: boolean;
 }
 
 const EmployeeTable: React.FC<EmployeeTableProps> = ({
@@ -18,7 +19,8 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onViewEmployee,
   onEditEmployee,
   onRequestDelete,
-  startIndex = 0
+  startIndex = 0,
+  isAdding = false
 }) => {
   if (isLoading) {
     return (
@@ -74,7 +76,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   return (
     <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] max-h-[429px] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <table className="table-fixed w-full">
-        <thead className="border-[#E5E7EB] border-b sticky top-0 bg-[#EDEDED] z-10">
+        <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${isAdding ? 'bg-green-100' : 'bg-[#EDEDED]'}`}>
           <tr>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[220px]">
               Staff Member
