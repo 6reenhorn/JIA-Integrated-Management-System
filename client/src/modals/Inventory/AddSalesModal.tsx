@@ -9,7 +9,7 @@ interface AddSalesModalProps {
     productName: string;
     quantity: number;
     price: number;
-    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay'; // Fixed: 'Paymaya' → 'PayMaya'
     date: string;
   }) => void;
 }
@@ -23,15 +23,16 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     productName: '',
     quantity: 0,
     price: 0,
-    paymentMethod: 'Cash' as 'Cash' | 'Gcash' | 'PayMaya' | 'Card',
-    date: new Date().toISOString().split('T')[0], // Today's date as default
+    paymentMethod: 'Cash' as 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay',
+    date: new Date().toISOString().split('T')[0],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPaymentMethodOpen, setIsPaymentMethodOpen] = useState(false);
   const paymentMethodRef = useRef<HTMLDivElement>(null);
 
-  const paymentMethodOptions = ['Cash', 'Gcash', 'PayMaya', 'Card'];
+  // Fixed: 'Paymaya' → 'PayMaya'
+  const paymentMethodOptions = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
 
   // Handle click outside to close dropdown
   useEffect(() => {
