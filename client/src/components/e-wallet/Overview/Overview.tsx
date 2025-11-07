@@ -360,7 +360,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
             <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-[320px]">
               <div className="space-y-3">
                 {dateRangeWarning && (
-                  <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
+                  <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-3">
                     {dateRangeWarning}
                   </div>
                 )}
