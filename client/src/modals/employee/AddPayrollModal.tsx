@@ -75,6 +75,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
   const handleEmployeeOptionClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setSelectedEmployeeText(`${employee.name} (${employee.empId})`);
+    setBasicSalary(employee.salary);
     setIsEmployeeDropdownOpen(false);
   };
 
