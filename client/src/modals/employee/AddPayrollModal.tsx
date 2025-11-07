@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Employee } from '../../types/employee_types';
+import CustomDatePicker from '../../components/common/CustomDatePicker';
 
 interface PayrollRecord {
   id: number;
@@ -74,6 +75,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
   const handleEmployeeOptionClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setSelectedEmployeeText(`${employee.name} (${employee.empId})`);
+    setBasicSalary(employee.salary);
     setIsEmployeeDropdownOpen(false);
   };
 
@@ -452,7 +454,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                     style={{
                       display: isStatusDropdownOpen ? 'block' : 'none',
                       position: 'absolute',
-                      top: '100%',
+                      top: '-225%',
                       left: 0,
                       right: 0,
                       backgroundColor: 'white',
@@ -526,7 +528,13 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="payment_date" className="text-[12px] font-bold">Payment Date (Optional)</label>
-                  <input type="date" id="payment_date" name="payment_date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <div className="relative w-full">
+                    <CustomDatePicker
+                      selected={paymentDate ? new Date(paymentDate) : null}
+                      onChange={(date: Date | null) => setPaymentDate(date ? date.toISOString().split('T')[0] : '')}
+                      className="w-full px-4 py-[7px] border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
