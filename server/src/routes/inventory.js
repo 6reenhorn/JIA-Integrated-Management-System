@@ -21,13 +21,15 @@ router.get('/categories', async (req, res) => {
     res.json(categories);
   } catch (err) {
     console.error('Error fetching categories:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
 // POST /api/inventory/categories - Add a new category
 router.post('/categories', async (req, res) => {
   const { name, color } = req.body;
+
+  console.log('Received category data:', { name, color });
 
   if (!name) {
     return res.status(400).json({ error: 'Category name is required' });
@@ -51,10 +53,11 @@ router.post('/categories', async (req, res) => {
       createdAt: newCategory.created_at
     };
 
+    console.log('Category added successfully:', category);
     res.status(201).json(category);
   } catch (err) {
     console.error('Error adding category:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
@@ -79,7 +82,7 @@ router.get('/sales', async (req, res) => {
     res.json(salesRecords);
   } catch (err) {
     console.error('Error fetching sales records:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
@@ -87,12 +90,24 @@ router.get('/sales', async (req, res) => {
 router.post('/sales', async (req, res) => {
   const { date, productName, quantity, price, paymentMethod } = req.body;
 
+  console.log('Received sales data:', { date, productName, quantity, price, paymentMethod });
+
   if (!date || !productName || !quantity || !price || !paymentMethod) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
+  // Validate payment method
+  const validPaymentMethods = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
+  if (!validPaymentMethods.includes(paymentMethod)) {
+    return res.status(400).json({ 
+      error: 'Invalid payment method. Must be one of: Cash, Gcash, PayMaya, Juanpay' 
+    });
+  }
+
   try {
     const total = quantity * price;
+    
+    console.log('Calculated total:', total);
 
     const query = `
       INSERT INTO sales_records (date, product_name, quantity, price, total, payment_method)
@@ -115,10 +130,17 @@ router.post('/sales', async (req, res) => {
       createdAt: newSale.created_at
     };
 
+    console.log('Sales record added successfully:', salesRecord);
     res.status(201).json(salesRecord);
   } catch (err) {
     console.error('Error adding sales record:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error message:', err.message);
+    console.error('Error code:', err.code);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      details: err.message,
+      code: err.code
+    });
   }
 });
 
@@ -127,8 +149,18 @@ router.put('/sales/:id', async (req, res) => {
   const { id } = req.params;
   const { date, productName, quantity, price, paymentMethod } = req.body;
 
+  console.log('Updating sales record:', { id, date, productName, quantity, price, paymentMethod });
+
   if (!date || !productName || !quantity || !price || !paymentMethod) {
     return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  // Validate payment method
+  const validPaymentMethods = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
+  if (!validPaymentMethods.includes(paymentMethod)) {
+    return res.status(400).json({ 
+      error: 'Invalid payment method. Must be one of: Cash, Gcash, PayMaya, Juanpay' 
+    });
   }
 
   try {
@@ -161,10 +193,11 @@ router.put('/sales/:id', async (req, res) => {
       createdAt: updatedSale.created_at
     };
 
+    console.log('Sales record updated successfully:', salesRecord);
     res.json(salesRecord);
   } catch (err) {
     console.error('Error updating sales record:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
@@ -179,10 +212,11 @@ router.delete('/sales/:id', async (req, res) => {
       return res.status(404).json({ error: 'Sales record not found' });
     }
 
+    console.log('Sales record deleted successfully');
     res.json({ message: 'Sales record deleted successfully' });
   } catch (err) {
     console.error('Error deleting sales record:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
@@ -208,13 +242,15 @@ router.get('/', async (req, res) => {
     res.json(inventoryItems);
   } catch (err) {
     console.error('Error fetching inventory items:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
 // POST /api/inventory - Add a new inventory item
 router.post('/', async (req, res) => {
   const { productName, category, stock, productPrice } = req.body;
+
+  console.log('Received inventory data:', { productName, category, stock, productPrice });
 
   if (!productName || !category || stock === undefined || !productPrice) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -223,6 +259,8 @@ router.post('/', async (req, res) => {
   try {
     const totalAmount = stock * productPrice;
     const status = stock === 0 ? 'Out Of Stock' : stock <= 10 ? 'Low Stock' : 'In Stock';
+
+    console.log('Calculated values:', { totalAmount, status });
 
     const query = `
       INSERT INTO inventory_items (product_name, category, stock, status, product_price, total_amount)
@@ -246,10 +284,17 @@ router.post('/', async (req, res) => {
       updatedAt: newItem.updated_at
     };
 
+    console.log('Inventory item added successfully:', inventoryItem);
     res.status(201).json(inventoryItem);
   } catch (err) {
     console.error('Error adding inventory item:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error message:', err.message);
+    console.error('Error code:', err.code);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      details: err.message,
+      code: err.code
+    });
   }
 });
 
@@ -257,6 +302,8 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { productName, category, stock, productPrice } = req.body;
+
+  console.log('Updating inventory item:', { id, productName, category, stock, productPrice });
 
   if (!productName || !category || stock === undefined || !productPrice) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -294,10 +341,11 @@ router.put('/:id', async (req, res) => {
       updatedAt: updatedItem.updated_at
     };
 
+    console.log('Inventory item updated successfully:', inventoryItem);
     res.json(inventoryItem);
   } catch (err) {
     console.error('Error updating inventory item:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
@@ -312,10 +360,11 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Inventory item not found' });
     }
 
+    console.log('Inventory item deleted successfully');
     res.json({ message: 'Inventory item deleted successfully' });
   } catch (err) {
     console.error('Error deleting inventory item:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 

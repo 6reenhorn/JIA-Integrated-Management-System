@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Calendar } from 'lucide-react';
 
+// Fixed: 'Paymaya' → 'PayMaya'
 export type SalesRecord = {
   id: number;
   date: string;
@@ -8,7 +9,7 @@ export type SalesRecord = {
   quantity: number;
   price: number;
   total: number;
-  paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+  paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
 };
 
 interface EditSaleModalProps {
@@ -164,7 +165,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                     <option value="Cash">Cash</option>
                     <option value="Gcash">Gcash</option>
                     <option value="PayMaya">PayMaya</option>
-                    <option value="Card">Card</option>
+                    <option value="Juanpay">Juanpay</option> {/* Fixed: Added Juanpay, removed Card */}
                   </select>
                 </div>
 

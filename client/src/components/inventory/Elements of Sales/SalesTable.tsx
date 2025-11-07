@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 
+// Fixed: 'Paymaya' → 'PayMaya'
 export type SalesRecord = {
   id: number;
   date: string;
@@ -8,7 +9,7 @@ export type SalesRecord = {
   quantity: number;
   price: number;
   total: number;
-  paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+  paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
 };
 
 interface SalesTableProps {

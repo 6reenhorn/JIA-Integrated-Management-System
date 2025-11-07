@@ -31,8 +31,8 @@ const createGCashRecordsTable = async () => {
   const query = `
     CREATE TABLE IF NOT EXISTS gcash_records (
       id SERIAL PRIMARY KEY,
-      amount DECIMAL(10, 2) NOT NULL,
-      service_charge DECIMAL(10, 2) DEFAULT 0,
+      amount NUMERIC NOT NULL,
+      service_charge NUMERIC DEFAULT 0,
       transaction_type VARCHAR(20) CHECK (transaction_type IN ('Cash-In', 'Cash-Out')) NOT NULL,
       charge_mop VARCHAR(20) CHECK (charge_mop IN ('Cash', 'GCash')) NOT NULL,
       reference_number VARCHAR(100),
@@ -55,8 +55,8 @@ const createPayMayaRecordsTable = async () => {
   const query = `
     CREATE TABLE IF NOT EXISTS paymaya_records (
       id SERIAL PRIMARY KEY,
-      amount DECIMAL(10, 2) NOT NULL,
-      service_charge DECIMAL(10, 2) DEFAULT 0,
+      amount NUMERIC NOT NULL,
+      service_charge NUMERIC DEFAULT 0,
       transaction_type VARCHAR(20) CHECK (transaction_type IN ('Cash-In', 'Cash-Out')) NOT NULL,
       charge_mop VARCHAR(20) CHECK (charge_mop IN ('Cash', 'PayMaya')) NOT NULL,
       reference_number VARCHAR(100),
@@ -82,8 +82,8 @@ const createInventoryTable = async () => {
       category VARCHAR(100) NOT NULL,
       stock INTEGER NOT NULL DEFAULT 0,
       status VARCHAR(20) CHECK (status IN ('In Stock', 'Low Stock', 'Out Of Stock')) DEFAULT 'In Stock',
-      product_price DECIMAL(10, 2) NOT NULL,
-      total_amount DECIMAL(10, 2) NOT NULL,
+      product_price NUMERIC NOT NULL,
+      total_amount NUMERIC NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -122,9 +122,9 @@ const createSalesRecordsTable = async () => {
       date DATE NOT NULL,
       product_name VARCHAR(255) NOT NULL,
       quantity INTEGER NOT NULL,
-      price DECIMAL(10, 2) NOT NULL,
-      total DECIMAL(10, 2) NOT NULL,
-      payment_method VARCHAR(20) CHECK (payment_method IN ('Cash', 'Gcash', 'PayMaya', 'Card')) NOT NULL,
+      price NUMERIC NOT NULL,
+      total NUMERIC NOT NULL,
+      payment_method VARCHAR(20) CHECK (payment_method IN ('Cash', 'Gcash', 'PayMaya', 'Juanpay')) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -147,9 +147,9 @@ const createPayrollRecordsTable = async () => {
       role VARCHAR(100),
       month INTEGER,
       year INTEGER,
-      basic_salary DECIMAL(10, 2),
-      deductions DECIMAL(10, 2),
-      net_salary DECIMAL(10, 2),
+      basic_salary NUMERIC,
+      deductions NUMERIC,
+      net_salary NUMERIC,
       status VARCHAR(20),
       payment_date DATE
     );
@@ -265,6 +265,73 @@ const insertSampleEmployees = async () => {
   }
 };
 
+// Function to update existing sales_records table constraint
+const updateSalesRecordsConstraint = async () => {
+  try {
+    // Drop the old constraint
+    await pool.query(`
+      ALTER TABLE sales_records 
+      DROP CONSTRAINT IF EXISTS sales_records_payment_method_check;
+    `);
+    
+    // Add the new constraint with Juanpay
+    await pool.query(`
+      ALTER TABLE sales_records 
+      ADD CONSTRAINT sales_records_payment_method_check 
+      CHECK (payment_method IN ('Cash', 'Gcash', 'PayMaya', 'Juanpay'));
+    `);
+    
+    console.log('Sales records payment method constraint updated successfully');
+  } catch (err) {
+    console.error('Error updating sales records constraint:', err);
+  }
+};
+
+// Function to update existing tables to remove NUMERIC precision limits
+const updateNumericColumns = async () => {
+  try {
+    // Update gcash_records table
+    await pool.query(`
+      ALTER TABLE gcash_records 
+        ALTER COLUMN amount TYPE NUMERIC,
+        ALTER COLUMN service_charge TYPE NUMERIC;
+    `);
+    
+    // Update paymaya_records table
+    await pool.query(`
+      ALTER TABLE paymaya_records 
+        ALTER COLUMN amount TYPE NUMERIC,
+        ALTER COLUMN service_charge TYPE NUMERIC;
+    `);
+    
+    // Update inventory_items table
+    await pool.query(`
+      ALTER TABLE inventory_items 
+        ALTER COLUMN product_price TYPE NUMERIC,
+        ALTER COLUMN total_amount TYPE NUMERIC;
+    `);
+    
+    // Update sales_records table
+    await pool.query(`
+      ALTER TABLE sales_records 
+        ALTER COLUMN price TYPE NUMERIC,
+        ALTER COLUMN total TYPE NUMERIC;
+    `);
+    
+    // Update payroll_records table
+    await pool.query(`
+      ALTER TABLE payroll_records 
+        ALTER COLUMN basic_salary TYPE NUMERIC,
+        ALTER COLUMN deductions TYPE NUMERIC,
+        ALTER COLUMN net_salary TYPE NUMERIC;
+    `);
+    
+    console.log('Numeric columns updated to remove precision limits');
+  } catch (err) {
+    console.error('Error updating numeric columns:', err);
+  }
+};
+
 const syncDatabase = async () => {
   await createEmployeesTable();
   await insertSampleEmployees();
@@ -273,6 +340,8 @@ const syncDatabase = async () => {
   await createInventoryTable();
   await createCategoriesTable();
   await createSalesRecordsTable();
+  await updateSalesRecordsConstraint(); // Update constraint for existing tables
+  await updateNumericColumns(); // Update numeric columns to remove limits
   await createPayrollRecordsTable();
 };
 
