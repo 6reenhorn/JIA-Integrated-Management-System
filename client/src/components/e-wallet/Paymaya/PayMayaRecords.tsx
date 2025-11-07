@@ -107,7 +107,7 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
                 <table className="table-fixed w-full">
                     <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeleting ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
                         <tr>
-                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+                            <th className="rounded-tl-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
                                 Date
                             </th>
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[150px]">
@@ -125,7 +125,7 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
                                 Charge MOP
                             </th>
-                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                            <th className="rounded-tr-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
                                 Actions
                             </th>
                         </tr>
