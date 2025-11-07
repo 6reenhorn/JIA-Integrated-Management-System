@@ -4,24 +4,62 @@ import type { Employee } from '../../types/employee_types';
 interface AddStaffModalProps {
   onClose?: () => void;
   onAddEmployee?: (employee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string }) => void;
+  firstName: string;
+  setFirstName: (value: string) => void;
+  lastName: string;
+  setLastName: (value: string) => void;
+  email: string;
+  setEmail: (value: string) => void;
+  phone: string;
+  setPhone: (value: string) => void;
+  address: string;
+  setAddress: (value: string) => void;
+  salary: string;
+  setSalary: (value: string) => void;
+  contactName: string;
+  setContactName: (value: string) => void;
+  contactNumber: string;
+  setContactNumber: (value: string) => void;
+  selectedRoleText: string;
+  setSelectedRoleText: (value: string) => void;
+  selectedStatus: 'Active' | 'Inactive';
+  setSelectedStatus: (value: 'Active' | 'Inactive') => void;
+  selectedRelationshipText: string;
+  setSelectedRelationshipText: (value: string) => void;
+  onResetForm: () => void;
 }
 
-const AddStaffModal = ({ onClose, onAddEmployee }: AddStaffModalProps) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [salary, setSalary] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [contactNumber, setContactNumber] = useState(''); 
+const AddStaffModal = ({
+  onClose,
+  onAddEmployee,
+  firstName,
+  setFirstName,
+  lastName,
+  setLastName,
+  email,
+  setEmail,
+  phone,
+  setPhone,
+  address,
+  setAddress,
+  salary,
+  setSalary,
+  contactName,
+  setContactName,
+  contactNumber,
+  setContactNumber,
+  selectedRoleText,
+  setSelectedRoleText,
+  selectedStatus,
+  setSelectedStatus,
+  selectedRelationshipText,
+  setSelectedRelationshipText,
+  onResetForm
+}: AddStaffModalProps) => {
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<'Active' | 'Inactive'>('Active');
-  const [selectedStatusText, setSelectedStatusText] = useState('Select Status');
-  const [selectedRoleText, setSelectedRoleText] = useState('Select Role');
+  const [selectedStatusText, setSelectedStatusText] = useState(selectedStatus === 'Active' ? 'Active' : 'Inactive');
   const [isRelationshipDropdownOpen, setIsRelationshipDropdownOpen] = useState(false);
-  const [selectedRelationshipText, setSelectedRelationshipText] = useState('Select Relationship');
   const [isFormValid, setIsFormValid] = useState(false);
   const [focusedStatusOption, setFocusedStatusOption] = useState(0);
   const [focusedRoleOption, setFocusedRoleOption] = useState(0);

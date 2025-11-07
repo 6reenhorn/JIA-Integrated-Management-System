@@ -28,13 +28,15 @@ interface PayrollRecordsProps {
   payrollLoading?: boolean;
   onUpdatePayrollRecords?: React.Dispatch<React.SetStateAction<PayrollRecord[]>>;
   onRefetchPayrollRecords?: () => void;
+  employees?: Employee[];
 }
 
 const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   payrollRecords: propPayrollRecords,
   payrollLoading: propPayrollLoading,
   onUpdatePayrollRecords,
-  onRefetchPayrollRecords
+  onRefetchPayrollRecords,
+  employees: propEmployees
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,8 +84,8 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
     }
   }, [propPayrollRecords]);
 
-  // Mock employees data
-  const [employees] = useState<Employee[]>([
+  // Use prop employees if provided, otherwise use local mock data
+  const [mockEmployees] = useState<Employee[]>([
     { id: 1, name: 'Glenn Mark Anino', empId: 'EMP001', role: 'Developer', contact: 'glenn@example.com', status: 'Active', lastLogin: '2024-10-01', address: 'Manila', salary: '50000', contactName: 'John Doe', contactNumber: '123-456-7890', relationship: 'Brother' },
     { id: 2, name: 'Den Jester Antonio', empId: 'EMP002', role: 'Designer', contact: 'den@example.com', status: 'Active', lastLogin: '2024-10-02', address: 'Quezon City', salary: '45000', contactName: 'Jane Doe', contactNumber: '123-456-7891', relationship: 'Sister' },
     { id: 3, name: 'John Jaybird Casia', empId: 'EMP003', role: 'Designer', contact: 'john@example.com', status: 'Active', lastLogin: '2024-10-03', address: 'Makati', salary: '45000', contactName: 'Bob Smith', contactNumber: '123-456-7892', relationship: 'Father' },
@@ -91,6 +93,8 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
     { id: 5, name: 'Sophia Marie Flores', empId: 'EMP005', role: 'Designer', contact: 'sophia@example.com', status: 'Active', lastLogin: '2024-10-05', address: 'Taguig', salary: '45000', contactName: 'Charlie Brown', contactNumber: '123-456-7894', relationship: 'Friend' },
     { id: 6, name: 'Julien Marabe', empId: 'EMP006', role: 'Designer', contact: 'julien@example.com', status: 'Active', lastLogin: '2024-10-06', address: 'Alabang', salary: '45000', contactName: 'Diana Prince', contactNumber: '123-456-7895', relationship: 'Colleague' },
   ]);
+
+  const employees = propEmployees || mockEmployees;
 
   // Filter payroll records
   const filteredRecords = useMemo(() => {
@@ -179,10 +183,10 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
 
       // Update parent state if callback provided
       if (onUpdatePayrollRecords) {
-        onUpdatePayrollRecords((prev: PayrollRecord[]) => [...prev, newRecord]);
+        onUpdatePayrollRecords((prev: PayrollRecord[]) => [newRecord, ...prev]);
       } else {
         // Update local state
-        setLocalPayrollRecords(prev => [...prev, newRecord]);
+        setLocalPayrollRecords(prev => [newRecord, ...prev]);
       }
 
       setIsAddModalOpen(false);

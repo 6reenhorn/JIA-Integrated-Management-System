@@ -258,51 +258,6 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
 
   return (
     <div className="space-y-6 mt-5 h-[700px]"> {/* Overall Border Height */}
-      {/* Date Range Filter */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">Filter by Date Range:</label>
-          <div className="flex items-center gap-2">
-            <div className="w-[140px]">
-              <CustomDatePicker
-                selected={startDate}
-                onChange={(date: Date | null) => setStartDate(date)}
-                className="text-sm"
-              />
-            </div>
-            <span className="text-gray-500">to</span>
-            <div className="w-[140px]">
-              <CustomDatePicker
-                selected={endDate}
-                onChange={(date: Date | null) => setEndDate(date)}
-                className="text-sm"
-              />
-            </div>
-            {(startDate || endDate) && (
-              <button
-                onClick={clearDateRange}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                title="Clear date range filter"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Selected Date Filter (inline) with static label */}
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">Summary cards filter</span>
-
-          <div className="w-[140px]">
-            <CustomDatePicker
-              selected={selectedDate}
-              onChange={(date: Date | null) => setSelectedDate(date)}
-              className="text-sm"
-            />
-          </div>
-        </div>
-      </div>
 
       {/* Main Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -336,11 +291,57 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
         </LayoutCard>
       </div>
 
+      {/* Date Range Filter */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium text-gray-700">Filter by Date Range:</label>
+          <div className="flex items-center gap-2">
+            <div className="w-[140px]">
+              <CustomDatePicker
+                selected={startDate}
+                onChange={(date: Date | null) => setStartDate(date)}
+                className="text-sm"
+              />
+            </div>
+            <span className="text-gray-500">to</span>
+            <div className="w-[140px]">
+              <CustomDatePicker
+                selected={endDate}
+                onChange={(date: Date | null) => setEndDate(date)}
+                className="text-sm"
+              />
+            </div>
+            {(startDate || endDate) && (
+              <button
+                onClick={clearDateRange}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                title="Clear date range filter"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Summary Date Fiter */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-600">Summary cards filter</span>
+
+          <div className="w-[140px]">
+            <CustomDatePicker
+              selected={selectedDate}
+              onChange={(date: Date | null) => setSelectedDate(date)}
+              className="text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SummaryCard title="GCash Summary" data={gcashData} />
-        <SummaryCard title="PayMaya Summary" data={paymayaData} />
-        <SummaryCard title="JuanPay Summary" data={juanpayData} />
+        <SummaryCard title="GCash Daily" data={gcashData} />
+        <SummaryCard title="PayMaya Daily" data={paymayaData} />
+        <SummaryCard title="JuanPay Daily" data={juanpayData} />
       </div>
 
       {/* Records Cards */}
