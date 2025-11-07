@@ -258,6 +258,39 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
 
   return (
     <div className="space-y-6 mt-5 h-[700px]"> {/* Overall Border Height */}
+
+      {/* Main Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <LayoutCard className="bg-blue-500 min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash In</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {formatCurrency(overallStats.totalCashIn)}
+          </div>
+          <div className="text-sm text-gray-500">Overall</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash In Charges</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {formatCurrency(overallStats.totalCashInCharges)}
+          </div>
+          <div className="text-sm text-gray-500">Service Fees</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash Out</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {formatCurrency(overallStats.totalCashOut)}
+          </div>
+          <div className="text-sm text-gray-500">Overall</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash Out Charges</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {formatCurrency(overallStats.totalCashOutCharges)}
+          </div>
+          <div className="text-sm text-gray-500">Service Fees</div>
+        </LayoutCard>
+      </div>
+
       {/* Date Range Filter */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -290,7 +323,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
           </div>
         </div>
 
-        {/* Selected Date Filter (inline) with static label */}
+        {/* Summary Date Fiter */}
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-600">Summary cards filter</span>
 
@@ -302,38 +335,6 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
             />
           </div>
         </div>
-      </div>
-
-      {/* Main Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash In</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">
-            {formatCurrency(overallStats.totalCashIn)}
-          </div>
-          <div className="text-sm text-gray-500">Overall</div>
-        </LayoutCard>
-        <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash In Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">
-            {formatCurrency(overallStats.totalCashInCharges)}
-          </div>
-          <div className="text-sm text-gray-500">Service Fees</div>
-        </LayoutCard>
-        <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash Out</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">
-            {formatCurrency(overallStats.totalCashOut)}
-          </div>
-          <div className="text-sm text-gray-500">Overall</div>
-        </LayoutCard>
-        <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash Out Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">
-            {formatCurrency(overallStats.totalCashOutCharges)}
-          </div>
-          <div className="text-sm text-gray-500">Service Fees</div>
-        </LayoutCard>
       </div>
 
       {/* Summary Cards */}
