@@ -150,9 +150,9 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
 
   // Validate form
   useEffect(() => {
-    const valid = selectedEmployee !== null && selectedMonth !== '' && selectedYear !== '' && basicSalary.trim() !== '' && deductions.trim() !== '' && selectedStatusText !== 'Select Status';
+    const valid = selectedEmployee !== null && selectedMonth !== '' && selectedYear !== '' && basicSalary.trim() !== '' && selectedStatusText !== 'Select Status';
     setIsFormValid(valid);
-  }, [selectedEmployee, selectedMonth, selectedYear, basicSalary, deductions, selectedStatusText]);
+  }, [selectedEmployee, selectedMonth, selectedYear, basicSalary, selectedStatusText]);
 
   return (
     <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">

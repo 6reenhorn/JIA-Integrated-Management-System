@@ -49,6 +49,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(!propPayrollRecords);
   const [error, setError] = useState<string | null>(null);
+  const [tableHeadColor, setTableHeadColor] = useState<'normal' | 'green' | 'red'>('normal');
 
   // Use props if provided, otherwise use local state
   const [localPayrollRecords, setLocalPayrollRecords] = useState<PayrollRecord[]>([]);
@@ -166,6 +167,9 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   }, []);
 
   const handleAddPayroll = async (newPayroll: Omit<PayrollRecord, 'id'>) => {
+    setTableHeadColor('green');
+    // Close modal immediately while the add request is processing
+    setIsAddModalOpen(false);
     try {
       const response = await fetch('http://localhost:3001/api/payroll', {
         method: 'POST',
@@ -188,15 +192,16 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
         // Update local state
         setLocalPayrollRecords(prev => [newRecord, ...prev]);
       }
-
-      setIsAddModalOpen(false);
     } catch (error) {
       console.error('Error adding payroll record:', error);
       // You might want to show an error message to the user here
+    } finally {
+      setTableHeadColor('normal');
     }
   };
 
   const handleDeletePayroll = async (id: number) => {
+    setTableHeadColor('red');
     try {
       const response = await fetch(`http://localhost:3001/api/payroll/${encodeURIComponent(id as unknown as string)}`, {
         method: 'DELETE',
@@ -227,6 +232,8 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
     } catch (error) {
       console.error('Error deleting payroll record:', error);
       alert(error instanceof Error ? error.message : 'Failed to delete payroll record. Please try again.');
+    } finally {
+      setTableHeadColor('normal');
     }
   };
 
@@ -285,7 +292,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
           </div>
         </div>
 
-        <PayrollTable payrollRecords={paginatedRecords} isLoading={payrollLoading} onDelete={handleDeletePayroll} />
+        <PayrollTable payrollRecords={paginatedRecords} isLoading={payrollLoading} onDelete={handleDeletePayroll} headColor={tableHeadColor} />
 
         <PayrollActions
           currentPage={currentPage}
