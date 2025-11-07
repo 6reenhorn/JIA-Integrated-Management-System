@@ -6,7 +6,7 @@ const router = Router();
 // GET /api/employees - Fetch all employees
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM employees ORDER BY id');
+    const result = await pool.query('SELECT * FROM employees ORDER BY id DESC');
     const employees = result.rows.map(row => ({
       id: row.id,
       empId: row.emp_id,

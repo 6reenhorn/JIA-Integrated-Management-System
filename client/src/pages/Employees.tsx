@@ -197,7 +197,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const handleAddEmployee = async (newEmployee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string }) => {
     try {
       const response = await axios.post('http://localhost:3001/api/employees', newEmployee);
-      setEmployees(prevEmployees => [...prevEmployees, response.data]);
+      setEmployees(prevEmployees => [response.data, ...prevEmployees]);
       setIsModalOpen(false);
     } catch (err) {
       console.error('Error adding employee:', err);
