@@ -7,6 +7,8 @@ interface PayMayaRecordsTableProps {
     isLoading?: boolean;
     onEdit?: (record: PayMayaRecord) => void;
     onDelete?: (record: PayMayaRecord) => void;
+    isAdding?: boolean;
+    isDeleting?: boolean;
 }
 
 const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
@@ -14,7 +16,10 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
     isLoading = false,
     onEdit,
     onDelete,
+    isAdding = false,
+    isDeleting = false,
 }) => {
+
     const formatCurrency = (amount: number): string => {
         return `₱${amount.toLocaleString('en-US', {
             minimumFractionDigits: 2,
@@ -100,7 +105,7 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
         <div className="border-2 border-[#E5E7EB] rounded-lg">
             <div className="h-[390px] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <table className="table-fixed w-full">
-                    <thead className="bg-[#EDEDED] border-[#E5E7EB] border-b sticky top-0 z-10">
+                    <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeleting ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
                         <tr>
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
                                 Date
