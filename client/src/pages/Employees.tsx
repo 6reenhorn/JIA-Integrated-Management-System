@@ -353,6 +353,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
             payrollLoading={payrollLoading}
             onUpdatePayrollRecords={setPayrollRecords}
             onRefetchPayrollRecords={fetchPayrollRecords}
+            employees={employees}
           />
         )}
       </MainLayoutCard>
