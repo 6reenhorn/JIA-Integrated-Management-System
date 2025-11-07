@@ -257,6 +257,8 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const handleConfirmDelete = async () => {
     if (deleteId !== null) {
       setIsDeleting(true);
+      setShowConfirm(false); // Close modal immediately
+      setDeleteId(null);
       try {
         await axios.delete(`http://localhost:3001/api/employees/${deleteId}`);
         setEmployees(prev => prev.filter(emp => emp.id !== deleteId));
@@ -267,8 +269,6 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         setIsDeleting(false);
       }
     }
-    setShowConfirm(false);
-    setDeleteId(null);
   };
 
   const handleCancelDelete = () => {
@@ -332,6 +332,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
               onRequestDelete={handleRequestDelete}
               startIndex={startIndex}
               isAdding={isAdding}
+              isDeleting={isDeleting}
             />
 
             <EmployeeActions

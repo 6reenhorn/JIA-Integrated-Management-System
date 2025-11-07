@@ -117,18 +117,10 @@ const DeleteEmployeeModal: React.FC<DeleteEmployeeModalProps> = ({
           </button>
           <button
             type="button"
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm flex items-center gap-2"
             onClick={handleConfirm}
-            disabled={isDeleting}
           >
-            {isDeleting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                Deleting...
-              </>
-            ) : (
-              'Delete Employee'
-            )}
+            Delete Employee
           </button>
         </div>
       </div>
