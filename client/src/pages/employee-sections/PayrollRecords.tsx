@@ -70,7 +70,9 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
       const response = await fetch('http://localhost:3001/api/payroll');
       if (!response.ok) throw new Error('Failed to fetch payroll records');
       const data = await response.json();
-      setLocalPayrollRecords(data);
+      // Sort by id descending to ensure newest records appear first
+      const sortedData = data.sort((a: PayrollRecord, b: PayrollRecord) => b.id - a.id);
+      setLocalPayrollRecords(sortedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

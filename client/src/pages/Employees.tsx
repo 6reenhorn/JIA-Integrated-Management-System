@@ -99,7 +99,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     try {
       const response = await axios.get('http://localhost:3001/api/payroll');
       const data = Array.isArray(response.data) ? response.data : [];
-      setPayrollRecords(data);
+      // Sort by id descending to ensure newest records appear first
+      const sortedData = data.sort((a, b) => b.id - a.id);
+      setPayrollRecords(sortedData);
     } catch (err) {
       console.error('Error fetching payroll records:', err);
       setPayrollRecords([]);
