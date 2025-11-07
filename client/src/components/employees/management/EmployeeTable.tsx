@@ -110,7 +110,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-gray-900">{employee.name}</div>
-                    <div className="text-sm text-gray-500">{`EMP${String(startIndex + index + 1).padStart(3, '0')}`}</div>
+                    <div className="text-sm text-gray-500">{employee.empId}</div>
                   </div>
                 </div>
               </td>

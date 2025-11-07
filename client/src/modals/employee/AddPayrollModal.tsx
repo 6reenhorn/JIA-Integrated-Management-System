@@ -532,7 +532,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                     <CustomDatePicker
                       selected={paymentDate ? new Date(paymentDate) : null}
                       onChange={(date: Date | null) => setPaymentDate(date ? date.toISOString().split('T')[0] : '')}
-                      className="w-full px-4 py-[7px] border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-[5px] border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
