@@ -179,10 +179,10 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
 
       // Update parent state if callback provided
       if (onUpdatePayrollRecords) {
-        onUpdatePayrollRecords((prev: PayrollRecord[]) => [...prev, newRecord]);
+        onUpdatePayrollRecords((prev: PayrollRecord[]) => [newRecord, ...prev]);
       } else {
         // Update local state
-        setLocalPayrollRecords(prev => [...prev, newRecord]);
+        setLocalPayrollRecords(prev => [newRecord, ...prev]);
       }
 
       setIsAddModalOpen(false);
