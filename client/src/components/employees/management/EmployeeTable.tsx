@@ -76,7 +76,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   return (
     <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] max-h-[429px] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <table className="table-fixed w-full">
-        <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${isAdding ? 'bg-green-100' : 'bg-[#EDEDED]'}`}>
+        <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
           <tr>
             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[220px]">
               Staff Member
