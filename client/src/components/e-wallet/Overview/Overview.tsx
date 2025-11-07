@@ -334,7 +334,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
         <div className="flex items-center gap-3 relative" ref={dateFilterRef}>
           <button
             onClick={() => setShowDateFilter(!showDateFilter)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
           >
             <Calendar className="w-4 h-4" />
             <span className="text-sm font-medium">
