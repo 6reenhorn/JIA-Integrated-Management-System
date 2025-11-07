@@ -20,9 +20,10 @@ interface PayrollTableProps {
   payrollRecords: PayrollRecord[];
   isLoading: boolean;
   onDelete: (id: number) => void;
+  headColor?: 'normal' | 'green' | 'red';
 }
 
-const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, onDelete }) => {
+const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, onDelete, headColor = 'normal' }) => {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -50,7 +51,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
     return (
       <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-md min-h-[429px]">
         <table className="table-auto w-full">
-          <thead className="border-[#E5E7EB] border-b sticky top-0 bg-[#EDEDED] z-10">
+          <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${headColor === 'green' ? 'bg-green-200' : headColor === 'red' ? 'bg-red-200' : 'bg-[#EDEDED]'}`}>
             <tr>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm min-w-[165px]">Employee Name</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm min-w-[150px]">Period</th>
@@ -79,7 +80,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
   return (
     <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] max-h-[429px] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <table className="table-auto w-full">
-        <thead className="border-[#E5E7EB] border-b sticky top-0 bg-[#EDEDED] z-10">
+        <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${headColor === 'green' ? 'bg-gradient-to-r from-green-100 via-green-400 to-green-100 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]' : headColor === 'red' ? 'bg-gradient-to-r from-red-100 via-red-400 to-red-100 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
           <tr>
             <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm min-w-[165px]">Employee Name</th>
             <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm min-w-[150px]">Period</th>
@@ -156,11 +157,12 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
         isDeleting={isDeleting}
         onClose={() => { if (!isDeleting) { setIsDeleteModalOpen(false); setDeleteTargetId(null); } }}
         onConfirmDelete={async (id) => {
+          // Close modal immediately while deletion proceeds
+          setIsDeleting(true);
+          setIsDeleteModalOpen(false);
+          setDeleteTargetId(null);
           try {
-            setIsDeleting(true);
             await onDelete(id);
-            setIsDeleteModalOpen(false);
-            setDeleteTargetId(null);
           } finally {
             setIsDeleting(false);
           }

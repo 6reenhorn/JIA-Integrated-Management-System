@@ -23,7 +23,7 @@ interface SalesRecord {
   quantity: number;
   price: number;
   total: number;
-  paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+  paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
   createdAt?: Date;
 }
 
@@ -127,11 +127,20 @@ router.post('/sales', async (req: Request, res: Response): Promise<void> => {
     productName: string;
     quantity: number;
     price: number;
-    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
   } = req.body;
 
   if (!date || !productName || !quantity || !price || !paymentMethod) {
     res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
+
+  // Validate payment method
+  const validPaymentMethods: Array<'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay'> = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
+  if (!validPaymentMethods.includes(paymentMethod)) {
+    res.status(400).json({ 
+      error: 'Invalid payment method. Must be one of: Cash, Gcash, PayMaya, Juanpay' 
+    });
     return;
   }
 
@@ -180,11 +189,20 @@ router.put('/sales/:id', async (req: Request, res: Response): Promise<void> => {
     productName: string;
     quantity: number;
     price: number;
-    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Card';
+    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
   } = req.body;
 
   if (!date || !productName || !quantity || !price || !paymentMethod) {
     res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
+
+  // Validate payment method
+  const validPaymentMethods: Array<'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay'> = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
+  if (!validPaymentMethods.includes(paymentMethod)) {
+    res.status(400).json({ 
+      error: 'Invalid payment method. Must be one of: Cash, Gcash, PayMaya, Juanpay' 
+    });
     return;
   }
 
