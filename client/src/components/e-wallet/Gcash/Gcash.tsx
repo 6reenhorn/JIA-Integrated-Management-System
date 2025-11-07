@@ -18,9 +18,11 @@ interface GCashProps {
   isLoading: boolean;
   onDelete?: (record: GCashRecord) => void;
   onEdit?: (record: GCashRecord) => void;
+  isAdding?: boolean;
+  isDeleting?: boolean;
 }
 
-const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete, onEdit }) => {
+const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete, onEdit, isAdding = false, isDeleting = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
@@ -178,6 +180,8 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
         isLoading={isLoading}
         onDelete={onDelete}
         onEdit={onEdit}
+        isAdding={isAdding}
+        isDeleting={isDeleting}
       />
 
       {/* Pagination */}
