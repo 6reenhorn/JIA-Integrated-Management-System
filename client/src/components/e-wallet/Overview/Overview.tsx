@@ -339,9 +339,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SummaryCard title="GCash Summary" data={gcashData} />
-        <SummaryCard title="PayMaya Summary" data={paymayaData} />
-        <SummaryCard title="JuanPay Summary" data={juanpayData} />
+        <SummaryCard title="GCash Daily" data={gcashData} />
+        <SummaryCard title="PayMaya Daily" data={paymayaData} />
+        <SummaryCard title="JuanPay Daily" data={juanpayData} />
       </div>
 
       {/* Records Cards */}
