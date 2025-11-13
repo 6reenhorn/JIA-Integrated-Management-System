@@ -41,6 +41,9 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [searchTerm, setSearchTerm] = useState('');
   const [salesSearchTerm, setSalesSearchTerm] = useState('');
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
+  const [isLoadingInventory, setIsLoadingInventory] = useState(false);
+  const [isLoadingSales, setIsLoadingSales] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   
   // UI states - SEPARATE PAGE STATE FOR EACH SECTION
   const [filterOpen, setFilterOpen] = useState(false);
@@ -84,65 +87,73 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [categoriesData, setCategoriesData] = useState<Category[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
-  // Fetch Categories on mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get('http://localhost:3001/api/inventory/categories');
-        setCategoriesData(response.data);
-      } catch (err: unknown) {
-        console.error('Error fetching categories:', err);
-        if (axios.isAxiosError(err)) {
-          console.error('Error details:', err.response?.data);
-        } else if (err instanceof Error) {
-          console.error('Error message:', err.message);
-        } else {
-          console.error('Error details:', String(err));
-        }
+// Fetch Categories on mount
+useEffect(() => {
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true); // Start loading
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory/categories');
+      setCategoriesData(response.data);
+    } catch (err: unknown) {
+      console.error('Error fetching categories:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
       }
-    };
-    fetchCategories();
-  }, []);
+    } finally {
+      setIsLoadingCategories(false); // Stop loading
+    }
+  };
+  fetchCategories();
+}, []);
 
-  // Fetch Inventory Items on mount
-  useEffect(() => {
-    const fetchInventoryItems = async () => {
-      try {
-        const response = await axios.get('http://localhost:3001/api/inventory');
-        setInventoryItems(response.data);
-      } catch (err: unknown) {
-        console.error('Error fetching inventory items:', err);
-        if (axios.isAxiosError(err)) {
-          console.error('Error details:', err.response?.data);
-        } else if (err instanceof Error) {
-          console.error('Error message:', err.message);
-        } else {
-          console.error('Error details:', String(err));
-        }
+// Fetch Inventory Items on mount
+useEffect(() => {
+  const fetchInventoryItems = async () => {
+    setIsLoadingInventory(true); // Start loading
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory');
+      setInventoryItems(response.data);
+    } catch (err: unknown) {
+      console.error('Error fetching inventory items:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
       }
-    };
-    fetchInventoryItems();
-  }, []);
-
+    } finally {
+      setIsLoadingInventory(false); // Stop loading
+    }
+  };
+  fetchInventoryItems();
+}, []);
   // Fetch Sales Records on mount
-  useEffect(() => {
-    const fetchSalesRecords = async () => {
-      try {
-        const response = await axios.get('http://localhost:3001/api/inventory/sales');
-        setSalesRecords(response.data);
-      } catch (err: unknown) {
-        console.error('Error fetching sales records:', err);
-        if (axios.isAxiosError(err)) {
-          console.error('Error details:', err.response?.data);
-        } else if (err instanceof Error) {
-          console.error('Error message:', err.message);
-        } else {
-          console.error('Error details:', String(err));
-        }
+useEffect(() => {
+  const fetchSalesRecords = async () => {
+    setIsLoadingSales(true); // Start loading
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory/sales');
+      setSalesRecords(response.data);
+    } catch (err: unknown) {
+      console.error('Error fetching sales records:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
       }
-    };
-    fetchSalesRecords();
-  }, []);
+    } finally {
+      setIsLoadingSales(false); // Stop loading
+    }
+  };
+  fetchSalesRecords();
+}, []);
 
   // Extract category names and colors from categoriesData
   const allCategories = useMemo(() => 
@@ -611,6 +622,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
             filteredCount={filteredItems.length}
             totalCount={inventoryItems.length}
             onPageChange={handleInventoryPageChange}
+            isLoading={isLoadingInventory}
           />
         </InventoryStats>
       )}
@@ -633,6 +645,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
           inventoryItems={inventoryItems}
+          isLoading={isLoadingCategories}
         />
       )}
 
@@ -656,6 +669,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           onDeleteSale={handleDeleteSale}
           currentPage={salesCurrentPage}
           onPageChange={handleSalesPageChange}
+          isLoading={isLoadingSales}
         />
       )}
 

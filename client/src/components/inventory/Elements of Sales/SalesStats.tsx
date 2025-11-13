@@ -33,6 +33,7 @@ interface SalesStatsProps {
   onDeleteSale: (id: number) => void;
   currentPage: number;
   onPageChange: (page: number) => void;
+  isLoading?: boolean;
 }
 
 const SalesStats: React.FC<SalesStatsProps> = ({
@@ -52,7 +53,8 @@ const SalesStats: React.FC<SalesStatsProps> = ({
   onEditSale,
   onDeleteSale,
   currentPage,
-  onPageChange
+  onPageChange,
+  isLoading = false
 }) => {
   const totalPages = Math.ceil(salesRecords.length / 10);
 
@@ -108,6 +110,8 @@ const SalesStats: React.FC<SalesStatsProps> = ({
             salesRecords={salesRecords}
             onEditSale={onEditSale}
             onDeleteSale={onDeleteSale}
+            currentPage={currentPage}
+            isLoading={isLoading}
           />
           <SalesActions 
             currentPage={currentPage}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
+import DeleteSalesRecordModal from '../../../modals/Inventory/DeleteSalesRecordModal';
 
 // Fixed: 'Paymaya' → 'PayMaya'
 export type SalesRecord = {
@@ -16,55 +17,66 @@ interface SalesTableProps {
   salesRecords: SalesRecord[];
   onEditSale: (id: number) => void;
   onDeleteSale: (id: number) => void;
+  currentPage: number;
+  isLoading?: boolean; // Add loading prop
 }
 
-const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDeleteSale }) => {
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+const SalesTable: React.FC<SalesTableProps> = ({ 
+  salesRecords, 
+  onEditSale, 
+  onDeleteSale,
+  currentPage,
+  isLoading = false // Default to false
+}) => {
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<SalesRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const ITEMS_PER_PAGE = 10;
 
-  const handleDeleteClick = (id: number, event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleDeleteClick = (record: SalesRecord, event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    setDeleteConfirmId(id);
+    setRecordToDelete(record);
+    setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (deleteConfirmId !== null) {
-      onDeleteSale(deleteConfirmId);
-      setDeleteConfirmId(null);
+  const handleConfirmDelete = async () => {
+    if (recordToDelete) {
+      setIsDeleting(true);
+      try {
+        await onDeleteSale(recordToDelete.id);
+        setDeleteModalOpen(false);
+        setRecordToDelete(null);
+      } catch (error) {
+        console.error('Error deleting sales record:', error);
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
-  const handleCancelDelete = () => {
-    setDeleteConfirmId(null);
+  const handleCloseModal = () => {
+    if (!isDeleting) {
+      setDeleteModalOpen(false);
+      setRecordToDelete(null);
+    }
   };
 
-  const renderDeleteConfirmation = (recordId: number) => {
-    if (deleteConfirmId !== recordId) return null;
+  // Paginate items - get only items for current page
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedItems = salesRecords.slice(startIndex, endIndex);
 
+  // Loading State
+  if (isLoading) {
     return (
-      <div className="absolute top-0 right-0 mt-2 mr-2 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-64">
-        <div className="mb-2">
-          <h3 className="text-xs font-semibold text-gray-900">Confirm Delete</h3>
-          <p className="text-xs text-gray-600 mt-1">
-            Are you sure you want to delete this sales record?
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={handleCancelDelete}
-            className="flex-1 px-2 py-1 text-gray-700 bg-gray-100 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
-          >
-            No
-          </button>
-          <button
-            onClick={handleConfirmDelete}
-            className="flex-1 px-2 py-1 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
-          >
-            Yes
-          </button>
+      <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-500">Loading sales records...</p>
         </div>
       </div>
     );
-  };
+  }
 
   if (salesRecords.length === 0) {
     return (
@@ -97,83 +109,93 @@ const SalesTable: React.FC<SalesTableProps> = ({ salesRecords, onEditSale, onDel
   }
 
   return (
-    <div className="space-y-6">
-      {/* Table */}
-      <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
-        <table className="table-fixed bg-[#EDEDED] w-full">
-          <thead className="border-[#E5E7EB] border-b">
-            <tr>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Date</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Product Name</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Quantity</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Price</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Total</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Payment Method</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
-            </tr>
-          </thead>
-        </table>
-        
-        <div className="h-[335px] overflow-y-auto">
-          <table className="table-fixed w-full h-full">
-            <tbody className="divide-y divide-gray-200">
-              {salesRecords.map((record) => (
-                <tr key={record.id} className="hover:bg-gray-50 relative">
-                  <td className="py-4 px-6 w-[180px]">
-                    <div className="text-sm text-gray-900 truncate">
-                      {record.date}
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 w-[140px]">
-                    <div className="text-sm font-medium text-gray-900 truncate">
-                      {record.productName}
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-900 w-[100px]">
-                    {record.quantity}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-900 w-[120px]">
-                    ₱{record.price.toFixed(2)}
-                  </td>
-                  <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
-                    ₱{record.total.toFixed(2)}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
-                    <div className="truncate">
-                      {record.paymentMethod}
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 text-left text-sm w-[100px] relative">
-                    <div className="flex justify-start space-x-2">
-                      <button
-                        onClick={() => onEditSale(record.id)}
-                        className="text-black hover:text-black p-1 rounded-full hover:bg-gray-100"
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => handleDeleteClick(record.id, e)}
-                        className="text-black hover:text-black p-1 rounded-full hover:bg-gray-100"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    {renderDeleteConfirmation(record.id)}
-                  </td>
-                </tr>
-              ))}
-              {salesRecords.length < 10 && (
-                <tr className="h-full">
-                  <td colSpan={7} className="h-full"></td>
-                </tr>
-              )}
-            </tbody>
+    <>
+      <div className="space-y-6">
+        {/* Table */}
+        <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
+          <table className="table-fixed bg-[#EDEDED] w-full">
+            <thead className="border-[#E5E7EB] border-b">
+              <tr>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Date</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Product Name</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Quantity</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Price</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Total</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Payment Method</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
+              </tr>
+            </thead>
           </table>
+          
+          <div className="h-[335px] overflow-y-auto">
+            <table className="table-fixed w-full h-full">
+              <tbody className="divide-y divide-gray-200">
+                {paginatedItems.map((record) => (
+                  <tr key={record.id} className="hover:bg-gray-50">
+                    <td className="py-4 px-6 w-[180px]">
+                      <div className="text-sm text-gray-900 truncate">
+                        {record.date}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 w-[140px]">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {record.productName}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-900 w-[100px]">
+                      {record.quantity}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-900 w-[120px]">
+                      ₱{record.price.toFixed(2)}
+                    </td>
+                    <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
+                      ₱{record.total.toFixed(2)}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
+                      <div className="truncate">
+                        {record.paymentMethod}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-left text-sm w-[100px]">
+                      <div className="flex justify-start space-x-2">
+                        <button
+                          onClick={() => onEditSale(record.id)}
+                          className="text-black hover:text-black p-1 rounded-full hover:bg-gray-100"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteClick(record, e)}
+                          className="text-black hover:text-black p-1 rounded-full hover:bg-gray-100"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {paginatedItems.length < 10 && (
+                  <tr className="h-full">
+                    <td colSpan={7} className="h-full"></td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteSalesRecordModal
+        isOpen={deleteModalOpen}
+        onClose={handleCloseModal}
+        onConfirmDelete={handleConfirmDelete}
+        record={recordToDelete}
+        isDeleting={isDeleting}
+      />
+    </>
   );
 };
 
