@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
+import LayoutCard from '../../layout/LayoutCard';
+import CustomDatePicker from '../../common/CustomDatePicker';
+import { X, Calendar } from 'lucide-react';
 import type { 
+  SummaryCardProps, 
+  RecordCardProps,
   GCashRecord,
   PayMayaRecord
 } from '../../../types/ewallet_types';
-import OverviewStats from './OverviewStats';
-import OverviewFilters from './OverviewFilters';
-import OverviewSummaryCards from './OverviewSummaryCards';
-import OverviewRecordCards from './OverviewRecordCards';
 
 interface OverviewProps {
   gcashRecords: GCashRecord[];
@@ -17,7 +18,22 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState<Date | null>(null);
+  const [tempEndDate, setTempEndDate] = useState<Date | null>(null);
   const [dateRangeWarning, setDateRangeWarning] = useState<string>('');
+
+  const dateFilterRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dateFilterRef.current && !dateFilterRef.current.contains(event.target as Node)) {
+        setShowDateFilter(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Calculate overall statistics with date range filter
   const overallStats = useMemo(() => {
@@ -157,10 +173,75 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
     };
   }, [gcashRecords, paymayaRecords, selectedDate]);
 
-  const handleClearFilter = () => {
+  const handleApplyFilter = () => {
+    if ((tempStartDate && !tempEndDate) || (!tempStartDate && tempEndDate)) {
+      setDateRangeWarning('Both start and end dates are required');
+      return;
+    }
+
+    if (tempStartDate && tempEndDate && tempStartDate > tempEndDate) {
+      setDateRangeWarning('Start date must be before end date');
+      return;
+    }
+    
+    setDateRangeWarning('');
+    setStartDate(tempStartDate);
+    setEndDate(tempEndDate);
+    setShowDateFilter(false);
+  };
+
+  const handleClearAndClose = () => {
+    setTempStartDate(null);
+    setTempEndDate(null);
     setStartDate(null);
     setEndDate(null);
+    setShowDateFilter(false);
   };
+
+  const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
+    <LayoutCard title={title} className="min-h-[200px]">
+      <div className="space-y-3">
+        {data.map((item, index) => {
+          const isHighlight =
+              item.label === 'Total Charges';
+          return (
+            <div
+              key={index}
+              className={`flex justify-between items-center ${
+                isHighlight ? 'pt-2 mt-2 border-t border-gray-200' : ''
+              }`}
+            >
+              <span
+                className={`text-sm ${
+                  isHighlight ? 'text-gray-900 font-bold' : 'text-gray-500'
+                }`}
+              >
+                {item.label}
+              </span>
+                <span
+                  className={`${
+                    item.value.includes('-')
+                      ? 'text-red-500 font-medium'
+                      : 'text-gray-900 font-medium'
+                  }`}
+                >
+                  {item.value}
+                </span>
+            </div>
+          );
+        })}
+      </div>
+    </LayoutCard>
+  );
+
+  const RecordCard: React.FC<RecordCardProps> = ({ title, count }) => (
+    <LayoutCard className="text-center min-h-[120px]">
+      <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
+      <div className="text-4xl font-bold text-gray-900">
+        {count}
+      </div>
+    </LayoutCard>
+  );
 
   const formatCurrency = (amount: number) => {
     const formatted = Math.abs(amount).toLocaleString('en-US', {
@@ -214,42 +295,148 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
   ];
 
   return (
-    <div className="space-y-6 mt-5 h-[700px]">
+    <div className="space-y-6 mt-5 h-[700px]"> {/* Overall Border Height */}
+
       {/* Main Stats Cards */}
-      <OverviewStats
-        totalCashIn={overallStats.totalCashIn}
-        totalCashInCharges={overallStats.totalCashInCharges}
-        totalCashOut={overallStats.totalCashOut}
-        totalCashOutCharges={overallStats.totalCashOutCharges}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <LayoutCard className="bg-blue-500 min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash In</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {formatCurrency(overallStats.totalCashIn)}
+          </div>
+          <div className="text-sm text-gray-500">Overall</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash In Charges</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {formatCurrency(overallStats.totalCashInCharges)}
+          </div>
+          <div className="text-sm text-gray-500">Service Fees</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash Out</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {formatCurrency(overallStats.totalCashOut)}
+          </div>
+          <div className="text-sm text-gray-500">Overall</div>
+        </LayoutCard>
+        <LayoutCard className="min-h-[120px]">
+          <h3 className="text-gray-500 font-medium mb-2">Total Cash Out Charges</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {formatCurrency(overallStats.totalCashOutCharges)}
+          </div>
+          <div className="text-sm text-gray-500">Service Fees</div>
+        </LayoutCard>
+      </div>
 
       {/* Date Range Filter */}
-      <OverviewFilters
-        startDate={startDate}
-        endDate={endDate}
-        selectedDate={selectedDate}
-        onStartDateChange={setStartDate}
-        onEndDateChange={setEndDate}
-        onSelectedDateChange={setSelectedDate}
-        onClearFilter={handleClearFilter}
-        dateRangeWarning={dateRangeWarning}
-        onWarningChange={setDateRangeWarning}
-      />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 relative" ref={dateFilterRef}>
+          <button
+            onClick={() => setShowDateFilter(!showDateFilter)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+          >
+            <Calendar className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              {(startDate && endDate) ? (
+                `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+              ) : (
+                'Filter by Date Range'
+              )}
+            </span>
+          </button>
+
+          {(startDate || endDate) && (
+            <button
+              onClick={handleClearAndClose}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              title="Clear date range filter"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+
+          {showDateFilter && (
+            <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-[320px]">
+              <div className="space-y-3">
+                {dateRangeWarning && (
+                  <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-3">
+                    {dateRangeWarning}
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
+                  <CustomDatePicker
+                    selected={tempStartDate}
+                    onChange={(date: Date | null) => {
+                      setTempStartDate(date);
+                      setDateRangeWarning('');
+                    }}
+                    className="text-sm w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
+                  <CustomDatePicker
+                    selected={tempEndDate}
+                    onChange={(date: Date | null) => {
+                      setTempEndDate(date);
+                      setDateRangeWarning('');
+                    }}
+                    className="text-sm w-full"
+                  />
+                </div>
+                <button
+                  onClick={handleApplyFilter}
+                  disabled={!tempStartDate}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  Apply Filter
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Summary Date Filter */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-600">Summary cards filter</span>
+          <div className="w-[140px]">
+            <CustomDatePicker
+              selected={selectedDate}
+              onChange={(date: Date | null) => setSelectedDate(date)}
+              className="text-sm"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Summary Cards */}
-      <OverviewSummaryCards
-        gcashData={gcashData}
-        paymayaData={paymayaData}
-        juanpayData={juanpayData}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SummaryCard title="GCash Daily" data={gcashData} />
+        <SummaryCard title="PayMaya Daily" data={paymayaData} />
+        <SummaryCard title="JuanPay Daily" data={juanpayData} />
+      </div>
 
       {/* Records Cards */}
-      <OverviewRecordCards
-        totalRecords={gcashRecords.length + paymayaRecords.length}
-        gcashRecords={gcashRecords.length}
-        paymayaRecords={paymayaRecords.length}
-        juanpayRecords={0}
-      />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <RecordCard 
+          title="Total Records" 
+          count={String(gcashRecords.length + paymayaRecords.length)} 
+        />
+        <RecordCard 
+          title="GCash Records" 
+          count={String(gcashRecords.length)} 
+        />
+        <RecordCard 
+          title="PayMaya Records" 
+          count={String(paymayaRecords.length)} 
+        />
+        <RecordCard 
+          title="JuanPay Records" 
+          count={String(0)} 
+        />
+      </div>
     </div>
   );
 };
