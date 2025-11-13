@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Calendar } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
+import CustomDatePicker from '../../components/common/CustomDatePicker';
 
 // Fixed: 'Paymaya' → 'PayMaya'
 export type SalesRecord = {
@@ -17,9 +18,10 @@ interface EditSaleModalProps {
   onClose: () => void;
   sale: SalesRecord | null;
   onSave: (updatedSale: SalesRecord) => void;
+  isUpdating?: boolean;
 }
 
-const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, onSave }) => {
+const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, onSave, isUpdating = false }) => {
   const [formData, setFormData] = useState({
     date: sale?.date || '',
     productName: sale?.productName || '',
@@ -28,7 +30,11 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
     paymentMethod: sale?.paymentMethod || 'Cash'
   });
 
-  React.useEffect(() => {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const paymentDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
     if (sale) {
       setFormData({
         date: sale.date,
@@ -37,10 +43,46 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
         price: sale.price,
         paymentMethod: sale.paymentMethod
       });
+      
+      // Convert date string to Date object
+      if (sale.date) {
+        setSelectedDate(new Date(sale.date));
+      }
     }
   }, [sale]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (paymentDropdownRef.current && !paymentDropdownRef.current.contains(event.target as Node)) {
+        setIsSelectOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isUpdating) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose, isUpdating]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -48,9 +90,32 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!sale) return;
+  const handleDateChange = (date: Date | null) => {
+    setSelectedDate(date);
+    if (date) {
+      const formattedDate = date.toISOString().split('T')[0];
+      setFormData(prev => ({
+        ...prev,
+        date: formattedDate
+      }));
+    }
+  };
+
+  const togglePaymentDropdown = () => {
+    if (!isUpdating) {
+      setIsSelectOpen(!isSelectOpen);
+    }
+  };
+
+  const handlePaymentSelect = (method: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay') => {
+    if (!isUpdating) {
+      setFormData(prev => ({ ...prev, paymentMethod: method }));
+      setIsSelectOpen(false);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!sale || isUpdating) return;
     
     const updatedSale: SalesRecord = {
       ...sale,
@@ -64,6 +129,8 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
 
   if (!isOpen) return null;
 
+  const paymentMethods: Array<'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay'> = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
+
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto">
@@ -75,138 +142,185 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 rounded-md p-1"
+            disabled={isUpdating}
+            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 rounded-md p-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Form Content */}
-          <div className="px-6 pb-6">
-            <div className="space-y-6">
-              {/* Product Details Section */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Details</h3>
-                
-                {/* Product Name */}
-                <div className="mb-4">
+        {/* Form Content */}
+        <div className="px-6 pb-6">
+          <div className="space-y-6">
+            {/* Product Details Section */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-4">Details</h3>
+              
+              {/* Product Name */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  name="productName"
+                  value={formData.productName}
+                  onChange={handleInputChange}
+                  disabled={isUpdating}
+                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  required
+                />
+              </div>
+
+              {/* Quantity and Price Row */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Product Name
+                    Quantity
                   </label>
                   <input
-                    type="text"
-                    name="productName"
-                    value={formData.productName}
+                    type="number"
+                    name="quantity"
+                    value={formData.quantity}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
+                    disabled={isUpdating}
+                    min="1"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     required
                   />
                 </div>
-
-                {/* Quantity and Price Row */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Quantity
-                    </label>
-                    <input
-                      type="number"
-                      name="quantity"
-                      value={formData.quantity}
-                      onChange={handleInputChange}
-                      min="1"
-                      className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Price per Item (₱)
-                    </label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      step="0.01"
-                      min="0"
-                      className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Total Amount Display */}
-                <div className="bg-gray-100 rounded-lg p-4 mb-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-gray-600">Total Amount:</p>
-                      <p className="text-sm text-gray-500">{formData.quantity} x ₱{formData.price.toFixed(2)}</p>
-                    </div>
-                    <div className="text-md font-semibold text-green-600">
-                      ₱{totalAmount.toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Method */}
-                <div className="mb-4">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Payment Method
+                    Price per Item (₱)
                   </label>
-                  <select
-                    name="paymentMethod"
-                    value={formData.paymentMethod}
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
+                    disabled={isUpdating}
+                    step="0.01"
+                    min="0"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     required
-                  >
-                    <option value="Cash">Cash</option>
-                    <option value="Gcash">Gcash</option>
-                    <option value="PayMaya">PayMaya</option>
-                    <option value="Juanpay">Juanpay</option> {/* Fixed: Added Juanpay, removed Card */}
-                  </select>
+                  />
                 </div>
+              </div>
 
-                {/* Sale Date */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sale Date
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none pr-10"
-                      required
-                    />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              {/* Total Amount Display */}
+              <div className="bg-gray-100 rounded-lg p-4 mb-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-gray-600">Total Amount:</p>
+                    <p className="text-sm text-gray-500">{formData.quantity} x ₱{formData.price.toFixed(2)}</p>
+                  </div>
+                  <div className="text-md font-semibold text-green-600">
+                    ₱{totalAmount.toFixed(2)}
                   </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-2 pt-4">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-1.5 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 bg-[#02367B] text-white rounded-md hover:bg-[#02367B] transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B]focus:ring-offset-1"
-                >
-                  Update Sales
-                </button>
+              {/* Payment Method */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Payment Method
+                </label>
+                <div className="relative" ref={paymentDropdownRef}>
+                  <div
+                    onClick={togglePaymentDropdown}
+                    className={`w-full px-3 py-2 pr-8 bg-gray-100 border border-gray-300 rounded-lg text-left transition-all outline-none ${
+                      isUpdating 
+                        ? 'opacity-50 cursor-not-allowed' 
+                        : 'cursor-pointer hover:bg-gray-200'
+                    } ${
+                      isSelectOpen ? 'ring-2 ring-[#02367B] border-[#02367B] bg-white' : 'focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white'
+                    }`}
+                  >
+                    {formData.paymentMethod}
+                  </div>
+                  
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg 
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className={`text-gray-500 transition-transform duration-200 ease-in-out ${
+                        isSelectOpen ? 'rotate-180' : ''
+                      }`}
+                    >
+                      <polygon points="4,6 12,6 8,12" fill="currentColor" />
+                    </svg>
+                  </div>
+
+                  {!isUpdating && (
+                    <div
+                      className="dropdown-options absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-48 overflow-y-auto"
+                      style={{
+                        display: isSelectOpen ? 'block' : 'none',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                      }}
+                    >
+                      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-center text-sm">
+                        Select Payment Method
+                      </div>
+                      
+                      {paymentMethods.map((method) => (
+                        <div
+                          key={method}
+                          onClick={() => handlePaymentSelect(method)}
+                          className="px-4 py-2 text-left hover:bg-gray-50 border-b border-gray-200 last:border-b-0 flex items-center transition-colors cursor-pointer"
+                        >
+                          {method}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Sale Date */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sale Date
+                </label>
+                <CustomDatePicker
+                  selected={selectedDate}
+                  onChange={handleDateChange}
+                  maxDate={new Date()}
+                  disabled={isUpdating}
+                />
               </div>
             </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isUpdating}
+                className="px-4 py-1.5 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isUpdating}
+                className="px-4 py-1.5 bg-[#02367B] text-white rounded-md hover:bg-[#02367B]/90 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isUpdating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Updating...
+                  </>
+                ) : (
+                  'Update Sales'
+                )}
+              </button>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

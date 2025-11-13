@@ -8,6 +8,7 @@ interface EditProductModalProps {
   onSave: (productData: InventoryItem) => void;
   initialData?: InventoryItem;
   categories: string[];
+  isUpdating?: boolean;
 }
 
 const EditProductModal: React.FC<EditProductModalProps> = ({
@@ -15,7 +16,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   onClose,
   onSave,
   initialData,
-  categories
+  categories,
+  isUpdating = false
 }) => {
   const [formData, setFormData] = useState<InventoryItem>({
     id: 0,
@@ -62,6 +64,23 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     };
   }, []);
 
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isUpdating) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose, isUpdating]);
+
   useEffect(() => {
     if (initialData && isOpen) {
       setFormData(initialData);
@@ -71,12 +90,16 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   }, [initialData, isOpen]);
 
   const toggleCategoryDropdown = () => {
-    setIsSelectOpen(!isSelectOpen);
+    if (!isUpdating) {
+      setIsSelectOpen(!isSelectOpen);
+    }
   };
 
   const handleCategorySelect = (category: string) => {
-    setFormData(prev => ({ ...prev, category }));
-    setIsSelectOpen(false);
+    if (!isUpdating) {
+      setFormData(prev => ({ ...prev, category }));
+      setIsSelectOpen(false);
+    }
   };
 
   const handleInputChange = (field: keyof InventoryItem, value: string | number) => {
@@ -87,6 +110,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   };
 
   const handleSubmit = () => {
+    if (isUpdating) return;
+    
     const updatedFormData = {
       ...formData,
       status: formData.totalAmount === 0 ? 'Out Of Stock' : 
@@ -94,7 +119,6 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     };
     
     onSave(updatedFormData);
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -110,7 +134,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 rounded-md p-1"
+            disabled={isUpdating}
+            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 rounded-md p-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <X className="w-4 h-4" />
           </button>
@@ -132,7 +157,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   type="text"
                   value={formData.productName}
                   onChange={(e) => handleInputChange('productName', e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
+                  disabled={isUpdating}
+                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -144,8 +170,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  disabled={isUpdating}
                   rows={3}
-                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all resize-none outline-none"
+                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all resize-none outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -159,7 +186,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   <div className="relative" ref={categoryDropdownRef}>
                     <div
                       onClick={toggleCategoryDropdown}
-                      className={`w-full px-3 py-2 pr-8 bg-gray-100 border border-gray-300 rounded-lg text-left cursor-pointer hover:bg-gray-200 transition-all outline-none ${
+                      className={`w-full px-3 py-2 pr-8 bg-gray-100 border border-gray-300 rounded-lg text-left transition-all outline-none ${
+                        isUpdating 
+                          ? 'opacity-50 cursor-not-allowed' 
+                          : 'cursor-pointer hover:bg-gray-200'
+                      } ${
                         isSelectOpen ? 'ring-2 ring-[#02367B] border-[#02367B] bg-white' : 'focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white'
                       }`}
                     >
@@ -192,31 +223,33 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                       </svg>
                     </div>
 
-                    <div
-                      className="dropdown-options absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-48 overflow-y-auto"
-                      style={{
-                        display: isSelectOpen ? 'block' : 'none',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-                      }}
-                    >
-                      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-center text-sm">
-                        Select Category
-                      </div>
-                      
-                      {categories.map((category, index) => (
-                        <div
-                          key={category}
-                          onClick={() => handleCategorySelect(category)}
-                          className="px-4 py-2 text-left hover:bg-gray-50 border-b border-gray-200 last:border-b-0 flex items-center transition-colors cursor-pointer"
-                        >
-                          <div 
-                            className="w-3 h-3 rounded-full mr-3"
-                            style={{ backgroundColor: getCategoryColor(index) }}
-                          ></div>
-                          {category}
+                    {!isUpdating && (
+                      <div
+                        className="dropdown-options absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-48 overflow-y-auto"
+                        style={{
+                          display: isSelectOpen ? 'block' : 'none',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                        }}
+                      >
+                        <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-center text-sm">
+                          Select Category
                         </div>
-                      ))}
-                    </div>
+                        
+                        {categories.map((category, index) => (
+                          <div
+                            key={category}
+                            onClick={() => handleCategorySelect(category)}
+                            className="px-4 py-2 text-left hover:bg-gray-50 border-b border-gray-200 last:border-b-0 flex items-center transition-colors cursor-pointer"
+                          >
+                            <div 
+                              className="w-3 h-3 rounded-full mr-3"
+                              style={{ backgroundColor: getCategoryColor(index) }}
+                            ></div>
+                            {category}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -229,9 +262,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                     type="number"
                     value={formData.productPrice || ''}
                     onChange={(e) => handleInputChange('productPrice', parseFloat(e.target.value) || 0)}
+                    disabled={isUpdating}
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -247,8 +281,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                     type="number"
                     value={formData.totalAmount || ''}
                     onChange={(e) => handleInputChange('totalAmount', parseInt(e.target.value) || 0)}
+                    disabled={isUpdating}
                     min="0"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -262,7 +297,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                     min="0"
                     value={minimumStock}
                     onChange={(e) => setMinimumStock(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
+                    disabled={isUpdating}
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -273,16 +309,25 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-1.5 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
+                disabled={isUpdating}
+                className="px-4 py-1.5 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="px-4 py-1.5 bg-[#02367B] text-white rounded-md hover:bg-[#02367B]/90 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1"
+                disabled={isUpdating}
+                className="px-4 py-1.5 bg-[#02367B] text-white rounded-md hover:bg-[#02367B]/90 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Update Product
+                {isUpdating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Updating...
+                  </>
+                ) : (
+                  'Update Product'
+                )}
               </button>
             </div>
           </div>

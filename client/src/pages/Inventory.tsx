@@ -59,10 +59,12 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [isAddSalesModalOpen, setIsAddSalesModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
+  const [isUpdatingProduct, setIsUpdatingProduct] = useState(false);
   
   // Sales Modal States
   const [isEditSaleModalOpen, setIsEditSaleModalOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<SalesRecord | null>(null);
+  const [isUpdatingSale, setIsUpdatingSale] = useState(false);
   
   // Use prop if provided, otherwise use local state
   const [localActiveSection, setLocalActiveSection] = useState('inventory');
@@ -343,6 +345,7 @@ useEffect(() => {
   };
 
   const handleSaveProduct = async (updated: InventoryItem) => {
+    setIsUpdatingProduct(true);
     try {
       console.log('Updating product:', updated);
       
@@ -375,6 +378,8 @@ useEffect(() => {
         errorMessage = String(err);
       }
       alert(`Failed to update product: ${errorMessage}\n\nPlease check the console for more details.`);
+    } finally {
+      setIsUpdatingProduct(false);
     }
   };
 
@@ -488,6 +493,7 @@ useEffect(() => {
   };
 
   const handleSaveSale = async (updatedSale: SalesRecord) => {
+    setIsUpdatingSale(true);
     try {
       console.log('Updating sale:', updatedSale);
       
@@ -525,6 +531,8 @@ useEffect(() => {
         errorMessage = String(err);
       }
       alert(`Failed to update sale: ${errorMessage}\n\nPlease check the console for more details.`);
+    } finally {
+      setIsUpdatingSale(false);
     }
   };
 
@@ -686,6 +694,7 @@ useEffect(() => {
         onSave={handleSaveProduct}
         initialData={editingItem}
         categories={categories}
+        isUpdating={isUpdatingProduct}
       />
       <AddCategoryModal 
         isOpen={isAddCategoryModalOpen}
@@ -699,6 +708,7 @@ useEffect(() => {
         onClose={handleCloseSaleModal}
         sale={editingSale}
         onSave={handleSaveSale}
+        isUpdating={isUpdatingSale}
       />
 
       {/* Add Sales Modal */}
