@@ -330,13 +330,13 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
       </div>
 
       {/* Date Range Filter */}
-      <div className="flex items-center justify-between">
+      <div className="flex h-10.5 items-center justify-between">
         <div className="flex items-center gap-3 relative" ref={dateFilterRef}>
           <button
             onClick={() => setShowDateFilter(!showDateFilter)}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
           >
-            <Calendar className="w-4 h-4" />
+            <Calendar className="w-4 h-6" />
             <span className="text-sm font-medium">
               {(startDate && endDate) ? (
                 `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
