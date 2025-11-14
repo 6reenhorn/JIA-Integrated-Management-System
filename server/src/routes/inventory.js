@@ -29,8 +29,6 @@ router.get('/categories', async (req, res) => {
 router.post('/categories', async (req, res) => {
   const { name, color } = req.body;
 
-  console.log('Received category data:', { name, color });
-
   if (!name) {
     return res.status(400).json({ error: 'Category name is required' });
   }
@@ -53,7 +51,6 @@ router.post('/categories', async (req, res) => {
       createdAt: newCategory.created_at
     };
 
-    console.log('Category added successfully:', category);
     res.status(201).json(category);
   } catch (err) {
     console.error('Error adding category:', err);
@@ -90,8 +87,6 @@ router.get('/sales', async (req, res) => {
 router.post('/sales', async (req, res) => {
   const { date, productName, quantity, price, paymentMethod } = req.body;
 
-  console.log('Received sales data:', { date, productName, quantity, price, paymentMethod });
-
   if (!date || !productName || !quantity || !price || !paymentMethod) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -105,8 +100,6 @@ router.post('/sales', async (req, res) => {
 
   try {
     const total = quantity * price;
-    
-    console.log('Calculated total:', total);
 
     const query = `
       INSERT INTO sales_records (date, product_name, quantity, price, total, payment_method)
@@ -129,12 +122,9 @@ router.post('/sales', async (req, res) => {
       createdAt: newSale.created_at
     };
 
-    console.log('Sales record added successfully:', salesRecord);
     res.status(201).json(salesRecord);
   } catch (err) {
     console.error('Error adding sales record:', err);
-    console.error('Error message:', err.message);
-    console.error('Error code:', err.code);
     res.status(500).json({ 
       error: 'Internal server error', 
       details: err.message,
@@ -147,8 +137,6 @@ router.post('/sales', async (req, res) => {
 router.put('/sales/:id', async (req, res) => {
   const { id } = req.params;
   const { date, productName, quantity, price, paymentMethod } = req.body;
-
-  console.log('Updating sales record:', { id, date, productName, quantity, price, paymentMethod });
 
   if (!date || !productName || !quantity || !price || !paymentMethod) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -191,7 +179,6 @@ router.put('/sales/:id', async (req, res) => {
       createdAt: updatedSale.created_at
     };
 
-    console.log('Sales record updated successfully:', salesRecord);
     res.json(salesRecord);
   } catch (err) {
     console.error('Error updating sales record:', err);
@@ -210,7 +197,6 @@ router.delete('/sales/:id', async (req, res) => {
       return res.status(404).json({ error: 'Sales record not found' });
     }
 
-    console.log('Sales record deleted successfully');
     res.json({ message: 'Sales record deleted successfully' });
   } catch (err) {
     console.error('Error deleting sales record:', err);
@@ -250,8 +236,6 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const { productName, category, stock, productPrice, description, minimumStock } = req.body;
 
-  console.log('Received inventory data:', { productName, category, stock, productPrice, description, minimumStock });
-
   if (!productName || !category || stock === undefined || !productPrice) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -260,8 +244,6 @@ router.post('/', async (req, res) => {
     const totalAmount = stock * productPrice;
     const minStock = minimumStock || 5;
     const status = stock === 0 ? 'Out Of Stock' : stock <= minStock ? 'Low Stock' : 'In Stock';
-
-    console.log('Calculated values:', { totalAmount, status, minStock });
 
     const query = `
       INSERT INTO inventory_items (product_name, category, stock, status, product_price, total_amount, description, minimum_stock)
@@ -287,12 +269,9 @@ router.post('/', async (req, res) => {
       updatedAt: newItem.updated_at
     };
 
-    console.log('Inventory item added successfully:', inventoryItem);
     res.status(201).json(inventoryItem);
   } catch (err) {
     console.error('Error adding inventory item:', err);
-    console.error('Error message:', err.message);
-    console.error('Error code:', err.code);
     res.status(500).json({ 
       error: 'Internal server error', 
       details: err.message,
@@ -305,8 +284,6 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { productName, category, stock, productPrice, description, minimumStock } = req.body;
-
-  console.log('Updating inventory item:', { id, productName, category, stock, productPrice, description, minimumStock });
 
   if (!productName || !category || stock === undefined || !productPrice) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -348,7 +325,6 @@ router.put('/:id', async (req, res) => {
       updatedAt: updatedItem.updated_at
     };
 
-    console.log('Inventory item updated successfully:', inventoryItem);
     res.json(inventoryItem);
   } catch (err) {
     console.error('Error updating inventory item:', err);
@@ -367,7 +343,6 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Inventory item not found' });
     }
 
-    console.log('Inventory item deleted successfully');
     res.json({ message: 'Inventory item deleted successfully' });
   } catch (err) {
     console.error('Error deleting inventory item:', err);
