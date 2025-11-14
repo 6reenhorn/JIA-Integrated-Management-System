@@ -12,7 +12,6 @@ import EditSaleModal from '../modals/Inventory/EditSaleModal';
 import type { InventoryItem, ProductFormData } from '../types/inventory_types';
 import { filterInventoryItems, calculateStats } from '../utils/inventory_utils';
 
-// Updated SalesRecord type to match the modal
 export type SalesRecord = {
   id: number;
   date: string;
@@ -23,7 +22,6 @@ export type SalesRecord = {
   paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
 };
 
-// Category type from backend
 type Category = {
   id: number;
   name: string;
@@ -37,7 +35,6 @@ interface InventoryProps {
 }
 
 const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
-  // Search states for each section
   const [searchTerm, setSearchTerm] = useState('');
   const [salesSearchTerm, setSalesSearchTerm] = useState('');
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
@@ -45,7 +42,6 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [isLoadingSales, setIsLoadingSales] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   
-  // UI states - SEPARATE PAGE STATE FOR EACH SECTION
   const [filterOpen, setFilterOpen] = useState(false);
   const [inventoryCurrentPage, setInventoryCurrentPage] = useState(1);
   const [salesCurrentPage, setSalesCurrentPage] = useState(1);
@@ -53,7 +49,6 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDate, setSelectedDate] = useState('');
   
-  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
@@ -61,103 +56,95 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
   const [isUpdatingProduct, setIsUpdatingProduct] = useState(false);
   
-  // Sales Modal States
   const [isEditSaleModalOpen, setIsEditSaleModalOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<SalesRecord | null>(null);
   const [isUpdatingSale, setIsUpdatingSale] = useState(false);
   
-  // Use prop if provided, otherwise use local state
   const [localActiveSection, setLocalActiveSection] = useState('inventory');
   const activeSection = propActiveSection || localActiveSection;
 
-  // Notify parent component when section changes
   useEffect(() => {
     if (onSectionChange && propActiveSection === undefined) {
       onSectionChange(activeSection);
     }
   }, [activeSection, onSectionChange, propActiveSection]);
 
-  // Sync with prop changes
   useEffect(() => {
     if (propActiveSection && propActiveSection !== activeSection) {
       setLocalActiveSection(propActiveSection);
     }
   }, [propActiveSection, activeSection]);
 
-  // Data states
   const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [categoriesData, setCategoriesData] = useState<Category[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
-// Fetch Categories on mount
-useEffect(() => {
-  const fetchCategories = async () => {
-    setIsLoadingCategories(true); // Start loading
-    try {
-      const response = await axios.get('http://localhost:3001/api/inventory/categories');
-      setCategoriesData(response.data);
-    } catch (err: unknown) {
-      console.error('Error fetching categories:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoadingCategories(true);
+      try {
+        const response = await axios.get('http://localhost:3001/api/inventory/categories');
+        setCategoriesData(response.data);
+      } catch (err: unknown) {
+        console.error('Error fetching categories:', err);
+        if (axios.isAxiosError(err)) {
+          console.error('Error details:', err.response?.data);
+        } else if (err instanceof Error) {
+          console.error('Error message:', err.message);
+        } else {
+          console.error('Error details:', String(err));
+        }
+      } finally {
+        setIsLoadingCategories(false);
       }
-    } finally {
-      setIsLoadingCategories(false); // Stop loading
-    }
-  };
-  fetchCategories();
-}, []);
+    };
+    fetchCategories();
+  }, []);
 
-// Fetch Inventory Items on mount
-useEffect(() => {
-  const fetchInventoryItems = async () => {
-    setIsLoadingInventory(true); // Start loading
-    try {
-      const response = await axios.get('http://localhost:3001/api/inventory');
-      setInventoryItems(response.data);
-    } catch (err: unknown) {
-      console.error('Error fetching inventory items:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
+  useEffect(() => {
+    const fetchInventoryItems = async () => {
+      setIsLoadingInventory(true);
+      try {
+        const response = await axios.get('http://localhost:3001/api/inventory');
+        setInventoryItems(response.data);
+      } catch (err: unknown) {
+        console.error('Error fetching inventory items:', err);
+        if (axios.isAxiosError(err)) {
+          console.error('Error details:', err.response?.data);
+        } else if (err instanceof Error) {
+          console.error('Error message:', err.message);
+        } else {
+          console.error('Error details:', String(err));
+        }
+      } finally {
+        setIsLoadingInventory(false);
       }
-    } finally {
-      setIsLoadingInventory(false); // Stop loading
-    }
-  };
-  fetchInventoryItems();
-}, []);
-  // Fetch Sales Records on mount
-useEffect(() => {
-  const fetchSalesRecords = async () => {
-    setIsLoadingSales(true); // Start loading
-    try {
-      const response = await axios.get('http://localhost:3001/api/inventory/sales');
-      setSalesRecords(response.data);
-    } catch (err: unknown) {
-      console.error('Error fetching sales records:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
-    } finally {
-      setIsLoadingSales(false); // Stop loading
-    }
-  };
-  fetchSalesRecords();
-}, []);
+    };
+    fetchInventoryItems();
+  }, []);
 
-  // Extract category names and colors from categoriesData
+  useEffect(() => {
+    const fetchSalesRecords = async () => {
+      setIsLoadingSales(true);
+      try {
+        const response = await axios.get('http://localhost:3001/api/inventory/sales');
+        setSalesRecords(response.data);
+      } catch (err: unknown) {
+        console.error('Error fetching sales records:', err);
+        if (axios.isAxiosError(err)) {
+          console.error('Error details:', err.response?.data);
+        } else if (err instanceof Error) {
+          console.error('Error message:', err.message);
+        } else {
+          console.error('Error details:', String(err));
+        }
+      } finally {
+        setIsLoadingSales(false);
+      }
+    };
+    fetchSalesRecords();
+  }, []);
+
   const allCategories = useMemo(() => 
     categoriesData.map(cat => cat.name), 
     [categoriesData]
@@ -171,7 +158,6 @@ useEffect(() => {
     return colors;
   }, [categoriesData]);
 
-  // Filter sales records by date and search term
   const filteredSalesRecords = useMemo(() => {
     let filtered = salesRecords;
     
@@ -188,7 +174,6 @@ useEffect(() => {
     return filtered;
   }, [salesRecords, selectedDate, salesSearchTerm]);
 
-  // Calculate sales stats from filtered records
   const salesStats = useMemo(() => {
     const totalSales = filteredSalesRecords.length;
     const totalAmount = filteredSalesRecords.reduce((sum, record) => sum + record.total, 0);
@@ -203,29 +188,24 @@ useEffect(() => {
     };
   }, [filteredSalesRecords]);
 
-  // for changing the name of tabs
   const sections = [
     { id: 'inventory', label: 'Inventory', key: 'inventory' },
     { id: 'sales', label: 'Sales', key: 'sales' },
     { id: 'category', label: 'Categories', key: 'category' }, 
   ];
 
-  // Stats
   const inventoryStats = useMemo(() => calculateStats(inventoryItems), [inventoryItems]);
 
-  // Filters
   const filteredItems = useMemo(
     () => filterInventoryItems(inventoryItems, searchTerm, selectedCategory),
     [inventoryItems, searchTerm, selectedCategory]
   );
 
-  // Use allCategories
   const categories = allCategories;
 
   const categoryData = useMemo(() => {
     const map = new Map();
     
-    // Initialize all categories with zero counts
     allCategories.forEach(categoryName => {
       map.set(categoryName, {
         name: categoryName,
@@ -236,7 +216,6 @@ useEffect(() => {
       });
     });
     
-    // Update with actual inventory data
     inventoryItems.forEach(item => {
       if (map.has(item.category)) {
         const category = map.get(item.category);
@@ -249,17 +228,12 @@ useEffect(() => {
     return Array.from(map.values());
   }, [inventoryItems, categoryColors, allCategories]);
 
-  // Filter categories based on search term
   const filteredCategoryData = useMemo(() => {
     if (!categorySearchTerm) return categoryData;
     return categoryData.filter(category => 
       category.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
     );
   }, [categoryData, categorySearchTerm]);
-
-  // ============================================
-  // INVENTORY ITEM HANDLERS
-  // ============================================
 
   const handleEditItem = (id: number) => {
     const item = inventoryItems.find(i => i.id === id);
@@ -317,6 +291,8 @@ useEffect(() => {
         category: data.category,
         stock: data.quantity,
         productPrice: data.productPrice,
+        description: data.description,
+        minimumStock: data.minimumStock,
       });
       
       console.log('Product added:', response.data);
@@ -354,6 +330,8 @@ useEffect(() => {
         category: updated.category,
         stock: updated.stock,
         productPrice: updated.productPrice,
+        description: updated.description,
+        minimumStock: updated.minimumStock,
       });
       
       console.log('Product updated:', response.data);
@@ -391,10 +369,6 @@ useEffect(() => {
   const handleCloseAddModal = () => {
     setIsAddModalOpen(false);
   };
-
-  // ============================================
-  // CATEGORY HANDLERS
-  // ============================================
 
   const handleAddCategory = () => setIsAddCategoryModalOpen(true);
 
@@ -440,10 +414,6 @@ useEffect(() => {
     handleSectionChange('inventory');
     setSelectedCategory(categoryName);
   };
-
-  // ============================================
-  // SALES HANDLERS
-  // ============================================
 
   const handleAddSale = () => setIsAddSalesModalOpen(true);
 
@@ -588,12 +558,10 @@ useEffect(() => {
     setIsAddSalesModalOpen(false);
   };
 
-  // Separate page change handlers for each section
   const handleInventoryPageChange = (page: number) => setInventoryCurrentPage(page);
   const handleSalesPageChange = (page: number) => setSalesCurrentPage(page);
   const handleCategoryPageChange = (page: number) => setCategoryCurrentPage(page);
 
-  // Handle section change - enhanced to properly notify parent
   const handleSectionChange = (section: string) => {
     setLocalActiveSection(section);
     if (onSectionChange) {
@@ -603,7 +571,6 @@ useEffect(() => {
 
   return (
     <div className="space-y-6">
-      {/* Inventory Section - Now InventoryStats handles the MainLayoutCard */}
       {activeSection === 'inventory' && (
         <InventoryStats 
           stats={inventoryStats}
@@ -635,7 +602,6 @@ useEffect(() => {
         </InventoryStats>
       )}
 
-      {/* Category Section - Now fully handled by CategoryContent */}
       {activeSection === 'category' && (
         <CategoryContent 
           categories={filteredCategoryData}
@@ -657,7 +623,6 @@ useEffect(() => {
         />
       )}
 
-      {/* Sales Section - Now handled by SalesStats */}
       {activeSection === 'sales' && (
         <SalesStats 
           totalSales={salesStats.totalSales}
@@ -681,12 +646,12 @@ useEffect(() => {
         />
       )}
 
-      {/* All Modals */}
       <AddProductModal 
         isOpen={isAddModalOpen}
         onClose={handleCloseAddModal}
         onAddProduct={handleAddProduct}
         categories={categories}
+        categoryColors={categoryColors}
       />
       <EditProductModal 
         isOpen={isEditModalOpen}
@@ -694,6 +659,7 @@ useEffect(() => {
         onSave={handleSaveProduct}
         initialData={editingItem}
         categories={categories}
+        categoryColors={categoryColors}
         isUpdating={isUpdatingProduct}
       />
       <AddCategoryModal 
@@ -702,7 +668,6 @@ useEffect(() => {
         onAddCategory={handleSaveCategory}
       />
       
-      {/* Edit Sales Modal */}
       <EditSaleModal
         isOpen={isEditSaleModalOpen}
         onClose={handleCloseSaleModal}
@@ -711,7 +676,6 @@ useEffect(() => {
         isUpdating={isUpdatingSale}
       />
 
-      {/* Add Sales Modal */}
       <AddSalesModal
         isOpen={isAddSalesModalOpen}
         onClose={handleCloseSalesModal}

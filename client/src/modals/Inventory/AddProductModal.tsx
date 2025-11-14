@@ -16,40 +16,27 @@ interface AddProductModalProps {
   onClose: () => void;
   onAddProduct: (productData: ProductFormData) => void;
   categories: string[];
+  categoryColors: Record<string, string>;
 }
 
 const AddProductModal: React.FC<AddProductModalProps> = ({
   isOpen,
   onClose,
   onAddProduct,
-  categories
+  categories,
+  categoryColors
 }) => {
   const [formData, setFormData] = useState<ProductFormData>({
     productName: '',
     category: '',
     productPrice: 0,
     quantity: 0,
-    minimumStock: 0
+    minimumStock: 5,
+    description: ''
   });
 
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Category colors mapping
-  const categoryColors = [
-    '#3B82F6', // blue
-    '#EF4444', // red  
-    '#10B981', // green
-    '#F59E0B', // orange
-    '#EC4899', // pink
-    '#8B5CF6', // purple
-    '#06B6D4', // cyan
-    '#84CC16'  // lime
-  ];
-
-  const getCategoryColor = (index: number) => {
-    return categoryColors[index % categoryColors.length];
-  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -98,7 +85,8 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       category: '',
       productPrice: 0,
       quantity: 0,
-      minimumStock: 0
+      minimumStock: 5,
+      description: ''
     });
     
     onClose();
@@ -187,7 +175,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                           <>
                             <div 
                               className="w-3 h-3 rounded-full mr-2"
-                              style={{ backgroundColor: getCategoryColor(categories.indexOf(formData.category)) }}
+                              style={{ backgroundColor: categoryColors[formData.category] || '#6B7280' }}
                             ></div>
                             {formData.category}
                           </>
@@ -222,7 +210,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         Select Category
                       </div>
                       
-                      {categories.map((category, index) => (
+                      {categories.map((category) => (
                         <div
                           key={category}
                           onClick={() => handleCategorySelect(category)}
@@ -230,7 +218,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         >
                           <div 
                             className="w-3 h-3 rounded-full mr-3"
-                            style={{ backgroundColor: getCategoryColor(index) }}
+                            style={{ backgroundColor: categoryColors[category] || '#6B7280' }}
                           ></div>
                           {category}
                         </div>
@@ -250,7 +238,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     placeholder="0"
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
@@ -269,7 +257,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
@@ -282,9 +270,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     name="minimumStock"
                     value={formData.minimumStock || ''}
                     onChange={handleChange}
-                    placeholder="0"
+                    placeholder="5"
                     min="0"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>

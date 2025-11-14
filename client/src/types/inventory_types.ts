@@ -1,23 +1,27 @@
 // types/inventory_types.ts
+
 export interface InventoryItem {
   id: number;
   productName: string;
   category: string;
   stock: number;
-  status: string;
+  status: 'Good' | 'Low Stock' | 'Out Of Stock' | 'In Stock' | string;
   productPrice: number;
   totalAmount: number;
+  description?: string;
+  minimumStock?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-// ProductFormData interface
 export interface ProductFormData {
   productName: string;
-  description?: string;
   category: string;
   productPrice: number;
-  quantity: number; 
-  minimumStock?: number;
-  status?: string; 
+  quantity: number;
+  minimumStock: number;
+  description?: string;
+  status?: string;
 }
 
 // Add the missing InventoryStats interface

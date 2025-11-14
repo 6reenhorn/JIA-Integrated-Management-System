@@ -8,6 +8,7 @@ interface EditProductModalProps {
   onSave: (productData: InventoryItem) => void;
   initialData?: InventoryItem;
   categories: string[];
+  categoryColors: Record<string, string>;
   isUpdating?: boolean;
 }
 
@@ -17,6 +18,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   onSave,
   initialData,
   categories,
+  categoryColors,
   isUpdating = false
 }) => {
   const [formData, setFormData] = useState<InventoryItem>({
@@ -26,29 +28,13 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     stock: 0,
     status: 'Good',
     productPrice: 0,
-    totalAmount: 0
+    totalAmount: 0,
+    description: '',
+    minimumStock: 5
   });
 
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-  const [description, setDescription] = useState('');
-  const [minimumStock, setMinimumStock] = useState(0);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Category colors mapping
-  const categoryColors = [
-    '#3B82F6', // blue
-    '#EF4444', // red  
-    '#10B981', // green
-    '#F59E0B', // orange
-    '#EC4899', // pink
-    '#8B5CF6', // purple
-    '#06B6D4', // cyan
-    '#84CC16'  // lime
-  ];
-
-  const getCategoryColor = (index: number) => {
-    return categoryColors[index % categoryColors.length];
-  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -83,9 +69,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
 
   useEffect(() => {
     if (initialData && isOpen) {
-      setFormData(initialData);
-      setDescription('This is a description');
-      setMinimumStock(5);
+      setFormData({
+        ...initialData,
+        description: initialData.description || '',
+        minimumStock: initialData.minimumStock || 5
+      });
     }
   }, [initialData, isOpen]);
 
@@ -112,10 +100,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   const handleSubmit = () => {
     if (isUpdating) return;
     
+    const minStock = formData.minimumStock || 5;
     const updatedFormData = {
       ...formData,
-      status: formData.totalAmount === 0 ? 'Out Of Stock' : 
-              formData.totalAmount <= minimumStock ? 'Low Stock' : 'Good'
+      totalAmount: formData.stock * formData.productPrice,
+      status: formData.stock === 0 ? 'Out Of Stock' : 
+              formData.stock <= minStock ? 'Low Stock' : 'Good'
     };
     
     onSave(updatedFormData);
@@ -168,8 +158,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   Description
                 </label>
                 <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={formData.description || ''}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
                   disabled={isUpdating}
                   rows={3}
                   className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all resize-none outline-none disabled:opacity-50 disabled:cursor-not-allowed"
@@ -199,7 +189,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                           <>
                             <div 
                               className="w-3 h-3 rounded-full mr-2"
-                              style={{ backgroundColor: getCategoryColor(categories.indexOf(formData.category)) }}
+                              style={{ backgroundColor: categoryColors[formData.category] || '#6B7280' }}
                             ></div>
                             {formData.category}
                           </>
@@ -235,7 +225,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                           Select Category
                         </div>
                         
-                        {categories.map((category, index) => (
+                        {categories.map((category) => (
                           <div
                             key={category}
                             onClick={() => handleCategorySelect(category)}
@@ -243,7 +233,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                           >
                             <div 
                               className="w-3 h-3 rounded-full mr-3"
-                              style={{ backgroundColor: getCategoryColor(index) }}
+                              style={{ backgroundColor: categoryColors[category] || '#6B7280' }}
                             ></div>
                             {category}
                           </div>
@@ -265,7 +255,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                     disabled={isUpdating}
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
@@ -279,11 +269,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   </label>
                   <input
                     type="number"
-                    value={formData.totalAmount || ''}
-                    onChange={(e) => handleInputChange('totalAmount', parseInt(e.target.value) || 0)}
+                    value={formData.stock || ''}
+                    onChange={(e) => handleInputChange('stock', parseInt(e.target.value) || 0)}
                     disabled={isUpdating}
                     min="0"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
 
@@ -295,10 +285,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   <input
                     type="number"
                     min="0"
-                    value={minimumStock}
-                    onChange={(e) => setMinimumStock(parseInt(e.target.value) || 0)}
+                    value={formData.minimumStock || ''}
+                    onChange={(e) => handleInputChange('minimumStock', parseInt(e.target.value) || 0)}
                     disabled={isUpdating}
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>

@@ -97,6 +97,26 @@ const createInventoryTable = async () => {
   }
 };
 
+const addInventoryColumns = async () => {
+  try {
+    // Add description column if it doesn't exist
+    await pool.query(`
+      ALTER TABLE inventory_items 
+      ADD COLUMN IF NOT EXISTS description TEXT;
+    `);
+    
+    // Add minimum_stock column if it doesn't exist
+    await pool.query(`
+      ALTER TABLE inventory_items 
+      ADD COLUMN IF NOT EXISTS minimum_stock INTEGER DEFAULT 0;
+    `);
+    
+    console.log('Inventory columns (description, minimum_stock) added successfully');
+  } catch (err) {
+    console.error('Error adding inventory columns:', err);
+  }
+};
+
 const createCategoriesTable = async () => {
   const query = `
     CREATE TABLE IF NOT EXISTS categories (
@@ -265,16 +285,13 @@ const insertSampleEmployees = async () => {
   }
 };
 
-// Function to update existing sales_records table constraint
 const updateSalesRecordsConstraint = async () => {
   try {
-    // Drop the old constraint
     await pool.query(`
       ALTER TABLE sales_records 
       DROP CONSTRAINT IF EXISTS sales_records_payment_method_check;
     `);
     
-    // Add the new constraint with Juanpay
     await pool.query(`
       ALTER TABLE sales_records 
       ADD CONSTRAINT sales_records_payment_method_check 
@@ -287,38 +304,32 @@ const updateSalesRecordsConstraint = async () => {
   }
 };
 
-// Function to update existing tables to remove NUMERIC precision limits
 const updateNumericColumns = async () => {
   try {
-    // Update gcash_records table
     await pool.query(`
       ALTER TABLE gcash_records 
         ALTER COLUMN amount TYPE NUMERIC,
         ALTER COLUMN service_charge TYPE NUMERIC;
     `);
     
-    // Update paymaya_records table
     await pool.query(`
       ALTER TABLE paymaya_records 
         ALTER COLUMN amount TYPE NUMERIC,
         ALTER COLUMN service_charge TYPE NUMERIC;
     `);
     
-    // Update inventory_items table
     await pool.query(`
       ALTER TABLE inventory_items 
         ALTER COLUMN product_price TYPE NUMERIC,
         ALTER COLUMN total_amount TYPE NUMERIC;
     `);
     
-    // Update sales_records table
     await pool.query(`
       ALTER TABLE sales_records 
         ALTER COLUMN price TYPE NUMERIC,
         ALTER COLUMN total TYPE NUMERIC;
     `);
     
-    // Update payroll_records table
     await pool.query(`
       ALTER TABLE payroll_records 
         ALTER COLUMN basic_salary TYPE NUMERIC,
@@ -338,10 +349,11 @@ const syncDatabase = async () => {
   await createGCashRecordsTable();
   await createPayMayaRecordsTable();
   await createInventoryTable();
+  await addInventoryColumns(); // ADD THIS LINE - Critical for description and minimum_stock
   await createCategoriesTable();
   await createSalesRecordsTable();
-  await updateSalesRecordsConstraint(); // Update constraint for existing tables
-  await updateNumericColumns(); // Update numeric columns to remove limits
+  await updateSalesRecordsConstraint();
+  await updateNumericColumns();
   await createPayrollRecordsTable();
 };
 
