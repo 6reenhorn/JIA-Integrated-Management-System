@@ -63,6 +63,11 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [localActiveSection, setLocalActiveSection] = useState('inventory');
   const activeSection = propActiveSection || localActiveSection;
 
+  const [isAddingSales, setIsAddingSales] = useState(false);
+  const [isDeletingSales, setIsDeletingSales] = useState(false);
+  const [isAddingInventory, setIsAddingInventory] = useState(false);
+  const [isDeletingInventory, setIsDeletingInventory] = useState(false);
+
   useEffect(() => {
     if (onSectionChange && propActiveSection === undefined) {
       onSectionChange(activeSection);
@@ -244,6 +249,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   };
 
   const handleDeleteItem = async (id: number) => {
+    setIsDeletingInventory(true);
     try {
       await axios.delete(`http://localhost:3001/api/inventory/${id}`);
       
@@ -277,12 +283,16 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         errorMessage = String(err);
       }
       alert(`Failed to delete item: ${errorMessage}`);
+    } finally {
+      setIsDeletingInventory(false);  
     }
   };
 
   const handleAddItem = () => setIsAddModalOpen(true);
 
   const handleAddProduct = async (data: ProductFormData) => {
+    setIsAddModalOpen(false);
+    setIsAddingInventory(true);
     try {
       console.log('Adding product:', data);
       
@@ -317,6 +327,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         errorMessage = String(err);
       }
       alert(`Failed to add product: ${errorMessage}\n\nPlease check the console for more details.`);
+    } finally {
+      setIsAddingInventory(false);
     }
   };
 
@@ -426,6 +438,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   };
 
   const handleDeleteSale = async (id: number) => {
+    setIsDeletingSales(true);
     try {
       await axios.delete(`http://localhost:3001/api/inventory/sales/${id}`);
       
@@ -459,6 +472,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         errorMessage = String(err);
       }
       alert(`Failed to delete sale: ${errorMessage}`);
+    } finally {
+      setIsDeletingSales(false);  
     }
   };
 
@@ -513,6 +528,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
     date: string;
   }) => {
+    setIsAddSalesModalOpen(false);
+    setIsAddingSales(true);
     try {
       console.log('Adding sale:', saleData);
       
@@ -546,6 +563,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         errorMessage = String(err);
       }
       alert(`Failed to add sale: ${errorMessage}\n\nPlease check the console for more details.`);
+    } finally {
+      setIsAddingSales(false);  
     }
   };
 
@@ -588,7 +607,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           onAddCategory={handleAddCategory}
           sections={sections}
         >
-          <InventoryTable 
+          <InventoryTable
             items={filteredItems}
             onViewItem={(id) => console.log('View item', id)}
             onEditItem={handleEditItem}
@@ -598,6 +617,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
             totalCount={inventoryItems.length}
             onPageChange={handleInventoryPageChange}
             isLoading={isLoadingInventory}
+            isAdding={isAddingInventory}
+            isDeletingRecord={isDeletingInventory}
           />
         </InventoryStats>
       )}
@@ -643,6 +664,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           currentPage={salesCurrentPage}
           onPageChange={handleSalesPageChange}
           isLoading={isLoadingSales}
+          isAdding={isAddingSales}
+          isDeleting={isDeletingSales}
         />
       )}
 

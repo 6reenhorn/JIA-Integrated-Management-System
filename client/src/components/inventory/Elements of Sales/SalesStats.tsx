@@ -14,6 +14,9 @@ interface SalesStatsProps {
   sections: Array<{ id: string; label: string; key: string }>;
   activeSection: string;
   onSectionChange: (section: string) => void;
+  isAdding?: boolean;
+  isDeleting?: boolean
+
   // Sales data and handlers
   salesRecords: Array<{
     id: number;
@@ -54,7 +57,9 @@ const SalesStats: React.FC<SalesStatsProps> = ({
   onDeleteSale,
   currentPage,
   onPageChange,
-  isLoading = false
+  isLoading = false,
+  isAdding = false,
+  isDeleting = false
 }) => {
   const totalPages = Math.ceil(salesRecords.length / 10);
 
@@ -106,12 +111,14 @@ const SalesStats: React.FC<SalesStatsProps> = ({
             onAddSale={onAddSale}
             salesRecordsCount={salesRecords.length}
           />
-          <SalesTable 
+          <SalesTable
             salesRecords={salesRecords}
             onEditSale={onEditSale}
             onDeleteSale={onDeleteSale}
             currentPage={currentPage}
             isLoading={isLoading}
+            isAdding={isAdding}
+            isDeletingRecord={isDeleting}
           />
           <SalesActions 
             currentPage={currentPage}

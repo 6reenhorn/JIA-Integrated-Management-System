@@ -13,7 +13,9 @@ interface InventoryTableProps {
   filteredCount: number;
   totalCount: number;
   onPageChange: (page: number) => void;
-  isLoading?: boolean; // Add loading prop
+  isLoading?: boolean;
+  isAdding?: boolean;
+  isDeletingRecord?: boolean;
 }
 
 const InventoryTable: React.FC<InventoryTableProps> = ({
@@ -24,7 +26,9 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
   filteredCount,
   totalCount,
   onPageChange,
-  isLoading = false // Default to false
+  isLoading = false,
+  isAdding = false,
+  isDeletingRecord = false
 }) => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
@@ -85,7 +89,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
         <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
           {/* Fixed Header */}
           <table className="table-fixed bg-[#EDEDED] w-full">
-            <thead className="border-[#E5E7EB] border-b">
+            <thead className={`border-[#E5E7EB] border-b ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeletingRecord ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
               <tr>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Product Name</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Category</th>
@@ -124,7 +128,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
         {/* Table */}
         <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
           <table className="table-fixed bg-[#EDEDED] w-full">
-            <thead className="border-[#E5E7EB] border-b">
+            <thead className={`border-[#E5E7EB] border-b ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeletingRecord ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
               <tr>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Product Name</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Category</th>
