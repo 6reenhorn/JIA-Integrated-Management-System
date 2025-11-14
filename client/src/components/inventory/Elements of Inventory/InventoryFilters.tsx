@@ -222,7 +222,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
           {/* Add Button */}
           <button
             onClick={handleAddClick}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#01295a] transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
           >
             <Plus className="w-4 h-4" />
             {config.addButtonText}

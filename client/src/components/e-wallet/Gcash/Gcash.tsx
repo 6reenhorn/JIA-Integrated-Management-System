@@ -165,7 +165,7 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
             
             <button
               onClick={onOpenModal}
-              className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#02367B]/90 transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
             >
               <Plus className="w-4 h-4" />
               Add Record
