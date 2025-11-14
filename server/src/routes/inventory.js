@@ -96,7 +96,6 @@ router.post('/sales', async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  // Validate payment method
   const validPaymentMethods = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
   if (!validPaymentMethods.includes(paymentMethod)) {
     return res.status(400).json({ 
@@ -155,7 +154,6 @@ router.put('/sales/:id', async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  // Validate payment method
   const validPaymentMethods = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
   if (!validPaymentMethods.includes(paymentMethod)) {
     return res.status(400).json({ 
@@ -236,6 +234,8 @@ router.get('/', async (req, res) => {
       status: row.status,
       productPrice: parseFloat(row.product_price),
       totalAmount: parseFloat(row.total_amount),
+      description: row.description || '',
+      minimumStock: row.minimum_stock || 5,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));
@@ -248,9 +248,9 @@ router.get('/', async (req, res) => {
 
 // POST /api/inventory - Add a new inventory item
 router.post('/', async (req, res) => {
-  const { productName, category, stock, productPrice } = req.body;
+  const { productName, category, stock, productPrice, description, minimumStock } = req.body;
 
-  console.log('Received inventory data:', { productName, category, stock, productPrice });
+  console.log('Received inventory data:', { productName, category, stock, productPrice, description, minimumStock });
 
   if (!productName || !category || stock === undefined || !productPrice) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -258,16 +258,17 @@ router.post('/', async (req, res) => {
 
   try {
     const totalAmount = stock * productPrice;
-    const status = stock === 0 ? 'Out Of Stock' : stock <= 10 ? 'Low Stock' : 'In Stock';
+    const minStock = minimumStock || 5;
+    const status = stock === 0 ? 'Out Of Stock' : stock <= minStock ? 'Low Stock' : 'In Stock';
 
-    console.log('Calculated values:', { totalAmount, status });
+    console.log('Calculated values:', { totalAmount, status, minStock });
 
     const query = `
-      INSERT INTO inventory_items (product_name, category, stock, status, product_price, total_amount)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO inventory_items (product_name, category, stock, status, product_price, total_amount, description, minimum_stock)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
-    const values = [productName, category, stock, status, productPrice, totalAmount];
+    const values = [productName, category, stock, status, productPrice, totalAmount, description || '', minStock];
 
     const result = await pool.query(query, values);
     const newItem = result.rows[0];
@@ -280,6 +281,8 @@ router.post('/', async (req, res) => {
       status: newItem.status,
       productPrice: parseFloat(newItem.product_price),
       totalAmount: parseFloat(newItem.total_amount),
+      description: newItem.description || '',
+      minimumStock: newItem.minimum_stock || 5,
       createdAt: newItem.created_at,
       updatedAt: newItem.updated_at
     };
@@ -301,9 +304,9 @@ router.post('/', async (req, res) => {
 // PUT /api/inventory/:id - Update an inventory item
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { productName, category, stock, productPrice } = req.body;
+  const { productName, category, stock, productPrice, description, minimumStock } = req.body;
 
-  console.log('Updating inventory item:', { id, productName, category, stock, productPrice });
+  console.log('Updating inventory item:', { id, productName, category, stock, productPrice, description, minimumStock });
 
   if (!productName || !category || stock === undefined || !productPrice) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -311,16 +314,18 @@ router.put('/:id', async (req, res) => {
 
   try {
     const totalAmount = stock * productPrice;
-    const status = stock === 0 ? 'Out Of Stock' : stock <= 10 ? 'Low Stock' : 'In Stock';
+    const minStock = minimumStock || 5;
+    const status = stock === 0 ? 'Out Of Stock' : stock <= minStock ? 'Low Stock' : 'In Stock';
 
     const query = `
       UPDATE inventory_items
       SET product_name = $1, category = $2, stock = $3, status = $4, 
-          product_price = $5, total_amount = $6, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7
+          product_price = $5, total_amount = $6, description = $7, 
+          minimum_stock = $8, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $9
       RETURNING *
     `;
-    const values = [productName, category, stock, status, productPrice, totalAmount, id];
+    const values = [productName, category, stock, status, productPrice, totalAmount, description || '', minStock, id];
 
     const result = await pool.query(query, values);
     
@@ -337,6 +342,8 @@ router.put('/:id', async (req, res) => {
       status: updatedItem.status,
       productPrice: parseFloat(updatedItem.product_price),
       totalAmount: parseFloat(updatedItem.total_amount),
+      description: updatedItem.description || '',
+      minimumStock: updatedItem.minimum_stock || 5,
       createdAt: updatedItem.created_at,
       updatedAt: updatedItem.updated_at
     };
