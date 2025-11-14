@@ -73,10 +73,12 @@ const SalesTable: React.FC<SalesTableProps> = ({
   // Loading State
   if (isLoading) {
     return (
-      <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-500">Loading sales records...</p>
+      <div className="space-y-6">
+        <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            <p className="mt-4 text-gray-500">Loading sales records...</p>
+          </div>
         </div>
       </div>
     );
