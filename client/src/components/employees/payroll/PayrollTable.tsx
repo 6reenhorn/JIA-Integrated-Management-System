@@ -82,7 +82,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
       <table className="table-fixed w-full">
         <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${headColor === 'green' ? 'bg-gradient-to-r from-green-100 via-green-400 to-green-100 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]' : headColor === 'red' ? 'bg-gradient-to-r from-red-100 via-red-400 to-red-100 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
           <tr>
-            <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[200px]">Employee Name</th>
+            <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[220px]">Employee Name</th>
             <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Period</th>
             <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Basic Salary</th>
             <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Deductions</th>
@@ -95,7 +95,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
         <tbody className="divide-y divide-gray-200">
           {payrollRecords.map((record) => (
             <tr key={record.id} className="hover:bg-gray-50">
-              <td className="py-[26px] px-6 w-[200px]">
+              <td className="py-[26px] px-6 w-[220px]">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                     <User className="w-5 h-5 text-gray-500" />

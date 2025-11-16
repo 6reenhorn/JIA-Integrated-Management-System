@@ -16,6 +16,7 @@ import Attendance from './employee-sections/Attendance';
 import PayrollRecords from './employee-sections/PayrollRecords';
 import PayrollStats from '../components/employees/payroll/PayrollStats';
 import DeleteEmployeeModal from '../modals/employee/DeleteStaffModal';
+import RefreshBtn from '../components/common/RefreshBtn';
 
 interface PayrollRecord {
   id: number;
@@ -73,6 +74,8 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const [internalActiveSection, setInternalActiveSection] = useState('staff');
 
   const activeSection = propActiveSection ?? internalActiveSection;
+
+  const [isSpinning, setIsSpinning] = useState(false);
 
   const sections = [
     { label: 'Staff Management', key: 'staff' },
@@ -273,6 +276,21 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   // No scroll lock needed when using a portal-rendered overlay
   useEffect(() => {}, [showConfirm]);
 
+  const handleRefreshSpinning = async () => {
+    setIsSpinning(true);
+    setIsLoading(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/employees');
+      const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
+      setEmployees(data);
+    } catch (err) {
+      console.error('Error refreshing employees:', err);
+    } finally {
+      setIsSpinning(false);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Employee Stats Section */}
@@ -298,7 +316,10 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         {activeSection === 'staff' && (
           <div className="space-y-6">
             <div className='flex justify-between items-center mb-0'>
-              <EmployeeSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+              <div className='flex items-center gap-4'>
+                <EmployeeSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                <RefreshBtn onClick={handleRefreshSpinning} isSpinning={isSpinning} />
+              </div>
               <EmployeeFilters
                 onAddStaff={toggleModal}
                 roleFilter={roleFilter}
@@ -342,6 +363,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
             payrollLoading={payrollLoading}
             onUpdatePayrollRecords={setPayrollRecords}
             onRefetchPayrollRecords={fetchPayrollRecords}
+            onSetPayrollLoading={setPayrollLoading}
             employees={employees}
           />
         )}
