@@ -22,11 +22,17 @@ interface EditSaleModalProps {
 }
 
 const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, onSave, isUpdating = false }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    date: string;
+    productName: string;
+    quantity: number | string;
+    price: number | string;
+    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
+  }>({
     date: sale?.date || '',
     productName: sale?.productName || '',
-    quantity: sale?.quantity || 0,
-    price: sale?.price || 0,
+    quantity: sale?.quantity || '',
+    price: sale?.price || '',
     paymentMethod: sale?.paymentMethod || 'Cash'
   });
 
@@ -84,10 +90,19 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'quantity' || name === 'price' ? parseFloat(value) || 0 : value
-    }));
+    
+    if (name === 'quantity' || name === 'price') {
+      // Allow empty string or convert to number
+      setFormData(prev => ({
+        ...prev,
+        [name]: value === '' ? '' : parseFloat(value)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleDateChange = (date: Date | null) => {
@@ -120,12 +135,14 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
     const updatedSale: SalesRecord = {
       ...sale,
       ...formData,
-      total: formData.quantity * formData.price
+      quantity: Number(formData.quantity) || 0,
+      price: Number(formData.price) || 0,
+      total: (Number(formData.quantity) || 0) * (Number(formData.price) || 0)
     };
     onSave(updatedSale);
   };
 
-  const totalAmount = formData.quantity * formData.price;
+  const totalAmount = (Number(formData.quantity) || 0) * (Number(formData.price) || 0);
 
   if (!isOpen) return null;
 
@@ -185,7 +202,8 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                     onChange={handleInputChange}
                     disabled={isUpdating}
                     min="1"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="0"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
@@ -201,18 +219,21 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                     disabled={isUpdating}
                     step="0.01"
                     min="0"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="0.00"
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
               </div>
-
+              
               {/* Total Amount Display */}
               <div className="bg-gray-100 rounded-lg p-4 mb-4">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-gray-600">Total Amount:</p>
-                    <p className="text-sm text-gray-500">{formData.quantity} x ₱{formData.price.toFixed(2)}</p>
+                    <p className="text-sm text-gray-500">
+                      {formData.quantity || 0} x ₱{(Number(formData.price) || 0).toFixed(2)}
+                    </p>
                   </div>
                   <div className="text-md font-semibold text-green-600">
                     ₱{totalAmount.toFixed(2)}

@@ -19,11 +19,17 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   onClose,
   onAddSale,
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    productName: string;
+    quantity: number | string;
+    price: number | string;
+    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
+    date: string;
+  }>({
     productName: '',
-    quantity: 0,
-    price: 0,
-    paymentMethod: 'Cash' as 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay',
+    quantity: '',
+    price: '',
+    paymentMethod: 'Cash',
     date: new Date().toISOString().split('T')[0],
   });
 
@@ -47,10 +53,18 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   }, []);
 
   const handleInputChange = (field: string, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    if (field === 'quantity' || field === 'price') {
+      // Allow empty string or convert to number
+      setFormData(prev => ({
+        ...prev,
+        [field]: value === '' ? '' : value
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
     
     // Clear error when user starts typing
     if (errors[field]) {
@@ -68,11 +82,13 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
       newErrors.productName = 'Product name is required';
     }
 
-    if (formData.quantity <= 0) {
+    const quantity = Number(formData.quantity);
+    if (!formData.quantity || quantity <= 0) {
       newErrors.quantity = 'Quantity must be greater than 0';
     }
 
-    if (formData.price <= 0) {
+    const price = Number(formData.price);
+    if (!formData.price || price <= 0) {
       newErrors.price = 'Price must be greater than 0';
     }
 
@@ -88,7 +104,11 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     e.preventDefault();
     
     if (validateForm()) {
-      onAddSale(formData);
+      onAddSale({
+        ...formData,
+        quantity: Number(formData.quantity),
+        price: Number(formData.price)
+      });
       handleClose();
     }
   };
@@ -96,8 +116,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   const handleClose = () => {
     setFormData({
       productName: '',
-      quantity: 0,
-      price: 0,
+      quantity: '',
+      price: '',
       paymentMethod: 'Cash',
       date: new Date().toISOString().split('T')[0],
     });
@@ -161,10 +181,10 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   <input
                     type="number"
                     min="1"
-                    value={formData.quantity || ''}
-                    onChange={(e) => handleInputChange('quantity', parseInt(e.target.value) || 0)}
+                    value={formData.quantity}
+                    onChange={(e) => handleInputChange('quantity', e.target.value === '' ? '' : parseFloat(e.target.value))}
                     placeholder="0"
-                    className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none ${
+                    className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                       errors.quantity ? 'border-red-300' : 'border-gray-300'
                     }`}
                   />
@@ -181,10 +201,10 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.price || ''}
-                    onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
-                    placeholder="₱0.00"
-                    className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none ${
+                    value={formData.price}
+                    onChange={(e) => handleInputChange('price', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    placeholder="0.00"
+                    className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                       errors.price ? 'border-red-300' : 'border-gray-300'
                     }`}
                   />
