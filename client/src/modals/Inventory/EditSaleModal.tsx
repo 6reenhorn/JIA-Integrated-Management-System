@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import CustomDatePicker from '../../components/common/CustomDatePicker';
 
-// Fixed: 'Paymaya' → 'PayMaya'
 export type SalesRecord = {
   id: number;
   date: string;
@@ -20,6 +19,22 @@ interface EditSaleModalProps {
   onSave: (updatedSale: SalesRecord) => void;
   isUpdating?: boolean;
 }
+
+// Helper function to format date to MM/dd/yyyy
+const formatDateToMMDDYYYY = (date: Date): string => {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${month}/${day}/${year}`;
+};
+
+// Helper function to parse MM/dd/yyyy to Date
+const parseDateFromMMDDYYYY = (dateString: string): Date | null => {
+  if (!dateString) return null;
+  const [month, day, year] = dateString.split('/');
+  if (!month || !day || !year) return null;
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+};
 
 const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, onSave, isUpdating = false }) => {
   const [formData, setFormData] = useState<{
@@ -52,7 +67,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
       
       // Convert date string to Date object
       if (sale.date) {
-        setSelectedDate(new Date(sale.date));
+        setSelectedDate(parseDateFromMMDDYYYY(sale.date));
       }
     }
   }, [sale]);
@@ -92,7 +107,6 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
     const { name, value } = e.target;
     
     if (name === 'quantity' || name === 'price') {
-      // Allow empty string or convert to number
       setFormData(prev => ({
         ...prev,
         [name]: value === '' ? '' : parseFloat(value)
@@ -108,7 +122,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
     if (date) {
-      const formattedDate = date.toISOString().split('T')[0];
+      const formattedDate = formatDateToMMDDYYYY(date);
       setFormData(prev => ({
         ...prev,
         date: formattedDate

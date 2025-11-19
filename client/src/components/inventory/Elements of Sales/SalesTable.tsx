@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import DeleteSalesRecordModal from '../../../modals/Inventory/DeleteSalesRecordModal';
 
-// Fixed: 'Paymaya' → 'PayMaya'
 export type SalesRecord = {
   id: number;
   date: string;
