@@ -44,7 +44,7 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
     };
 
     const formatCurrency = (amount: number): string => {
-        return `₱${amount.toFixed(2)}`;
+        return `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
     const formatDate = (dateString: string): string => {

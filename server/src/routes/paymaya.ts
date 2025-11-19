@@ -79,7 +79,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// Soft delete a Paymaya record by ID
+// DELETE /api/paymaya/:id - Soft delete a PayMaya record
 router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
@@ -101,6 +101,65 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
     res.json({ message: 'PayMaya record deleted successfully', id: result.rows[0].id });
   } catch (err) {
     console.error('Error deleting PayMaya record:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/paymaya/:id - Update a PayMaya record
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const {
+    amount,
+    serviceCharge,
+    transactionType,
+    chargeMOP,
+    referenceNumber,
+    date
+  } = req.body;
+
+  try {
+    const query = `
+      UPDATE paymaya_records
+      SET amount = $1, service_charge = $2, transaction_type = $3, charge_mop = $4, reference_number = $5, date = $6, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $7 AND deleted_at IS NULL
+      RETURNING *
+    `;
+    const values = [
+      amount,
+      serviceCharge || 0,
+      transactionType,
+      chargeMOP,
+      referenceNumber || null,
+      date,
+      id
+    ];
+
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'PayMaya record not found or already deleted' });
+      return;
+    }
+
+    const updatedRecord = result.rows[0];
+    const d = updatedRecord.date;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    const record = {
+      id: updatedRecord.id.toString(),
+      amount: parseFloat(updatedRecord.amount),
+      serviceCharge: parseFloat(updatedRecord.service_charge),
+      transactionType: updatedRecord.transaction_type,
+      chargeMOP: updatedRecord.charge_mop,
+      referenceNumber: updatedRecord.reference_number || '',
+      date: `${year}-${month}-${day}`
+    };
+
+    res.json(record);
+  } catch (err) {
+    console.error('Error updating PayMaya record:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

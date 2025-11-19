@@ -15,6 +15,7 @@ import DeleteGCashRecordModal from '../modals/ewallet/DeleteGcashModal';
 import DeletePayMayaRecordModal from '../modals/ewallet/DeletePayMayaModal';
 import DeleteJuanPayRecordModal from '../modals/ewallet/DeleteJuanPayModal';
 import EditGCashRecordModal from '../modals/ewallet/EditGcashModal';
+import EditPayMayaRecordModal from '../modals/ewallet/EditPayMayaModal';
 import EditJuanPayRecordModal from '../modals/ewallet/EditJuanPayModal';
 
 interface EWalletProps {
@@ -65,6 +66,11 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const [isDeletePayMayaModalOpen, setIsDeletePayMayaModalOpen] = useState(false);
   const [paymayaRecordToDelete, setPaymayaRecordToDelete] = useState<PayMayaRecord | null>(null);
   const [isDeletingPayMaya, setIsDeletingPayMaya] = useState(false);
+
+  // Action states for PayMaya editing
+  const [isEditPayMayaModalOpen, setIsEditPayMayaModalOpen] = useState(false);
+  const [paymayaRecordToEdit, setPaymayaRecordToEdit] = useState<PayMayaRecord | null>(null);
+  const [isEditingPayMaya, setIsEditingPayMaya] = useState(false);
 
   // Action states for JuanPay deletion
   const [isDeleteJuanPayModalOpen, setIsDeleteJuanPayModalOpen] = useState(false);
@@ -269,6 +275,39 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     setIsDeletePayMayaModalOpen(true);
   };
 
+  const handleEditPayMayaRecord = async (id: string, updatedRecord: Omit<PayMayaRecord, 'id'>) => {
+    setIsEditingPayMaya(true);
+    try {
+      await axios.put(`http://localhost:3001/api/paymaya/${id}`, updatedRecord);
+      
+      setPaymayaRecords(prev => {
+        const updated = prev.map(record => 
+          record.id === id ? { ...updatedRecord, id } : record
+        );
+        return updated.sort((a, b) => {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          if (dateB !== dateA) return dateB - dateA;
+          return Number(b.id) - Number(a.id);
+        });
+      });
+      
+      setIsEditPayMayaModalOpen(false);
+      setPaymayaRecordToEdit(null);
+      console.log('PayMaya record updated successfully');
+    } catch (err) {
+      console.error('Error updating PayMaya record:', err);
+      alert('Failed to update record. Please try again.');
+    } finally {
+      setIsEditingPayMaya(false);
+    }
+  };
+
+  const handleOpenEditPayMayaModal = (record: PayMayaRecord) => {
+    setPaymayaRecordToEdit(record);
+    setIsEditPayMayaModalOpen(true);
+  };
+
   // Handler for adding JuanPay record 
   const handleAddJuanPayRecord = async (newRecord: Omit<JuanPayRecord, 'id'>) => {
     setIsJuanPayModalOpen(false);
@@ -356,7 +395,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
         {/* Overview Section */}
         {activeSection === 'Overview' && (
           <div className="space-y-6">
-            <Overview gcashRecords={gcashRecords} paymayaRecords={paymayaRecords} />
+            <Overview gcashRecords={gcashRecords} paymayaRecords={paymayaRecords} juanpayRecords={juanpayRecords} />
           </div>
         )}
 
@@ -383,6 +422,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
               onOpenModal={() => setIsPayMayaModalOpen(true)}
               isLoading={isInitialLoadingPayMaya}
               onDelete={handleOpenDeletePayMayaModal}
+              onEdit={handleOpenEditPayMayaModal} 
               isAdding={isAddingPayMaya}
               isDeleting={isDeletingPayMayaRecord}
             />
@@ -461,6 +501,22 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
         </Portal>
       )}
 
+      {/* PayMaya Modal */}
+      {isPayMayaModalOpen && (
+        <Portal>
+          <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
+            <div className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm' style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}></div>
+            <div className='relative z-[1010]'>
+              <AddPayMayaRecordModal
+                isOpen={isPayMayaModalOpen}
+                onClose={() => setIsPayMayaModalOpen(false)}
+                onAddRecord={handleAddPayMayaRecord}
+              />
+            </div>
+          </div>
+        </Portal>
+      )}
+
       {/* PayMaya Delete Modal */}
       {isDeletePayMayaModalOpen && (
         <Portal>
@@ -481,18 +537,22 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
         </Portal>
       )}
 
-      {/* PayMaya Modal */}
-      {isPayMayaModalOpen && (
+      {/* PayMaya Edit Modal */}
+      {isEditPayMayaModalOpen && (
         <Portal>
           <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
-            <div className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm' style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}></div>
-            <div className='relative z-[1010]'>
-              <AddPayMayaRecordModal
-                isOpen={isPayMayaModalOpen}
-                onClose={() => setIsPayMayaModalOpen(false)}
-                onAddRecord={handleAddPayMayaRecord}
-              />
-            </div>
+            <EditPayMayaRecordModal
+              isOpen={isEditPayMayaModalOpen}
+              onClose={() => {
+                if (!isEditingPayMaya) {
+                  setIsEditPayMayaModalOpen(false);
+                  setPaymayaRecordToEdit(null);
+                }
+              }}
+              onEditRecord={handleEditPayMayaRecord}
+              record={paymayaRecordToEdit}
+              isEditing={isEditingPayMaya}
+            />
           </div>
         </Portal>
       )}
