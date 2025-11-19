@@ -4,6 +4,7 @@ import { Search, Plus, X } from 'lucide-react';
 import type { PayMayaRecord } from '../../../types/ewallet_types';
 import PayMayaRecordsTable from './PayMayaRecords';
 import CustomDatePicker from '../../common/CustomDatePicker';
+import RefreshBtn from '../../common/RefreshBtn';
 
 const formatCurrency = (amount: number): string => {
   return amount.toLocaleString('en-US', {
@@ -16,16 +17,18 @@ interface PayMayaProps {
   records: PayMayaRecord[];
   onOpenModal: () => void;
   isLoading?: boolean;
+  onRefresh?: () => Promise<void>;
   onDelete?: (record: PayMayaRecord) => void;
   onEdit?: (record: PayMayaRecord) => void;
   isAdding?: boolean;
   isDeleting?: boolean;
 }
 
-const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = false, onDelete, onEdit, isAdding = false, isDeleting = false }) => {
+const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = false, onDelete, onEdit, onRefresh, isAdding = false, isDeleting = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const recordsPerPage = 10;
 
   // Calculate today's statistics
@@ -67,6 +70,17 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
     
     return matchesSearch && matchesDate;
   });
+
+  const handleRefresh = async () => {
+    if (onRefresh) {
+      setIsRefreshing(true);
+      try {
+        await onRefresh();
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  };
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
@@ -122,15 +136,18 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
             </div>
 
             {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search Records"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
-              />
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search Records"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
+                />
+              </div>
+              <RefreshBtn onClick={handleRefresh} isSpinning={isRefreshing} />
             </div>
           </div>
 

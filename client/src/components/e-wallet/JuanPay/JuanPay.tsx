@@ -4,6 +4,7 @@ import { Search, Plus, X } from 'lucide-react';
 import type { JuanPayRecord } from '../../../types/ewallet_types';
 import JuanPayRecordsTable from './JuanPayRecords';
 import CustomDatePicker from '../../common/CustomDatePicker';
+import RefreshBtn from '../../common/RefreshBtn';
 
 const formatCurrency = (amount: number): string => {
   return amount.toLocaleString('en-US', {
@@ -16,6 +17,7 @@ interface JuanPayProps {
   records: JuanPayRecord[];
   onOpenModal: () => void;
   isLoading: boolean;
+  onRefresh?: () => Promise<void>;
   onDelete?: (record: JuanPayRecord) => void;
   onEdit?: (record: JuanPayRecord) => void;
   isAdding?: boolean;
@@ -26,6 +28,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
   records, 
   onOpenModal, 
   isLoading, 
+  onRefresh,
   onDelete, 
   onEdit,
   isAdding = false, 
@@ -34,6 +37,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const recordsPerPage = 10;
 
   // Calculate statistics
@@ -81,6 +85,17 @@ const JuanPay: React.FC<JuanPayProps> = ({
 
     return matchesSearch && matchesDate;
   });
+
+  const handleRefresh = async () => {
+    if (onRefresh) {
+      setIsRefreshing(true);
+      try {
+        await onRefresh();
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  };
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
@@ -134,15 +149,18 @@ const JuanPay: React.FC<JuanPayProps> = ({
             </div>
 
             {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search Records"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
-              />
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search Records"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
+                />
+              </div>
+              <RefreshBtn onClick={handleRefresh} isSpinning={isRefreshing} />
             </div>
           </div>
 

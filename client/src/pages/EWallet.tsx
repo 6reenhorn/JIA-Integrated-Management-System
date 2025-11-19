@@ -144,6 +144,42 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     }
   };
 
+  const handleRefreshGCash = async () => {
+    setIsInitialLoading(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/gcash');
+      setGcashRecords(response.data);
+    } catch (err) {
+      console.error('Error fetching GCash records:', err);
+    } finally {
+      setIsInitialLoading(false);
+    }
+  };
+
+  const handleRefreshPayMaya = async () => {
+    setIsInitialLoadingPayMaya(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/paymaya');
+      setPaymayaRecords(response.data);
+    } catch (err) {
+      console.error('Error fetching PayMaya records:', err);
+    } finally {
+      setIsInitialLoadingPayMaya(false);
+    }
+  };
+
+  const handleRefreshJuanPay = async () => {
+    setIsInitialLoadingJuanPay(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/juanpay');
+      setJuanpayRecords(response.data);
+    } catch (err) {
+      console.error('Error fetching JuanPay records:', err);
+    } finally {
+      setIsInitialLoadingJuanPay(false);
+    }
+  };
+
   // Handler for adding GCash record 
   const handleAddGCashRecord = async (newRecord: Omit<GCashRecord, 'id'>) => {
     setIsGCashModalOpen(false);
@@ -406,6 +442,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
               records={gcashRecords}
               onOpenModal={() => setIsGCashModalOpen(true)}
               isLoading={isInitialLoading}
+              onRefresh={handleRefreshGCash}
               onDelete={handleOpenDeleteModal}
               onEdit={handleOpenEditModal}
               isAdding={isAddingGCash}
@@ -421,6 +458,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
               records={paymayaRecords}
               onOpenModal={() => setIsPayMayaModalOpen(true)}
               isLoading={isInitialLoadingPayMaya}
+              onRefresh={handleRefreshPayMaya}
               onDelete={handleOpenDeletePayMayaModal}
               onEdit={handleOpenEditPayMayaModal} 
               isAdding={isAddingPayMaya}
@@ -436,6 +474,7 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
               records={juanpayRecords}
               onOpenModal={() => setIsJuanPayModalOpen(true)}
               isLoading={isInitialLoadingJuanPay}
+              onRefresh={handleRefreshJuanPay}
               onDelete={handleOpenDeleteJuanPayModal}
               onEdit={handleOpenEditJuanPayModal}
               isAdding={isAddingJuanPay}

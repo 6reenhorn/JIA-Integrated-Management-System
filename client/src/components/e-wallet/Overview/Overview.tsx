@@ -242,42 +242,60 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
     setShowSummaryDateFilter(false);
   };
 
-  const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => (
-    <LayoutCard title={title} className="min-h-[200px]">
-      <div className="space-y-3">
-        {data.map((item, index) => {
-          const isHighlight =
-              item.label === 'Total Charges' || (title === 'JuanPay Daily' && item.label === 'Sales');
-          const isEmpty = item.label === '';
-          return (
-            <div
-              key={index}
-              className={`flex justify-between items-center ${
-                isHighlight ? 'pt-2 mt-2 border-t border-gray-200' : ''
-              } ${isEmpty ? 'h-6' : ''}`}
-            >
-              <span
-                className={`text-sm ${
-                  isHighlight ? 'text-gray-900 font-bold' : 'text-gray-500'
-                }`}
+  const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => {
+    const isFiltered = summaryStartDate && summaryEndDate && 
+      !(summaryStartDate.toDateString() === new Date().toDateString() && 
+        summaryEndDate.toDateString() === new Date().toDateString());
+    
+    return (
+      <LayoutCard className="min-h-[200px]">
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          {isFiltered && (
+            <div className="text-right text-xs text-gray-600">
+              {summaryStartDate.toDateString() === summaryEndDate.toDateString() ? (
+                <div>{summaryStartDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+              ) : (
+                <div>{summaryStartDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {summaryEndDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="space-y-3">
+          {data.map((item, index) => {
+            const isHighlight =
+                item.label === 'Total Charges' || (title === 'JuanPay Daily' && item.label === 'Sales');
+            const isEmpty = item.label === '';
+            return (
+              <div
+                key={index}
+                className={`flex justify-between items-center ${
+                  isHighlight ? 'pt-2 mt-2 border-t border-gray-200' : ''
+                } ${isEmpty ? 'h-6' : ''}`}
               >
-                {item.label}
-              </span>
                 <span
-                  className={`${
-                    isHighlight ? 'text-red-500 font-medium' : item.value.includes('-')
-                      ? 'text-red-500 font-medium'
-                      : 'text-gray-900 font-medium'
+                  className={`text-sm ${
+                    isHighlight ? 'text-gray-900 font-bold' : 'text-gray-500'
                   }`}
                 >
-                  {item.value}
+                  {item.label}
                 </span>
-            </div>
-          );
-        })}
-      </div>
-    </LayoutCard>
-  );
+                  <span
+                    className={`${
+                      isHighlight ? 'text-red-500 font-medium' : item.value.includes('-')
+                        ? 'text-red-500 font-medium'
+                        : 'text-gray-900 font-medium'
+                    }`}
+                  >
+                    {item.value}
+                  </span>
+              </div>
+            );
+          })}
+        </div>
+      </LayoutCard>
+    );
+  };
 
   const RecordCard: React.FC<RecordCardProps> = ({ title, count }) => (
     <LayoutCard className="text-center min-h-[120px]">
@@ -345,28 +363,72 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
       {/* Main Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash In</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Total Cash In</h3>
+            {(startDate && endDate) && (
+              <div className="text-right text-xs text-gray-600">
+                {startDate.toDateString() === endDate.toDateString() ? (
+                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                ) : (
+                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
             {formatCurrency(overallStats.totalCashIn)}
           </div>
           <div className="text-sm text-gray-500">Overall</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash In Charges</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Total Cash In Charges</h3>
+            {(startDate && endDate) && (
+              <div className="text-right text-xs text-gray-600">
+                {startDate.toDateString() === endDate.toDateString() ? (
+                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                ) : (
+                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
             {formatCurrency(overallStats.totalCashInCharges)}
           </div>
           <div className="text-sm text-gray-500">Service Fees</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash Out</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Total Cash Out</h3>
+            {(startDate && endDate) && (
+              <div className="text-right text-xs text-gray-600">
+                {startDate.toDateString() === endDate.toDateString() ? (
+                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                ) : (
+                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
             {formatCurrency(overallStats.totalCashOut)}
           </div>
           <div className="text-sm text-gray-500">Overall</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Total Cash Out Charges</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Total Cash Out Charges</h3>
+            {(startDate && endDate) && (
+              <div className="text-right text-xs text-gray-600">
+                {startDate.toDateString() === endDate.toDateString() ? (
+                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                ) : (
+                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">
             {formatCurrency(overallStats.totalCashOutCharges)}
           </div>
@@ -523,9 +585,27 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SummaryCard title="GCash Daily" data={gcashData} />
-        <SummaryCard title="PayMaya Daily" data={paymayaData} />
-        <SummaryCard title="JuanPay Daily" data={juanpayData} />
+        <SummaryCard 
+          title={summaryStartDate && summaryEndDate && 
+                !(summaryStartDate.toDateString() === new Date().toDateString() && 
+                  summaryEndDate.toDateString() === new Date().toDateString()) 
+                ? "GCash (Filtered)" : "GCash Daily"} 
+          data={gcashData} 
+        />
+        <SummaryCard 
+          title={summaryStartDate && summaryEndDate && 
+                !(summaryStartDate.toDateString() === new Date().toDateString() && 
+                  summaryEndDate.toDateString() === new Date().toDateString()) 
+                ? "PayMaya (Filtered)" : "PayMaya Daily"} 
+          data={paymayaData} 
+        />
+        <SummaryCard 
+          title={summaryStartDate && summaryEndDate && 
+                !(summaryStartDate.toDateString() === new Date().toDateString() && 
+                  summaryEndDate.toDateString() === new Date().toDateString()) 
+                ? "JuanPay (Filtered)" : "JuanPay Daily"} 
+          data={juanpayData} 
+        />
       </div>
 
       {/* Records Cards */}
