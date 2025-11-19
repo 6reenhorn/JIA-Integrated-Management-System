@@ -349,9 +349,12 @@ const Dashboard: React.FC = () => {
         />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
-              <p className="text-gray-600">{getHeaderSubtitle()}</p>
+            <div className="flex justify-between w-full mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
+                <p className="text-gray-600">{getHeaderSubtitle()}</p>
+              </div>
+              <button className='h-[36px]'>Check In</button>
             </div>
             {renderContent()}
           </div>
