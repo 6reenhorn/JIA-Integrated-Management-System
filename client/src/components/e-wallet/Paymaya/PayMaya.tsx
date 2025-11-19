@@ -96,7 +96,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-In Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-In)</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
@@ -106,7 +106,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-Out Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-Out)</div>
         </LayoutCard>
       </div>

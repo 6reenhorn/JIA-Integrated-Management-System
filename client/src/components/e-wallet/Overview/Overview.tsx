@@ -279,7 +279,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
               </span>
                 <span
                   className={`${
-                    item.value.includes('-')
+                    isHighlight ? 'text-red-500 font-medium' : item.value.includes('-')
                       ? 'text-red-500 font-medium'
                       : 'text-gray-900 font-medium'
                   }`}
