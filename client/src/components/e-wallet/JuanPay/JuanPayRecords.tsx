@@ -138,7 +138,7 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                                                         {formatCurrency(beginning.amount)}
                                                     </div>
                                                 ))}
-                                                <div className="text-sm font-semibold text-gray-900 pt-1 border-t border-gray-200">
+                                                <div className="text-sm font-semibold text-gray-900 pt-1 border-t border-gray-200 w-3/5">
                                                     Total: {formatCurrency(totalBeginning)}
                                                 </div>
                                             </div>

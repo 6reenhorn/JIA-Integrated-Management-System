@@ -264,7 +264,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
         <div className="space-y-3">
           {data.map((item, index) => {
             const isHighlight =
-                item.label === 'Total Charges' || (title === 'JuanPay Daily' && item.label === 'Sales');
+                item.label === 'Total Charges' || (title.includes('JuanPay') && item.label === 'Sales');
             const isEmpty = item.label === '';
             return (
               <div
