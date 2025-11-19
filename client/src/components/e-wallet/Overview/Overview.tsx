@@ -404,7 +404,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                   `${startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`
                 )
               ) : (
-                'Filter by Date Range'
+                'Filter Overall Total'
               )}
             </span>
           </button>

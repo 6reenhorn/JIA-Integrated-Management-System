@@ -149,6 +149,7 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
                     selected={filterDate}
                     onChange={(date: Date | null) => setFilterDate(date)}
                     className="text-sm"
+                    dateFormat="MM/dd/yyyy"
                   />
                 </div>
                 {filterDate && (

@@ -146,6 +146,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
                     selected={filterDate}
                     onChange={(date: Date | null) => setFilterDate(date)}
                     className="text-sm"
+                    dateFormat="MM/dd/yyyy"
                   />
                 </div>
                 {filterDate && (
