@@ -150,14 +150,10 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                     return;
                                 }
                                 try {
-                                    // Verify password
-                                    if (password !== selectedEmployee.password) {
-                                        alert('Incorrect password.');
-                                        return;
-                                    }
-                                    // Check in
+                                    // Check in with password verification on server
                                     const response = await axios.post('http://localhost:3001/api/attendance/checkin', {
-                                        employeeId: selectedEmployee.id
+                                        employeeId: selectedEmployee.id,
+                                        password: password
                                     });
                                     alert('Check-in successful!');
                                     // Close the modal after successful check-in
@@ -165,8 +161,13 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                     // Optionally reset form
                                     setSelectedEmployee(null);
                                     setPassword('');
-                                } catch (error) {
+                                } catch (error: any) {
                                     console.error('Error during check-in:', error);
+                                    if (error.response?.data?.error) {
+                                        alert(error.response.data.error);
+                                    } else {
+                                        alert('An error occurred during check-in.');
+                                    }
                                 }
                             }}
                         >
