@@ -12,6 +12,7 @@ export interface Employee {
   contactName: string;
   contactNumber: string;
   relationship: string;
+  password: string;
 }
 
 export interface EmployeeStats {

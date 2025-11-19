@@ -15,7 +15,8 @@ const createEmployeesTable = async () => {
       salary VARCHAR(50),
       contact_name VARCHAR(255),
       contact_number VARCHAR(50),
-      relationship VARCHAR(100)
+      relationship VARCHAR(100),
+      password VARCHAR(255) NOT NULL
     );
   `;
 
@@ -206,6 +207,26 @@ const createPayrollRecordsTable = async () => {
   }
 };
 
+const createAttendanceTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS attendance (
+      id SERIAL PRIMARY KEY,
+      employee_id INTEGER REFERENCES employees(id),
+      date DATE NOT NULL DEFAULT CURRENT_DATE,
+      time_in TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      time_out TIMESTAMP,
+      status VARCHAR(20) DEFAULT 'Present'
+    );
+  `;
+
+  try {
+    await pool.query(query);
+    console.log('Attendance table created or already exists');
+  } catch (err) {
+    console.error('Error creating attendance table:', err);
+  }
+};
+
 const insertSampleEmployees = async () => {
   const sampleEmployees = [
     {
@@ -220,7 +241,8 @@ const insertSampleEmployees = async () => {
       salary: '50000',
       contact_name: 'Jane Doe',
       contact_number: '555-123-4567',
-      relationship: 'Spouse'
+      relationship: 'Spouse',
+      password: 'TempPass123'
     },
     {
       emp_id: 'EMP002',
@@ -379,6 +401,7 @@ const syncDatabase = async () => {
   await updateSalesRecordsConstraint();
   await updateNumericColumns();
   await createPayrollRecordsTable();
+  await createAttendanceTable();
 };
 
 module.exports = { syncDatabase };
