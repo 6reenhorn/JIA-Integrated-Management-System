@@ -1,12 +1,12 @@
-import { Router } from 'express';
+import express, { Request, Response, Router } from 'express';
 import pool from '../db/postgres';
 
-const router = Router();
+const router: Router = express.Router();
 
 // GET /api/paymaya - Fetch all PayMaya records
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query('SELECT * FROM paymaya_records ORDER BY date DESC, id DESC');
+    const result = await pool.query('SELECT * FROM paymaya_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
     const records = result.rows.map(row => {
       const d = row.date;
       const year = d.getFullYear();
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/paymaya - Add a new PayMaya record
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   const {
     amount,
     serviceCharge,
@@ -75,6 +75,32 @@ router.post('/', async (req, res) => {
     res.status(201).json(record);
   } catch (err) {
     console.error('Error adding PayMaya record:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Soft delete a Paymaya record by ID
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  try {
+    const query = `
+      UPDATE paymaya_records
+      SET deleted_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND deleted_at IS NULL
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [id]);
+    
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'PayMaya record not found or already deleted' });
+      return;
+    }
+
+    res.json({ message: 'PayMaya record deleted successfully', id: result.rows[0].id });
+  } catch (err) {
+    console.error('Error deleting PayMaya record:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

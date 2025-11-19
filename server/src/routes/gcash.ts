@@ -1,12 +1,12 @@
-import { Router } from 'express';
+import express, { Request, Response, Router } from 'express';
 import pool from '../db/postgres';
 
-const router = Router();
+const router: Router = express.Router();
 
 // GET /api/gcash - Fetch all GCash records
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query('SELECT * FROM gcash_records ORDER BY date DESC, id DESC');
+    const result = await pool.query('SELECT * FROM gcash_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
     const records = result.rows.map(row => {
       const d = row.date;
       const year = d.getFullYear();
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/gcash - Add a new GCash record
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   const {
     amount,
     serviceCharge,
@@ -75,6 +75,91 @@ router.post('/', async (req, res) => {
     res.status(201).json(record);
   } catch (err) {
     console.error('Error adding GCash record:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/gcash/:id - Soft delete a GCash record
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  try {
+    const query = `
+      UPDATE gcash_records
+      SET deleted_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND deleted_at IS NULL
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [id]);
+    
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'GCash record not found or already deleted' });
+      return;
+    }
+
+    res.json({ message: 'GCash record deleted successfully', id: result.rows[0].id });
+  } catch (err) {
+    console.error('Error deleting GCash record:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/gcash/:id - Update a GCash record
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const {
+    amount,
+    serviceCharge,
+    transactionType,
+    chargeMOP,
+    referenceNumber,
+    date
+  } = req.body;
+
+  try {
+    const query = `
+      UPDATE gcash_records
+      SET amount = $1, service_charge = $2, transaction_type = $3, charge_mop = $4, reference_number = $5, date = $6, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $7 AND deleted_at IS NULL
+      RETURNING *
+    `;
+    const values = [
+      amount,
+      serviceCharge || 0,
+      transactionType,
+      chargeMOP,
+      referenceNumber || null,
+      date,
+      id
+    ];
+
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'GCash record not found or already deleted' });
+      return;
+    }
+
+    const updatedRecord = result.rows[0];
+    const d = updatedRecord.date;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    const record = {
+      id: updatedRecord.id.toString(),
+      amount: parseFloat(updatedRecord.amount),
+      serviceCharge: parseFloat(updatedRecord.service_charge),
+      transactionType: updatedRecord.transaction_type,
+      chargeMOP: updatedRecord.charge_mop,
+      referenceNumber: updatedRecord.reference_number || '',
+      date: `${year}-${month}-${day}`
+    };
+
+    res.json(record);
+  } catch (err) {
+    console.error('Error updating GCash record:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
