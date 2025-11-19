@@ -8,6 +8,10 @@ export interface RecordCardProps {
   count: string;
 }
 
+export interface JuanPayBeginning {
+  amount: number;
+}
+
 export interface GCashRecord {
   id: string;
   amount: number;
@@ -26,4 +30,14 @@ export interface PayMayaRecord {
   chargeMOP: 'Cash' | 'PayMaya';
   referenceNumber: string;
   date: string;
+}
+
+export interface JuanPayRecord {
+  id: string;
+  date: string;
+  beginnings: JuanPayBeginning[];
+  ending: number;
+  sales: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
