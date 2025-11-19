@@ -63,6 +63,7 @@ const createPayMayaRecordsTable = async () => {
       reference_number VARCHAR(100),
       date DATE NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
       deleted_at TIMESTAMP DEFAULT NULL
     );
   `;
@@ -72,6 +73,28 @@ const createPayMayaRecordsTable = async () => {
     console.log('PayMaya records table created or already exists');
   } catch (err) {
     console.error('Error creating paymaya_records table:', err);
+  }
+};
+
+const createJuanPayRecordsTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS juanpay_records (
+      id SERIAL PRIMARY KEY,
+      date DATE NOT NULL,
+      beginnings JSONB NOT NULL DEFAULT '[]',
+      ending NUMERIC NOT NULL DEFAULT 0,
+      sales NUMERIC NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
+      deleted_at TIMESTAMP DEFAULT NULL
+    );
+  `;
+
+  try {
+    await pool.query(query);
+    console.log('JuanPay records table created or already exists');
+  } catch (err) {
+    console.error('Error creating juanpay_records table:', err);
   }
 };
 
@@ -370,8 +393,9 @@ const syncDatabase = async () => {
   await insertSampleEmployees();
   await createGCashRecordsTable();
   await createPayMayaRecordsTable();
+  await createJuanPayRecordsTable();
   await createInventoryTable();
-  await addInventoryColumns(); // ADD THIS LINE - Critical for description and minimum_stock
+  await addInventoryColumns();
   await createCategoriesTable();
   await createSalesRecordsTable();
   await updateSalesRecordsConstraint();

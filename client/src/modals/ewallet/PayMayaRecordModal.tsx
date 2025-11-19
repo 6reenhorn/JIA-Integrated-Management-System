@@ -13,13 +13,43 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     onClose,
     onAddRecord,
 }) => {
+    const getLocalISODate = (date: Date) => {
+        const tzOffset = date.getTimezoneOffset() * 60000;
+        const local = new Date(date.getTime() - tzOffset);
+        return local.toISOString().split('T')[0];
+    };
+    
+    const parseLocalDate = (dateString: string) => {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+            const y = Number(parts[0]);
+            const m = Number(parts[1]) - 1;
+            const d = Number(parts[2]);
+            return new Date(y, m, d);
+        }
+        return new Date(dateString);
+    };
+
+    // Format number with commas
+    const formatNumberWithCommas = (value: string): string => {
+        const numericValue = value.replace(/,/g, '');
+        if (!numericValue || isNaN(Number(numericValue))) return '';
+        return Number(numericValue).toLocaleString('en-US');
+    };
+
+    // Parse formatted number to actual number
+    const parseFormattedNumber = (value: string): number => {
+        const numericValue = value.replace(/,/g, '');
+        return parseFloat(numericValue) || 0;
+    };
+
     const [formData, setFormData] = useState({
         amount: '',
         serviceCharge: '',
         transactionType: '',
         chargeMOP: '',
         referenceNumber: '',
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalISODate(new Date()),
     });
 
     const [dropdowns, setDropdowns] = useState({
@@ -33,7 +63,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     const chargeMOPRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
 
-    // Transaction type options
     const transactionTypeOptions = ['Cash-In', 'Cash-Out'];
     const chargeMOPOptions = ['Cash', 'PayMaya'];
 
@@ -71,7 +100,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
 
         if (isOpen) {
             document.addEventListener('keydown', handleEscape);
-            // Prevent body scroll
             document.body.style.overflow = 'hidden';
         }
 
@@ -82,10 +110,19 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     }, [isOpen]);
 
     const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value,
-        }));
+        if (field === 'amount' || field === 'serviceCharge') {
+            const numericValue = value.replace(/[^0-9.]/g, '');
+            const formatted = formatNumberWithCommas(numericValue);
+            setFormData(prev => ({
+                ...prev,
+                [field]: formatted,
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [field]: value,
+            }));
+        }
     };
 
     const handleDropdownToggle = (dropdown: 'transactionType' | 'chargeMOP') => {
@@ -109,15 +146,14 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validation
         if (!isFormValid) {
             return;
         }
 
         const newRecord: PayMayaRecord = {
             id: Date.now().toString(),
-            amount: parseFloat(formData.amount),
-            serviceCharge: parseFloat(formData.serviceCharge) || 0,
+            amount: parseFormattedNumber(formData.amount),
+            serviceCharge: parseFormattedNumber(formData.serviceCharge),
             transactionType: formData.transactionType as 'Cash-In' | 'Cash-Out',
             chargeMOP: formData.chargeMOP as 'Cash' | 'PayMaya',
             referenceNumber: formData.referenceNumber,
@@ -133,21 +169,20 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
             transactionType: '',
             chargeMOP: '',
             referenceNumber: '',
-            date: new Date().toISOString().split('T')[0],
+            date: getLocalISODate(new Date()),
         });
         
         onClose();
     };
 
     const handleCancel = () => {
-        // Reset form
         setFormData({
             amount: '',
             serviceCharge: '',
             transactionType: '',
             chargeMOP: '',
             referenceNumber: '',
-            date: new Date().toISOString().split('T')[0],
+            date: getLocalISODate(new Date()),
         });
         onClose();
     };
@@ -156,7 +191,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Background overlay with blur effect */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                 onClick={onClose}
@@ -166,7 +200,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                 }}
             />
 
-            {/* Modal content */}
             <div 
                 ref={modalRef}
                 className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
@@ -184,11 +217,10 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                             <div className="flex flex-col">
                                 <label htmlFor="amount" className="text-[12px] font-bold text-gray-700 mb-1">Amount (₱)</label>
                                 <input 
-                                    type="number" 
-                                    step="0.01"
+                                    type="text" 
                                     id="amount" 
                                     name="amount" 
-                                    placeholder='₱0.00' 
+                                    placeholder='0.00' 
                                     value={formData.amount} 
                                     onChange={(e) => handleInputChange('amount', e.target.value)} 
                                     className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
@@ -198,11 +230,10 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                             <div className="flex flex-col">
                                 <label htmlFor="serviceCharge" className="text-[12px] font-bold text-gray-700 mb-1">Service Charge (₱)</label>
                                 <input 
-                                    type="number" 
-                                    step="0.01"
+                                    type="text"
                                     id="serviceCharge" 
                                     name="serviceCharge" 
-                                    placeholder='₱0.00' 
+                                    placeholder='0.00' 
                                     value={formData.serviceCharge} 
                                     onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
                                     className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
@@ -212,7 +243,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
 
                         {/* Transaction Type and Charge MOP */}
                         <div className='grid grid-cols-2 gap-4'>
-                            {/* Transaction Type Dropdown */}
                             <div className="dropdown relative" ref={transactionTypeRef}>
                                 <label className="text-[12px] font-bold text-gray-700 mb-1 block">Transaction Type</label>
                                 <div
@@ -247,7 +277,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                 )}
                             </div>
 
-                            {/* Charge MOP Dropdown */}
                             <div className="dropdown relative" ref={chargeMOPRef}>
                                 <label className="text-[12px] font-bold text-gray-700 mb-1 block">Charge MOP (₱)</label>
                                 <div
@@ -301,8 +330,8 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                         <div className="flex flex-col">
                             <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
                             <CustomDatePicker
-                                selected={formData.date ? new Date(formData.date) : null}
-                                onChange={(date: Date | null) => handleInputChange('date', date ? date.toISOString().split('T')[0] : '')}
+                                selected={formData.date ? parseLocalDate(formData.date) : null}
+                                onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
                                 maxDate={new Date()}
                             />
                         </div>

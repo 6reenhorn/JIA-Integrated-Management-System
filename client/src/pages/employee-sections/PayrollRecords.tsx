@@ -3,7 +3,7 @@ import PayrollSearchBar from '../../components/employees/payroll/PayrollSearchBa
 import PayrollFilters from '../../components/employees/payroll/PayrollFilters';
 import PayrollTable from '../../components/employees/payroll/PayrollTable';
 import PayrollActions from '../../components/employees/payroll/PayrollActions';
-import PayrollStats from '../../components/employees/payroll/PayrollStats';
+//import PayrollStats from '../../components/employees/payroll/PayrollStats';
 import AddPayrollModal from '../../modals/employee/AddPayrollModal';
 import type { Employee } from '../../types/employee_types';
 import { Plus } from 'lucide-react';

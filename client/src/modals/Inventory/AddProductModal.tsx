@@ -26,12 +26,19 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   categories,
   categoryColors
 }) => {
-  const [formData, setFormData] = useState<ProductFormData>({
+  const [formData, setFormData] = useState<{
+    productName: string;
+    category: string;
+    productPrice: number | string;
+    quantity: number | string;
+    minimumStock: number | string;
+    description?: string;
+  }>({
     productName: '',
     category: '',
-    productPrice: 0,
-    quantity: 0,
-    minimumStock: 5,
+    productPrice: '',
+    quantity: '',
+    minimumStock: '',
     description: ''
   });
 
@@ -64,16 +71,24 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const quantity = Number(formData.quantity) || 0;
+    const minimumStock = Number(formData.minimumStock) || 0;
+    
     // Determine status based on quantity
     let status = 'Good';
-    if (formData.quantity === 0) {
+    if (quantity === 0) {
       status = 'Out Of Stock';
-    } else if (formData.quantity <= (formData.minimumStock || 5)) {
+    } else if (quantity <= minimumStock) {
       status = 'Low Stock';
     }
 
-    const productData = {
-      ...formData,
+    const productData: ProductFormData = {
+      productName: formData.productName,
+      category: formData.category,
+      productPrice: Number(formData.productPrice) || 0,
+      quantity: quantity,
+      minimumStock: minimumStock,
+      description: formData.description,
       status
     };
 
@@ -83,9 +98,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     setFormData({
       productName: '',
       category: '',
-      productPrice: 0,
-      quantity: 0,
-      minimumStock: 5,
+      productPrice: '',
+      quantity: '',
+      minimumStock: '',
       description: ''
     });
     
@@ -95,12 +110,17 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'productPrice' || name === 'quantity' || name === 'minimumStock' 
-        ? parseFloat(value) || 0 
-        : value
-    }));
+    if (name === 'productPrice' || name === 'quantity' || name === 'minimumStock') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value === '' ? '' : parseFloat(value)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   if (!isOpen) return null;
@@ -233,9 +253,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   <input
                     type="number"
                     name="productPrice"
-                    value={formData.productPrice || ''}
+                    value={formData.productPrice}
                     onChange={handleChange}
-                    placeholder="0"
+                    placeholder="0.00"
                     min="0"
                     step="0.01"
                     className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -253,7 +273,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   <input
                     type="number"
                     name="quantity"
-                    value={formData.quantity || ''}
+                    value={formData.quantity}
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
@@ -268,9 +288,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   <input
                     type="number"
                     name="minimumStock"
-                    value={formData.minimumStock || ''}
+                    value={formData.minimumStock}
                     onChange={handleChange}
-                    placeholder="5"
+                    placeholder="0"
                     min="0"
                     className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
