@@ -66,10 +66,10 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                     <table className="table-fixed bg-[#EDEDED] w-full">
                         <thead className="border-[#E5E7EB] border-b">
                             <tr>
-                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[110px]">
                                     Date
                                 </th>
-                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[200px]">
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[145px]">
                                     Beginning Balance
                                 </th>
                                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">
@@ -78,7 +78,7 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
                                     Sales
                                 </th>
-                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[68.5px]">
                                     Actions
                                 </th>
                             </tr>
@@ -101,10 +101,10 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                 <table className="table-fixed w-full">
                     <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeleting ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
                         <tr>
-                            <th className="rounded-tl-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+                            <th className="rounded-tl-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[110px]">
                                 Date
                             </th>
-                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[200px]">
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[145px]">
                                 Beginning Balance
                             </th>
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">
@@ -113,7 +113,7 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
                                 Sales
                             </th>
-                            <th className="rounded-tr-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                            <th className="rounded-tr-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[68.5px]">
                                 Actions
                             </th>
                         </tr>
