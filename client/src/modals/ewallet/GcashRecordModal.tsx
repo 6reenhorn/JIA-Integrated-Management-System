@@ -18,6 +18,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
         const local = new Date(date.getTime() - tzOffset);
         return local.toISOString().split('T')[0];
     };
+    
     const parseLocalDate = (dateString: string) => {
         const parts = dateString.split('-');
         if (parts.length === 3) {
@@ -28,6 +29,20 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
         }
         return new Date(dateString);
     };
+
+    // Format number with commas
+    const formatNumberWithCommas = (value: string): string => {
+        const numericValue = value.replace(/,/g, '');
+        if (!numericValue || isNaN(Number(numericValue))) return '';
+        return Number(numericValue).toLocaleString('en-US');
+    };
+
+    // Parse formatted number to actual number
+    const parseFormattedNumber = (value: string): number => {
+        const numericValue = value.replace(/,/g, '');
+        return parseFloat(numericValue) || 0;
+    };
+
     const [formData, setFormData] = useState({
         amount: '',
         serviceCharge: '',
@@ -48,7 +63,6 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     const chargeMOPRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
 
-    // Transaction type options
     const transactionTypeOptions = ['Cash-In', 'Cash-Out'];
     const chargeMOPOptions = ['Cash', 'GCash'];
 
@@ -86,7 +100,6 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
 
         if (isOpen) {
             document.addEventListener('keydown', handleEscape);
-            // Prevent body scroll
             document.body.style.overflow = 'hidden';
         }
 
@@ -97,10 +110,19 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     }, [isOpen]);
 
     const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value,
-        }));
+        if (field === 'amount' || field === 'serviceCharge') {
+            const numericValue = value.replace(/[^0-9.]/g, '');
+            const formatted = formatNumberWithCommas(numericValue);
+            setFormData(prev => ({
+                ...prev,
+                [field]: formatted,
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [field]: value,
+            }));
+        }
     };
 
     const handleDropdownToggle = (dropdown: 'transactionType' | 'chargeMOP') => {
@@ -124,14 +146,13 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validation
         if (!isFormValid) {
             return;
         }
 
         const newRecord: Omit<GCashRecord, 'id'> = {
-            amount: parseFloat(formData.amount),
-            serviceCharge: parseFloat(formData.serviceCharge) || 0,
+            amount: parseFormattedNumber(formData.amount),
+            serviceCharge: parseFormattedNumber(formData.serviceCharge),
             transactionType: formData.transactionType as 'Cash-In' | 'Cash-Out',
             chargeMOP: formData.chargeMOP as 'Cash' | 'GCash',
             referenceNumber: formData.referenceNumber,
@@ -154,7 +175,6 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     };
 
     const handleCancel = () => {
-        // Reset form
         setFormData({
             amount: '',
             serviceCharge: '',
@@ -198,11 +218,10 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                             <div className="flex flex-col">
                                 <label htmlFor="amount" className="text-[12px] font-bold text-gray-700 mb-1">Amount (₱)</label>
                                 <input 
-                                    type="number" 
-                                    step="0.01"
+                                    type="text" 
                                     id="amount" 
                                     name="amount" 
-                                    placeholder='₱0.00' 
+                                    placeholder='0.00' 
                                     value={formData.amount} 
                                     onChange={(e) => handleInputChange('amount', e.target.value)} 
                                     className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
@@ -212,11 +231,10 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                             <div className="flex flex-col">
                                 <label htmlFor="serviceCharge" className="text-[12px] font-bold text-gray-700 mb-1">Service Charge (₱)</label>
                                 <input 
-                                    type="number" 
-                                    step="0.01"
+                                    type="text"
                                     id="serviceCharge" 
                                     name="serviceCharge" 
-                                    placeholder='₱0.00' 
+                                    placeholder='0.00' 
                                     value={formData.serviceCharge} 
                                     onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
                                     className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
@@ -226,7 +244,6 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
 
                         {/* Transaction Type and Charge MOP */}
                         <div className='grid grid-cols-2 gap-4'>
-                            {/* Transaction Type Dropdown */}
                             <div className="dropdown relative" ref={transactionTypeRef}>
                                 <label className="text-[12px] font-bold text-gray-700 mb-1 block">Transaction Type</label>
                                 <div
@@ -261,7 +278,6 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                                 )}
                             </div>
 
-                            {/* Charge MOP Dropdown */}
                             <div className="dropdown relative" ref={chargeMOPRef}>
                                 <label className="text-[12px] font-bold text-gray-700 mb-1 block">Charge MOP (₱)</label>
                                 <div
