@@ -56,17 +56,8 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
       const startStr = startDate ? toYMD(startDate) : null;
       const endStr = endDate ? toYMD(endDate) : null;
 
-      if (startStr && endStr && startStr > endStr) {
-        return false;
-      }
       if (startStr && endStr) {
-        const s = startStr <= endStr ? startStr : endStr;
-        const e = startStr <= endStr ? endStr : startStr;
-        return recordYmd >= s && recordYmd <= e;
-      } else if (startStr) {
-        return recordYmd >= startStr;
-      } else if (endStr) {
-        return recordYmd <= endStr;
+        return recordYmd >= startStr && recordYmd <= endStr;
       }
       return true;
     };
@@ -124,12 +115,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
       const startStr = toYMD(summaryStartDate);
       const endStr = toYMD(summaryEndDate);
 
-      if (startStr > endStr) {
-        return false;
-      }
-      const s = startStr <= endStr ? startStr : endStr;
-      const e = startStr <= endStr ? endStr : startStr;
-      return recordYmd >= s && recordYmd <= e;
+      return recordYmd >= startStr && recordYmd <= endStr;
     };
 
     const gcashForDate = gcashRecords.filter(filterByDateRange);

@@ -78,7 +78,7 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
                                     Sales
                                 </th>
-                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[68.5px]">
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[67.8px]">
                                     Actions
                                 </th>
                             </tr>
@@ -113,7 +113,7 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
                                 Sales
                             </th>
-                            <th className="rounded-tr-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[68.5px]">
+                            <th className="rounded-tr-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[67.8px]">
                                 Actions
                             </th>
                         </tr>
