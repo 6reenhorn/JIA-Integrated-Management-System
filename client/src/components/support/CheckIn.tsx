@@ -4,10 +4,10 @@ import checkInIcon from '../../assets/JIA_CheckIn.ico';
 import type { Employee } from '../../types/employee_types';
 
 interface CheckInProps {
-//   onSuccess: () => void;
+  onClose: () => void;
 }
 
-const CheckIn: React.FC<CheckInProps> = () => {
+const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [password, setPassword] = useState('');
@@ -160,8 +160,8 @@ const CheckIn: React.FC<CheckInProps> = () => {
                                         employeeId: selectedEmployee.id
                                     });
                                     alert('Check-in successful!');
-                                    // Call onSuccess to proceed to main app
-                                    // onSuccess();
+                                    // Close the modal after successful check-in
+                                    onClose();
                                     // Optionally reset form
                                     setSelectedEmployee(null);
                                     setPassword('');
