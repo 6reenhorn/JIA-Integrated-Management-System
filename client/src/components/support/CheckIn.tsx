@@ -4,10 +4,10 @@ import checkInIcon from '../../assets/JIA_CheckIn.ico';
 import type { Employee } from '../../types/employee_types';
 
 interface CheckInProps {
-  onSuccess: () => void;
+//   onSuccess: () => void;
 }
 
-const CheckIn: React.FC<CheckInProps> = ({ onSuccess }) => {
+const CheckIn: React.FC<CheckInProps> = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [password, setPassword] = useState('');
@@ -161,7 +161,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onSuccess }) => {
                                     });
                                     alert('Check-in successful!');
                                     // Call onSuccess to proceed to main app
-                                    onSuccess();
+                                    // onSuccess();
                                     // Optionally reset form
                                     setSelectedEmployee(null);
                                     setPassword('');
