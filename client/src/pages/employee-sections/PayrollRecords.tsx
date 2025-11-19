@@ -8,6 +8,7 @@ import AddPayrollModal from '../../modals/employee/AddPayrollModal';
 import type { Employee } from '../../types/employee_types';
 import { Plus } from 'lucide-react';
 import Portal from '../../components/common/Portal'; // ensure this import path matches your project
+import RefreshBtn from '../../components/common/RefreshBtn';
 
 interface PayrollRecord {
   id: number;
@@ -28,6 +29,7 @@ interface PayrollRecordsProps {
   payrollLoading?: boolean;
   onUpdatePayrollRecords?: React.Dispatch<React.SetStateAction<PayrollRecord[]>>;
   onRefetchPayrollRecords?: () => void;
+  onSetPayrollLoading?: React.Dispatch<React.SetStateAction<boolean>>;
   employees?: Employee[];
 }
 
@@ -36,6 +38,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   payrollLoading: propPayrollLoading,
   onUpdatePayrollRecords,
   onRefetchPayrollRecords,
+  onSetPayrollLoading,
   employees: propEmployees
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,6 +53,8 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   const [isLoading, setIsLoading] = useState(!propPayrollRecords);
   const [error, setError] = useState<string | null>(null);
   const [tableHeadColor, setTableHeadColor] = useState<'normal' | 'green' | 'red'>('normal');
+
+   const [isSpinning, setIsSpinning] = useState(false);
 
   // Use props if provided, otherwise use local state
   const [localPayrollRecords, setLocalPayrollRecords] = useState<PayrollRecord[]>([]);
@@ -239,12 +244,41 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
     }
   };
 
+  const handleRefreshSpinning = async () => {
+    setIsSpinning(true);
+    if (onSetPayrollLoading) {
+      onSetPayrollLoading(true);
+    } else {
+      setIsLoading(true);
+    }
+    try {
+      if (onRefetchPayrollRecords) {
+        await onRefetchPayrollRecords();
+      } else {
+        // Fallback to local fetch if no prop provided
+        await fetchPayrollRecords();
+      }
+    } catch (err) {
+      console.error('Error refreshing payroll records:', err);
+    } finally {
+      setIsSpinning(false);
+      if (onSetPayrollLoading) {
+        onSetPayrollLoading(false);
+      } else {
+        setIsLoading(false);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-5">
         {/* Payroll stats are rendered in Employees page above the main layout */}
         <div className="flex justify-between items-center pt-5 relative">
-          <PayrollSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          <div className='flex gap-4 items-center'>
+            <PayrollSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+            <RefreshBtn onClick={handleRefreshSpinning} isSpinning={isSpinning} />
+          </div>
           <div className="flex items-center gap-4">
             <div className="relative">
               <button
