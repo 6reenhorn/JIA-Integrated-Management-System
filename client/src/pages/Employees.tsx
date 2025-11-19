@@ -314,9 +314,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         />
       )}
 
-      {/* <div className='absolute top-[20%] left-[23%] z-[100]'>
+      <div className='absolute top-[20%] left-[23%] z-[100]'>
         <CheckIn />
-      </div> */}
+      </div>
 
       <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={handleSectionChange}>
         {/* Staff Management Section */}
