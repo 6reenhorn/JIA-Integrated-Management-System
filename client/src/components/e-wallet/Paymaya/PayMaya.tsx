@@ -35,24 +35,28 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
   const todayStats = React.useMemo(() => {
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    
-    const todayRecords = records.filter(record => record.date === todayStr);
-    
+
+    const targetDateStr = filterDate
+      ? `${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}-${String(filterDate.getDate()).padStart(2, '0')}`
+      : todayStr;
+
+    const todayRecords = records.filter(record => record.date === targetDateStr);
+
     const cashInRecords = todayRecords.filter(r => r.transactionType === 'Cash-In');
     const cashOutRecords = todayRecords.filter(r => r.transactionType === 'Cash-Out');
-    
+
     const totalCashIn = cashInRecords.reduce((sum, r) => sum + r.amount, 0);
     const totalCashInCharges = cashInRecords.reduce((sum, r) => sum + r.serviceCharge, 0);
     const totalCashOut = cashOutRecords.reduce((sum, r) => sum + r.amount, 0);
     const totalCashOutCharges = cashOutRecords.reduce((sum, r) => sum + r.serviceCharge, 0);
-    
+
     return {
       cashIn: totalCashIn,
       cashInCharges: totalCashInCharges,
       cashOut: totalCashOut,
       cashOutCharges: totalCashOutCharges
     };
-  }, [records]);
+  }, [records, filterDate]);
 
   // Filter records based on search term and date
   const filteredRecords = records.filter(record => {
@@ -104,22 +108,50 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Cash-In (Today)</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Cash-In {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashIn)}</div>
           <div className="text-sm text-gray-500">Total Cash-In Amount</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Cash-In Charges</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Cash-In {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-In)</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Cash-Out (Today)</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Cash-Out {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOut)}</div>
           <div className="text-sm text-gray-500">Total Cash-Out Amount</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Cash-Out Charges</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Cash-Out {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-Out)</div>
         </LayoutCard>

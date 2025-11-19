@@ -44,26 +44,30 @@ const JuanPay: React.FC<JuanPayProps> = ({
   const stats = React.useMemo(() => {
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    
-    const todayRecords = records.filter(record => record.date === todayStr);
-    
+
+    const targetDateStr = filterDate
+      ? `${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}-${String(filterDate.getDate()).padStart(2, '0')}`
+      : todayStr;
+
+    const todayRecords = records.filter(record => record.date === targetDateStr);
+
     const totalBeginning = todayRecords.reduce((sum, r) => {
       const beginningSum = r.beginnings.reduce((s, b) => s + b.amount, 0);
       return sum + beginningSum;
     }, 0);
-    
+
     const totalEnding = todayRecords.reduce((sum, r) => sum + r.ending, 0);
     const totalSales = todayRecords.reduce((sum, r) => sum + r.sales, 0);
-    
+
     const avgSales = todayRecords.length > 0 ? totalSales / todayRecords.length : 0;
-    
+
     return {
       totalBeginning,
       totalEnding,
       totalSales,
       avgSales
     };
-  }, [records]);
+  }, [records, filterDate]);
 
   // Filter records
   const filteredRecords = records.filter(record => {
@@ -118,22 +122,50 @@ const JuanPay: React.FC<JuanPayProps> = ({
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Beginning Balance (Today)</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Beginning Balance {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.totalBeginning)}</div>
           <div className="text-sm text-gray-500">Total Beginning</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Ending Balance (Today)</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Ending Balance {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.totalEnding)}</div>
           <div className="text-sm text-gray-500">Current Balance</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Sales (Today)</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Sales {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(stats.totalSales)}</div>
           <div className="text-sm text-gray-500">Total Sales</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Average per Record</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Average per Record {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.avgSales)}</div>
           <div className="text-sm text-gray-500">Per Transaction</div>
         </LayoutCard>
