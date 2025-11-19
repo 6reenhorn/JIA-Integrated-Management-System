@@ -35,6 +35,19 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
         return new Date(dateString);
     };
 
+    // Format number with commas
+    const formatNumberWithCommas = (value: string): string => {
+        const numericValue = value.replace(/,/g, '');
+        if (!numericValue || isNaN(Number(numericValue))) return '';
+        return Number(numericValue).toLocaleString('en-US');
+    };
+
+    // Parse formatted number to actual number
+    const parseFormattedNumber = (value: string): number => {
+        const numericValue = value.replace(/,/g, '');
+        return parseFloat(numericValue) || 0;
+    };
+
     const [formData, setFormData] = useState({
         date: '',
         beginnings: [{ amount: '' }] as Array<{ amount: string }>,
@@ -50,8 +63,10 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
         if (record) {
             setFormData({
                 date: record.date,
-                beginnings: record.beginnings.map(b => ({ amount: b.amount.toString() })),
-                ending: record.ending.toString(),
+                beginnings: record.beginnings.map(b => ({ 
+                    amount: formatNumberWithCommas(b.amount.toString()) 
+                })),
+                ending: formatNumberWithCommas(record.ending.toString()),
                 sales: record.sales.toString(),
             });
         }
@@ -67,10 +82,10 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
     // Calculate sales automatically
     useEffect(() => {
         const totalBeginning = formData.beginnings.reduce((sum, b) => {
-            const amount = parseFloat(b.amount) || 0;
+            const amount = parseFormattedNumber(b.amount) || 0;
             return sum + amount;
         }, 0);
-        const ending = parseFloat(formData.ending) || 0;
+        const ending = parseFormattedNumber(formData.ending) || 0;
         const calculatedSales = totalBeginning - ending;
         
         setFormData(prev => ({
@@ -106,11 +121,22 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
     };
 
     const handleBeginningChange = (index: number, value: string) => {
+        const numericValue = value.replace(/[^0-9.]/g, '');
+        const formatted = formatNumberWithCommas(numericValue);
         const newBeginnings = [...formData.beginnings];
-        newBeginnings[index] = { amount: value };
+        newBeginnings[index] = { amount: formatted };
         setFormData(prev => ({
             ...prev,
             beginnings: newBeginnings
+        }));
+    };
+
+    const handleEndingChange = (value: string) => {
+        const numericValue = value.replace(/[^0-9.]/g, '');
+        const formatted = formatNumberWithCommas(numericValue);
+        setFormData(prev => ({
+            ...prev,
+            ending: formatted
         }));
     };
 
@@ -140,12 +166,12 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
 
         const beginnings = formData.beginnings
             .filter(b => b.amount.trim() !== '')
-            .map(b => ({ amount: parseFloat(b.amount) }));
+            .map(b => ({ amount: parseFormattedNumber(b.amount) }));
 
         const updatedRecord: Omit<JuanPayRecord, 'id'> = {
             date: formData.date,
             beginnings: beginnings,
-            ending: parseFloat(formData.ending) || 0,
+            ending: parseFormattedNumber(formData.ending) || 0,
             sales: parseFloat(formData.sales) || 0,
         };
 
@@ -156,8 +182,10 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
         if (record) {
             setFormData({
                 date: record.date,
-                beginnings: record.beginnings.map(b => ({ amount: b.amount.toString() })),
-                ending: record.ending.toString(),
+                beginnings: record.beginnings.map(b => ({ 
+                    amount: formatNumberWithCommas(b.amount.toString()) 
+                })),
+                ending: formatNumberWithCommas(record.ending.toString()),
                 sales: record.sales.toString(),
             });
         }
@@ -167,7 +195,7 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
     if (!isOpen || !record) return null;
 
     const totalBeginning = formData.beginnings.reduce((sum, b) => {
-        const amount = parseFloat(b.amount) || 0;
+        const amount = parseFormattedNumber(b.amount) || 0;
         return sum + amount;
     }, 0);
 
@@ -201,6 +229,7 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
                                 selected={formData.date ? parseLocalDate(formData.date) : null}
                                 onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
                                 maxDate={new Date()}
+                                disabled={isEditing}
                             />
                         </div>
 
@@ -223,8 +252,7 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
                                 {formData.beginnings.map((beginning, index) => (
                                     <div key={index} className="flex items-center gap-2">
                                         <input 
-                                            type="number" 
-                                            step="0.01"
+                                            type="text"
                                             placeholder={`Beginning #${index + 1}`}
                                             value={beginning.amount} 
                                             onChange={(e) => handleBeginningChange(index, e.target.value)} 
@@ -248,7 +276,7 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
                             
                             {formData.beginnings.length > 1 && (
                                 <div className="mt-2 text-[11px] text-gray-600 bg-blue-50 px-3 py-2 rounded-md">
-                                    Total Beginning: ₱{totalBeginning.toFixed(2)}
+                                    Total Beginning: ₱{totalBeginning.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                             )}
                         </div>
@@ -257,13 +285,12 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
                         <div className="flex flex-col">
                             <label htmlFor="ending" className="text-[12px] font-bold text-gray-700 mb-1">Ending Balance (₱)</label>
                             <input 
-                                type="number" 
-                                step="0.01"
+                                type="text"
                                 id="ending" 
                                 name="ending" 
-                                placeholder='₱0.00' 
+                                placeholder='0.00' 
                                 value={formData.ending} 
-                                onChange={(e) => handleInputChange('ending', e.target.value)} 
+                                onChange={(e) => handleEndingChange(e.target.value)} 
                                 className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100"
                                 disabled={isEditing}
                             />
@@ -276,7 +303,7 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
                                 type="text" 
                                 id="sales" 
                                 name="sales" 
-                                value={`₱${formData.sales}`}
+                                value={`₱${parseFloat(formData.sales).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 readOnly
                                 className="border border-gray-300 rounded-md px-3 py-2 bg-gray-200 text-gray-700 cursor-not-allowed" 
                             />

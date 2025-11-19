@@ -17,11 +17,12 @@ interface PayMayaProps {
   onOpenModal: () => void;
   isLoading?: boolean;
   onDelete?: (record: PayMayaRecord) => void;
+  onEdit?: (record: PayMayaRecord) => void;
   isAdding?: boolean;
   isDeleting?: boolean;
 }
 
-const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = false, onDelete, isAdding = false, isDeleting = false }) => {
+const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = false, onDelete, onEdit, isAdding = false, isDeleting = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
@@ -95,7 +96,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-In Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-In)</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
@@ -105,7 +106,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Cash-Out Charges</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-Out)</div>
         </LayoutCard>
       </div>
@@ -145,6 +146,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
                     selected={filterDate}
                     onChange={(date: Date | null) => setFilterDate(date)}
                     className="text-sm"
+                    dateFormat="MM/dd/yyyy"
                   />
                 </div>
                 {filterDate && (
@@ -175,6 +177,7 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
         records={currentRecords}
         isLoading={isLoading}
         onDelete={onDelete}
+        onEdit={onEdit}
         isAdding={isAdding}
         isDeleting={isDeleting}
       />

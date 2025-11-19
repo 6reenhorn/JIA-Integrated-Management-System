@@ -114,12 +114,12 @@ const JuanPay: React.FC<JuanPayProps> = ({
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Sales (Today)</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.totalSales)}</div>
+          <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(stats.totalSales)}</div>
           <div className="text-sm text-gray-500">Total Sales</div>
         </LayoutCard>
         <LayoutCard className="min-h-[120px]">
           <h3 className="text-gray-500 font-medium mb-2">Average per Record</h3>
-          <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(stats.avgSales)}</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.avgSales)}</div>
           <div className="text-sm text-gray-500">Per Transaction</div>
         </LayoutCard>
       </div>
@@ -158,6 +158,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
                     selected={filterDate}
                     onChange={(date: Date | null) => setFilterDate(date)}
                     className="text-sm"
+                    dateFormat="MM/dd/yyyy"
                   />
                 </div>
                 {filterDate && (

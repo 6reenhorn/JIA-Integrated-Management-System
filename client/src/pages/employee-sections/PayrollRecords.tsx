@@ -3,7 +3,7 @@ import PayrollSearchBar from '../../components/employees/payroll/PayrollSearchBa
 import PayrollFilters from '../../components/employees/payroll/PayrollFilters';
 import PayrollTable from '../../components/employees/payroll/PayrollTable';
 import PayrollActions from '../../components/employees/payroll/PayrollActions';
-import PayrollStats from '../../components/employees/payroll/PayrollStats';
+//import PayrollStats from '../../components/employees/payroll/PayrollStats';
 import AddPayrollModal from '../../modals/employee/AddPayrollModal';
 import type { Employee } from '../../types/employee_types';
 import { Plus } from 'lucide-react';
@@ -94,12 +94,12 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
 
   // Use prop employees if provided, otherwise use local mock data
   const [mockEmployees] = useState<Employee[]>([
-    { id: 1, name: 'Glenn Mark Anino', empId: 'EMP001', role: 'Developer', contact: 'glenn@example.com', status: 'Active', lastLogin: '2024-10-01', address: 'Manila', salary: '50000', contactName: 'John Doe', contactNumber: '123-456-7890', relationship: 'Brother' },
-    { id: 2, name: 'Den Jester Antonio', empId: 'EMP002', role: 'Designer', contact: 'den@example.com', status: 'Active', lastLogin: '2024-10-02', address: 'Quezon City', salary: '45000', contactName: 'Jane Doe', contactNumber: '123-456-7891', relationship: 'Sister' },
-    { id: 3, name: 'John Jaybird Casia', empId: 'EMP003', role: 'Designer', contact: 'john@example.com', status: 'Active', lastLogin: '2024-10-03', address: 'Makati', salary: '45000', contactName: 'Bob Smith', contactNumber: '123-456-7892', relationship: 'Father' },
-    { id: 4, name: 'John Cyril Espina', empId: 'EMP004', role: 'Designer', contact: 'cyril@example.com', status: 'Active', lastLogin: '2024-10-04', address: 'Pasig', salary: '45000', contactName: 'Alice Johnson', contactNumber: '123-456-7893', relationship: 'Mother' },
-    { id: 5, name: 'Sophia Marie Flores', empId: 'EMP005', role: 'Designer', contact: 'sophia@example.com', status: 'Active', lastLogin: '2024-10-05', address: 'Taguig', salary: '45000', contactName: 'Charlie Brown', contactNumber: '123-456-7894', relationship: 'Friend' },
-    { id: 6, name: 'Julien Marabe', empId: 'EMP006', role: 'Designer', contact: 'julien@example.com', status: 'Active', lastLogin: '2024-10-06', address: 'Alabang', salary: '45000', contactName: 'Diana Prince', contactNumber: '123-456-7895', relationship: 'Colleague' },
+    { id: 1, name: 'Glenn Mark Anino', empId: 'EMP001', role: 'Developer', contact: 'glenn@example.com', status: 'Active', lastLogin: '2024-10-01', address: 'Manila', salary: '50000', contactName: 'John Doe', contactNumber: '123-456-7890', relationship: 'Brother', password: 'TempPass123' },
+    { id: 2, name: 'Den Jester Antonio', empId: 'EMP002', role: 'Designer', contact: 'den@example.com', status: 'Active', lastLogin: '2024-10-02', address: 'Quezon City', salary: '45000', contactName: 'Jane Doe', contactNumber: '123-456-7891', relationship: 'Sister', password: 'TempPass123' },
+    { id: 3, name: 'John Jaybird Casia', empId: 'EMP003', role: 'Designer', contact: 'john@example.com', status: 'Active', lastLogin: '2024-10-03', address: 'Makati', salary: '45000', contactName: 'Bob Smith', contactNumber: '123-456-7892', relationship: 'Father', password: 'TempPass123' },
+    { id: 4, name: 'John Cyril Espina', empId: 'EMP004', role: 'Designer', contact: 'cyril@example.com', status: 'Active', lastLogin: '2024-10-04', address: 'Pasig', salary: '45000', contactName: 'Alice Johnson', contactNumber: '123-456-7893', relationship: 'Mother', password: 'TempPass123' },
+    { id: 5, name: 'Sophia Marie Flores', empId: 'EMP005', role: 'Designer', contact: 'sophia@example.com', status: 'Active', lastLogin: '2024-10-05', address: 'Taguig', salary: '45000', contactName: 'Charlie Brown', contactNumber: '123-456-7894', relationship: 'Friend', password: 'TempPass123' },
+    { id: 6, name: 'Julien Marabe', empId: 'EMP006', role: 'Designer', contact: 'julien@example.com', status: 'Active', lastLogin: '2024-10-06', address: 'Alabang', salary: '45000', contactName: 'Diana Prince', contactNumber: '123-456-7895', relationship: 'Colleague', password: 'TempPass123' },
   ]);
 
   const employees = propEmployees || mockEmployees;
