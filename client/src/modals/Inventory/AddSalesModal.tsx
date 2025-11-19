@@ -9,10 +9,26 @@ interface AddSalesModalProps {
     productName: string;
     quantity: number;
     price: number;
-    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay'; // Fixed: 'Paymaya' → 'PayMaya'
+    paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
     date: string;
   }) => void;
 }
+
+// Helper function to format date to MM/dd/yyyy
+const formatDateToMMDDYYYY = (date: Date): string => {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${month}/${day}/${year}`;
+};
+
+// Helper function to parse MM/dd/yyyy to Date
+const parseDateFromMMDDYYYY = (dateString: string): Date | null => {
+  if (!dateString) return null;
+  const [month, day, year] = dateString.split('/');
+  if (!month || !day || !year) return null;
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+};
 
 const AddSalesModal: React.FC<AddSalesModalProps> = ({
   isOpen,
@@ -30,14 +46,13 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     quantity: '',
     price: '',
     paymentMethod: 'Cash',
-    date: new Date().toISOString().split('T')[0],
+    date: formatDateToMMDDYYYY(new Date()),
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPaymentMethodOpen, setIsPaymentMethodOpen] = useState(false);
   const paymentMethodRef = useRef<HTMLDivElement>(null);
 
-  // Fixed: 'Paymaya' → 'PayMaya'
   const paymentMethodOptions = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
 
   // Handle click outside to close dropdown
@@ -54,7 +69,6 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
   const handleInputChange = (field: string, value: string | number) => {
     if (field === 'quantity' || field === 'price') {
-      // Allow empty string or convert to number
       setFormData(prev => ({
         ...prev,
         [field]: value === '' ? '' : value
@@ -119,7 +133,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
       quantity: '',
       price: '',
       paymentMethod: 'Cash',
-      date: new Date().toISOString().split('T')[0],
+      date: formatDateToMMDDYYYY(new Date()),
     });
     setErrors({});
     onClose();
@@ -267,8 +281,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   Sale Date
                 </label>
                 <CustomDatePicker
-                  selected={formData.date ? new Date(formData.date) : null}
-                  onChange={(date: Date | null) => handleInputChange('date', date ? date.toISOString().split('T')[0] : '')}
+                  selected={formData.date ? parseDateFromMMDDYYYY(formData.date) : null}
+                  onChange={(date: Date | null) => handleInputChange('date', date ? formatDateToMMDDYYYY(date) : '')}
                   className={errors.date ? 'border-red-300' : ''}
                 />
                 {errors.date && (

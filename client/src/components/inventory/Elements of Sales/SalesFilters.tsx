@@ -11,6 +11,22 @@ interface SalesFiltersProps {
   salesRecordsCount: number;
 }
 
+// Helper function to format date to MM/dd/yyyy
+const formatDateToMMDDYYYY = (date: Date): string => {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${month}/${day}/${year}`;
+};
+
+// Helper function to parse MM/dd/yyyy to Date
+const parseDateFromMMDDYYYY = (dateString: string): Date | null => {
+  if (!dateString) return null;
+  const [month, day, year] = dateString.split('/');
+  if (!month || !day || !year) return null;
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+};
+
 const SalesFilters: React.FC<SalesFiltersProps> = ({
   searchTerm,
   setSearchTerm,
@@ -50,8 +66,8 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
             <div className="flex items-center gap-2">
               <div className="w-[140px]">
                 <CustomDatePicker
-                  selected={selectedDate ? new Date(selectedDate) : null}
-                  onChange={(date: Date | null) => setSelectedDate(date ? date.toISOString().split('T')[0] : '')}
+                  selected={selectedDate ? parseDateFromMMDDYYYY(selectedDate) : null}
+                  onChange={(date: Date | null) => setSelectedDate(date ? formatDateToMMDDYYYY(date) : '')}
                   className="text-sm"
                 />
               </div>
