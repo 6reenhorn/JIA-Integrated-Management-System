@@ -4,6 +4,7 @@ import { Search, Plus, X } from 'lucide-react';
 import type { PayMayaRecord } from '../../../types/ewallet_types';
 import PayMayaRecordsTable from './PayMayaRecords';
 import CustomDatePicker from '../../common/CustomDatePicker';
+import RefreshBtn from '../../common/RefreshBtn';
 
 const formatCurrency = (amount: number): string => {
   return amount.toLocaleString('en-US', {
@@ -16,40 +17,46 @@ interface PayMayaProps {
   records: PayMayaRecord[];
   onOpenModal: () => void;
   isLoading?: boolean;
+  onRefresh?: () => Promise<void>;
   onDelete?: (record: PayMayaRecord) => void;
   onEdit?: (record: PayMayaRecord) => void;
   isAdding?: boolean;
   isDeleting?: boolean;
 }
 
-const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = false, onDelete, onEdit, isAdding = false, isDeleting = false }) => {
+const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = false, onDelete, onEdit, onRefresh, isAdding = false, isDeleting = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const recordsPerPage = 10;
 
   // Calculate today's statistics
   const todayStats = React.useMemo(() => {
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    
-    const todayRecords = records.filter(record => record.date === todayStr);
-    
+
+    const targetDateStr = filterDate
+      ? `${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, '0')}-${String(filterDate.getDate()).padStart(2, '0')}`
+      : todayStr;
+
+    const todayRecords = records.filter(record => record.date === targetDateStr);
+
     const cashInRecords = todayRecords.filter(r => r.transactionType === 'Cash-In');
     const cashOutRecords = todayRecords.filter(r => r.transactionType === 'Cash-Out');
-    
+
     const totalCashIn = cashInRecords.reduce((sum, r) => sum + r.amount, 0);
     const totalCashInCharges = cashInRecords.reduce((sum, r) => sum + r.serviceCharge, 0);
     const totalCashOut = cashOutRecords.reduce((sum, r) => sum + r.amount, 0);
     const totalCashOutCharges = cashOutRecords.reduce((sum, r) => sum + r.serviceCharge, 0);
-    
+
     return {
       cashIn: totalCashIn,
       cashInCharges: totalCashInCharges,
       cashOut: totalCashOut,
       cashOutCharges: totalCashOutCharges
     };
-  }, [records]);
+  }, [records, filterDate]);
 
   // Filter records based on search term and date
   const filteredRecords = records.filter(record => {
@@ -67,6 +74,17 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
     
     return matchesSearch && matchesDate;
   });
+
+  const handleRefresh = async () => {
+    if (onRefresh) {
+      setIsRefreshing(true);
+      try {
+        await onRefresh();
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  };
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
@@ -90,22 +108,50 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Cash-In (Today)</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Cash-In {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashIn)}</div>
           <div className="text-sm text-gray-500">Total Cash-In Amount</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Cash-In Charges</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Cash-In {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-In)</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Cash-Out (Today)</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Cash-Out {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOut)}</div>
           <div className="text-sm text-gray-500">Total Cash-Out Amount</div>
         </LayoutCard>
         <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <h3 className="text-gray-500 font-medium mb-2">Cash-Out Charges</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-gray-500 font-medium">Cash-Out {filterDate ? '(Filtered)' : '(Today)'}</h3>
+            {filterDate && (
+              <div className="text-right text-xs text-gray-600">
+                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              </div>
+            )}
+          </div>
           <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
           <div className="text-sm text-gray-500">Service Fees (Cash-Out)</div>
         </LayoutCard>
@@ -122,15 +168,18 @@ const PayMaya: React.FC<PayMayaProps> = ({ records, onOpenModal, isLoading = fal
             </div>
 
             {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search Records"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
-              />
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search Records"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
+                />
+              </div>
+              <RefreshBtn onClick={handleRefresh} isSpinning={isRefreshing} />
             </div>
           </div>
 
