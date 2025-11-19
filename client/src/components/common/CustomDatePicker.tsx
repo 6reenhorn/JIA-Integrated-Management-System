@@ -7,7 +7,7 @@ const CustomDateInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttrib
         <input
         {...props}
         ref={ref}
-        placeholder="yyyy-MM-dd"
+        placeholder="MM/dd/yyyy"
         className={`${props.className} pr-10`}
         />
         <svg

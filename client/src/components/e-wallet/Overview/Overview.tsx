@@ -398,7 +398,11 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
             <Calendar className="w-4 h-6" />
             <span className="text-sm font-medium">
               {(startDate && endDate) ? (
-                `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                startDate.toDateString() === endDate.toDateString() ? (
+                  startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
+                ) : (
+                  `${startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`
+                )
               ) : (
                 'Filter by Date Range'
               )}
@@ -468,9 +472,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
             <span className="text-sm font-medium">
               {(summaryStartDate && summaryEndDate) ? (
                 summaryStartDate.toDateString() === summaryEndDate.toDateString() ? (
-                  summaryStartDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
+                  summaryStartDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
                 ) : (
-                  `${summaryStartDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })} - ${summaryEndDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`
+                  `${summaryStartDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - ${summaryEndDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`
                 )
               ) : (
                 'Summary Date Range'
@@ -489,7 +493,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
           )}
 
           {showSummaryDateFilter && (
-            <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-[320px]">
+            <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-[320px]">
               <div className="space-y-3">
                 {summaryDateRangeWarning && (
                   <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-3">
