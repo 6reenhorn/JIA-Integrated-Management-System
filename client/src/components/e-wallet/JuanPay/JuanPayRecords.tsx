@@ -151,7 +151,7 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                                     <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[140px]">
                                         {formatCurrency(record.ending)}
                                     </td>
-                                    <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[120px]">
+                                    <td className="py-4 px-6 text-sm font-medium text-red-500 w-[120px]">
                                         {formatCurrency(record.sales)}
                                     </td>
                                     <td className="py-4 px-5 w-[100px]">
