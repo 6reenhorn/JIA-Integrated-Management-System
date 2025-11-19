@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "build": "tsc"
+    "build": "tsc",
+    "sync": "node src/db/sync.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -11,12 +11,14 @@ import MainLayoutCard from '../components/layout/MainLayoutCard';
 import EmployeeSearchBar from '../components/employees/management/EmployeeSearchBar';
 import AddStaffModal from '../modals/employee/AddStaffModal';
 import EditStaffDetailsModal from '../modals/employee/EditStaffDetailsModal';
+import ViewEmployeeModal from '../modals/employee/ViewEmployeeModal';
 import AttendanceStats from '../components/employees/attendance/AttendanceStats';
 import Attendance from './employee-sections/Attendance';
 import PayrollRecords from './employee-sections/PayrollRecords';
 import PayrollStats from '../components/employees/payroll/PayrollStats';
 import DeleteEmployeeModal from '../modals/employee/DeleteStaffModal';
 import RefreshBtn from '../components/common/RefreshBtn';
+import CheckIn from '../components/support/CheckIn';
 
 interface PayrollRecord {
   id: number;
@@ -52,6 +54,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -231,7 +234,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setSelectedRelationshipText('Select Relationship');
   };
 
-  const handleAddEmployee = async (newEmployee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string }) => {
+  const handleAddEmployee = async (newEmployee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string; password: string }) => {
     setIsAdding(true);
     setIsModalOpen(false); // Close modal immediately
     try {
@@ -311,6 +314,10 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         />
       )}
 
+      {/* <div className='absolute top-[20%] left-[23%] z-[100]'>
+        <CheckIn />
+      </div> */}
+
       <MainLayoutCard sections={sections} activeSection={activeSection} onSectionChange={handleSectionChange}>
         {/* Staff Management Section */}
         {activeSection === 'staff' && (
@@ -333,7 +340,11 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
             <EmployeeTable
               employees={paginatedEmployees}
               isLoading={isLoading}
-              onViewEmployee={() => {}}
+              onViewEmployee={(id: number) => {
+                const emp = employees.find(e => e.id === id) || null;
+                setSelectedEmployee(emp);
+                setIsViewModalOpen(true);
+              }}
               onEditEmployee={(id: number) => {
                 const emp = employees.find(e => e.id === id) || null;
                 setSelectedEmployee(emp);
@@ -421,6 +432,24 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
                 employee={selectedEmployee}
                 onClose={() => setIsEditModalOpen(false)}
                 onSave={handleSaveEmployee}
+              />
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {/* View Employee Modal */}
+      {isViewModalOpen && selectedEmployee && (
+        <Portal>
+          <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
+            <div
+              className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm'
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            </div>
+            <div className='relative z-[1010]'>
+              <ViewEmployeeModal
+                employee={selectedEmployee}
+                onClose={() => setIsViewModalOpen(false)}
               />
             </div>
           </div>

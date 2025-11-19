@@ -3,7 +3,7 @@ import type { Employee } from '../../types/employee_types';
 
 interface AddStaffModalProps {
   onClose?: () => void;
-  onAddEmployee?: (employee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string }) => void;
+  onAddEmployee?: (employee: Omit<Employee, 'id' | 'empId' | 'lastLogin'> & { address: string; salary: string; contactName: string; contactNumber: string; relationship: string; password: string }) => void;
   firstName: string;
   setFirstName: (value: string) => void;
   lastName: string;
@@ -561,6 +561,13 @@ const AddStaffModal = ({
           onClick={() => {
             if (isFormValid && !isSaving && onAddEmployee) {
               setIsSaving(true);
+              // Generate random password 8-10 characters
+              const length = Math.floor(Math.random() * 3) + 8; // 8 to 10
+              const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+              let password = '';
+              for (let i = 0; i < length; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+              }
               onAddEmployee({
                 name: `${firstName} ${lastName}`,
                 role: selectedRoleText,
@@ -571,7 +578,8 @@ const AddStaffModal = ({
                 salary,
                 contactName,
                 contactNumber,
-                relationship: selectedRelationshipText
+                relationship: selectedRelationshipText,
+                password
               });
             }
           }}

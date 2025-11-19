@@ -22,7 +22,8 @@ router.get('/', async (req, res) => {
       salary: row.salary,
       contactName: row.contact_name,
       contactNumber: row.contact_number,
-      relationship: row.relationship
+      relationship: row.relationship,
+      password: row.password
     }));
     res.json(employees);
   } catch (err) {
@@ -36,7 +37,6 @@ router.post('/', async (req, res) => {
   const {
     name,
     role,
-    department,
     contact,
     status,
     avatar,
@@ -44,7 +44,8 @@ router.post('/', async (req, res) => {
     salary,
     contactName,
     contactNumber,
-    relationship
+    relationship,
+    password
   } = req.body;
 
   try {
@@ -54,7 +55,7 @@ router.post('/', async (req, res) => {
     const empId = `EMP${String(maxId).padStart(3, '0')}`;
 
     const query = `
-      INSERT INTO employees (emp_id, name, role, department, contact, status, avatar, address, salary, contact_name, contact_number, relationship)
+      INSERT INTO employees (emp_id, name, role, contact, status, avatar, address, salary, contact_name, contact_number, relationship, password)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `;
@@ -62,7 +63,6 @@ router.post('/', async (req, res) => {
       empId,
       name,
       role,
-      department || '',
       contact,
       status || 'Active',
       avatar,
@@ -70,7 +70,8 @@ router.post('/', async (req, res) => {
       salary,
       contactName,
       contactNumber,
-      relationship
+      relationship,
+      password
     ];
 
     const result = await pool.query(query, values);
@@ -81,7 +82,6 @@ router.post('/', async (req, res) => {
       empId: newEmployee.emp_id,
       name: newEmployee.name,
       role: newEmployee.role,
-      department: newEmployee.department,
       contact: newEmployee.contact,
       status: newEmployee.status,
       lastLogin: 'Never',
@@ -90,7 +90,8 @@ router.post('/', async (req, res) => {
       salary: newEmployee.salary,
       contactName: newEmployee.contact_name,
       contactNumber: newEmployee.contact_number,
-      relationship: newEmployee.relationship
+      relationship: newEmployee.relationship,
+      password: newEmployee.password
     };
 
     res.status(201).json(employee);
@@ -114,20 +115,20 @@ router.put('/:id', async (req, res) => {
     salary,
     contactName,
     contactNumber,
-    relationship
+    relationship,
+    password
   } = req.body;
 
   try {
     const query = `
       UPDATE employees
-      SET name = $1, role = $2, department = $3, contact = $4, status = $5, avatar = $6, address = $7, salary = $8, contact_name = $9, contact_number = $10, relationship = $11
+      SET name = $1, role = $2, contact = $3, status = $4, avatar = $5, address = $6, salary = $7, contact_name = $8, contact_number = $9, relationship = $10, password = $11
       WHERE id = $12
       RETURNING *
     `;
     const values = [
       name,
       role,
-      department,
       contact,
       status,
       avatar,
@@ -136,6 +137,7 @@ router.put('/:id', async (req, res) => {
       contactName,
       contactNumber,
       relationship,
+      password,
       id
     ];
 
@@ -160,7 +162,8 @@ router.put('/:id', async (req, res) => {
       salary: updatedEmployee.salary,
       contactName: updatedEmployee.contact_name,
       contactNumber: updatedEmployee.contact_number,
-      relationship: updatedEmployee.relationship
+      relationship: updatedEmployee.relationship,
+      password: updatedEmployee.password
     };
 
     res.json(employee);
