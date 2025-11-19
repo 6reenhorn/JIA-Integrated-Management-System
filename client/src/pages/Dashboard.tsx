@@ -7,6 +7,7 @@ import EWallet from './EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
+import CheckIn from '../components/support/CheckIn';
 
 // Define the section information type
 interface SectionInfo {
@@ -21,6 +22,8 @@ const Dashboard: React.FC = () => {
     page: 'dashboard', 
     section: undefined 
   });
+
+  const [showCheckInModal, setShowCheckInModal] = useState<boolean>(false);
 
   // Sync sidebar with inventory sections
   useEffect(() => {
@@ -336,14 +339,18 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleCheckIn = () => {
+    setShowCheckInModal(true);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Navbar />
       <div className='flex flex-1 overflow-hidden'>
-        <Sidebar 
-          activeItem={activeItem} 
-          onItemClick={handleSidebarItemClick} 
-          isCollapsed={isSidebarCollapsed} 
+        <Sidebar
+          activeItem={activeItem}
+          onItemClick={handleSidebarItemClick}
+          isCollapsed={isSidebarCollapsed}
           onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           currentSection={currentSection.section}
         />
@@ -354,12 +361,33 @@ const Dashboard: React.FC = () => {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
                 <p className="text-gray-600">{getHeaderSubtitle()}</p>
               </div>
-              <button className='h-[36px]'>Check In</button>
+              {activeItem === 'dashboard' && (
+                <div className='flex items-center'>
+                  <button onClick={handleCheckIn} className='bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0'>
+                    Check In
+                  </button>
+                </div>
+              )}
             </div>
             {renderContent()}
           </div>
         </main>
       </div>
+      {activeItem === 'dashboard' && showCheckInModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          onClick={() => setShowCheckInModal(false)}
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)'
+          }}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <CheckIn onClose={() => setShowCheckInModal(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

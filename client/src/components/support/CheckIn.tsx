@@ -4,10 +4,10 @@ import checkInIcon from '../../assets/JIA_CheckIn.ico';
 import type { Employee } from '../../types/employee_types';
 
 interface CheckInProps {
-//   onSuccess: () => void;
+  onClose: () => void;
 }
 
-const CheckIn: React.FC<CheckInProps> = () => {
+const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [password, setPassword] = useState('');
@@ -150,24 +150,24 @@ const CheckIn: React.FC<CheckInProps> = () => {
                                     return;
                                 }
                                 try {
-                                    // Verify password
-                                    if (password !== selectedEmployee.password) {
-                                        alert('Incorrect password.');
-                                        return;
-                                    }
-                                    // Check in
+                                    // Check in with password verification on server
                                     const response = await axios.post('http://localhost:3001/api/attendance/checkin', {
-                                        employeeId: selectedEmployee.id
+                                        employeeId: selectedEmployee.id,
+                                        password: password
                                     });
                                     alert('Check-in successful!');
-                                    // Call onSuccess to proceed to main app
-                                    // onSuccess();
+                                    // Close the modal after successful check-in
+                                    onClose();
                                     // Optionally reset form
                                     setSelectedEmployee(null);
                                     setPassword('');
-                                } catch (error) {
+                                } catch (error: any) {
                                     console.error('Error during check-in:', error);
-                                    alert('Check-in failed. Please try again.');
+                                    if (error.response?.data?.error) {
+                                        alert(error.response.data.error);
+                                    } else {
+                                        alert('An error occurred during check-in.');
+                                    }
                                 }
                             }}
                         >

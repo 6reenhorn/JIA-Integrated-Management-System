@@ -8,6 +8,7 @@ const paymayaRoutes = require("./paymaya");
 const juanpayRoutes = require("./juanpay");
 const inventoryRoutes = require("./inventory");
 const payrollRoutes = require("./payroll");
+const attendanceRoutes = require("./attendance");
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.use('/paymaya', paymayaRoutes);
 router.use('/juanpay', juanpayRoutes);
 router.use('/inventory', inventoryRoutes);
 router.use('/payroll', payrollRoutes);
+router.use('/attendance', attendanceRoutes);
 
 // Add more routes here as needed
 module.exports = router;
