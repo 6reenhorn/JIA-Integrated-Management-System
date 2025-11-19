@@ -167,7 +167,6 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                     setPassword('');
                                 } catch (error) {
                                     console.error('Error during check-in:', error);
-                                    alert('Check-in failed. Please try again.');
                                 }
                             }}
                         >
