@@ -2,19 +2,21 @@ import React, { useState, useMemo } from 'react';
 import LayoutCard from '../../layout/LayoutCard';
 import CustomDatePicker from '../../common/CustomDatePicker';
 import { X, Calendar } from 'lucide-react';
-import type { 
-  SummaryCardProps, 
+import type {
+  SummaryCardProps,
   RecordCardProps,
   GCashRecord,
-  PayMayaRecord
+  PayMayaRecord,
+  JuanPayRecord
 } from '../../../types/ewallet_types';
 
 interface OverviewProps {
   gcashRecords: GCashRecord[];
   paymayaRecords: PayMayaRecord[];
+  juanpayRecords: JuanPayRecord[];
 }
 
-const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => {
+const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanpayRecords }) => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
@@ -38,7 +40,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
   // Calculate overall statistics with date range filter
   const overallStats = useMemo(() => {
     const toYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const filterByDateRange = (record: GCashRecord | PayMayaRecord) => {
+    const filterByDateRange = (record: GCashRecord | PayMayaRecord | JuanPayRecord) => {
       if (!startDate && !endDate) return true;
 
       const recordYmd = record.date;
@@ -66,15 +68,15 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
     const gcashCashIn = filteredGCash
       .filter(r => r.transactionType === 'Cash-In')
       .reduce((sum, r) => sum + r.amount, 0);
-    
+
     const gcashCashInCharges = filteredGCash
       .filter(r => r.transactionType === 'Cash-In')
       .reduce((sum, r) => sum + r.serviceCharge, 0);
-    
+
     const gcashCashOut = filteredGCash
       .filter(r => r.transactionType === 'Cash-Out')
       .reduce((sum, r) => sum + r.amount, 0);
-    
+
     const gcashCashOutCharges = filteredGCash
       .filter(r => r.transactionType === 'Cash-Out')
       .reduce((sum, r) => sum + r.serviceCharge, 0);
@@ -82,15 +84,15 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
     const paymayaCashIn = filteredPayMaya
       .filter(r => r.transactionType === 'Cash-In')
       .reduce((sum, r) => sum + r.amount, 0);
-    
+
     const paymayaCashInCharges = filteredPayMaya
       .filter(r => r.transactionType === 'Cash-In')
       .reduce((sum, r) => sum + r.serviceCharge, 0);
-    
+
     const paymayaCashOut = filteredPayMaya
       .filter(r => r.transactionType === 'Cash-Out')
       .reduce((sum, r) => sum + r.amount, 0);
-    
+
     const paymayaCashOutCharges = filteredPayMaya
       .filter(r => r.transactionType === 'Cash-Out')
       .reduce((sum, r) => sum + r.serviceCharge, 0);
@@ -101,7 +103,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
       totalCashOut: gcashCashOut + paymayaCashOut,
       totalCashOutCharges: gcashCashOutCharges + paymayaCashOutCharges,
     };
-  }, [gcashRecords, paymayaRecords, startDate, endDate]);
+  }, [gcashRecords, paymayaRecords, juanpayRecords, startDate, endDate]);
 
   // Calculate stats for selected date
   const selectedDateStats = useMemo(() => {
@@ -111,19 +113,20 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
 
     const gcashForDate = gcashRecords.filter(r => r.date === selectedDateStr);
     const paymayaForDate = paymayaRecords.filter(r => r.date === selectedDateStr);
+    const juanpayForDate = juanpayRecords.filter(r => r.date === selectedDateStr);
 
     const gcashCashIn = gcashForDate
       .filter(r => r.transactionType === 'Cash-In')
       .reduce((sum, r) => sum + r.amount, 0);
-    
+
     const gcashCashInCharges = gcashForDate
       .filter(r => r.transactionType === 'Cash-In')
       .reduce((sum, r) => sum + r.serviceCharge, 0);
-    
+
     const gcashCashOut = gcashForDate
       .filter(r => r.transactionType === 'Cash-Out')
       .reduce((sum, r) => sum + r.amount, 0);
-    
+
     const gcashCashOutCharges = gcashForDate
       .filter(r => r.transactionType === 'Cash-Out')
       .reduce((sum, r) => sum + r.serviceCharge, 0);
@@ -131,18 +134,28 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
     const paymayaCashIn = paymayaForDate
       .filter(r => r.transactionType === 'Cash-In')
       .reduce((sum, r) => sum + r.amount, 0);
-    
+
     const paymayaCashInCharges = paymayaForDate
       .filter(r => r.transactionType === 'Cash-In')
       .reduce((sum, r) => sum + r.serviceCharge, 0);
-    
+
     const paymayaCashOut = paymayaForDate
       .filter(r => r.transactionType === 'Cash-Out')
       .reduce((sum, r) => sum + r.amount, 0);
-    
+
     const paymayaCashOutCharges = paymayaForDate
       .filter(r => r.transactionType === 'Cash-Out')
       .reduce((sum, r) => sum + r.serviceCharge, 0);
+
+    // Calculate JuanPay stats for selected date
+    const juanpayBeginning = juanpayForDate.reduce((sum, r) => {
+      const beginningSum = r.beginnings.reduce((s, b) => s + b.amount, 0);
+      return sum + beginningSum;
+    }, 0);
+
+    const juanpayEnding = juanpayForDate.reduce((sum, r) => sum + r.ending, 0);
+    const juanpaySales = juanpayForDate.reduce((sum, r) => sum + r.sales, 0);
+    const juanpayAvgSales = juanpayForDate.length > 0 ? juanpaySales / juanpayForDate.length : 0;
 
     return {
       gcash: {
@@ -160,18 +173,17 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
         totalCharges: paymayaCashInCharges + paymayaCashOutCharges,
       },
       juanpay: {
-        cashIn: 0,
-        cashInCharges: 0,
-        cashOut: 0,
-        cashOutCharges: 0,
-        totalCharges: 0,
+        beginning: juanpayBeginning,
+        ending: juanpayEnding,
+        sales: juanpaySales,
+        avgSales: juanpayAvgSales,
       },
-      totalRecords: gcashForDate.length + paymayaForDate.length,
+      totalRecords: gcashForDate.length + paymayaForDate.length + juanpayForDate.length,
       gcashRecords: gcashForDate.length,
       paymayaRecords: paymayaForDate.length,
-      juanpayRecords: 0,
+      juanpayRecords: juanpayForDate.length,
     };
-  }, [gcashRecords, paymayaRecords, selectedDate]);
+  }, [gcashRecords, paymayaRecords, juanpayRecords, selectedDate]);
 
   const handleApplyFilter = () => {
     if ((tempStartDate && !tempEndDate) || (!tempStartDate && tempEndDate)) {
@@ -203,13 +215,14 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
       <div className="space-y-3">
         {data.map((item, index) => {
           const isHighlight =
-              item.label === 'Total Charges';
+              item.label === 'Total Charges' || (title === 'JuanPay Daily' && item.label === 'Sales');
+          const isEmpty = item.label === '';
           return (
             <div
               key={index}
               className={`flex justify-between items-center ${
                 isHighlight ? 'pt-2 mt-2 border-t border-gray-200' : ''
-              }`}
+              } ${isEmpty ? 'h-6' : ''}`}
             >
               <span
                 className={`text-sm ${
@@ -281,17 +294,17 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
   ];
 
   const juanpayData = selectedDateStats ? [
-    { label: 'Cash-In', value: formatCurrency(selectedDateStats.juanpay.cashIn) },
-    { label: 'Cash-In Charges', value: formatCurrency(selectedDateStats.juanpay.cashInCharges) },
-    { label: 'Cash-Out', value: formatCurrency(selectedDateStats.juanpay.cashOut) },
-    { label: 'Cash-Out Charges', value: formatCurrency(selectedDateStats.juanpay.cashOutCharges) },
-    { label: 'Total Charges', value: formatCurrency(selectedDateStats.juanpay.totalCharges) }
+    { label: 'Beginning Balance', value: formatCurrency(selectedDateStats.juanpay.beginning) },
+    { label: 'Ending Balance', value: formatCurrency(selectedDateStats.juanpay.ending) },
+    { label: 'Average per Record', value: formatCurrency(selectedDateStats.juanpay.avgSales) },
+    { label: '', value: '' },
+    { label: 'Sales', value: formatCurrency(selectedDateStats.juanpay.sales) }
   ] : [
-    { label: 'Cash-In', value: formatCurrency(0) },
-    { label: 'Cash-In Charges', value: formatCurrency(0) },
-    { label: 'Cash-Out', value: formatCurrency(0) },
-    { label: 'Cash-Out Charges', value: formatCurrency(0) },
-    { label: 'Total Charges', value: formatCurrency(0) }
+    { label: 'Beginning Balance', value: formatCurrency(0) },
+    { label: 'Ending Balance', value: formatCurrency(0) },
+    { label: 'Average per Record', value: formatCurrency(0) },
+    { label: '', value: '' },
+    { label: 'Sales', value: formatCurrency(0) }
   ];
 
   return (
@@ -432,9 +445,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords }) => 
           title="PayMaya Records" 
           count={String(paymayaRecords.length)} 
         />
-        <RecordCard 
-          title="JuanPay Records" 
-          count={String(0)} 
+        <RecordCard
+          title="JuanPay Records"
+          count={String(juanpayRecords.length)}
         />
       </div>
     </div>
