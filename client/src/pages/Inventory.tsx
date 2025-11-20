@@ -34,6 +34,20 @@ interface InventoryProps {
   onSectionChange?: (section: string) => void;
 }
 
+// Helper function to normalize date formats
+const normalizeDateFormat = (dateString: string): string => {
+  if (!dateString) return '';
+  
+  // If date is in MM/DD/YYYY format, convert to YYYY-MM-DD
+  if (dateString.includes('/')) {
+    const [month, day, year] = dateString.split('/');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+  
+  // If date is in YYYY-MM-DD format, return as is
+  return dateString;
+};
+
 const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [salesSearchTerm, setSalesSearchTerm] = useState('');
@@ -67,6 +81,10 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [isDeletingSales, setIsDeletingSales] = useState(false);
   const [isAddingInventory, setIsAddingInventory] = useState(false);
   const [isDeletingInventory, setIsDeletingInventory] = useState(false);
+
+  const [isRefreshingInventory, setIsRefreshingInventory] = useState(false);
+  const [isRefreshingSales, setIsRefreshingSales] = useState(false);
+  const [isRefreshingCategories, setIsRefreshingCategories] = useState(false);
 
   useEffect(() => {
     if (onSectionChange && propActiveSection === undefined) {
@@ -164,18 +182,27 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   }, [categoriesData]);
 
   const filteredSalesRecords = useMemo(() => {
+    console.log('Filtering sales records - Total:', salesRecords.length, 'Selected Date:', selectedDate, 'Search Term:', salesSearchTerm);
+    
     let filtered = salesRecords;
     
     if (selectedDate) {
-      filtered = filtered.filter(record => record.date === selectedDate);
+      const normalizedSelectedDate = normalizeDateFormat(selectedDate);
+      filtered = filtered.filter(record => {
+        const normalizedRecordDate = normalizeDateFormat(record.date);
+        return normalizedRecordDate === normalizedSelectedDate;
+      });
+      console.log('After date filter:', filtered.length);
     }
     
     if (salesSearchTerm) {
       filtered = filtered.filter(record => 
         record.productName.toLowerCase().includes(salesSearchTerm.toLowerCase())
       );
+      console.log('After search filter:', filtered.length);
     }
     
+    console.log('Final filtered count:', filtered.length);
     return filtered;
   }, [salesRecords, selectedDate, salesSearchTerm]);
 
@@ -437,6 +464,93 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   };
 
+  const handleRefreshInventory = async () => {
+  console.log('Refresh button clicked');
+  console.log('Current inventory items:', inventoryItems.length);
+  setIsRefreshingInventory(true);
+  setIsLoadingInventory(true);
+  try {
+    const response = await axios.get('http://localhost:3001/api/inventory');
+    console.log('Fetched inventory data:', response.data);
+    console.log('New inventory items count:', response.data.length);
+    setInventoryItems(response.data);
+    console.log('State updated');
+  } catch (err: unknown) {
+    console.error('Error refreshing inventory data:', err);
+    if (axios.isAxiosError(err)) {
+      console.error('Error details:', err.response?.data);
+    } else if (err instanceof Error) {
+      console.error('Error message:', err.message);
+    } else {
+      console.error('Error details:', String(err));
+    }
+  } finally {
+    setTimeout(() => {
+      setIsRefreshingInventory(false);
+      setIsLoadingInventory(false);
+      console.log('Refresh complete');
+    }, 500);
+  }
+};
+
+  const handleRefreshSales = async () => {
+    console.log('Refresh button clicked');
+    console.log('Current sales records:', salesRecords.length);
+    setIsRefreshingSales(true);
+    setIsLoadingSales(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory/sales');
+      console.log('Fetched sales data:', response.data);
+      console.log('New sales records count:', response.data.length);
+      setSalesRecords(response.data);
+      console.log('State updated');
+    } catch (err: unknown) {
+      console.error('Error refreshing sales data:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+    } finally {
+      setTimeout(() => {
+        setIsRefreshingSales(false);
+        setIsLoadingSales(false);
+        console.log('Refresh complete');
+      }, 500);
+    }
+  };
+
+    const handleRefreshCategories = async () => {
+    console.log('Refresh button clicked');
+    console.log('Current categories:', categoriesData.length);
+    setIsRefreshingCategories(true);
+    setIsLoadingCategories(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory/categories');
+      console.log('Fetched categories data:', response.data);
+      console.log('New categories count:', response.data.length);
+      setCategoriesData(response.data);
+      console.log('State updated');
+    } catch (err: unknown) {
+      console.error('Error refreshing categories data:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+    } finally {
+      setTimeout(() => {
+        setIsRefreshingCategories(false);
+        setIsLoadingCategories(false);
+        console.log('Refresh complete');
+      }, 500);
+    }
+  };
+
   const handleDeleteSale = async (id: number) => {
     setIsDeletingSales(true);
     try {
@@ -606,6 +720,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           setActiveSection={handleSectionChange}
           onAddCategory={handleAddCategory}
           sections={sections}
+          onRefresh={handleRefreshInventory}
+          isRefreshing={isRefreshingInventory}
         >
           <InventoryTable
             items={filteredItems}
@@ -641,6 +757,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           onSectionChange={handleSectionChange}
           inventoryItems={inventoryItems}
           isLoading={isLoadingCategories}
+          onRefresh={handleRefreshCategories}
+          isRefreshing={isRefreshingCategories}
         />
       )}
 
@@ -666,6 +784,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           isLoading={isLoadingSales}
           isAdding={isAddingSales}
           isDeleting={isDeletingSales}
+          onRefreshSales={handleRefreshSales}
+          isRefreshingSales={isRefreshingSales}
         />
       )}
 

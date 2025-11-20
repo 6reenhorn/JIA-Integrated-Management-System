@@ -1,12 +1,11 @@
 import React from 'react';
 import MainLayoutCard from '../../layout/MainLayoutCard';
-import LayoutCard from '../../layout/LayoutCard'; // Add this import
+import LayoutCard from '../../layout/LayoutCard';
 import InventoryFilters from './InventoryFilters';
 import type { InventoryStats as InventoryStatsType } from '../../../types/inventory_types';
 
 interface InventoryStatsProps {
   stats: InventoryStatsType;
-  // Add props for the filters and other functionality
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   selectedCategory: string;
@@ -20,7 +19,9 @@ interface InventoryStatsProps {
   setActiveSection: (section: string) => void;
   onAddCategory: () => void;
   sections: Array<{ id: string; label: string; key: string }>;
-  children?: React.ReactNode; // Add children prop
+  children?: React.ReactNode;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const InventoryStats: React.FC<InventoryStatsProps> = ({ 
@@ -38,7 +39,9 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
   setActiveSection,
   onAddCategory,
   sections,
-  children // Add children prop
+  children,
+  onRefresh,
+  isRefreshing
 }) => {
   return (
     <>
@@ -103,6 +106,8 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
             onAddCategory={onAddCategory}
             showTabsAndTitle={false}
             sections={sections}
+            onRefresh={onRefresh}
+            isRefreshing={isRefreshing}
           />
           {/* Content area for table - will be passed as children from parent */}
           {children}

@@ -15,7 +15,7 @@ interface SalesStatsProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
   isAdding?: boolean;
-  isDeleting?: boolean
+  isDeleting?: boolean;
 
   // Sales data and handlers
   salesRecords: Array<{
@@ -37,6 +37,10 @@ interface SalesStatsProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   isLoading?: boolean;
+  
+  // Refresh functionality
+  onRefreshSales: () => void;
+  isRefreshingSales: boolean;
 }
 
 const SalesStats: React.FC<SalesStatsProps> = ({
@@ -59,7 +63,9 @@ const SalesStats: React.FC<SalesStatsProps> = ({
   onPageChange,
   isLoading = false,
   isAdding = false,
-  isDeleting = false
+  isDeleting = false,
+  onRefreshSales,
+  isRefreshingSales
 }) => {
   const totalPages = Math.ceil(salesRecords.length / 10);
 
@@ -110,6 +116,8 @@ const SalesStats: React.FC<SalesStatsProps> = ({
             setSelectedDate={setSelectedDate}
             onAddSale={onAddSale}
             salesRecordsCount={salesRecords.length}
+            onRefresh={onRefreshSales}
+            isRefreshing={isRefreshingSales}
           />
           <SalesTable
             salesRecords={salesRecords}
