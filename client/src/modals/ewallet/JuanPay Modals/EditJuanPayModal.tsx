@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { JuanPayRecord } from '../../types/ewallet_types';
-import CustomDatePicker from '../../components/common/CustomDatePicker';
+import type { JuanPayRecord } from '../../../types/ewallet_types';
+import CustomDatePicker from '../../../components/common/CustomDatePicker';
 import { Plus, X } from 'lucide-react';
 
 interface EditJuanPayRecordModalProps {

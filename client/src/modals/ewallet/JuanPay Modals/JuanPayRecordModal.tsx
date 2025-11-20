@@ -1,18 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { JuanPayRecord, JuanPayBeginning } from '../../types/ewallet_types';
-import CustomDatePicker from '../../components/common/CustomDatePicker';
+import type { JuanPayRecord, JuanPayBeginning } from '../../../types/ewallet_types';
+import CustomDatePicker from '../../../components/common/CustomDatePicker';
 import { Plus, X } from 'lucide-react';
 
 interface AddJuanPayRecordModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAddRecord: (record: Omit<JuanPayRecord, 'id'>) => void;
+    lastEndingBalance?: number | null;
 }
 
 const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
     isOpen,
     onClose,
     onAddRecord,
+    lastEndingBalance = null,
 }) => {
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
@@ -53,6 +55,16 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
 
     const [isFormValid, setIsFormValid] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
+
+    // Pre-fill beginning balance with last ending balance
+    useEffect(() => {
+        if (isOpen && lastEndingBalance !== null && lastEndingBalance !== undefined) {
+            setFormData(prev => ({
+                ...prev,
+                beginnings: [{ amount: formatNumberWithCommas(lastEndingBalance.toString()) }]
+            }));
+        }
+    }, [lastEndingBalance, isOpen]);
 
     // Validate form
     useEffect(() => {

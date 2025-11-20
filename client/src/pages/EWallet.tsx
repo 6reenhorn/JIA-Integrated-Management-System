@@ -7,16 +7,16 @@ import Overview from '../components/e-wallet/Overview/Overview';
 import GCash from '../components/e-wallet/Gcash/Gcash';
 import PayMaya from '../components/e-wallet/Paymaya/PayMaya';
 import JuanPay from '../components/e-wallet/JuanPay/JuanPay';
-import AddGCashRecordModal from '../modals/ewallet/GcashRecordModal';
-import AddPayMayaRecordModal from '../modals/ewallet/PayMayaRecordModal';
-import AddJuanPayRecordModal from '../modals/ewallet/JuanPayRecordModal';
+import AddGCashRecordModal from '../modals/ewallet/Gcash Modals/GcashRecordModal';
+import AddPayMayaRecordModal from '../modals/ewallet/Paymaya Modals/PayMayaRecordModal';
+import AddJuanPayRecordModal from '../modals/ewallet/JuanPay Modals/JuanPayRecordModal';
 import type { GCashRecord, PayMayaRecord, JuanPayRecord } from '../types/ewallet_types';
-import DeleteGCashRecordModal from '../modals/ewallet/DeleteGcashModal';
-import DeletePayMayaRecordModal from '../modals/ewallet/DeletePayMayaModal';
-import DeleteJuanPayRecordModal from '../modals/ewallet/DeleteJuanPayModal';
-import EditGCashRecordModal from '../modals/ewallet/EditGcashModal';
-import EditPayMayaRecordModal from '../modals/ewallet/EditPayMayaModal';
-import EditJuanPayRecordModal from '../modals/ewallet/EditJuanPayModal';
+import DeleteGCashRecordModal from '../modals/ewallet/Gcash Modals/DeleteGcashModal';
+import DeletePayMayaRecordModal from '../modals/ewallet/Paymaya Modals/DeletePayMayaModal';
+import DeleteJuanPayRecordModal from '../modals/ewallet/JuanPay Modals/DeleteJuanPayModal';
+import EditGCashRecordModal from '../modals/ewallet/Gcash Modals/EditGcashModal';
+import EditPayMayaRecordModal from '../modals/ewallet/Paymaya Modals/EditPayMayaModal';
+import EditJuanPayRecordModal from '../modals/ewallet/JuanPay Modals/EditJuanPayModal';
 
 interface EWalletProps {
   activeSection?: string;
@@ -606,6 +606,16 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
                 isOpen={isJuanPayModalOpen}
                 onClose={() => setIsJuanPayModalOpen(false)}
                 onAddRecord={handleAddJuanPayRecord}
+                // Pre-fill 
+                lastEndingBalance={(() => {
+                  if (juanpayRecords.length === 0) return null;
+                  const sortedRecords = [...juanpayRecords].sort((a, b) => {
+                    const dateA = new Date(a.date).getTime();
+                    const dateB = new Date(b.date).getTime();
+                    return dateB - dateA;
+                  });
+                  return sortedRecords[0].ending;
+                })()}
               />
             </div>
           </div>
