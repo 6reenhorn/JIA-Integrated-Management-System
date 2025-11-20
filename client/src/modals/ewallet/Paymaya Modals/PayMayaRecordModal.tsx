@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { GCashRecord } from '../../types/ewallet_types';
-import CustomDatePicker from '../../components/common/CustomDatePicker';
+import type { PayMayaRecord } from '../../../types/ewallet_types';
+import CustomDatePicker from '../../../components/common/CustomDatePicker';
 
-interface AddGCashRecordModalProps {
+interface AddPayMayaRecordModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAddRecord: (record: Omit<GCashRecord, 'id'>) => void;
+    onAddRecord: (record: PayMayaRecord) => void;
 }
 
-const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
+const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     isOpen,
     onClose,
     onAddRecord,
@@ -64,7 +64,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     const modalRef = useRef<HTMLDivElement>(null);
 
     const transactionTypeOptions = ['Cash-In', 'Cash-Out'];
-    const chargeMOPOptions = ['Cash', 'GCash'];
+    const chargeMOPOptions = ['Cash', 'PayMaya'];
 
     // Validate form
     useEffect(() => {
@@ -150,11 +150,12 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
             return;
         }
 
-        const newRecord: Omit<GCashRecord, 'id'> = {
+        const newRecord: PayMayaRecord = {
+            id: Date.now().toString(),
             amount: parseFormattedNumber(formData.amount),
             serviceCharge: parseFormattedNumber(formData.serviceCharge),
             transactionType: formData.transactionType as 'Cash-In' | 'Cash-Out',
-            chargeMOP: formData.chargeMOP as 'Cash' | 'GCash',
+            chargeMOP: formData.chargeMOP as 'Cash' | 'PayMaya',
             referenceNumber: formData.referenceNumber,
             date: formData.date,
         };
@@ -190,7 +191,6 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Background overlay with blur effect */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                 onClick={onClose}
@@ -200,15 +200,14 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                 }}
             />
 
-            {/* Modal content */}
             <div 
                 ref={modalRef}
                 className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>
-                    <h3 className="text-[20px] font-bold text-gray-900">Add New GCash Record</h3>
-                    <p className="text-[12px] text-gray-600">Record GCash cash-in, GCash cash-out, service charge, and charge MOP.</p>
+                    <h3 className="text-[20px] font-bold text-gray-900">Add New PayMaya Record</h3>
+                    <p className="text-[12px] text-gray-600">Record PayMaya cash-in, PayMaya cash-out, service charge, and charge MOP.</p>
                 </div>
                 
                 <div className="overflow-y-auto max-h-[60vh] mt-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
@@ -366,4 +365,4 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     );
 };
 
-export default AddGCashRecordModal;
+export default AddPayMayaRecordModal;

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import type { JuanPayRecord } from '../../types/ewallet_types';
+import type { JuanPayRecord } from '../../../types/ewallet_types';
 import { AlertTriangle, X } from 'lucide-react';
 
 interface DeleteJuanPayRecordModalProps {

@@ -1,21 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { PayMayaRecord } from '../../types/ewallet_types';
-import CustomDatePicker from '../../components/common/CustomDatePicker';
+import type { GCashRecord } from '../../../types/ewallet_types';
+import CustomDatePicker from '../../../components/common/CustomDatePicker';
 
-interface EditPayMayaRecordModalProps {
+interface AddGCashRecordModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onEditRecord: (id: string, record: Omit<PayMayaRecord, 'id'>) => void;
-    record: PayMayaRecord | null;
-    isEditing?: boolean;
+    onAddRecord: (record: Omit<GCashRecord, 'id'>) => void;
 }
 
-const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
+const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     isOpen,
     onClose,
-    onEditRecord,
-    record,
-    isEditing = false
+    onAddRecord,
 }) => {
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
@@ -68,21 +64,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     const modalRef = useRef<HTMLDivElement>(null);
 
     const transactionTypeOptions = ['Cash-In', 'Cash-Out'];
-    const chargeMOPOptions = ['Cash', 'PayMaya'];
-
-    // Initialize form with record data
-    useEffect(() => {
-        if (record && isOpen) {
-            setFormData({
-                amount: formatNumberWithCommas(record.amount.toString()),
-                serviceCharge: formatNumberWithCommas(record.serviceCharge.toString()),
-                transactionType: record.transactionType,
-                chargeMOP: record.chargeMOP,
-                referenceNumber: record.referenceNumber || '',
-                date: record.date,
-            });
-        }
-    }, [record, isOpen]);
+    const chargeMOPOptions = ['Cash', 'GCash'];
 
     // Validate form
     useEffect(() => {
@@ -111,7 +93,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     // Close modal on escape key
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && !isEditing) {
+            if (event.key === 'Escape') {
                 handleCancel();
             }
         };
@@ -125,7 +107,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
             document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen, isEditing]);
+    }, [isOpen]);
 
     const handleInputChange = (field: string, value: string) => {
         if (field === 'amount' || field === 'serviceCharge') {
@@ -144,12 +126,10 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     };
 
     const handleDropdownToggle = (dropdown: 'transactionType' | 'chargeMOP') => {
-        if (!isEditing) {
-            setDropdowns(prev => ({
-                ...prev,
-                [dropdown]: !prev[dropdown],
-            }));
-        }
+        setDropdowns(prev => ({
+            ...prev,
+            [dropdown]: !prev[dropdown],
+        }));
     };
 
     const handleDropdownSelect = (dropdown: 'transactionType' | 'chargeMOP', value: string) => {
@@ -166,49 +146,69 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!isFormValid || !record || isEditing) {
+        if (!isFormValid) {
             return;
         }
 
-        const updatedRecord: Omit<PayMayaRecord, 'id'> = {
+        const newRecord: Omit<GCashRecord, 'id'> = {
             amount: parseFormattedNumber(formData.amount),
             serviceCharge: parseFormattedNumber(formData.serviceCharge),
             transactionType: formData.transactionType as 'Cash-In' | 'Cash-Out',
-            chargeMOP: formData.chargeMOP as 'Cash' | 'PayMaya',
+            chargeMOP: formData.chargeMOP as 'Cash' | 'GCash',
             referenceNumber: formData.referenceNumber,
             date: formData.date,
         };
 
-        onEditRecord(record.id, updatedRecord);
+        onAddRecord(newRecord);
+        
+        // Reset form
+        setFormData({
+            amount: '',
+            serviceCharge: '',
+            transactionType: '',
+            chargeMOP: '',
+            referenceNumber: '',
+            date: getLocalISODate(new Date()),
+        });
+        
+        onClose();
     };
 
     const handleCancel = () => {
-        if (!isEditing) {
-            onClose();
-        }
+        setFormData({
+            amount: '',
+            serviceCharge: '',
+            transactionType: '',
+            chargeMOP: '',
+            referenceNumber: '',
+            date: getLocalISODate(new Date()),
+        });
+        onClose();
     };
 
-    if (!isOpen || !record) return null;
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Background overlay with blur effect */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={!isEditing ? onClose : undefined}
+                onClick={onClose}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
                 }}
             />
 
+            {/* Modal content */}
             <div 
                 ref={modalRef}
                 className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>
-                    <h3 className="text-[20px] font-bold text-gray-900">Edit PayMaya Record</h3>
-                    <p className="text-[12px] text-gray-600">Update PayMaya cash-in, cash-out, service charge, and charge MOP.</p>
+                    <h3 className="text-[20px] font-bold text-gray-900">Add New GCash Record</h3>
+                    <p className="text-[12px] text-gray-600">Record GCash cash-in, GCash cash-out, service charge, and charge MOP.</p>
                 </div>
                 
                 <div className="overflow-y-auto max-h-[60vh] mt-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
@@ -226,20 +226,18 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                                     onChange={(e) => handleInputChange('amount', e.target.value)} 
                                     className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
                                     required
-                                    disabled={isEditing}
                                 />
                             </div>
                             <div className="flex flex-col">
                                 <label htmlFor="serviceCharge" className="text-[12px] font-bold text-gray-700 mb-1">Service Charge (₱)</label>
                                 <input 
-                                    type="text" 
+                                    type="text"
                                     id="serviceCharge" 
                                     name="serviceCharge" 
                                     placeholder='0.00' 
                                     value={formData.serviceCharge} 
                                     onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
                                     className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
-                                    disabled={isEditing}
                                 />
                             </div>
                         </div>
@@ -249,7 +247,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                             <div className="dropdown relative" ref={transactionTypeRef}>
                                 <label className="text-[12px] font-bold text-gray-700 mb-1 block">Transaction Type</label>
                                 <div
-                                    className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 transition-all duration-200 min-h-[38px] ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'cursor-not-allowed'}`}
+                                    className="dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
                                     onClick={() => handleDropdownToggle('transactionType')}
                                 >
                                     <span className={formData.transactionType ? 'text-gray-900' : 'text-gray-500'}>
@@ -265,7 +263,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                                         <polygon points="4,6 12,6 8,12" fill="currentColor" />
                                     </svg>
                                 </div>
-                                {dropdowns.transactionType && !isEditing && (
+                                {dropdowns.transactionType && (
                                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
                                         {transactionTypeOptions.map((option) => (
                                             <div
@@ -283,7 +281,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                             <div className="dropdown relative" ref={chargeMOPRef}>
                                 <label className="text-[12px] font-bold text-gray-700 mb-1 block">Charge MOP (₱)</label>
                                 <div
-                                    className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 transition-all duration-200 min-h-[38px] ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'cursor-not-allowed'}`}
+                                    className="dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
                                     onClick={() => handleDropdownToggle('chargeMOP')}
                                 >
                                     <span className={formData.chargeMOP ? 'text-gray-900' : 'text-gray-500'}>
@@ -299,7 +297,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                                         <polygon points="4,6 12,6 8,12" fill="currentColor" />
                                     </svg>
                                 </div>
-                                {dropdowns.chargeMOP && !isEditing && (
+                                {dropdowns.chargeMOP && (
                                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
                                         {chargeMOPOptions.map((option) => (
                                             <div
@@ -326,7 +324,6 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                                 value={formData.referenceNumber} 
                                 onChange={(e) => handleInputChange('referenceNumber', e.target.value)} 
                                 className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
-                                disabled={isEditing}
                             />
                         </div>
 
@@ -337,7 +334,6 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                                 selected={formData.date ? parseLocalDate(formData.date) : null}
                                 onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
                                 maxDate={new Date()}
-                                disabled={isEditing}
                             />
                         </div>
                     </form>
@@ -349,28 +345,20 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm"
                         onClick={handleCancel}
-                        disabled={isEditing}
                     >
                         Cancel
                     </button>
                     <button 
                         type="submit"
                         className={`px-4 py-2 rounded-md transition-colors duration-200 font-medium text-sm shadow-sm ${
-                            isFormValid && !isEditing
+                            isFormValid 
                                 ? 'bg-[#02367B] hover:bg-[#01285a] text-white' 
                                 : 'bg-gray-400 text-white cursor-not-allowed'
                         }`}
                         onClick={handleSubmit}
-                        disabled={!isFormValid || isEditing}
+                        disabled={!isFormValid}
                     >
-                        {isEditing ? (
-                            <>
-                                <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Updating...
-                            </>
-                        ) : (
-                            'Update Record'
-                        )}
+                        Add Record
                     </button>
                 </div>
             </div>
@@ -378,4 +366,4 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     );
 };
 
-export default EditPayMayaRecordModal;
+export default AddGCashRecordModal;

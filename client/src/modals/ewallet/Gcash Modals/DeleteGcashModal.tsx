@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
-import type { GCashRecord } from '../../types/ewallet_types';
+import type { GCashRecord } from '../../../types/ewallet_types';
 
 interface DeleteGCashRecordModalProps {
     isOpen: boolean;
