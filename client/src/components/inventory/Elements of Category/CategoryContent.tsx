@@ -38,7 +38,9 @@ interface CategoryContentProps {
   activeSection?: string;
   onSectionChange?: (key: string) => void;
   inventoryItems?: InventoryItem[];
-  isLoading?: boolean; // Add loading prop
+  isLoading?: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const CategoryContent: React.FC<CategoryContentProps> = ({
@@ -55,7 +57,9 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
   activeSection,
   onSectionChange,
   inventoryItems = [],
-  isLoading = false // Default to false
+  isLoading = false,
+  onRefresh,
+  isRefreshing = false
 }) => {
   const defaultColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'];
   
@@ -99,6 +103,8 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
           searchPlaceholder="Search Categories"
           addButtonText="Add Category"
           showTitle={true}
+          onRefresh={onRefresh}
+          isRefreshing={isRefreshing}
         />
         
         {/* Loading State */}

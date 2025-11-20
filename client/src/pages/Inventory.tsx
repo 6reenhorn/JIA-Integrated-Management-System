@@ -84,6 +84,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
 
   const [isRefreshingInventory, setIsRefreshingInventory] = useState(false);
   const [isRefreshingSales, setIsRefreshingSales] = useState(false);
+  const [isRefreshingCategories, setIsRefreshingCategories] = useState(false);
 
   useEffect(() => {
     if (onSectionChange && propActiveSection === undefined) {
@@ -521,6 +522,35 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   };
 
+    const handleRefreshCategories = async () => {
+    console.log('Refresh button clicked');
+    console.log('Current categories:', categoriesData.length);
+    setIsRefreshingCategories(true);
+    setIsLoadingCategories(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory/categories');
+      console.log('Fetched categories data:', response.data);
+      console.log('New categories count:', response.data.length);
+      setCategoriesData(response.data);
+      console.log('State updated');
+    } catch (err: unknown) {
+      console.error('Error refreshing categories data:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+    } finally {
+      setTimeout(() => {
+        setIsRefreshingCategories(false);
+        setIsLoadingCategories(false);
+        console.log('Refresh complete');
+      }, 500);
+    }
+  };
+
   const handleDeleteSale = async (id: number) => {
     setIsDeletingSales(true);
     try {
@@ -727,6 +757,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           onSectionChange={handleSectionChange}
           inventoryItems={inventoryItems}
           isLoading={isLoadingCategories}
+          onRefresh={handleRefreshCategories}
+          isRefreshing={isRefreshingCategories}
         />
       )}
 
