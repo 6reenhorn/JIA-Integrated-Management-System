@@ -36,7 +36,10 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ employees }) => {
               </td>
               <td className="py-4 px-6 text-sm w-[150px] min-w-[150px] text-gray-600">
                 <div>
-                  {employee.date}
+                  {(() => {
+                    const date = new Date(employee.date);
+                    return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+                  })()}
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px] min-w-[120px]">

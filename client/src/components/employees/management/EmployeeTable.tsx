@@ -130,7 +130,15 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                 </span>
               </td>
               <td className="py-4 px-6 w-[150px] text-sm text-gray-600">
-                {employee.lastLogin}
+                {employee.lastLogin !== 'Never' ? (() => {
+                  const date = new Date(employee.lastLogin);
+                  const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+                  const hours = date.getHours();
+                  const minutes = String(date.getMinutes()).padStart(2, '0');
+                  const ampm = hours >= 12 ? 'PM' : 'AM';
+                  const displayHours = hours % 12 || 12;
+                  return `${formattedDate} ${displayHours}:${minutes}${ampm}`;
+                })() : 'Never'}
               </td>
               <td className="py-4 px-6 w-[120px]">
                 <div className="flex items-center gap-2">
