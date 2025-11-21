@@ -133,7 +133,11 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
-                  {record.paymentDate || '-'}
+                  {record.paymentDate ? (() => {
+                    const cleaned = record.paymentDate.split(' ')[0];
+                    const [yy, dd, mm] = cleaned.split('-');
+                    return `${mm}/${dd}/20${yy}`;
+                  })() : '-'}
                 </div>
               </td>
               <td className="py-4 px-6 w-[80px]">
