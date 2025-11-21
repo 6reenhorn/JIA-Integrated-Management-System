@@ -151,7 +151,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             </h2>
           ) : null}
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
@@ -159,7 +159,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 placeholder={config.searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent w-64"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[310px]"
               />
             </div>
             {onRefresh && <RefreshBtn onClick={onRefresh} isSpinning={isRefreshing} />}
