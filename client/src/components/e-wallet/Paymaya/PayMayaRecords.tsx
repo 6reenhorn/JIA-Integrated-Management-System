@@ -1,6 +1,7 @@
 import React from 'react';
 import type { PayMayaRecord } from '../../../types/ewallet_types';
 import { Edit, Trash2 } from 'lucide-react';
+import { useDateFormat } from '../../../context/DateFormatContext';
 
 interface PayMayaRecordsTableProps {
     records: PayMayaRecord[];
@@ -20,6 +21,8 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
     isDeleting = false,
 }) => {
 
+    const { formatDate: formatDateWithPreference } = useDateFormat();
+
     const formatCurrency = (amount: number): string => {
         return `₱${amount.toLocaleString('en-US', {
             minimumFractionDigits: 2,
@@ -28,13 +31,17 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
     };
 
     const formatDate = (dateString: string): string => {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+            const year = Number(parts[0]);
+            const month = Number(parts[1]) - 1;
+            const day = Number(parts[2]);
+            const localDate = new Date(year, month, day);
+            return formatDateWithPreference(localDate);
+        }
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric',
-        });
-    };
+        return formatDateWithPreference(date);
+    }
 
     const getTransactionTypeColor = (type: string): string => {
         return type === 'Cash-In'

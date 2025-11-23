@@ -2,6 +2,7 @@ import React from 'react';
 import { Eye, Edit, Trash2, User } from 'lucide-react';
 import type { Employee } from '../../../types/employee_types';
 import { getStatusColor, getRoleColor } from '../../../utils/employee_utils';
+import { useDateFormat } from '../../../context/DateFormatContext';
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -24,6 +25,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   isAdding = false,
   isDeleting = false
 }) => {
+
+  const { formatDate } = useDateFormat();
+
   if (isLoading) {
     return (
       <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] flex items-center justify-center">
@@ -132,7 +136,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
               <td className="py-4 px-6 w-[150px] text-sm text-gray-600">
                 {employee.lastLogin !== 'Never' ? (() => {
                   const date = new Date(employee.lastLogin);
-                  const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+                  const formattedDate = formatDate(date);
                   const hours = date.getHours();
                   const minutes = String(date.getMinutes()).padStart(2, '0');
                   const ampm = hours >= 12 ? 'PM' : 'AM';

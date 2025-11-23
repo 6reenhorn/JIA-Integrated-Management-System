@@ -2,12 +2,14 @@ import React from "react";
 import { User } from "lucide-react";
 import type { AttendanceRecord } from "../../../types/employee_types";
 import { getAttendanceStatusColor } from "../../../utils/attendance_utils";
+import { useDateFormat } from '../../../context/DateFormatContext';
 
 interface AttendanceTableProps {
     employees: AttendanceRecord[];
 }
 
 const AttendanceTable: React.FC<AttendanceTableProps> = ({ employees }) => {
+    const { formatDate } = useDateFormat();
     return (
     <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] max-h-[429px] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <table className="table-fixed w-full">
@@ -36,10 +38,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ employees }) => {
               </td>
               <td className="py-4 px-6 text-sm w-[150px] min-w-[150px] text-gray-600">
                 <div>
-                  {(() => {
-                    const date = new Date(employee.date);
-                    return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
-                  })()}
+                  {formatDate(new Date(employee.date))}
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px] min-w-[120px]">
