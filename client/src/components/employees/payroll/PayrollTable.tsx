@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { User, Trash2 } from "lucide-react";
 import DeletePayrollRecordModal from '../../../modals/employee/DeletePayrollRecordModal';
+import { useDateFormat } from '../../../context/DateFormatContext';
 
 interface PayrollRecord {
   id: number;
@@ -24,6 +25,7 @@ interface PayrollTableProps {
 }
 
 const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, onDelete, headColor = 'normal' }) => {
+  const { formatDate } = useDateFormat();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -134,9 +136,11 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
                   {record.paymentDate ? (() => {
-                    const cleaned = record.paymentDate.split(' ')[0];
-                    const [yy, dd, mm] = cleaned.split('-');
-                    return `${mm}/${dd}/20${yy}`;
+                    const dateStr = record.paymentDate.split(' ')[0];
+                    const [yy, mm, dd] = dateStr.split('-');
+                    const fullYear = `20${yy}`;
+                    const dateObj = new Date(parseInt(fullYear), parseInt(mm) - 1, parseInt(dd));
+                    return formatDate(dateObj);
                   })() : '-'}
                 </div>
               </td>

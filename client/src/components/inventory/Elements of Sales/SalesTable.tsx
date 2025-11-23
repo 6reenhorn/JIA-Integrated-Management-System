@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import DeleteSalesRecordModal from '../../../modals/Inventory/DeleteSalesRecordModal';
+import { useDateFormat } from '../../../context/DateFormatContext';
 
 export type SalesRecord = {
   id: number;
@@ -22,15 +23,6 @@ interface SalesTableProps {
   isDeletingRecord?: boolean;
 }
 
-// Utility function to format date from yyyy-MM-dd to MM/dd/yyyy
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${month}/${day}/${year}`;
-};
-
 const SalesTable: React.FC<SalesTableProps> = ({
   salesRecords,
   onEditSale,
@@ -40,6 +32,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
   isAdding = false,
   isDeletingRecord = false
 }) => {
+  const { formatDate } = useDateFormat()
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<SalesRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -148,7 +141,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                   <tr key={record.id} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
                       <div className="text-sm text-gray-900 truncate">
-                        {formatDate(record.date)}
+                        {formatDate(new Date(record.date))}
                       </div>
                     </td>
                     <td className="py-4 px-6 w-[140px]">

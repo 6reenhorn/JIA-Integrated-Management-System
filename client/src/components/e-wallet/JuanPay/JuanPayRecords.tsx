@@ -1,6 +1,7 @@
 import React from 'react';
 import type { JuanPayRecord } from '../../../types/ewallet_types';
 import { Edit, Trash2 } from 'lucide-react';
+import { useDateFormat } from '../../../context/DateFormatContext';
 
 interface JuanPayRecordsTableProps {
     records: JuanPayRecord[];
@@ -20,6 +21,8 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
     isDeleting = false,
 }) => {
 
+    const { formatDate: formatDateWithPreference } = useDateFormat();
+
     const formatCurrency = (amount: number): string => {
         return `₱${amount.toLocaleString('en-US', {
             minimumFractionDigits: 2,
@@ -34,18 +37,10 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
             const month = Number(parts[1]) - 1;
             const day = Number(parts[2]);
             const localDate = new Date(year, month, day);
-            return localDate.toLocaleDateString('en-US', {
-                month: '2-digit',
-                day: '2-digit',
-                year: 'numeric',
-            });
+            return formatDateWithPreference(localDate);
         }
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric',
-        });
+        return formatDateWithPreference(date);
     };
 
     if (isLoading) {

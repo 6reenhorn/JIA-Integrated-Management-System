@@ -17,17 +17,19 @@ interface SectionInfo {
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(true);
   const [currentSection, setCurrentSection] = useState<SectionInfo>({ 
     page: 'dashboard', 
     section: undefined 
   });
 
+const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+  const saved = localStorage.getItem('sidebarDefaultExpanded');
+  return saved !== 'true';
+});
+
   const [showCheckInModal, setShowCheckInModal] = useState<boolean>(false);
 
-  // Sync sidebar with inventory sections
   useEffect(() => {
-    // Sync sidebar with inventory sections
     if (currentSection.page === 'inventory' && currentSection.section) {
       const sectionToSidebarId: Record<string, string> = {
         'inventory': 'inventory',

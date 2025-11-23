@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import LayoutCard from '../../layout/LayoutCard';
 import CustomDatePicker from '../../common/CustomDatePicker';
+import { useDateFormat } from '../../../context/DateFormatContext';
 import { X, Calendar } from 'lucide-react';
 import type {
   SummaryCardProps,
@@ -17,6 +18,7 @@ interface OverviewProps {
 }
 
 const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanpayRecords }) => {
+  const { formatDate } = useDateFormat();
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [summaryStartDate, setSummaryStartDate] = useState<Date | null>(new Date());
@@ -253,10 +255,12 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
           {isFiltered && (
             <div className="text-right text-xs text-gray-600">
-              {summaryStartDate.toDateString() === summaryEndDate.toDateString() ? (
-                <div>{summaryStartDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
-              ) : (
-                <div>{summaryStartDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {summaryEndDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+              {summaryStartDate && summaryEndDate && (
+                summaryStartDate.toDateString() === summaryEndDate.toDateString() ? (
+                  <div>{formatDate(summaryStartDate)}</div>
+                ) : (
+                  <div>{formatDate(summaryStartDate)} - {formatDate(summaryEndDate)}</div>
+                )
               )}
             </div>
           )}
@@ -368,9 +372,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
             {(startDate && endDate) && (
               <div className="text-right text-xs text-gray-600">
                 {startDate.toDateString() === endDate.toDateString() ? (
-                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                  <div>{formatDate(startDate)}</div>
                 ) : (
-                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                  <div>{formatDate(startDate)} - {formatDate(endDate)}</div>
                 )}
               </div>
             )}
@@ -386,9 +390,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
             {(startDate && endDate) && (
               <div className="text-right text-xs text-gray-600">
                 {startDate.toDateString() === endDate.toDateString() ? (
-                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                  <div>{formatDate(startDate)}</div>
                 ) : (
-                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                  <div>{formatDate(startDate)} - {formatDate(endDate)}</div>
                 )}
               </div>
             )}
@@ -404,9 +408,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
             {(startDate && endDate) && (
               <div className="text-right text-xs text-gray-600">
                 {startDate.toDateString() === endDate.toDateString() ? (
-                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                  <div>{formatDate(startDate)}</div>
                 ) : (
-                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                  <div>{formatDate(startDate)} - {formatDate(endDate)}</div>
                 )}
               </div>
             )}
@@ -422,9 +426,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
             {(startDate && endDate) && (
               <div className="text-right text-xs text-gray-600">
                 {startDate.toDateString() === endDate.toDateString() ? (
-                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                  <div>{formatDate(startDate)}</div>
                 ) : (
-                  <div>{startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - {endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</div>
+                  <div>{formatDate(startDate)} - {formatDate(endDate)}</div>
                 )}
               </div>
             )}
@@ -447,9 +451,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
             <span className="text-sm font-medium">
               {(startDate && endDate) ? (
                 startDate.toDateString() === endDate.toDateString() ? (
-                  startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
+                  formatDate(startDate)
                 ) : (
-                  `${startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`
+                  `${formatDate(startDate)} - ${formatDate(endDate)}`
                 )
               ) : (
                 'Filter Overall Total'
@@ -520,9 +524,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
             <span className="text-sm font-medium">
               {(summaryStartDate && summaryEndDate) ? (
                 summaryStartDate.toDateString() === summaryEndDate.toDateString() ? (
-                  summaryStartDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
+                  formatDate(summaryStartDate)
                 ) : (
-                  `${summaryStartDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} - ${summaryEndDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}`
+                  `${formatDate(summaryStartDate)} - ${formatDate(summaryEndDate)}`
                 )
               ) : (
                 'Summary Date Range'
