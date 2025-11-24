@@ -124,25 +124,26 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    const fetchInventoryItems = async () => {
-      setIsLoadingInventory(true);
-      try {
-        const response = await axios.get('http://localhost:3001/api/inventory');
-        setInventoryItems(response.data);
-      } catch (err: unknown) {
-        console.error('Error fetching inventory items:', err);
-        if (axios.isAxiosError(err)) {
-          console.error('Error details:', err.response?.data);
-        } else if (err instanceof Error) {
-          console.error('Error message:', err.message);
-        } else {
-          console.error('Error details:', String(err));
-        }
-      } finally {
-        setIsLoadingInventory(false);
+  const fetchInventoryItems = async () => {
+    setIsLoadingInventory(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory');
+      setInventoryItems(response.data);
+    } catch (err: unknown) {
+      console.error('Error fetching inventory items:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
       }
-    };
+    } finally {
+      setIsLoadingInventory(false);
+    }
+  };
+
+  useEffect(() => {
     fetchInventoryItems();
   }, []);
 
@@ -180,6 +181,18 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     });
     return colors;
   }, [categoriesData]);
+
+  // Calculate out of stock items
+  const outOfStockItems = useMemo(() => 
+    inventoryItems.filter(item => item.stock === 0),
+    [inventoryItems]
+  );
+
+  // Calculate low stock items (you can define what "low stock" means, e.g., stock <= minimumStock or stock <= 5)
+  const lowStockItems = useMemo(() => 
+    inventoryItems.filter(item => item.stock > 0 && item.stock <= (item.minimumStock || 5)),
+    [inventoryItems]
+  );
 
   const filteredSalesRecords = useMemo(() => {
     console.log('Filtering sales records - Total:', salesRecords.length, 'Selected Date:', selectedDate, 'Search Term:', salesSearchTerm);
@@ -227,6 +240,13 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   ];
 
   const inventoryStats = useMemo(() => calculateStats(inventoryItems), [inventoryItems]);
+
+  // Update inventory stats to include out of stock and low stock counts
+  const enhancedInventoryStats = useMemo(() => ({
+    ...inventoryStats,
+    outOfStockItems: outOfStockItems.length,
+    lowStockItems: lowStockItems.length
+  }), [inventoryStats, outOfStockItems.length, lowStockItems.length]);
 
   const filteredItems = useMemo(
     () => filterInventoryItems(inventoryItems, searchTerm, selectedCategory),
@@ -465,33 +485,33 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   };
 
   const handleRefreshInventory = async () => {
-  console.log('Refresh button clicked');
-  console.log('Current inventory items:', inventoryItems.length);
-  setIsRefreshingInventory(true);
-  setIsLoadingInventory(true);
-  try {
-    const response = await axios.get('http://localhost:3001/api/inventory');
-    console.log('Fetched inventory data:', response.data);
-    console.log('New inventory items count:', response.data.length);
-    setInventoryItems(response.data);
-    console.log('State updated');
-  } catch (err: unknown) {
-    console.error('Error refreshing inventory data:', err);
-    if (axios.isAxiosError(err)) {
-      console.error('Error details:', err.response?.data);
-    } else if (err instanceof Error) {
-      console.error('Error message:', err.message);
-    } else {
-      console.error('Error details:', String(err));
+    console.log('Refresh button clicked');
+    console.log('Current inventory items:', inventoryItems.length);
+    setIsRefreshingInventory(true);
+    setIsLoadingInventory(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory');
+      console.log('Fetched inventory data:', response.data);
+      console.log('New inventory items count:', response.data.length);
+      setInventoryItems(response.data);
+      console.log('State updated');
+    } catch (err: unknown) {
+      console.error('Error refreshing inventory data:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
+      }
+    } finally {
+      setTimeout(() => {
+        setIsRefreshingInventory(false);
+        setIsLoadingInventory(false);
+        console.log('Refresh complete');
+      }, 500);
     }
-  } finally {
-    setTimeout(() => {
-      setIsRefreshingInventory(false);
-      setIsLoadingInventory(false);
-      console.log('Refresh complete');
-    }, 500);
-  }
-};
+  };
 
   const handleRefreshSales = async () => {
     console.log('Refresh button clicked');
@@ -522,7 +542,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   };
 
-    const handleRefreshCategories = async () => {
+  const handleRefreshCategories = async () => {
     console.log('Refresh button clicked');
     console.log('Current categories:', categoriesData.length);
     setIsRefreshingCategories(true);
@@ -635,6 +655,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   };
 
+  // ADD THIS FUNCTION BACK - IT WAS MISSING
   const handleAddNewSale = async (saleData: {
     productName: string;
     quantity: number;
@@ -659,15 +680,16 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       setSalesRecords(prev => [...prev, response.data]);
       setSalesCurrentPage(1);
       setIsAddSalesModalOpen(false);
+      
+      // Automatically refresh inventory after adding sale
+      await fetchInventoryItems();
+      
     } catch (err: unknown) {
       console.error('Error adding sales record:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
+      
+      // Re-open the modal if there's a stock conflict so user can adjust
+      setIsAddSalesModalOpen(true);
+      
       let errorMessage = 'Unknown error';
       if (axios.isAxiosError(err)) {
         errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
@@ -676,7 +698,18 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       } else {
         errorMessage = String(err);
       }
-      alert(`Failed to add sale: ${errorMessage}\n\nPlease check the console for more details.`);
+      
+      // Show more specific error message for stock issues
+      if (errorMessage.includes('Insufficient stock') || errorMessage.includes('Available:')) {
+        alert(`Stock conflict: ${errorMessage}\n\nPlease adjust the quantity and try again.`);
+      } else if (errorMessage.includes('not found in inventory')) {
+        alert(`Product not found: ${errorMessage}\n\nPlease add the product to inventory first.`);
+      } else {
+        alert(`Failed to add sale: ${errorMessage}\n\nPlease check the console for more details.`);
+      }
+      
+      // Re-throw the error to stop the process
+      throw err;
     } finally {
       setIsAddingSales(false);  
     }
@@ -706,7 +739,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     <div className="space-y-6">
       {activeSection === 'inventory' && (
         <InventoryStats 
-          stats={inventoryStats}
+          stats={enhancedInventoryStats} // Use enhanced stats that include out of stock count
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           selectedCategory={selectedCategory}
@@ -822,7 +855,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       <AddSalesModal
         isOpen={isAddSalesModalOpen}
         onClose={handleCloseSalesModal}
-        onAddSale={handleAddNewSale}
+        onAddSale={handleAddNewSale} // This is now defined
+        onInventoryUpdate={fetchInventoryItems} // Pass the refresh function
       />
     </div>
   );

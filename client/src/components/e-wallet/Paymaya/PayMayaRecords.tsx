@@ -57,10 +57,12 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
 
     if (isLoading) {
         return (
-            <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
-                <div className="flex flex-col items-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-                    <p className="mt-4 text-gray-500">Loading PayMaya records...</p>
+            <div className="border-2 border-[#E5E7EB] rounded-lg">
+                <div className="h-[390px] flex items-center justify-center">
+                    <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                        <p className="mt-4 text-gray-500">Loading PayMaya records...</p>
+                    </div>
                 </div>
             </div>
         );
@@ -70,10 +72,10 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
         return (
             <div className="border-2 border-[#E5E7EB] rounded-lg">
                 <div className="overflow-x-auto">
-                    <table className="table-fixed bg-[#EDEDED] w-full">
-                        <thead className="border-[#E5E7EB] border-b">
+                    <table className="table-fixed w-full">
+                        <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeleting ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
                             <tr>
-                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+                                <th className="rounded-tl-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
                                     Date
                                 </th>
                                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[150px]">
@@ -91,7 +93,7 @@ const PayMayaRecordsTable: React.FC<PayMayaRecordsTableProps> = ({
                                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
                                     Charge MOP
                                 </th>
-                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                                <th className="rounded-tr-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
                                     Actions
                                 </th>
                             </tr>

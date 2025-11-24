@@ -59,7 +59,7 @@ router.post('/categories', async (req, res) => {
 });
 
 // ============================================
-// SALES ROUTES
+// SALES ROUTES (WITH INVENTORY DEDUCTION)
 // ============================================
 
 // GET /api/inventory/sales - Fetch all sales records
@@ -83,7 +83,7 @@ router.get('/sales', async (req, res) => {
   }
 });
 
-// POST /api/inventory/sales - Add a new sales record
+// POST /api/inventory/sales - Add a new sales record AND deduct from inventory
 router.post('/sales', async (req, res) => {
   const { date, productName, quantity, price, paymentMethod } = req.body;
 
@@ -98,18 +98,63 @@ router.post('/sales', async (req, res) => {
     });
   }
 
+  // Start a database transaction
+  const client = await pool.connect();
+  
   try {
-    const total = quantity * price;
+    await client.query('BEGIN');
 
-    const query = `
+    // 1. Check if product exists in inventory
+    const inventoryCheck = await client.query(
+      'SELECT id, stock, product_price, minimum_stock FROM inventory_items WHERE product_name = $1',
+      [productName]
+    );
+
+    if (inventoryCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        error: `Product "${productName}" not found in inventory. Please add it to inventory first.` 
+      });
+    }
+
+    const inventoryItem = inventoryCheck.rows[0];
+    const currentStock = inventoryItem.stock;
+    const minStock = inventoryItem.minimum_stock || 5;
+
+    // 2. Check if there's enough stock
+    if (currentStock < quantity) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        error: `Insufficient stock for "${productName}". Available: ${currentStock}, Requested: ${quantity}` 
+      });
+    }
+
+    // 3. Calculate new stock and determine status
+    const newStock = currentStock - quantity;
+    const newTotalAmount = newStock * inventoryItem.product_price;
+    const newStatus = newStock === 0 ? 'Out Of Stock' : newStock <= minStock ? 'Low Stock' : 'In Stock';
+
+    // 4. Update inventory
+    await client.query(
+      `UPDATE inventory_items 
+       SET stock = $1, status = $2, total_amount = $3, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $4`,
+      [newStock, newStatus, newTotalAmount, inventoryItem.id]
+    );
+
+    // 5. Insert sales record
+    const total = quantity * price;
+    const salesQuery = `
       INSERT INTO sales_records (date, product_name, quantity, price, total, payment_method)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `;
-    const values = [date, productName, quantity, price, total, paymentMethod];
+    const salesValues = [date, productName, quantity, price, total, paymentMethod];
+    const salesResult = await client.query(salesQuery, salesValues);
+    const newSale = salesResult.rows[0];
 
-    const result = await pool.query(query, values);
-    const newSale = result.rows[0];
+    // Commit the transaction
+    await client.query('COMMIT');
 
     const salesRecord = {
       id: newSale.id,
@@ -119,21 +164,30 @@ router.post('/sales', async (req, res) => {
       price: parseFloat(newSale.price),
       total: parseFloat(newSale.total),
       paymentMethod: newSale.payment_method,
-      createdAt: newSale.created_at
+      createdAt: newSale.created_at,
+      // Include updated inventory info
+      inventoryUpdate: {
+        previousStock: currentStock,
+        newStock: newStock,
+        newStatus: newStatus
+      }
     };
 
     res.status(201).json(salesRecord);
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Error adding sales record:', err);
     res.status(500).json({ 
       error: 'Internal server error', 
       details: err.message,
       code: err.code
     });
+  } finally {
+    client.release();
   }
 });
 
-// PUT /api/inventory/sales/:id - Update a sales record
+// PUT /api/inventory/sales/:id - Update a sales record (with inventory adjustment)
 router.put('/sales/:id', async (req, res) => {
   const { id } = req.params;
   const { date, productName, quantity, price, paymentMethod } = req.body;
@@ -149,25 +203,92 @@ router.put('/sales/:id', async (req, res) => {
     });
   }
 
+  const client = await pool.connect();
+  
   try {
-    const total = quantity * price;
+    await client.query('BEGIN');
 
-    const query = `
+    // 1. Get the old sales record
+    const oldSaleResult = await client.query(
+      'SELECT product_name, quantity FROM sales_records WHERE id = $1',
+      [id]
+    );
+
+    if (oldSaleResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Sales record not found' });
+    }
+
+    const oldSale = oldSaleResult.rows[0];
+    const oldProductName = oldSale.product_name;
+    const oldQuantity = oldSale.quantity;
+
+    // 2. Restore old inventory
+    await client.query(
+      `UPDATE inventory_items 
+       SET stock = stock + $1, 
+           total_amount = (stock + $1) * product_price,
+           status = CASE 
+             WHEN (stock + $1) = 0 THEN 'Out Of Stock'
+             WHEN (stock + $1) <= COALESCE(minimum_stock, 5) THEN 'Low Stock'
+             ELSE 'In Stock'
+           END,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE product_name = $2`,
+      [oldQuantity, oldProductName]
+    );
+
+    // 3. Check new product inventory
+    const inventoryCheck = await client.query(
+      'SELECT id, stock, product_price, minimum_stock FROM inventory_items WHERE product_name = $1',
+      [productName]
+    );
+
+    if (inventoryCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        error: `Product "${productName}" not found in inventory` 
+      });
+    }
+
+    const inventoryItem = inventoryCheck.rows[0];
+    const currentStock = inventoryItem.stock;
+    const minStock = inventoryItem.minimum_stock || 5;
+
+    if (currentStock < quantity) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        error: `Insufficient stock for "${productName}". Available: ${currentStock}, Requested: ${quantity}` 
+      });
+    }
+
+    // 4. Deduct new quantity from inventory
+    const newStock = currentStock - quantity;
+    const newTotalAmount = newStock * inventoryItem.product_price;
+    const newStatus = newStock === 0 ? 'Out Of Stock' : newStock <= minStock ? 'Low Stock' : 'In Stock';
+
+    await client.query(
+      `UPDATE inventory_items 
+       SET stock = $1, status = $2, total_amount = $3, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $4`,
+      [newStock, newStatus, newTotalAmount, inventoryItem.id]
+    );
+
+    // 5. Update sales record
+    const total = quantity * price;
+    const salesQuery = `
       UPDATE sales_records
       SET date = $1, product_name = $2, quantity = $3, price = $4, total = $5, 
           payment_method = $6, updated_at = CURRENT_TIMESTAMP
       WHERE id = $7
       RETURNING *
     `;
-    const values = [date, productName, quantity, price, total, paymentMethod, id];
+    const salesValues = [date, productName, quantity, price, total, paymentMethod, id];
+    const salesResult = await client.query(salesQuery, salesValues);
+    const updatedSale = salesResult.rows[0];
 
-    const result = await pool.query(query, values);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Sales record not found' });
-    }
+    await client.query('COMMIT');
 
-    const updatedSale = result.rows[0];
     const salesRecord = {
       id: updatedSale.id,
       date: updatedSale.date.toISOString().split('T')[0],
@@ -181,26 +302,67 @@ router.put('/sales/:id', async (req, res) => {
 
     res.json(salesRecord);
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Error updating sales record:', err);
     res.status(500).json({ error: 'Internal server error', details: err.message });
+  } finally {
+    client.release();
   }
 });
 
-// DELETE /api/inventory/sales/:id - Delete a sales record
+// DELETE /api/inventory/sales/:id - Delete a sales record (restore inventory)
 router.delete('/sales/:id', async (req, res) => {
   const { id } = req.params;
 
+  const client = await pool.connect();
+  
   try {
-    const result = await pool.query('DELETE FROM sales_records WHERE id = $1 RETURNING *', [id]);
+    await client.query('BEGIN');
+
+    // 1. Get the sales record to restore inventory
+    const salesResult = await client.query(
+      'SELECT product_name, quantity FROM sales_records WHERE id = $1',
+      [id]
+    );
     
-    if (result.rows.length === 0) {
+    if (salesResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Sales record not found' });
     }
 
-    res.json({ message: 'Sales record deleted successfully' });
+    const sale = salesResult.rows[0];
+
+    // 2. Restore inventory
+    await client.query(
+      `UPDATE inventory_items 
+       SET stock = stock + $1, 
+           total_amount = (stock + $1) * product_price,
+           status = CASE 
+             WHEN (stock + $1) = 0 THEN 'Out Of Stock'
+             WHEN (stock + $1) <= COALESCE(minimum_stock, 5) THEN 'Low Stock'
+             ELSE 'In Stock'
+           END,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE product_name = $2`,
+      [sale.quantity, sale.product_name]
+    );
+
+    // 3. Delete sales record
+    await client.query('DELETE FROM sales_records WHERE id = $1', [id]);
+
+    await client.query('COMMIT');
+
+    res.json({ 
+      message: 'Sales record deleted and inventory restored successfully',
+      restoredQuantity: sale.quantity,
+      productName: sale.product_name
+    });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Error deleting sales record:', err);
     res.status(500).json({ error: 'Internal server error', details: err.message });
+  } finally {
+    client.release();
   }
 });
 

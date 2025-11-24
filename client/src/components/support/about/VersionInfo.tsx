@@ -10,7 +10,7 @@ const VersionInfo: React.FC<VersionInfoProps> = ({ isHighlighted = false }) => (
     title="Version Info"
     className={isHighlighted ? 'ring-4 ring-[#02367B] ring-opacity-50' : ''}
   >
-    <div className="space-y-3">
+    <div className="space-y-3 h-93.5">
       <div>
         <h4 className="text-sm font-medium text-gray-500">Current Version</h4>
         <p className="text-gray-800">v1.0.0</p>

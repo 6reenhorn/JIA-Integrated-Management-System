@@ -1,6 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import CustomDatePicker from '../../components/common/CustomDatePicker';
+import axios from 'axios';
+
+interface InventoryProduct {
+  id: number;
+  productName: string;
+  stock: number;
+  productPrice: number;
+  category: string;
+}
 
 interface AddSalesModalProps {
   isOpen: boolean;
@@ -12,6 +21,7 @@ interface AddSalesModalProps {
     paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
     date: string;
   }) => void;
+  onInventoryUpdate?: () => void;
 }
 
 // Helper function to format date to MM/dd/yyyy
@@ -34,6 +44,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   isOpen,
   onClose,
   onAddSale,
+  onInventoryUpdate,
 }) => {
   const [formData, setFormData] = useState<{
     productName: string;
@@ -51,21 +62,74 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPaymentMethodOpen, setIsPaymentMethodOpen] = useState(false);
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+  const [inventoryProducts, setInventoryProducts] = useState<InventoryProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<InventoryProduct | null>(null);
+  const [productSearchTerm, setProductSearchTerm] = useState('');
+  
   const paymentMethodRef = useRef<HTMLDivElement>(null);
+  const productDropdownRef = useRef<HTMLDivElement>(null);
 
   const paymentMethodOptions = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
 
-  // Handle click outside to close dropdown
+  // Fetch inventory products when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchInventoryProducts();
+    }
+  }, [isOpen]);
+
+  const fetchInventoryProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory');
+      setInventoryProducts(response.data);
+    } catch (err) {
+      console.error('Error fetching inventory products:', err);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  // Handle click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (paymentMethodRef.current && !paymentMethodRef.current.contains(event.target as Node)) {
         setIsPaymentMethodOpen(false);
+      }
+      if (productDropdownRef.current && !productDropdownRef.current.contains(event.target as Node)) {
+        setIsProductDropdownOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Filter products based on search term
+  const filteredProducts = inventoryProducts.filter(product =>
+    product.productName.toLowerCase().includes(productSearchTerm.toLowerCase())
+  );
+
+  const handleProductSelect = (product: InventoryProduct) => {
+    setSelectedProduct(product);
+    setFormData(prev => ({
+      ...prev,
+      productName: product.productName,
+      price: product.productPrice,
+    }));
+    setProductSearchTerm(product.productName);
+    setIsProductDropdownOpen(false);
+    
+    // Clear error when product is selected
+    if (errors.productName) {
+      setErrors(prev => ({
+        ...prev,
+        productName: ''
+      }));
+    }
+  };
 
   const handleInputChange = (field: string, value: string | number) => {
     if (field === 'quantity' || field === 'price') {
@@ -101,6 +165,11 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
       newErrors.quantity = 'Quantity must be greater than 0';
     }
 
+    // Check if quantity exceeds available stock
+    if (selectedProduct && quantity > selectedProduct.stock) {
+      newErrors.quantity = `Only ${selectedProduct.stock} items available in stock`;
+    }
+
     const price = Number(formData.price);
     if (!formData.price || price <= 0) {
       newErrors.price = 'Price must be greater than 0';
@@ -114,18 +183,48 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (validateForm()) {
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (validateForm()) {
+    try {
+      // Just add the sale - the backend will handle stock deduction
       onAddSale({
         ...formData,
         quantity: Number(formData.quantity),
         price: Number(formData.price)
       });
+
+      // Trigger inventory refresh
+      if (onInventoryUpdate) {
+        onInventoryUpdate();
+      }
+
       handleClose();
+    } catch (err) {
+      console.error('Error processing sale:', err);
+      
+      // Refresh inventory data in case it's stale
+      await fetchInventoryProducts();
+      
+      // Update selected product with latest data
+      if (selectedProduct) {
+        const updatedProduct = inventoryProducts.find(p => p.id === selectedProduct.id);
+        if (updatedProduct) {
+          setSelectedProduct(updatedProduct);
+          // Update the form with current stock info
+          setFormData(prev => ({
+            ...prev,
+            price: updatedProduct.productPrice
+          }));
+        }
+      }
+      
+      // The error will be handled by the parent component
+      throw err; // Re-throw to let parent handle the error
     }
-  };
+  }
+};
 
   const handleClose = () => {
     setFormData({
@@ -136,6 +235,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
       date: formatDateToMMDDYYYY(new Date()),
     });
     setErrors({});
+    setSelectedProduct(null);
+    setProductSearchTerm('');
     onClose();
   };
 
@@ -167,22 +268,68 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
             <div>
               <h3 className="text-sm font-medium text-gray-900 mb-4">Details</h3>
               
-              {/* Product Name */}
+              {/* Product Name Dropdown */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Product Name
                 </label>
-                <input
-                  type="text"
-                  value={formData.productName}
-                  onChange={(e) => handleInputChange('productName', e.target.value)}
-                  placeholder="Enter Product Name"
-                  className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none ${
-                    errors.productName ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                />
+                <div className="relative" ref={productDropdownRef}>
+                  <input
+                    type="text"
+                    value={productSearchTerm}
+                    onChange={(e) => {
+                      setProductSearchTerm(e.target.value);
+                      setIsProductDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsProductDropdownOpen(true)}
+                    placeholder="Search and select product"
+                    className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none ${
+                      errors.productName ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                  />
+                  
+                  {/* Product Dropdown */}
+                  {isProductDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                      {isLoadingProducts ? (
+                        <div className="px-3 py-4 text-center text-gray-500">
+                          Loading products...
+                        </div>
+                      ) : filteredProducts.length === 0 ? (
+                        <div className="px-3 py-4 text-center text-gray-500">
+                          No products found
+                        </div>
+                      ) : (
+                        filteredProducts.map((product) => (
+                          <button
+                            key={product.id}
+                            type="button"
+                            onClick={() => handleProductSelect(product)}
+                            className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                              selectedProduct?.id === product.id ? 'bg-blue-50 text-blue-600' : ''
+                            }`}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <div className="font-medium">{product.productName}</div>
+                                <div className="text-xs text-gray-500">
+                                  Stock: {product.stock} | Price: ₱{product.productPrice.toFixed(2)}
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
                 {errors.productName && (
                   <p className="text-red-500 text-xs mt-1">{errors.productName}</p>
+                )}
+                {selectedProduct && (
+                  <p className="text-green-600 text-xs mt-1">
+                    Available stock: {selectedProduct.stock} units
+                  </p>
                 )}
               </div>
 
@@ -195,6 +342,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   <input
                     type="number"
                     min="1"
+                    max={selectedProduct?.stock || undefined}
                     value={formData.quantity}
                     onChange={(e) => handleInputChange('quantity', e.target.value === '' ? '' : parseFloat(e.target.value))}
                     placeholder="0"
@@ -227,6 +375,18 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Total Amount Display */}
+              {formData.quantity && formData.price && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-700">Total Amount:</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      ₱{(Number(formData.quantity) * Number(formData.price)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Payment Method */}
               <div className="mb-4">
