@@ -28,7 +28,7 @@ const createEmployeesTable = async () => {
   }
 };
 
-const createGCashRecordsTable = async () => {
+const createGCashRecordsTable = async () => {``
   const query = `
     CREATE TABLE IF NOT EXISTS gcash_records (
       id SERIAL PRIMARY KEY,
