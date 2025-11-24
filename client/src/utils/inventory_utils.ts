@@ -29,16 +29,24 @@ export const filterInventoryItems = (
 };
 
 export const calculateStats = (items: InventoryItem[]): InventoryStats => {
-  // CORRECTED: Calculate total inventory value by summing the pre-calculated totalAmount
+  // Calculate total inventory value by summing the pre-calculated totalAmount
   const inventoryValue = items.reduce((total, item) => {
     return total + item.totalAmount;
   }, 0);
 
+  // Calculate out of stock items (stock === 0)
+  const outOfStockItems = items.filter(item => item.stock === 0).length;
+  
+  // Calculate low stock items (stock > 0 but stock <= minimumStock, or stock <= 5 if no minimumStock defined)
+  const lowStockItems = items.filter(item => 
+    item.stock > 0 && item.stock <= (item.minimumStock || 5)
+  ).length;
+
   return {
     totalItems: items.length,
     inventoryValue: Math.round(inventoryValue * 100) / 100, // Round to 2 decimal places
-    lowStockItems: items.filter(item => item.status === 'Low Stock').length,
+    lowStockItems: lowStockItems,
     expiredItems: items.filter(item => item.status === 'Expired').length,
-    outOfStockItems: items.filter(item => item.status === 'Out Of Stock').length,
+    outOfStockItems: outOfStockItems,
   };
 };
