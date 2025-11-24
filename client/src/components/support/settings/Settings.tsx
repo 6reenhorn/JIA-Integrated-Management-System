@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardCard from '../../layout/LayoutCard';
 import DateFormatSettings from './DateFormatSettings';
 import SidebarSettings from './SidebarSettings';
+import DarkModeSettings from './DarkModeSettings';
 
 const Settings: React.FC = () => {
   const [sidebarExpanded, setSidebarExpanded] = useState(() => {
@@ -17,13 +18,14 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       {/* Appearance Settings */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Appearance</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <h2 className="text-xl font-semibold text-gray-900" style={{ color: 'var(--text-primary)' }}>Appearance</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <DateFormatSettings />
           <SidebarSettings 
             sidebarExpanded={sidebarExpanded}
             onToggle={setSidebarExpanded}
           />
+          <DarkModeSettings />
         </div>
       </div>
 

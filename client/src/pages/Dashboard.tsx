@@ -356,7 +356,7 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
           onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           currentSection={currentSection.section}
         />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
           <div className="p-8">
             <div className="flex justify-between w-full mb-8">
               <div>

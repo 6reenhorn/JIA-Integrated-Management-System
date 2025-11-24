@@ -90,6 +90,38 @@
   margin-left: 0 !important;
 }
 
+:root {
+  /* Light mode colors */
+  --bg-primary: #f3f4f6;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #ededed;
+  --bg-card: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --border-color: #e5e7eb;
+  --hover-bg: #f9fafb;
+  --input-bg: #f3f4f6;
+}
+
+[data-theme='dark'] {
+  /* Dark mode colors */
+  --bg-primary: #1f2937;
+  --bg-secondary: #111827;
+  --bg-tertiary: #374151;
+  --bg-card: #1f2937;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --border-color: #374151;
+  --hover-bg: #374151;
+  --input-bg: #374151;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
 
 /* Gradient animation */
 @keyframes gradient {
