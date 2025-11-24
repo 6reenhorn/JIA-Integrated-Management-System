@@ -211,7 +211,7 @@ const createAttendanceTable = async () => {
   const query = `
     CREATE TABLE IF NOT EXISTS attendance (
       id SERIAL PRIMARY KEY,
-      employee_id INTEGER REFERENCES employees(id),
+      employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
       date DATE NOT NULL DEFAULT CURRENT_DATE,
       time_in TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       time_out TIMESTAMP,
@@ -224,6 +224,27 @@ const createAttendanceTable = async () => {
     console.log('Attendance table created or already exists');
   } catch (err) {
     console.error('Error creating attendance table:', err);
+  }
+};
+
+const addCascadeToAttendance = async () => {
+  try {
+    // Drop the existing foreign key constraint if it exists
+    await pool.query(`
+      ALTER TABLE attendance
+      DROP CONSTRAINT IF EXISTS attendance_employee_id_fkey;
+    `);
+
+    // Add the foreign key constraint with ON DELETE CASCADE
+    await pool.query(`
+      ALTER TABLE attendance
+      ADD CONSTRAINT attendance_employee_id_fkey
+      FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+    `);
+
+    console.log('ON DELETE CASCADE added to attendance table foreign key');
+  } catch (err) {
+    console.error('Error adding CASCADE to attendance table:', err);
   }
 };
 
@@ -305,8 +326,8 @@ const insertSampleEmployees = async () => {
   try {
     for (const employee of sampleEmployees) {
       const insertQuery = `
-        INSERT INTO employees (emp_id, name, role, contact, status, last_login, address, salary, contact_name, contact_number, relationship)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        INSERT INTO employees (emp_id, name, role, contact, status, last_login, address, salary, contact_name, contact_number, relationship, password)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         ON CONFLICT (emp_id) DO NOTHING;
       `;
       const values = [
@@ -320,7 +341,8 @@ const insertSampleEmployees = async () => {
         employee.salary,
         employee.contact_name,
         employee.contact_number,
-        employee.relationship
+        employee.relationship,
+        employee.password
       ];
       await pool.query(insertQuery, values);
     }
@@ -402,6 +424,7 @@ const syncDatabase = async () => {
   await updateNumericColumns();
   await createPayrollRecordsTable();
   await createAttendanceTable();
+  await addCascadeToAttendance();
 };
 
 module.exports = { syncDatabase };
