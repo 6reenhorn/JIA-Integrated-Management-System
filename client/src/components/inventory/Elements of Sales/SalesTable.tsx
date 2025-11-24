@@ -94,12 +94,12 @@ const SalesTable: React.FC<SalesTableProps> = ({
             <thead className={`border-[#E5E7EB] border-b ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeletingRecord ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
               <tr>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Date</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Product Name</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Quantity</th>
+                <th className="text-left py-4 px-5 text-sm font-medium text-gray-500 w-[140px]">Product Name</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Quantity</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Price</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Total</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Payment Method</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[130px]">Total</th>
+                <th className="text-left py-4 px-3.5 text-sm font-medium text-gray-500 w-[130px]">Payment Method</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
               </tr>
             </thead>
           </table>
@@ -124,12 +124,12 @@ const SalesTable: React.FC<SalesTableProps> = ({
             <thead className={`border-[#E5E7EB] border-b ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeletingRecord ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
               <tr>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Date</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Product Name</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Quantity</th>
+                <th className="text-left py-4 px-5 text-sm font-medium text-gray-500 w-[140px]">Product Name</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Quantity</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Price</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Total</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Payment Method</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[130px]">Total</th>
+                <th className="text-left py-4 px-3.5 text-sm font-medium text-gray-500 w-[130px]">Payment Method</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
               </tr>
             </thead>
           </table>

@@ -103,12 +103,12 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             <thead className={`border-[#E5E7EB] border-b ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeletingRecord ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
               <tr>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Product Name</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Category</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Stock</th>
+                <th className="text-left py-4 px-5.5 text-sm font-medium text-gray-500 w-[140px]">Category</th>
+                <th className="text-left py-4 px-4.5 text-sm font-medium text-gray-500 w-[100px]">Stock</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Status</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Product Price</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Total Amount</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
+                <th className="text-left py-4 px-3.5 text-sm font-medium text-gray-500 w-[130px]">Product Price</th>
+                <th className="text-left py-4 px-3 text-sm font-medium text-gray-500 w-[130px]">Total Amount</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
               </tr>
             </thead>
           </table>
@@ -142,12 +142,12 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             <thead className={`border-[#E5E7EB] border-b ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeletingRecord ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
               <tr>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Product Name</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">Category</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Stock</th>
+                <th className="text-left py-4 px-5.5 text-sm font-medium text-gray-500 w-[140px]">Category</th>
+                <th className="text-left py-4 px-4.5 text-sm font-medium text-gray-500 w-[100px]">Stock</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Status</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Product Price</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">Total Amount</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
+                <th className="text-left py-4 px-3.5 text-sm font-medium text-gray-500 w-[130px]">Product Price</th>
+                <th className="text-left py-4 px-3 text-sm font-medium text-gray-500 w-[130px]">Total Amount</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
               </tr>
             </thead>
           </table>
