@@ -16,7 +16,7 @@ interface AttendanceProps {
   attendanceLoading: boolean;
 }
 
-const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLoading }) => {
+const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLoading, onRefresh }) => {
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [filterType, setFilterType] = useState<'preset' | 'custom'>('preset');
@@ -87,9 +87,13 @@ const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLo
   }, []);
 
   const handleRefreshSpinning = async () => {
-    // Since data is managed by parent, we just show spinning for a moment
-    setIsSpinning(true);
-    setTimeout(() => setIsSpinning(false), 1000);
+    if (onRefresh) {
+      onRefresh();
+    } else {
+      // Fallback: just show spinning for a moment
+      setIsSpinning(true);
+      setTimeout(() => setIsSpinning(false), 1000);
+    }
   };
 
 

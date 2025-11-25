@@ -314,11 +314,22 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setAttendanceLoading(true);
     setPayrollLoading(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/employees');
-      const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
-      setEmployees(data);
+      // Fetch employees
+      const employeeResponse = await axios.get('http://localhost:3001/api/employees');
+      const employeeData = Array.isArray(employeeResponse.data) ? sortEmployeesByNewest(employeeResponse.data) : [];
+      setEmployees(employeeData);
+
+      // Fetch attendance
+      const attendanceResponse = await axios.get('http://localhost:3001/api/attendance');
+      const attendanceData = Array.isArray(attendanceResponse.data) ? attendanceResponse.data : [];
+      setAttendanceRecords(attendanceData);
+
+      // Fetch payroll
+      const payrollResponse = await axios.get('http://localhost:3001/api/payroll');
+      const payrollData = Array.isArray(payrollResponse.data) ? payrollResponse.data.sort((a, b) => b.id - a.id) : [];
+      setPayrollRecords(payrollData);
     } catch (err) {
-      console.error('Error refreshing employees:', err);
+      console.error('Error refreshing data:', err);
     } finally {
       setIsSpinning(false);
       setIsLoading(false);
@@ -402,6 +413,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
           <Attendance
             attendanceRecords={attendanceRecords}
             attendanceLoading={attendanceLoading}
+            onRefresh={handleRefreshSpinning}
           />
         )}
         {/* Payroll Records Section */}
