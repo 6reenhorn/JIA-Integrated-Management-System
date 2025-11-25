@@ -504,7 +504,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                 <button
                   onClick={handleApplyFilter}
                   disabled={!tempStartDate}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
+                  className="w-full px-4 py-2 bg-[#02367B] text-white rounded-md hover:bg-[#1C4A9E] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   Apply Filter
                 </button>
@@ -577,7 +577,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                 <button
                   onClick={handleApplySummaryFilter}
                   disabled={!tempSummaryStartDate}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
+                  className="w-full px-4 py-2 bg-[#02367B] text-white rounded-md hover:bg-[#1C4A9E] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   Apply Filter
                 </button>
