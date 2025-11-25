@@ -14,6 +14,7 @@ interface DateRange {
 interface AttendanceProps {
   attendanceRecords: AttendanceRecord[];
   attendanceLoading: boolean;
+  onRefresh: () => Promise<void>;
 }
 
 const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLoading, onRefresh }) => {
