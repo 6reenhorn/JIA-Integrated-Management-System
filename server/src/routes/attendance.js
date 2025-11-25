@@ -46,11 +46,29 @@ router.post('/checkin', async (req, res) => {
 // GET /api/attendance - Get all attendance records
 router.get('/', async (req, res) => {
   try {
-    const query = 'SELECT * FROM attendance ORDER BY date DESC, time_in DESC';
+    const query = `
+      SELECT
+        a.id as attendance_id,
+        e.name,
+        e.emp_id,
+        e.role,
+        a.date,
+        TO_CHAR(a.time_in, 'HH12:MI AM') as time_in,
+        CASE
+          WHEN a.time_out IS NOT NULL THEN TO_CHAR(a.time_out, 'HH12:MI AM')
+          ELSE NULL
+        END as time_out,
+        a.status
+      FROM attendance a
+      JOIN employees e ON a.employee_id = e.id
+      ORDER BY a.date DESC, a.time_in DESC
+    `;
     const result = await pool.query(query);
     const records = result.rows.map(row => ({
-      id: row.id,
-      employeeId: row.employee_id,
+      attendanceId: row.attendance_id,
+      name: row.name,
+      empId: row.emp_id,
+      role: row.role,
       date: row.date,
       timeIn: row.time_in,
       timeOut: row.time_out,
