@@ -16,8 +16,8 @@ const AttendanceStats: React.FC<AttendanceStatsProps> = ({ stats, loading = fals
         {loading ? (
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <Skeleton className="h-6 w-16" />
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-6 w-[250px]" />
+              <Skeleton className="h-4 w-[100px]" />
             </div>
             <Skeleton className="w-10 h-10 rounded-full" />
           </div>
@@ -38,8 +38,8 @@ const AttendanceStats: React.FC<AttendanceStatsProps> = ({ stats, loading = fals
         {loading ? (
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <Skeleton className="h-6 w-16" />
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-6 w-[250px]" />
+              <Skeleton className="h-4 w-[100px]" />
             </div>
             <Skeleton className="w-10 h-10 rounded-full" />
           </div>
@@ -60,8 +60,8 @@ const AttendanceStats: React.FC<AttendanceStatsProps> = ({ stats, loading = fals
         {loading ? (
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <Skeleton className="h-6 w-16" />
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-6 w-[250px]" />
+              <Skeleton className="h-4 w-[100px]" />
             </div>
             <Skeleton className="w-10 h-10 rounded-full" />
           </div>

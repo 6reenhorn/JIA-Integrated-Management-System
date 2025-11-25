@@ -55,8 +55,8 @@ const PayrollStats: React.FC<PayrollStatsProps> = ({
           {loading ? (
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <Skeleton className="h-6 w-20" />
-                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-6 w-[200px]" />
+                <Skeleton className="h-4 w-[100px]" />
               </div>
               <Skeleton className="w-12 h-12 rounded-full" />
             </div>
