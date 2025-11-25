@@ -270,11 +270,11 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                   </div>
 
                   <div
-                    className="dropdown-options mt-1 rounded-md"
+                    className="dropdown-options mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                     style={{
                       display: isSelectOpen && !isUpdating ? 'block' : 'none',
                       position: 'absolute',
-                      top: '100%',
+                      top: '-550%',
                       left: 0,
                       right: 0,
                       backgroundColor: 'white',
