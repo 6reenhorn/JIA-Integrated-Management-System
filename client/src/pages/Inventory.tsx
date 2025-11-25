@@ -905,8 +905,8 @@ const handleCloseCategoryModal = () => {
       <AddSalesModal
         isOpen={isAddSalesModalOpen}
         onClose={handleCloseSalesModal}
-        onAddSale={handleAddNewSale} // This is now defined
-        onInventoryUpdate={fetchInventoryItems} // Pass the refresh function
+        onAddSale={handleAddNewSale} 
+        onInventoryUpdate={fetchInventoryItems} 
       />
     </div>
   );

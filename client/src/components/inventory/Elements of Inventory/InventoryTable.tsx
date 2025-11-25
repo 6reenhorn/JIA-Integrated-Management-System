@@ -73,7 +73,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
 
   // Loading State with Skeleton
   if (isLoading) {
-    const skeletonCount = Math.min(items.length || 0, ITEMS_PER_PAGE);
+    const skeletonCount = Math.min(items.length || 3, ITEMS_PER_PAGE);
     
     return (
       <div className="space-y-6">
@@ -117,8 +117,8 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                     </td>
                     <td className="py-4 px-6 w-[100px]">
                       <div className="flex justify-start space-x-2">
-                        <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-                        <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
                       </div>
                     </td>
                   </tr>
