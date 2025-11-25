@@ -202,10 +202,43 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
         />
         
         {isLoading ? (
-          <div className="h-[392px] flex items-center justify-center border-t border-b border-gray-200 mt-1 mb-8">
-            <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-              <p className="mt-4 text-gray-500">Loading categories...</p>
+          <div className="h-[392px] overflow-hidden p-6 mt-1 mb-8 border-t border-b border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: Math.min(categories.length || 0, ITEMS_PER_PAGE) }).map((_, index) => (
+                <LayoutCard key={`skeleton-${index}`}>
+                  {/* Category Header Skeleton */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="w-3 h-3 rounded-full bg-gray-200 animate-pulse" />
+                      <div className="h-5 bg-gray-200 rounded animate-pulse w-32"></div>
+                    </div>
+                    <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  
+                  {/* Stats Grid Skeleton */}
+                  <div className="grid grid-cols-2 gap-6 mb-6">
+                    <div className="text-center">
+                      <div className="h-9 bg-gray-200 rounded animate-pulse mb-2 mx-auto w-16"></div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-20"></div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="h-9 bg-gray-200 rounded animate-pulse mb-2 mx-auto w-16"></div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-24"></div>
+                    </div>
+                  </div>
+                  
+                  {/* Category Value Skeleton */}
+                  <div className="pt-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-28"></div>
+                      <div className="h-6 bg-gray-200 rounded animate-pulse w-24"></div>
+                    </div>
+                    
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mx-auto"></div>
+                  </div>
+                </LayoutCard>
+              ))}
             </div>
           </div>
         ) : paginatedCategories.length === 0 ? (
