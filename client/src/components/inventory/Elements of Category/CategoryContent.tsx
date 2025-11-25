@@ -250,7 +250,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             </p>
           </div>
         ) : (
-          <div className="h-[392px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200">
+          <div className="h-[392px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedCategories.map((category, index) => {
                 const actualIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;

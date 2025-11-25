@@ -80,7 +80,7 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                                         <div className="h-4 bg-gray-200 rounded w-24"></div>
                                     </td>
                                     <td className="py-4 px-6 w-[120px]">
-                                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                        <div className="h-4 bg-red-200 rounded w-24"></div>
                                     </td>
                                     <td className="py-4 px-5 w-[100px]">
                                         <div className="flex items-center gap-2">
@@ -126,7 +126,7 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                 
                 <div className="h-[335px] flex items-center justify-center">
                     <p className="text-gray-500">
-                        No JuanPay records found. Add your first record to get started.
+                        No JuanPay records found.
                     </p>
                 </div>
             </div>
