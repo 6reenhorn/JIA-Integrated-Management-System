@@ -38,6 +38,17 @@ const SalesTable: React.FC<SalesTableProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const ITEMS_PER_PAGE = 10;
 
+  // Local date formatter to avoid timezone issues
+  const formatLocalDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString + 'T00:00:00');
+      return formatDate(date);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
+  };
+
   const handleDeleteClick = (record: SalesRecord, event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     setRecordToDelete(record);
@@ -73,7 +84,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
   // Loading State
   if (isLoading) {
-    const skeletonCount = Math.min(salesRecords.length || 0, ITEMS_PER_PAGE);
+    const skeletonCount = Math.min(salesRecords.length || 3, ITEMS_PER_PAGE);
     
     return (
       <div className="space-y-6">
@@ -188,7 +199,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                   <tr key={record.id} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
                       <div className="text-sm text-gray-900 truncate">
-                        {formatDate(new Date(record.date))}
+                        {formatLocalDate(record.date)}
                       </div>
                     </td>
                     <td className="py-4 px-6 w-[140px]">
