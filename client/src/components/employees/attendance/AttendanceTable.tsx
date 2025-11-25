@@ -72,7 +72,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ employees, isLoading 
         <tbody className="divide-y divide-gray-200">
           {employees.length === 0 ? (
             <tr>
-              <td colSpan={5} className="py-8 text-center text-gray-500">
+              <td colSpan={5} className="py-8 text-center text-gray-500 h-[350px] align-middle">
                 No attendance records found.
               </td>
             </tr>
