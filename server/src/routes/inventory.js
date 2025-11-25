@@ -116,6 +116,17 @@ router.delete('/categories/:categoryName', async (req, res) => {
   }
 });
 
+// Helper function to format date in Philippines timezone (UTC+8)
+const formatDatePH = (date) => {
+  const d = new Date(date);
+  // Convert to Philippines time (UTC+8)
+  const phDate = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+  const year = phDate.getFullYear();
+  const month = String(phDate.getMonth() + 1).padStart(2, '0');
+  const day = String(phDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // ============================================
 // SALES ROUTES (WITH INVENTORY DEDUCTION)
 // ============================================
@@ -126,7 +137,7 @@ router.get('/sales', async (req, res) => {
     const result = await pool.query('SELECT * FROM sales_records ORDER BY date DESC, id DESC');
     const salesRecords = result.rows.map(row => ({
       id: row.id,
-      date: row.date.toISOString().split('T')[0],
+      date: formatDatePH(row.date), // Use Philippines timezone
       productName: row.product_name,
       quantity: row.quantity,
       price: parseFloat(row.price),
@@ -156,13 +167,12 @@ router.post('/sales', async (req, res) => {
     });
   }
 
-  // Start a database transaction
   const client = await pool.connect();
   
   try {
     await client.query('BEGIN');
 
-    // 1. Check if product exists in inventory
+    // Check if product exists in inventory
     const inventoryCheck = await client.query(
       'SELECT id, stock, product_price, minimum_stock FROM inventory_items WHERE product_name = $1',
       [productName]
@@ -179,7 +189,6 @@ router.post('/sales', async (req, res) => {
     const currentStock = inventoryItem.stock;
     const minStock = inventoryItem.minimum_stock || 5;
 
-    // 2. Check if there's enough stock
     if (currentStock < quantity) {
       await client.query('ROLLBACK');
       return res.status(400).json({ 
@@ -187,12 +196,10 @@ router.post('/sales', async (req, res) => {
       });
     }
 
-    // 3. Calculate new stock and determine status
     const newStock = currentStock - quantity;
     const newTotalAmount = newStock * inventoryItem.product_price;
     const newStatus = newStock === 0 ? 'Out Of Stock' : newStock <= minStock ? 'Low Stock' : 'In Stock';
 
-    // 4. Update inventory
     await client.query(
       `UPDATE inventory_items 
        SET stock = $1, status = $2, total_amount = $3, updated_at = CURRENT_TIMESTAMP
@@ -200,7 +207,6 @@ router.post('/sales', async (req, res) => {
       [newStock, newStatus, newTotalAmount, inventoryItem.id]
     );
 
-    // 5. Insert sales record
     const total = quantity * price;
     const salesQuery = `
       INSERT INTO sales_records (date, product_name, quantity, price, total, payment_method)
@@ -211,19 +217,17 @@ router.post('/sales', async (req, res) => {
     const salesResult = await client.query(salesQuery, salesValues);
     const newSale = salesResult.rows[0];
 
-    // Commit the transaction
     await client.query('COMMIT');
 
     const salesRecord = {
       id: newSale.id,
-      date: newSale.date.toISOString().split('T')[0],
+      date: formatDatePH(newSale.date), // Use Philippines timezone
       productName: newSale.product_name,
       quantity: newSale.quantity,
       price: parseFloat(newSale.price),
       total: parseFloat(newSale.total),
       paymentMethod: newSale.payment_method,
       createdAt: newSale.created_at,
-      // Include updated inventory info
       inventoryUpdate: {
         previousStock: currentStock,
         newStock: newStock,
@@ -245,7 +249,7 @@ router.post('/sales', async (req, res) => {
   }
 });
 
-// PUT /api/inventory/sales/:id - Update a sales record (with inventory adjustment)
+// PUT /api/inventory/sales/:id - Update a sales record
 router.put('/sales/:id', async (req, res) => {
   const { id } = req.params;
   const { date, productName, quantity, price, paymentMethod } = req.body;
@@ -266,7 +270,6 @@ router.put('/sales/:id', async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // 1. Get the old sales record
     const oldSaleResult = await client.query(
       'SELECT product_name, quantity FROM sales_records WHERE id = $1',
       [id]
@@ -281,7 +284,6 @@ router.put('/sales/:id', async (req, res) => {
     const oldProductName = oldSale.product_name;
     const oldQuantity = oldSale.quantity;
 
-    // 2. Restore old inventory
     await client.query(
       `UPDATE inventory_items 
        SET stock = stock + $1, 
@@ -296,7 +298,6 @@ router.put('/sales/:id', async (req, res) => {
       [oldQuantity, oldProductName]
     );
 
-    // 3. Check new product inventory
     const inventoryCheck = await client.query(
       'SELECT id, stock, product_price, minimum_stock FROM inventory_items WHERE product_name = $1',
       [productName]
@@ -320,7 +321,6 @@ router.put('/sales/:id', async (req, res) => {
       });
     }
 
-    // 4. Deduct new quantity from inventory
     const newStock = currentStock - quantity;
     const newTotalAmount = newStock * inventoryItem.product_price;
     const newStatus = newStock === 0 ? 'Out Of Stock' : newStock <= minStock ? 'Low Stock' : 'In Stock';
@@ -332,7 +332,6 @@ router.put('/sales/:id', async (req, res) => {
       [newStock, newStatus, newTotalAmount, inventoryItem.id]
     );
 
-    // 5. Update sales record
     const total = quantity * price;
     const salesQuery = `
       UPDATE sales_records
@@ -349,7 +348,7 @@ router.put('/sales/:id', async (req, res) => {
 
     const salesRecord = {
       id: updatedSale.id,
-      date: updatedSale.date.toISOString().split('T')[0],
+      date: formatDatePH(updatedSale.date), // Use Philippines timezone
       productName: updatedSale.product_name,
       quantity: updatedSale.quantity,
       price: parseFloat(updatedSale.price),

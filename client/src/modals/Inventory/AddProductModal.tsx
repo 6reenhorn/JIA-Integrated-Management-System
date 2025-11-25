@@ -202,11 +202,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     </svg>
                   </div>
                   <div
-                    className="dropdown-options mt-1 rounded-md"
+                    className="dropdown-options mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                     style={{
                       display: isSelectOpen ? 'block' : 'none',
                       position: 'absolute',
-                      top: '100%',
+                      top: '-330%',
                       left: 0,
                       right: 0,
                       backgroundColor: 'white',
@@ -216,7 +216,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       width: '100%',
                       maxWidth: '100%',
                       boxSizing: 'border-box',
-                      maxHeight: '200px',
+                      maxHeight: '170px',
                       overflowY: 'auto'
                     }}
                     onKeyDown={(e) => {
