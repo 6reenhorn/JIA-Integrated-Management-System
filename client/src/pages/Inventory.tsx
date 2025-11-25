@@ -465,10 +465,49 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   };
 
-  const handleCloseCategoryModal = () => {
-    setIsAddCategoryModalOpen(false);
-  };
+const handleDeleteCategory = async (categoryName: string) => {
+  try {
+    console.log('Deleting category:', categoryName);
+    
+    await axios.delete(`http://localhost:3001/api/inventory/categories/${encodeURIComponent(categoryName)}`);
+    
+    console.log('Category deleted successfully');
+    
+    // Remove the category from state
+    setCategoriesData(prev => prev.filter(cat => cat.name !== categoryName));
+    
+    // Reset to first page if needed
+    const remainingCategories = categoriesData.filter(cat => cat.name !== categoryName);
+    const totalPages = Math.ceil(remainingCategories.length / 9);
+    if (categoryCurrentPage > totalPages && totalPages > 0) {
+      setCategoryCurrentPage(totalPages);
+    } else if (remainingCategories.length === 0) {
+      setCategoryCurrentPage(1);
+    }
+    
+    // If the deleted category was selected in the filter, reset to 'all'
+    if (selectedCategory === categoryName) {
+      setSelectedCategory('all');
+    }
+    
+  } catch (err: unknown) {
+    console.error('Error deleting category:', err);
+    if (axios.isAxiosError(err)) {
+      console.error('Error details:', err.response?.data);
+    } else if (err instanceof Error) {
+      console.error('Error message:', err.message);
+    } else {
+      console.error('Error details:', String(err));
+    }
+    
+    // Just re-throw the error - CategoryContent will handle displaying it
+    throw err;
+  }
+};
 
+const handleCloseCategoryModal = () => {
+  setIsAddCategoryModalOpen(false);
+};
   const handleViewProducts = (categoryName: string) => {
     handleSectionChange('inventory');
     setSelectedCategory(categoryName);
@@ -783,6 +822,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           onViewProducts={handleViewProducts}
           showHeaderStats={true}
           onAddCategory={handleAddCategory}
+          onDeleteCategory={handleDeleteCategory} 
           searchQuery={categorySearchTerm}
           onSearchChange={setCategorySearchTerm}
           sections={sections}

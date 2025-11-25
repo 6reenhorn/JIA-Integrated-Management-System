@@ -6,12 +6,14 @@ interface SalesActionsProps {
   onPageChange: (page: number) => void;
   filteredCount: number;
   totalCount: number;
+  isLoading?: boolean; // Add loading state prop
 }
 
 const SalesActions: React.FC<SalesActionsProps> = ({
   currentPage,
   totalPages,
   onPageChange,
+  isLoading = false,
 }) => {
   const getVisiblePages = () => {
     const pages: (number | string)[] = [];
@@ -48,17 +50,18 @@ const SalesActions: React.FC<SalesActionsProps> = ({
   };
 
   const visiblePages = getVisiblePages();
+  const displayTotalPages = totalPages || 1;
 
   return (
     <div className="flex items-center justify-between mt-8">
-      <div className="text-sm text-gray-500">
-        Page {currentPage} of {totalPages || 1}
+      <div className={`text-sm text-gray-500 ${isLoading ? 'opacity-50' : ''}`}>
+        Page {currentPage} of {displayTotalPages}
       </div>
       <div className="flex items-center gap-2">
         <button
-          disabled={currentPage === 1}
-          onClick={() => onPageChange(1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={currentPage === 1 || isLoading}
+          onClick={() => !isLoading && onPageChange(1)}
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -70,9 +73,9 @@ const SalesActions: React.FC<SalesActionsProps> = ({
           </svg>
         </button>
         <button
-          disabled={currentPage === 1}
-          onClick={() => onPageChange(currentPage - 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={currentPage === 1 || isLoading}
+          onClick={() => !isLoading && onPageChange(currentPage - 1)}
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -87,25 +90,26 @@ const SalesActions: React.FC<SalesActionsProps> = ({
           typeof page === 'number' ? (
             <button
               key={idx}
-              className={`px-3 py-1 text-sm rounded ${
+              disabled={isLoading}
+              className={`px-3 py-1 text-sm rounded transition-opacity ${
                 currentPage === page 
                   ? 'bg-[#02367B] text-white' 
                   : 'border border-gray-300 hover:bg-gray-50'
-              }`}
-              onClick={() => currentPage !== page && onPageChange(page)}
+              } ${isLoading && currentPage !== page ? 'opacity-50 cursor-not-allowed' : isLoading ? 'cursor-not-allowed' : ''}`}
+              onClick={() => !isLoading && currentPage !== page && onPageChange(page)}
             >
               {page}
             </button>
           ) : (
-            <span key={idx} className="px-2 py-1 text-sm text-gray-500">
+            <span key={idx} className={`px-2 py-1 text-sm text-gray-500 ${isLoading ? 'opacity-50' : ''}`}>
               {page}
             </span>
           )
         ))}
         <button
-          disabled={currentPage === totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={currentPage === totalPages || isLoading}
+          onClick={() => !isLoading && onPageChange(currentPage + 1)}
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -117,9 +121,9 @@ const SalesActions: React.FC<SalesActionsProps> = ({
           </svg>
         </button>
         <button
-          disabled={currentPage === totalPages}
-          onClick={() => onPageChange(totalPages)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={currentPage === totalPages || isLoading}
+          onClick={() => !isLoading && onPageChange(totalPages)}
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
