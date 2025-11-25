@@ -431,7 +431,12 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
         {/* Overview Section */}
         {activeSection === 'Overview' && (
           <div className="space-y-6">
-            <Overview gcashRecords={gcashRecords} paymayaRecords={paymayaRecords} juanpayRecords={juanpayRecords} />
+            <Overview 
+              gcashRecords={gcashRecords} 
+              paymayaRecords={paymayaRecords} 
+              juanpayRecords={juanpayRecords}
+              isLoading={isInitialLoading || isInitialLoadingPayMaya || isInitialLoadingJuanPay}
+            />
           </div>
         )}
 

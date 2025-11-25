@@ -58,11 +58,64 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
     if (isLoading) {
         return (
             <div className="border-2 border-[#E5E7EB] rounded-lg">
-                <div className="h-[390px] flex items-center justify-center">
-                    <div className="flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-                        <p className="mt-4 text-gray-500">Loading GCash records...</p>
-                    </div>
+                <div className="h-[390px] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <table className="table-fixed w-full">
+                        <thead className="border-[#E5E7EB] border-b sticky top-0 z-10 bg-[#EDEDED]">
+                            <tr>
+                                <th className="rounded-tl-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+                                    Date
+                                </th>
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[150px]">
+                                    Reference Number
+                                </th>
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[140px]">
+                                    Transaction Type
+                                </th>
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+                                    Amount
+                                </th>
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[130px]">
+                                    Service Charge
+                                </th>
+                                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                                    Charge MOP
+                                </th>
+                                <th className="rounded-tr-lg text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                            {[...Array(7)].map((_, index) => (
+                                <tr key={index} className="animate-pulse">
+                                    <td className="py-4 px-6 w-[120px]">
+                                        <div className="h-4 bg-gray-200 rounded w-20"></div>
+                                    </td>
+                                    <td className="py-4 px-6 w-[150px]">
+                                        <div className="h-4 bg-gray-200 rounded w-28"></div>
+                                    </td>
+                                    <td className="py-4 px-6 w-[140px]">
+                                        <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+                                    </td>
+                                    <td className="py-4 px-6 w-[120px]">
+                                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                    </td>
+                                    <td className="py-4 px-6 w-[130px]">
+                                        <div className="h-4 bg-gray-200 rounded w-20"></div>
+                                    </td>
+                                    <td className="py-4 px-6 w-[100px]">
+                                        <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+                                    </td>
+                                    <td className="py-4 px-5 w-[100px]">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                                            <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         );
@@ -103,7 +156,7 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                 
                 <div className="h-[335px] flex items-center justify-center">
                     <p className="text-gray-500">
-                        No GCash records found. Add your first record to get started.
+                        No GCash records found.
                     </p>
                 </div>
             </div>

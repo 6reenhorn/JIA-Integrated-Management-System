@@ -15,9 +15,10 @@ interface OverviewProps {
   gcashRecords: GCashRecord[];
   paymayaRecords: PayMayaRecord[];
   juanpayRecords: JuanPayRecord[];
+  isLoading?: boolean;
 }
 
-const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanpayRecords }) => {
+const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanpayRecords, isLoading = false }) => {
   const { formatDate } = useDateFormat();
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -361,6 +362,72 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
     { label: 'Sales', value: formatCurrency(0) }
   ];
 
+  // Skeleton Loading Component
+  if (isLoading) {
+    return (
+      <div className="space-y-6 mt-5 h-[700px]">
+        {/* Main Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <LayoutCard key={i} className="min-h-[120px] animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-32 mb-5"></div>
+              <div className="h-9 bg-gray-200 rounded w-40 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-16"></div>
+            </LayoutCard>
+          ))}
+        </div>
+
+        {/* Filter Bar Skeleton */}
+        <div className="flex h-10.5 items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 bg-gray-200 rounded-md w-43 animate-pulse"></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-4 bg-gray-200 rounded w-33 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded-md w-36 animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Summary Cards Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <LayoutCard key={i} className="min-h-[273px] animate-pulse">
+              <div className="h-5 bg-gray-200 rounded w-24 mb-4"></div>
+              <div className="space-y-6.5">
+                {[1, 2, 3, 4, 5].map((j) => (
+                  <div key={j} className="flex justify-between items-center">
+                    {/* Left div */}
+                    <div
+                      className={`h-4 rounded w-28 ${
+                        j === 5 ? "bg-gray-200" : "bg-gray-200"
+                      }`}
+                    ></div>
+                    {/* Right div */}
+                    <div
+                      className={`h-4 rounded w-20 ${
+                        j === 5 ? "bg-red-200" : "bg-gray-200"
+                      }`}
+                    ></div>
+                  </div>
+                ))}
+              </div>
+            </LayoutCard>
+          ))}
+        </div>
+
+        {/* Records Cards Skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <LayoutCard key={i} className="text-center min-h-[120px] animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-24 mx-auto mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-16 mx-auto"></div>
+            </LayoutCard>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 mt-5 h-[700px]"> {/* Overall Border Height */}
 
@@ -504,7 +571,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                 <button
                   onClick={handleApplyFilter}
                   disabled={!tempStartDate}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
+                  className="w-full px-4 py-2 bg-[#02367B] text-white rounded-md hover:bg-[#1C4A9E] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   Apply Filter
                 </button>
@@ -577,7 +644,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                 <button
                   onClick={handleApplySummaryFilter}
                   disabled={!tempSummaryStartDate}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
+                  className="w-full px-4 py-2 bg-[#02367B] text-white rounded-md hover:bg-[#1C4A9E] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   Apply Filter
                 </button>
