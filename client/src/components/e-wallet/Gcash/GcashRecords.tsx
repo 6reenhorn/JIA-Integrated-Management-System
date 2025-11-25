@@ -156,7 +156,7 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
                 
                 <div className="h-[335px] flex items-center justify-center">
                     <p className="text-gray-500">
-                        No GCash records found. Add your first record to get started.
+                        No GCash records found.
                     </p>
                 </div>
             </div>

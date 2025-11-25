@@ -198,7 +198,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-y-auto">
+          <div className="h-[335px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <table className="table-fixed w-full h-full">
               <tbody className="divide-y divide-gray-200">
                 {paginatedItems.map((item) => (
