@@ -18,7 +18,6 @@ import PayrollRecords from './employee-sections/PayrollRecords';
 import PayrollStats from '../components/employees/payroll/PayrollStats';
 import DeleteEmployeeModal from '../modals/employee/DeleteStaffModal';
 import RefreshBtn from '../components/common/RefreshBtn';
-import CheckIn from '../components/support/CheckIn';
 
 interface PayrollRecord {
   id: number;

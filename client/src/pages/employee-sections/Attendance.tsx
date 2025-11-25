@@ -4,6 +4,8 @@ import AttendanceFilters from "../../components/employees/attendance/AttendanceF
 import AttendanceTable from '../../components/employees/attendance/AttendanceTable';
 import type { AttendanceRecord } from "../../types/employee_types";
 import AttendanceActions from '../../components/employees/attendance/AttendanceActions';
+import axios from 'axios';
+import RefreshBtn from '../../components/common/RefreshBtn';
 
 interface DateRange {
   start: Date;
@@ -21,129 +23,29 @@ const Attendance: React.FC = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Temporary mock employees data for attendance section
-  const [employees] = useState<AttendanceRecord[]>([
-    {
-      attendanceId: 12,
-      name: "Julien Marabe",
-      empId: "EMP006",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "On Leave",
-    },
-    {
-      attendanceId: 11,
-      name: "Sophia Marie Flores",
-      empId: "EMP005",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 10,
-      name: "John Cyril Espina",
-      empId: "EMP004",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 9,
-      name: "John Jaybird Casia",
-      empId: "EMP003",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 8,
-      name: "Den Jester Antonio",
-      empId: "EMP002",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 7,
-      name: "Glenn Mark Anino",
-      empId: "EMP001",
-      role: "Developer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 6,
-      name: "Julien Marabe",
-      empId: "EMP006",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "On Leave",
-    },
-    {
-      attendanceId: 5,
-      name: "Sophia Marie Flores",
-      empId: "EMP005",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 4,
-      name: "John Cyril Espina",
-      empId: "EMP004",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 3,
-      name: "John Jaybird Casia",
-      empId: "EMP003",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 2,
-      name: "Den Jester Antonio",
-      empId: "EMP002",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 1,
-      name: "Glenn Mark Anino",
-      empId: "EMP001",
-      role: "Developer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-  ]);
+  const [employees, setEmployees] = useState<AttendanceRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  // Fetch attendance records function
+  const fetchAttendance = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/attendance');
+      const data = Array.isArray(response.data) ? response.data : [];
+      setEmployees(data);
+    } catch (err) {
+      console.error('Error fetching attendance records:', err);
+      setEmployees([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch attendance records on mount
+  useEffect(() => {
+    fetchAttendance();
+  }, []);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(() => {
@@ -193,10 +95,27 @@ const Attendance: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleRefreshSpinning = async () => {
+    setIsSpinning(true);
+    setIsLoading(true);
+    try {
+      await fetchAttendance();
+    } catch (err) {
+      console.error('Error refreshing attendance records:', err);
+    } finally {
+      setIsSpinning(false);
+      setIsLoading(false);
+    }
+  };
+
+
   return (
     <div className="space-y-5">
       <div className="flex justify-between items-center pt-5 relative">
-        <AttendanceSearchBar />
+        <div className='flex items-center gap-4'>
+          <AttendanceSearchBar />
+          <RefreshBtn onClick={handleRefreshSpinning} isSpinning={isSpinning} />
+        </div>
         <div className="relative">
           <button
             ref={buttonRef}
@@ -248,7 +167,7 @@ const Attendance: React.FC = () => {
       )}
       
       {/* Attendance Table */}
-      <AttendanceTable employees={paginatedEmployees} />
+      <AttendanceTable employees={paginatedEmployees} isLoading={isLoading} />
 
       <div className='pt-1'>
         {/* Pagination Actions */}

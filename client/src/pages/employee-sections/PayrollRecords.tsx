@@ -54,7 +54,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [tableHeadColor, setTableHeadColor] = useState<'normal' | 'green' | 'red'>('normal');
 
-   const [isSpinning, setIsSpinning] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
 
   // Use props if provided, otherwise use local state
   const [localPayrollRecords, setLocalPayrollRecords] = useState<PayrollRecord[]>([]);
