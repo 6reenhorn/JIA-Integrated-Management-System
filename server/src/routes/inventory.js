@@ -58,6 +58,64 @@ router.post('/categories', async (req, res) => {
   }
 });
 
+router.delete('/categories/:categoryName', async (req, res) => {
+  const { categoryName } = req.params;
+  const decodedCategoryName = decodeURIComponent(categoryName);
+
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    // 1. Check if category exists
+    const categoryCheck = await client.query(
+      'SELECT * FROM categories WHERE category_name = $1',
+      [decodedCategoryName]
+    );
+    
+    if (categoryCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    // 2. Check if there are products using this category
+    const productsCheck = await client.query(
+      'SELECT COUNT(*) FROM inventory_items WHERE category = $1',
+      [decodedCategoryName]
+    );
+    
+    const productCount = parseInt(productsCheck.rows[0].count);
+    
+    if (productCount > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        error: `Cannot delete category "${decodedCategoryName}". ${productCount} product(s) are using this category.`,
+        productCount 
+      });
+    }
+
+    // 3. Delete the category
+    await client.query('DELETE FROM categories WHERE category_name = $1', [decodedCategoryName]);
+
+    await client.query('COMMIT');
+    
+    res.json({ 
+      message: 'Category deleted successfully',
+      categoryName: decodedCategoryName
+    });
+    
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting category:', err);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      details: err.message 
+    });
+  } finally {
+    client.release();
+  }
+});
+
 // ============================================
 // SALES ROUTES (WITH INVENTORY DEDUCTION)
 // ============================================
