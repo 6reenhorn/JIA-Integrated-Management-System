@@ -1,13 +1,15 @@
 import React from 'react';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import LayoutCard from '../../layout/LayoutCard';
+import Skeleton from '../../common/Skeleton';
 import type { AttendanceStats as AttendanceStatsType } from '../../../types/employee_types';
 
 interface AttendanceStatsProps {
   stats: AttendanceStatsType;
+  loading?: boolean;
 }
 
-const AttendanceStats: React.FC<AttendanceStatsProps> = ({ stats }) => {
+const AttendanceStats: React.FC<AttendanceStatsProps> = ({ stats, loading = false }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <LayoutCard title="Present">

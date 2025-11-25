@@ -311,6 +311,8 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const handleRefreshSpinning = async () => {
     setIsSpinning(true);
     setIsLoading(true);
+    setAttendanceLoading(true);
+    setPayrollLoading(true);
     try {
       const response = await axios.get('http://localhost:3001/api/employees');
       const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
@@ -320,6 +322,8 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     } finally {
       setIsSpinning(false);
       setIsLoading(false);
+      setAttendanceLoading(false);
+      setPayrollLoading(false);
     }
   };
 
@@ -327,11 +331,11 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     <div className="space-y-6">
       {/* Employee Stats Section */}
       {activeSection === 'staff' && (
-        <EmployeeStats stats={stats} />
+        <EmployeeStats stats={stats} loading={isLoading} />
       )}
       {/* Attendance Stats Section */}
       {activeSection === 'attendance' && (
-        <AttendanceStats stats={attendanceStats} />
+        <AttendanceStats stats={attendanceStats} loading={attendanceLoading} />
       )}
       {/* Payroll Stats Section */}
       {activeSection === 'payroll' && (
@@ -340,6 +344,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
           paidPayroll={payrollStats.paidPayroll}
           pendingPayroll={payrollStats.pendingPayroll}
           overduePayroll={payrollStats.overduePayroll}
+          loading={payrollLoading}
         />
       )}
 
