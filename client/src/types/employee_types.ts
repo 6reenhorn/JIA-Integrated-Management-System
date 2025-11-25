@@ -31,3 +31,9 @@ export interface AttendanceRecord {
   timeOut: string;
   status: 'Present' | 'Absent' | 'On Leave';
 }
+
+export interface AttendanceStats {
+  present: number;
+  absent: number;
+  onLeave: number;
+}

@@ -5,8 +5,9 @@ import EmployeeStats from '../components/employees/management/EmployeeStats';
 import EmployeeFilters from '../components/employees/management/EmployeeFilters';
 import EmployeeTable from '../components/employees/management/EmployeeTable';
 import EmployeeActions from '../components/employees/management/EmployeeActions';
-import type { Employee } from '../types/employee_types';
+import type { Employee, AttendanceRecord } from '../types/employee_types';
 import { filterEmployees, calculateStats } from '../utils/employee_utils';
+import { calculateAttendanceStats } from '../utils/attendance_utils';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
 import EmployeeSearchBar from '../components/employees/management/EmployeeSearchBar';
 import AddStaffModal from '../modals/employee/AddStaffModal';
@@ -99,6 +100,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
   const [payrollLoading, setPayrollLoading] = useState(true);
 
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
+
   // Fetch payroll records function
   const fetchPayrollRecords = async () => {
     try {
@@ -130,8 +134,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     const fetchEmployees = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/employees');
-      const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
-      setEmployees(data);
+        const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
+        console.log('Fetched employees:', data.length);
+        setEmployees(data);
       } catch (err) {
         console.error('Error fetching employees:', err);
         setEmployees([]);
@@ -140,6 +145,23 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       }
     };
     fetchEmployees();
+  }, []);
+
+  // Fetch attendance records on mount
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/attendance');
+        const data = Array.isArray(response.data) ? response.data : [];
+        setAttendanceRecords(data);
+      } catch (err) {
+        console.error('Error fetching attendance records:', err);
+        setAttendanceRecords([]);
+      } finally {
+        setAttendanceLoading(false);
+      }
+    };
+    fetchAttendance();
   }, []);
 
   // Update localStorage when employees change
@@ -176,6 +198,14 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
     return { totalPayroll, paidPayroll, pendingPayroll, overduePayroll };
   }, [payrollRecords]);
+
+  // Calculate attendance stats (only when both data sets are loaded)
+  const attendanceStats = useMemo(() => {
+    if (employees.length === 0 || attendanceRecords.length === 0) {
+      return { present: 0, absent: 0, onLeave: 0 };
+    }
+    return calculateAttendanceStats(attendanceRecords, employees.length);
+  }, [attendanceRecords, employees.length]);
 
   // Filter employees based on search and filters
   const filteredEmployees = useMemo(() =>
@@ -301,7 +331,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       )}
       {/* Attendance Stats Section */}
       {activeSection === 'attendance' && (
-        <AttendanceStats />
+        <AttendanceStats stats={attendanceStats} />
       )}
       {/* Payroll Stats Section */}
       {activeSection === 'payroll' && (
@@ -364,7 +394,10 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         )}
         {/* Attendance Management Section */}
         {activeSection === 'attendance' && (
-          <Attendance />
+          <Attendance
+            attendanceRecords={attendanceRecords}
+            attendanceLoading={attendanceLoading}
+          />
         )}
         {/* Payroll Records Section */}
         {activeSection === 'payroll' && (
