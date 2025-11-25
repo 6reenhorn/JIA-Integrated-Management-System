@@ -4,6 +4,7 @@ import LoadingScreen from '../components/common/LoadingScreen';
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingPercentage, setLoadingPercentage] = useState(0);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -16,12 +17,24 @@ const App: React.FC = () => {
           }
         });
 
+        // Increment loading percentage gradually up to 100 during wait time
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 5;
+          if (progress >= 100) {
+            progress = 100;
+            clearInterval(interval);
+          }
+          setLoadingPercentage(progress);
+        }, 75);
+
         await new Promise(resolve => setTimeout(resolve, 1500));
 
+        clearInterval(interval);
+        setLoadingPercentage(100);
         setIsLoading(false);
       } catch (error) {
         console.error('Error initializing app:', error);
-
         setIsLoading(false);
       }
     };
@@ -30,7 +43,7 @@ const App: React.FC = () => {
   }, []);
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen percentage={loadingPercentage} />;
   }
 
   return (
