@@ -40,11 +40,57 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
   }, [targetRecord]);
   if (isLoading) {
     return (
-      <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-500">Loading payroll records...</p>
-        </div>
+      <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] max-h-[429px] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <table className="table-fixed w-full">
+          <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${headColor === 'green' ? 'bg-green-200' : headColor === 'red' ? 'bg-red-200' : 'bg-[#EDEDED]'}`}>
+            <tr>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[200px]">Employee Name</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Period</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Basic Salary</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Deductions</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Net Salary</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[100px]">Status</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Payment Date</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[80px]">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="py-[26px] px-6 w-[220px]">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse mr-3 flex-shrink-0"></div>
+                    <div className="min-w-0">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse mb-1"></div>
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 w-[100px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 w-[80px]">
+                  <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }
