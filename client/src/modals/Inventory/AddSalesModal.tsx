@@ -276,24 +276,60 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   
                   {/* Product Dropdown */}
                   {isProductDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                    <div
+                      className="dropdown-options mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                      style={{
+                        display: isProductDropdownOpen ? 'block' : 'none',
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        backgroundColor: 'white',
+                        border: '1px solid #ccc',
+                        zIndex: 10,
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                        maxHeight: '100px',
+                        overflowY: 'auto'
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          // Add keyboard navigation logic if needed
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          // Add keyboard navigation logic if needed
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setIsProductDropdownOpen(false);
+                        }
+                      }}
+                      tabIndex={isProductDropdownOpen ? 0 : -1}
+                    >
                       {isLoadingProducts ? (
-                        <div className="px-3 py-4 text-center text-gray-500">
+                        <div className="px-4 py-4 text-center text-gray-500">
                           Loading products...
                         </div>
                       ) : filteredProducts.length === 0 ? (
-                        <div className="px-3 py-4 text-center text-gray-500">
+                        <div className="px-4 py-4 text-center text-gray-500">
                           No products found
                         </div>
                       ) : (
                         filteredProducts.map((product) => (
-                          <button
+                          <div
                             key={product.id}
-                            type="button"
-                            onClick={() => handleProductSelect(product)}
-                            className={`w-full text-left px-3 py-2 hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0 ${
+                            className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0 ${
                               selectedProduct?.id === product.id ? 'bg-blue-50 text-blue-600' : ''
                             }`}
+                            onClick={() => handleProductSelect(product)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleProductSelect(product);
+                              }
+                            }}
+                            tabIndex={isProductDropdownOpen ? 0 : -1}
                           >
                             <div className="flex justify-between items-center">
                               <div>
@@ -303,7 +339,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                 </div>
                               </div>
                             </div>
-                          </button>
+                          </div>
                         ))
                       )}
                     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import InventoryActions from './InventoryActions';
 import DeleteInventoryItemModal from '../../../modals/Inventory/DeleteInventoryItemModal';
@@ -35,6 +35,18 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const ITEMS_PER_PAGE = 10;
 
+  // Sort items with newest first (assuming items have createdAt or id for sorting)
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      // Sort by createdAt if available, otherwise by id (assuming higher id = newer)
+      if (a.createdAt && b.createdAt) {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      // Fallback: sort by id in descending order (newest first)
+      return b.id - a.id;
+    });
+  }, [items]);
+
   const handleDeleteClick = (item: InventoryItem, event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     setItemToDelete(item);
@@ -63,17 +75,17 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     }
   };
 
-  // Paginate items - get only items for current page
+  // Paginate sorted items - get only items for current page
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedItems = items.slice(startIndex, endIndex);
+  const paginatedItems = sortedItems.slice(startIndex, endIndex);
 
-  // Calculate actual total pages based on items length - ensure at least 1 page
-  const actualTotalPages = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+  // Calculate actual total pages based on sortedItems length - ensure at least 1 page
+  const actualTotalPages = Math.max(1, Math.ceil(sortedItems.length / ITEMS_PER_PAGE));
 
   // Loading State with Skeleton
   if (isLoading) {
-    const skeletonCount = Math.min(items.length || 3, ITEMS_PER_PAGE);
+    const skeletonCount = Math.min(items.length || 10, ITEMS_PER_PAGE);
     
     return (
       <div className="space-y-6">
@@ -140,7 +152,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     );
   }
 
-  if (items.length === 0) {
+  if (sortedItems.length === 0) {
     return (
       <div className="space-y-6">
         <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">

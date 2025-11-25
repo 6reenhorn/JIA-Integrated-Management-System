@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import DeleteSalesRecordModal from '../../../modals/Inventory/DeleteSalesRecordModal';
 import { useDateFormat } from '../../../context/DateFormatContext';
@@ -37,6 +37,22 @@ const SalesTable: React.FC<SalesTableProps> = ({
   const [recordToDelete, setRecordToDelete] = useState<SalesRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const ITEMS_PER_PAGE = 10;
+
+  // Sort sales records with newest first
+  const sortedSalesRecords = useMemo(() => {
+    return [...salesRecords].sort((a, b) => {
+      // Sort by date in descending order (newest first)
+      const dateA = new Date(a.date + 'T00:00:00').getTime();
+      const dateB = new Date(b.date + 'T00:00:00').getTime();
+      
+      // If dates are equal, sort by ID (newer IDs first)
+      if (dateA === dateB) {
+        return b.id - a.id;
+      }
+      
+      return dateB - dateA;
+    });
+  }, [salesRecords]);
 
   // Local date formatter to avoid timezone issues
   const formatLocalDate = (dateString: string): string => {
@@ -77,14 +93,14 @@ const SalesTable: React.FC<SalesTableProps> = ({
     }
   };
 
-  // Paginate items - get only items for current page
+  // Paginate sorted items - get only items for current page
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedItems = salesRecords.slice(startIndex, endIndex);
+  const paginatedItems = sortedSalesRecords.slice(startIndex, endIndex);
 
   // Loading State
   if (isLoading) {
-    const skeletonCount = Math.min(salesRecords.length || 3, ITEMS_PER_PAGE);
+    const skeletonCount = Math.min(sortedSalesRecords.length || 10, ITEMS_PER_PAGE);
     
     return (
       <div className="space-y-6">
@@ -142,8 +158,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
     );
   }
 
-
-  if (salesRecords.length === 0) {
+  if (sortedSalesRecords.length === 0) {
     return (
       <div className="space-y-6">
         <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
@@ -241,7 +256,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                     </td>
                   </tr>
                 ))}
-                {paginatedItems.length < 10 && (
+                {paginatedItems.length < ITEMS_PER_PAGE && (
                   <tr className="h-full">
                     <td colSpan={7} className="h-full"></td>
                   </tr>
