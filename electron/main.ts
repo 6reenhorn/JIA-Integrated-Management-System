@@ -18,9 +18,32 @@ app.on('ready', () => {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
-            nodeIntegration: false
+            nodeIntegration: false,
+            webSecurity: true
         }
     });
+
+    // Set Content Security Policy to prevent unsafe-eval (only in production)
+    if (!isDev()) {
+        mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+            callback({
+                responseHeaders: {
+                    ...details.responseHeaders,
+                    'Content-Security-Policy': [
+                        "default-src 'self'; " +
+                        "script-src 'self'; " +
+                        "style-src 'self' 'unsafe-inline'; " +
+                        "img-src 'self' data: https:; " +
+                        "font-src 'self'; " +
+                        "connect-src 'self' http://localhost:3001 ws://localhost:3001; " +
+                        "object-src 'none'; " +
+                        "base-uri 'self'; " +
+                        "form-action 'self';"
+                    ]
+                }
+            });
+        });
+    }
     mainWindow.menuBarVisible = false;
     mainWindow.maximize();
 
