@@ -12,11 +12,11 @@ export const getStatusColor = (status: Employee['status']): string => {
 
 export const getRoleColor = (role: string): string => {
   const colors: { [key: string]: string } = {
-    'Manager': 'bg-blue-100 text-blue-800',
     'Admin': 'bg-purple-100 text-purple-800',
-    'Sales Associate': 'bg-orange-100 text-orange-800',
-    'Cashier': 'bg-pink-100 text-pink-800',
-    'Maintenance': 'bg-gray-100 text-gray-800'
+    'General Manager': 'bg-blue-100 text-blue-800',
+    'Inventory Manager': 'bg-green-100 text-green-800',
+    'E-Wallet Recorder': 'bg-orange-100 text-orange-800',
+    'Inventory Transaction Officer': 'bg-pink-100 text-pink-800'
   };
   return colors[role] || 'bg-gray-100 text-gray-800';
 };

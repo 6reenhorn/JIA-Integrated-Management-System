@@ -309,11 +309,11 @@ const AddStaffModal = ({
                     } else if (e.key === 'Enter') {
                       e.preventDefault();
                       const roleOptions = [
-                        { value: 'manager', text: 'Manager' },
                         { value: 'admin', text: 'Admin' },
-                        { value: 'sales_associates', text: 'Sales Associate' },
-                        { value: 'cashier', text: 'Cashier' },
-                        { value: 'maintenance', text: 'Maintenance' }
+                        { value: 'general_manager', text: 'General Manager' },
+                        { value: 'inventory_manager', text: 'Inventory Manager' },
+                        { value: 'e_wallet_recorder', text: 'E-Wallet Recorder' },
+                        { value: 'inventory_transaction_officer', text: 'Inventory Transaction Officer' }
                       ];
                       const selected = roleOptions[focusedRoleOption];
                       handleRoleOptionClick(selected.value, selected.text);
@@ -326,19 +326,6 @@ const AddStaffModal = ({
                 >
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 0 ? 'bg-blue-100' : ''}`}
-                    data-value="manager"
-                    onClick={() => handleRoleOptionClick('manager', 'Manager')}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleRoleOptionClick('manager', 'Manager');
-                      }
-                    }}
-                    tabIndex={isRoleDropdownOpen ? 0 : -1}
-                  >
-                    Manager
-                  </div>
-                  <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 1 ? 'bg-blue-100' : ''}`}
                     data-value="admin"
                     onClick={() => handleRoleOptionClick('admin', 'Admin')}
                     onKeyDown={(e) => {
@@ -351,43 +338,56 @@ const AddStaffModal = ({
                     Admin
                   </div>
                   <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 2 ? 'bg-blue-100' : ''}`}
-                    data-value="sales_associates"
-                    onClick={() => handleRoleOptionClick('sales_associates', 'Sales Associate')}
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 1 ? 'bg-blue-100' : ''}`}
+                    data-value="general_manager"
+                    onClick={() => handleRoleOptionClick('general_manager', 'General Manager')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRoleOptionClick('sales_associates', 'Sales Associate');
+                        handleRoleOptionClick('general_manager', 'General Manager');
                       }
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Sales Associate
+                    General Manager
+                  </div>
+                  <div
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 2 ? 'bg-blue-100' : ''}`}
+                    data-value="inventory_manager"
+                    onClick={() => handleRoleOptionClick('inventory_manager', 'Inventory Manager')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRoleOptionClick('inventory_manager', 'Inventory Manager');
+                      }
+                    }}
+                    tabIndex={isRoleDropdownOpen ? 0 : -1}
+                  >
+                    Inventory Manager
                   </div>
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 3 ? 'bg-blue-100' : ''}`}
-                    data-value="cashier"
-                    onClick={() => handleRoleOptionClick('cashier', 'Cashier')}
+                    data-value="e_wallet_recorder"
+                    onClick={() => handleRoleOptionClick('e_wallet_recorder', 'E-Wallet Recorder')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRoleOptionClick('cashier', 'Cashier');
+                        handleRoleOptionClick('e_wallet_recorder', 'E-Wallet Recorder');
                       }
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Cashier
+                    E-Wallet Recorder
                   </div>
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 4 ? 'bg-blue-100' : ''}`}
-                    data-value="maintenance"
-                    onClick={() => handleRoleOptionClick('maintenance', 'Maintenance')}
+                    data-value="inventory_transaction_officer"
+                    onClick={() => handleRoleOptionClick('inventory_transaction_officer', 'Inventory Transaction Officer')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRoleOptionClick('maintenance', 'Maintenance');
+                        handleRoleOptionClick('inventory_transaction_officer', 'Inventory Transaction Officer');
                       }
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Maintenance
+                    Inventory Transaction Officer
                   </div>
                 </div>
               </div>
