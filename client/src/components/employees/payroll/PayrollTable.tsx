@@ -44,7 +44,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
         <table className="table-fixed w-full">
           <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${headColor === 'green' ? 'bg-green-200' : headColor === 'red' ? 'bg-red-200' : 'bg-[#EDEDED]'}`}>
             <tr>
-              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[200px]">Employee Name</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[220px]">Employee Name</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Period</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Basic Salary</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Deductions</th>
@@ -101,7 +101,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
         <table className="table-fixed w-full">
           <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${headColor === 'green' ? 'bg-green-200' : headColor === 'red' ? 'bg-red-200' : 'bg-[#EDEDED]'}`}>
             <tr>
-              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[200px]">Employee Name</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[220px]">Employee Name</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Period</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Basic Salary</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Deductions</th>
