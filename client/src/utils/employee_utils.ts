@@ -16,7 +16,7 @@ export const getRoleColor = (role: string): string => {
     'General Manager': 'bg-blue-100 text-blue-800',
     'Inventory Manager': 'bg-green-100 text-green-800',
     'E-Wallet Recorder': 'bg-orange-100 text-orange-800',
-    'Inventory Transaction Officer': 'bg-pink-100 text-pink-800'
+    'Inventory Transaction Manager': 'bg-pink-100 text-pink-800'
   };
   return colors[role] || 'bg-gray-100 text-gray-800';
 };

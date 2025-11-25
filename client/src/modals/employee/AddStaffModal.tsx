@@ -313,7 +313,7 @@ const AddStaffModal = ({
                         { value: 'general_manager', text: 'General Manager' },
                         { value: 'inventory_manager', text: 'Inventory Manager' },
                         { value: 'e_wallet_recorder', text: 'E-Wallet Recorder' },
-                        { value: 'inventory_transaction_officer', text: 'Inventory Transaction Officer' }
+                        { value: 'inventory_transaction_manager', text: 'Inventory Transaction Manager' }
                       ];
                       const selected = roleOptions[focusedRoleOption];
                       handleRoleOptionClick(selected.value, selected.text);
@@ -387,7 +387,7 @@ const AddStaffModal = ({
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Inventory Transaction Officer
+                    Inventory Transaction Manager
                   </div>
                 </div>
               </div>

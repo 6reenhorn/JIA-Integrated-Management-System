@@ -33,7 +33,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
     setIsStatusDropdownOpen(false);
   };
 
-  const roleOptions = ['All Roles', 'Admin', 'General Manager', 'Inventory Manager', 'E-Wallet Recorder', 'Inventory Transaction Officer'];
+  const roleOptions = ['All Roles', 'Admin', 'General Manager', 'Inventory Manager', 'E-Wallet Recorder', 'Inventory Transaction Manager'];
   const statusOptions = ['All Status', 'Active', 'Inactive'];
 
   useEffect(() => {
