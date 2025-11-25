@@ -24,6 +24,7 @@ const Attendance: React.FC = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const [employees, setEmployees] = useState<AttendanceRecord[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<AttendanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [isSpinning, setIsSpinning] = useState(false);
@@ -34,9 +35,11 @@ const Attendance: React.FC = () => {
       const response = await axios.get('http://localhost:3001/api/attendance');
       const data = Array.isArray(response.data) ? response.data : [];
       setEmployees(data);
+      setFilteredEmployees(data);
     } catch (err) {
       console.error('Error fetching attendance records:', err);
       setEmployees([]);
+      setFilteredEmployees([]);
     } finally {
       setIsLoading(false);
     }
@@ -53,18 +56,26 @@ const Attendance: React.FC = () => {
     return saved ? parseInt(saved, 10) : 1;
   });
   const pageSize = 4;
-  const pageCount = Math.ceil(employees.length / pageSize);
+  const pageCount = Math.ceil(filteredEmployees.length / pageSize);
   const handlePageChange = (page: number) => setCurrentPage(page);
 
   useEffect(() => {
     localStorage.setItem('attendanceCurrentPage', currentPage.toString());
   }, [currentPage]);
-  const paginatedEmployees = employees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginatedEmployees = filteredEmployees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleApply = (range: DateRange | null) => {
     setDateRange(range);
-    // Here you can add logic to filter attendance data based on the date range
-    console.log('Applied date range:', range);
+    if (range) {
+      const filtered = employees.filter(employee => {
+        const employeeDate = new Date(employee.date);
+        return employeeDate >= range.start && employeeDate <= range.end;
+      });
+      setFilteredEmployees(filtered);
+      setCurrentPage(1); // Reset to first page when filtering
+    } else {
+      setFilteredEmployees(employees);
+    }
   };
 
   const handleReset = () => {
@@ -73,6 +84,8 @@ const Attendance: React.FC = () => {
     setCustomStart('');
     setCustomEnd('');
     setDateRange(null);
+    setFilteredEmployees(employees);
+    setCurrentPage(1); // Reset to first page when resetting
   };
 
   const toggleFilters = () => {
@@ -158,13 +171,7 @@ const Attendance: React.FC = () => {
           )}
         </div>
       </div>
-      {dateRange && (
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-          <p className="text-blue-800">
-            Filtering attendance from {dateRange.start.toLocaleDateString()} to {dateRange.end.toLocaleDateString()}
-          </p>
-        </div>
-      )}
+
       
       {/* Attendance Table */}
       <AttendanceTable employees={paginatedEmployees} isLoading={isLoading} />
