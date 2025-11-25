@@ -204,7 +204,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
         {isLoading ? (
           <div className="h-[392px] overflow-hidden p-6 mt-1 mb-8 border-t border-b border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: Math.min(categories.length || 0, ITEMS_PER_PAGE) }).map((_, index) => (
+              {Array.from({ length: Math.min(categories.length || 3, ITEMS_PER_PAGE) }).map((_, index) => (
                 <LayoutCard key={`skeleton-${index}`}>
                   {/* Category Header Skeleton */}
                   <div className="flex items-center justify-between mb-6">
@@ -272,7 +272,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                         className="p-1.5 hover:bg-red-50 rounded-md transition-colors group"
                         title="Delete category"
                       >
-                        <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-600" />
+                        <Trash2 className="w-4 h-4 text-gray-800 group-hover:text-red-600" />
                       </button>
                     </div>
                     

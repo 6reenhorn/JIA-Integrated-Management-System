@@ -38,14 +38,20 @@ interface InventoryProps {
 const normalizeDateFormat = (dateString: string): string => {
   if (!dateString) return '';
   
-  // If date is in MM/DD/YYYY format, convert to YYYY-MM-DD
-  if (dateString.includes('/')) {
-    const [month, day, year] = dateString.split('/');
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  try {
+    // Create date object and format it in local timezone
+    const date = new Date(dateString);
+    
+    // Get year, month, day in local timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.error('Error normalizing date:', error);
+    return '';
   }
-  
-  // If date is in YYYY-MM-DD format, return as is
-  return dateString;
 };
 
 const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
@@ -200,9 +206,13 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     let filtered = salesRecords;
     
     if (selectedDate) {
+      // Normalize the selected date
       const normalizedSelectedDate = normalizeDateFormat(selectedDate);
+      console.log('Normalized selected date:', normalizedSelectedDate);
+      
       filtered = filtered.filter(record => {
         const normalizedRecordDate = normalizeDateFormat(record.date);
+        console.log('Comparing:', normalizedRecordDate, '===', normalizedSelectedDate);
         return normalizedRecordDate === normalizedSelectedDate;
       });
       console.log('After date filter:', filtered.length);
@@ -895,8 +905,8 @@ const handleCloseCategoryModal = () => {
       <AddSalesModal
         isOpen={isAddSalesModalOpen}
         onClose={handleCloseSalesModal}
-        onAddSale={handleAddNewSale} // This is now defined
-        onInventoryUpdate={fetchInventoryItems} // Pass the refresh function
+        onAddSale={handleAddNewSale} 
+        onInventoryUpdate={fetchInventoryItems} 
       />
     </div>
   );
