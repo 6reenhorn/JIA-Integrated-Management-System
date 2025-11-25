@@ -73,17 +73,64 @@ const SalesTable: React.FC<SalesTableProps> = ({
 
   // Loading State
   if (isLoading) {
+    const skeletonCount = Math.min(salesRecords.length || 0, ITEMS_PER_PAGE);
+    
     return (
       <div className="space-y-6">
-        <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-            <p className="mt-4 text-gray-500">Loading sales records...</p>
+        <div className="border-2 border-[#E5E7EB] rounded-lg overflow-hidden">
+          <table className="table-fixed bg-[#EDEDED] w-full">
+            <thead className="border-[#E5E7EB] border-b bg-[#EDEDED]">
+              <tr>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Date</th>
+                <th className="text-left py-4 px-5 text-sm font-medium text-gray-500 w-[140px]">Product Name</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Quantity</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Price</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[130px]">Total</th>
+                <th className="text-left py-4 px-3.5 text-sm font-medium text-gray-500 w-[130px]">Payment Method</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
+              </tr>
+            </thead>
+          </table>
+          
+          <div className="h-[335px] overflow-hidden">
+            <table className="table-fixed w-full">
+              <tbody className="divide-y divide-gray-200">
+                {Array.from({ length: skeletonCount }).map((_, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="py-4 px-6 w-[180px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-5 w-[140px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-4 w-[100px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-6 w-[120px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-4 w-[130px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-3.5 w-[130px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-4 w-[100px]">
+                      <div className="flex justify-start space-x-2">
+                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     );
   }
+
 
   if (salesRecords.length === 0) {
     return (
@@ -134,7 +181,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-y-auto">
+          <div className="h-[335px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <table className="table-fixed w-full h-full">
               <tbody className="divide-y divide-gray-200">
                 {paginatedItems.map((record) => (

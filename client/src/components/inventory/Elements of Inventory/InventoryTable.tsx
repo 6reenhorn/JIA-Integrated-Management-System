@@ -71,14 +71,60 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
   // Calculate actual total pages based on items length - ensure at least 1 page
   const actualTotalPages = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
 
-  // Loading State
+  // Loading State with Skeleton
   if (isLoading) {
+    const skeletonCount = Math.min(items.length || 0, ITEMS_PER_PAGE);
+    
     return (
       <div className="space-y-6">
-        <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-            <p className="mt-4 text-gray-500">Loading inventory items...</p>
+        <div className="border-2 border-[#E5E7EB] rounded-lg overflow-hidden">
+          <table className="table-fixed w-full bg-[#EDEDED]">
+            <thead className="border-[#E5E7EB] border-b bg-[#EDEDED]">
+              <tr>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Product Name</th>
+                <th className="text-left py-4 px-5.5 text-sm font-medium text-gray-500 w-[140px]">Category</th>
+                <th className="text-left py-4 px-4.5 text-sm font-medium text-gray-500 w-[100px]">Stock</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Status</th>
+                <th className="text-left py-4 px-3.5 text-sm font-medium text-gray-500 w-[130px]">Product Price</th>
+                <th className="text-left py-4 px-3 text-sm font-medium text-gray-500 w-[130px]">Total Amount</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
+              </tr>
+            </thead>
+          </table>
+          
+          <div className="h-[335px] overflow-hidden">
+            <table className="table-fixed w-full">
+              <tbody className="divide-y divide-gray-200">
+                {Array.from({ length: skeletonCount }).map((_, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="py-4 px-6 w-[180px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-6 w-[140px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-6 w-[100px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-6 w-[120px]">
+                      <div className="h-6 bg-gray-200 rounded-full animate-pulse w-20"></div>
+                    </td>
+                    <td className="py-4 px-6 w-[130px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-6 w-[130px]">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="py-4 px-6 w-[100px]">
+                      <div className="flex justify-start space-x-2">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                        <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -152,7 +198,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-y-auto">
+          <div className="h-[335px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <table className="table-fixed w-full h-full">
               <tbody className="divide-y divide-gray-200">
                 {paginatedItems.map((item) => (
