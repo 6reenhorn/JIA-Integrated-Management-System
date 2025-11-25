@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import checkInIcon from '../../assets/JIA_CheckIn.ico';
 import type { Employee } from '../../types/employee_types';
+import { useAuth } from '../../context/AuthContext';
+import type { UserRole } from '../../context/AuthContext';
 
 interface CheckInProps {
   onClose: () => void;
@@ -12,18 +14,15 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [password, setPassword] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [focusedEmployeeOption, setFocusedEmployeeOption] = useState(0);
+
     const employeeDropdownRef = useRef<HTMLDivElement>(null);
 
     const selectedEmployeeText = selectedEmployee ? `${selectedEmployee.name} (${selectedEmployee.empId})` : 'Select Employee';
 
+    const { checkIn } = useAuth();
+
     const toggleEmployeeDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
-    };
-
-    const handleEmployeeOptionClick = (employee: Employee) => {
-        setSelectedEmployee(employee);
-        setIsDropdownOpen(false);
     };
 
     // Close dropdown when clicking outside
@@ -151,11 +150,19 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                 }
                                 try {
                                     // Check in with password verification on server
-                                    const response = await axios.post('http://localhost:3001/api/attendance/checkin', {
+                                    await axios.post('http://localhost:3001/api/attendance/checkin', {
                                         employeeId: selectedEmployee.id,
                                         password: password
                                     });
+                                    
                                     alert('Check-in successful!');
+
+                                    checkIn({
+                                        id: selectedEmployee.id,
+                                        empId: selectedEmployee.empId,
+                                        name: selectedEmployee.name,
+                                        role: selectedEmployee.role as UserRole,
+                                    })
                                     // Close the modal after successful check-in
                                     onClose();
                                     // Optionally reset form

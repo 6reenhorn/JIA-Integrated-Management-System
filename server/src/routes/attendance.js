@@ -28,15 +28,25 @@ router.post('/checkin', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
     const checkQuery = 'SELECT id FROM attendance WHERE employee_id = $1 AND date = $2';
     const checkResult = await pool.query(checkQuery, [employeeId, today]);
+    
     if (checkResult.rows.length > 0) {
-      return res.status(400).json({ error: 'Already checked in today' });
+      // Already checked in - just authenticate and grant access
+      return res.json({ 
+        success: true,
+        alreadyCheckedIn: true,
+        message: 'Already checked in today'
+      });
     }
 
-    // Insert check-in record
+    // Insert check-in record for new check-in
     const insertQuery = 'INSERT INTO attendance (employee_id, date, time_in, status) VALUES ($1, $2, CURRENT_TIMESTAMP, $3)';
     await pool.query(insertQuery, [employeeId, today, 'Present']);
 
-    res.json({ message: 'Check-in successful' });
+    res.json({ 
+      success: true,
+      alreadyCheckedIn: false,
+      message: 'Check-in successful'
+    });
   } catch (err) {
     console.error('Error during check-in:', err);
     res.status(500).json({ error: 'Internal server error' });
