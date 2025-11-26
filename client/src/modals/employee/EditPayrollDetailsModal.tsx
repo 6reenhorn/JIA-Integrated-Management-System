@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import CustomDatePicker from '../../components/common/CustomDatePicker';
 
 interface Employee {
   id: number;
@@ -28,18 +29,6 @@ interface EditPayrollModalProps {
   employees: Employee[];
   payrollRecord: PayrollRecord;
 }
-
-// CustomDatePicker placeholder - replace with your actual component
-const CustomDatePicker = ({ selected, onChange, className }: any) => {
-  return (
-    <input
-      type="date"
-      value={selected ? selected.toISOString().split('T')[0] : ''}
-      onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
-      className={className}
-    />
-  );
-};
 
 const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }: EditPayrollModalProps) => {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -602,11 +591,15 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
                     <CustomDatePicker
                       selected={paymentDate && !isNaN(new Date(paymentDate).getTime()) ? new Date(paymentDate) : null}
                       onChange={(date: Date | null) => {
-                        if (date && !isNaN(date.getTime())) {
-                          setPaymentDate(date.toISOString().split('T')[0]);
-                        } else {
+                        if (!date) {
                           setPaymentDate('');
+                          return;
                         }
+                        // Format as YYYY-MM-DD in local timezone
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        setPaymentDate(`${year}-${month}-${day}`);
                       }}
                       className="w-full px-4 py-[5px] border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />

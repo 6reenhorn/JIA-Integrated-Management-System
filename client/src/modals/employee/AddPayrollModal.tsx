@@ -531,7 +531,17 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   <div className="relative w-full">
                     <CustomDatePicker
                       selected={paymentDate ? new Date(paymentDate) : null}
-                      onChange={(date: Date | null) => setPaymentDate(date ? date.toISOString().split('T')[0] : '')}
+                      onChange={(date: Date | null) => {
+                        if (!date) {
+                          setPaymentDate('');
+                          return;
+                        }
+                        // Format as YYYY-MM-DD in local timezone
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        setPaymentDate(`${year}-${month}-${day}`);
+                      }}
                       className="w-full px-4 py-[5px] border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
