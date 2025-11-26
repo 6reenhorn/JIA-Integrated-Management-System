@@ -198,7 +198,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                     <div className='w-full'>
                         <button
                             type="submit"
-                            disabled={isProcessing}
+                            disabled={isProcessing || message?.type === 'success'}
                             className={`w-full py-2 rounded-3xl text-white transition-colors ${
                                 isProcessing 
                                     ? 'bg-gray-400 cursor-not-allowed' 

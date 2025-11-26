@@ -231,12 +231,15 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
     <LayoutCard>
       {/* Category Header Skeleton */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3 flex-1">
-          <Skeleton className="w-3 h-3 rounded-full" />
-          <Skeleton className="h-5 w-32" />
+          <div className="flex items-center gap-3 flex-1">
+            <Skeleton className="w-3 h-3 rounded-full" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-6 h-6" />
+            <Skeleton className="w-6 h-6" />
+          </div>
         </div>
-        <Skeleton className="w-6 h-6" />
-      </div>
       
       {/* Stats Grid Skeleton */}
       <div className="grid grid-cols-2 gap-6 mb-6">
@@ -252,7 +255,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       </div>
       
       {/* Category Value Skeleton */}
-      <div className="pt-4">
+      <div className="pt-8">
         <div className="flex justify-between items-center mb-4">
           <Skeleton className="h-4 w-28" />
           <Skeleton className="h-6 w-24" />
@@ -264,11 +267,11 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
   );
 
   // Skeleton Card Component for header stats
-  const SkeletonStatCard = () => (
+  const SkeletonStatCard = ({ isRedCard = false, showBottomSkeleton = false }) => (
     <LayoutCard>
-      <Skeleton className="h-4 w-3/4 mb-3" />
-      <Skeleton className="h-9 w-1/2 mb-2" />
-      <Skeleton className="h-3 w-2/3" />
+      <Skeleton className="h-4 w-24 mb-2" />
+      <Skeleton className={`h-9 w-20 mb-2 ${isRedCard ? 'bg-red-200' : ''}`} />
+      {showBottomSkeleton && <Skeleton className="h-3 w-28" />}
     </LayoutCard>
   );
 
@@ -425,9 +428,9 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             // Show skeleton loading for all 4 stat cards
             <>
               <SkeletonStatCard />
+              <SkeletonStatCard showBottomSkeleton={true} />
               <SkeletonStatCard />
-              <SkeletonStatCard />
-              <SkeletonStatCard />
+              <SkeletonStatCard isRedCard={true} />
             </>
           ) : (
             <>
@@ -449,7 +452,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
 
               <LayoutCard>
                 <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-red-500">
                   ₱{categoryStats.totalValue.toLocaleString()}
                 </p>
               </LayoutCard>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import CustomDatePicker from '../../components/common/CustomDatePicker';
 import Portal from '../../components/common/Portal';
+import axios from 'axios';
 
 export type SalesRecord = {
   id: number;
@@ -11,6 +12,14 @@ export type SalesRecord = {
   total: number;
   paymentMethod: 'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay';
 };
+
+interface InventoryProduct {
+  id: number;
+  productName: string;
+  stock: number;
+  productPrice: number;
+  category: string;
+}
 
 interface EditSaleModalProps {
   isOpen: boolean;
@@ -55,6 +64,13 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const [focusedPaymentOption, setFocusedPaymentOption] = useState(0);
   const paymentDropdownRef = useRef<HTMLDivElement>(null);
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+  const [inventoryProducts, setInventoryProducts] = useState<InventoryProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<InventoryProduct | null>(null);
+  const [productSearchTerm, setProductSearchTerm] = useState('');
+  const productDropdownRef = useRef<HTMLDivElement>(null);
+  const [errors, setErrors] = useState<{ productName?: string }>({});
 
   useEffect(() => {
     if (sale) {
@@ -73,11 +89,66 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
     }
   }, [sale]);
 
+  // Fetch inventory products when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchInventoryProducts();
+    }
+  }, [isOpen]);
+
+  const fetchInventoryProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory');
+      setInventoryProducts(response.data);
+      
+      // Set selected product if editing existing sale
+      if (sale?.productName) {
+        const product = response.data.find((p: InventoryProduct) => p.productName === sale.productName);
+        if (product) {
+          setSelectedProduct(product);
+          setProductSearchTerm(sale.productName);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching inventory products:', err);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  // Filter products based on search term
+  const filteredProducts = inventoryProducts.filter(product =>
+    product.productName.toLowerCase().includes(productSearchTerm.toLowerCase())
+  );
+
+  const handleProductSelect = (product: InventoryProduct) => {
+    setSelectedProduct(product);
+    setFormData(prev => ({
+      ...prev,
+      productName: product.productName,
+      price: product.productPrice,
+    }));
+    setProductSearchTerm(product.productName);
+    setIsProductDropdownOpen(false);
+    
+    // Clear error when product is selected
+    if (errors.productName) {
+      setErrors(prev => ({
+        ...prev,
+        productName: undefined
+      }));
+    }
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (paymentDropdownRef.current && !paymentDropdownRef.current.contains(event.target as Node)) {
         setIsSelectOpen(false);
+      }
+      if (productDropdownRef.current && !productDropdownRef.current.contains(event.target as Node)) {
+        setIsProductDropdownOpen(false);
       }
     };
 
@@ -144,8 +215,30 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
     }
   };
 
+  const validateForm = () => {
+    const newErrors: { productName?: string } = {};
+
+    // Check if product name matches an inventory product
+    const productExists = inventoryProducts.some(
+      product => product.productName.toLowerCase() === formData.productName.trim().toLowerCase()
+    );
+
+    if (!formData.productName.trim()) {
+      newErrors.productName = 'Product name is required';
+    } else if (!productExists) {
+      newErrors.productName = 'Product does not exist in inventory. Please select from the list.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = () => {
     if (!sale || isUpdating) return;
+    
+    if (!validateForm()) {
+      return;
+    }
     
     const updatedSale: SalesRecord = {
       ...sale,
@@ -178,18 +271,109 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                 <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4">
                   <h3 className="text-[16px] font-bold">Details</h3>
                   
-                  {/* Product Name */}
+                  {/* Product Name Dropdown */}
                   <div className="mt-2">
                     <label className="text-[12px] font-bold">Product Name</label>
-                    <input
-                      type="text"
-                      name="productName"
-                      value={formData.productName}
-                      onChange={handleInputChange}
-                      disabled={isUpdating}
-                      className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      required
-                    />
+                    <div className="relative" ref={productDropdownRef}>
+                      <input
+                        type="text"
+                        value={productSearchTerm}
+                        onChange={(e) => {
+                          setProductSearchTerm(e.target.value);
+                          setIsProductDropdownOpen(true);
+                          setFormData(prev => ({
+                            ...prev,
+                            productName: e.target.value
+                          }));
+                          // Clear error when user starts typing
+                          if (errors.productName) {
+                            setErrors(prev => ({
+                              ...prev,
+                              productName: undefined
+                            }));
+                          }
+                        }}
+                        onFocus={() => setIsProductDropdownOpen(true)}
+                        disabled={isUpdating}
+                        placeholder="Search and select product"
+                        className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                          errors.productName ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                      />
+                      
+                      {/* Product Dropdown */}
+                      {isProductDropdownOpen && !isUpdating && (
+                        <div
+                          className="dropdown-options mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                          style={{
+                            display: isProductDropdownOpen ? 'block' : 'none',
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'white',
+                            border: '1px solid #ccc',
+                            zIndex: 10,
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                            width: '100%',
+                            maxWidth: '100%',
+                            boxSizing: 'border-box',
+                            maxHeight: '180px',
+                            overflowY: 'auto'
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              e.preventDefault();
+                              setIsProductDropdownOpen(false);
+                            }
+                          }}
+                          tabIndex={isProductDropdownOpen ? 0 : -1}                      
+                        >
+                          {isLoadingProducts ? (
+                            <div className="px-4 py-4 text-center text-gray-500">
+                              Loading products...
+                            </div>
+                          ) : filteredProducts.length === 0 ? (
+                            <div className="px-4 py-4 text-center text-gray-500">
+                              No products found
+                            </div>
+                          ) : (
+                            filteredProducts.map((product) => (
+                              <div
+                                key={product.id}
+                                className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0 ${
+                                  selectedProduct?.id === product.id ? 'bg-blue-50 text-blue-600' : ''
+                                }`}
+                                onClick={() => handleProductSelect(product)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleProductSelect(product);
+                                  }
+                                }}
+                                tabIndex={isProductDropdownOpen ? 0 : -1}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <div className="font-medium">{product.productName}</div>
+                                    <div className="text-xs text-gray-500">
+                                      Stock: {product.stock} | Price: ₱{product.productPrice.toFixed(2)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {errors.productName && (
+                      <p className="text-red-500 text-xs mt-1">{errors.productName}</p>
+                    )}
+                    {selectedProduct && (
+                      <p className="text-green-600 text-xs mt-1">
+                        Available stock: {selectedProduct.stock} units
+                      </p>
+                    )}
                   </div>
 
                   {/* Quantity and Price Row */}

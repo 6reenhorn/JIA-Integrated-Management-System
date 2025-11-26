@@ -47,14 +47,20 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
   isLoading = false // Add default value
 }) => {
   // Skeleton Card Component
-  const SkeletonCard = () => (
+  const SkeletonCard = ({ isRed = false }: { isRed?: boolean }) => (
     <LayoutCard>
-      <Skeleton className="h-4 w-3/4 mb-3" />
-      <Skeleton className="h-9 w-1/2 mb-2" />
-      <Skeleton className="h-3 w-2/3" />
+      <Skeleton className="h-4 w-36 mb-3" />
+      <Skeleton className={`h-9 w-28 mb-2 ${isRed ? 'bg-red-200' : ''}`} />
+      {isRed ? (
+        <div className="h-6 flex items-end">
+          <Skeleton className="h-5.5 w-32 rounded-full bg-red-200" />
+        </div>
+      ) : (
+        <Skeleton className="h-3 w-24" />
+      )}
     </LayoutCard>
   );
-
+  
   return (
     <>
       {/* Stats Cards */}
@@ -64,8 +70,8 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
           <>
             <SkeletonCard />
             <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
+            <SkeletonCard isRed={true} />
+            <SkeletonCard isRed={true} />
           </>
         ) : (
           <>
