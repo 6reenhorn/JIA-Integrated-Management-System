@@ -20,7 +20,7 @@ export interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, isCollapsed, currentSection }) => {
-  const { currentUser, hasAccess, checkOut } = useAuth();
+  const { currentUser, hasAccess, hasAccessToEmployeeSection, checkOut } = useAuth();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
@@ -55,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
 
   const supportItems: MenuItem[] = [
     { id: 'settings', label: 'Settings', icon: <Settings size={20} />, category: 'Support', page: 'settings' as const },
-    { id: 'about', label: 'About', icon: <Info size={20} />, page: 'about' as const },
+    { id: 'about', label: 'About', icon: <Info size={20} />, requiresAuth: false },
   ];
 
   // Define functional sections for E-Wallet
@@ -65,44 +65,66 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
     { id: 'e-wallet-juanpay', label: 'JuanPay' },
   ];
 
-  // Updated sections for inventory - removed the duplicate "Inventory" section
-  const getSections = (itemId: string) => {
+  // Updated sections for inventory 
+  const getSections = (itemId: string): { id: string; label: string }[] => {
+    let sections: { id: string; label: string }[];
+    
     switch (itemId) {
       case 'dashboard':
-        return [
+        sections = [
           { id: 'dashboard-overview', label: 'Overview' },
           { id: 'dashboard-analytics', label: 'Analytics' },
           { id: 'dashboard-reports', label: 'Reports' },
           { id: 'dashboard-statistics', label: 'Statistics' }
         ];
+        break;
       case 'inventory':
-        return [
+        sections = [
           { id: 'inventory-categories', label: 'Sales' },
           { id: 'inventory-stock-levels', label: 'Category' }
         ];
+        break;
       case 'employees':
-        return [
+        sections = [
           { id: 'employees-attendance', label: 'Attendance' },
           { id: 'employees-payroll', label: 'Payroll Records' }
         ];
+        break;
       case 'e-wallet':
-        return getEWalletSections();
+        sections = getEWalletSections();
+        break;
       case 'settings':
-        return [
+        sections = [
           { id: 'settings-general', label: 'General' },
           { id: 'settings-security', label: 'Security' },
           { id: 'settings-notifications', label: 'Notifications' },
           { id: 'settings-preferences', label: 'Preferences' }
         ];
+        break;
       case 'about':
-        return [
+        sections = [
           { id: 'about-version', label: 'Version Info' },
           { id: 'about-support', label: 'Support' },
           { id: 'about-license', label: 'License & Credits' }
         ];
+        break;
       default:
-        return [];
+        sections = [];
     }
+    
+    // Filter sections based on access for employees
+    if (itemId === 'employees') {
+      return sections.filter(section => {
+        if (section.id === 'employees-attendance') {
+          return hasAccessToEmployeeSection('attendance');
+        } else if (section.id === 'employees-payroll') {
+          return hasAccessToEmployeeSection('payroll');
+        }
+        return true;
+      });
+    }
+    
+    return sections;
   };
 
   // Checker functions
@@ -248,6 +270,20 @@ const renderMenuItem = (item: MenuItem) => {
           <div className="mb-6">
             <button
               onClick={() => {
+                // Check if user has access to this page
+                const hasAccessToPage = item.requiresAuth === false || !item.page || hasAccess(item.page);
+
+                if (itemId === 'employees') {
+                  const hasStaffAccess = hasAccessToEmployeeSection('staff');
+                  if (!hasStaffAccess) {
+                    return;
+                  }
+                }
+                
+                if (!hasAccessToPage) {
+                  return;
+                }
+
                 // For inventory, clicking the main button should go to inventory section
                 if (itemId === 'inventory') {
                   // Don't allow re-clicking if already on main inventory section
@@ -263,8 +299,17 @@ const renderMenuItem = (item: MenuItem) => {
                 }
                 setExpanded(itemId);
               }}
+              disabled={
+                (item.requiresAuth !== false && item.page && !hasAccess(item.page)) ||
+                (itemId === 'employees' && !hasAccessToEmployeeSection('staff'))
+              }
               className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 ${
-                (activeItem === itemId || (itemId === 'about' && activeItem === 'about-main')) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300 hover:bg-[#FFFFFF33]'
+                (item.requiresAuth !== false && item.page && !hasAccess(item.page)) ||
+                (itemId === 'employees' && !hasAccessToEmployeeSection('staff'))
+                  ? 'opacity-40 cursor-not-allowed text-gray-400'
+                  : (activeItem === itemId || (itemId === 'about' && activeItem === 'about-main')) 
+                    ? 'bg-[#FFFFFF33] text-white' 
+                    : 'text-gray-300 hover:bg-[#FFFFFF33]'
               }`}
             >
               <span className="flex-shrink-0">{item.icon}</span>
@@ -277,46 +322,52 @@ const renderMenuItem = (item: MenuItem) => {
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 whitespace-nowrap">Sections</p>
               <ul className="space-y-2">
-                {sections.map((section) => (
-                  <li key={section.id}>
-                    <button
-                      onClick={() => {
-                        // For functional sections, handle them properly
-                        if (isSectionFunctional(section.id)) {
-                          // Prevent re-clicking if already active
-                          if (isItemActive(section.id)) {
-                            return;
+                {sections.map((section) => {
+                  // Check if user has access to this specific employee section
+                  let hasAccessToSection = true;
+                  if (itemId === 'employees') {
+                    if (section.id === 'employees-attendance') {
+                      hasAccessToSection = hasAccessToEmployeeSection('attendance');
+                    } else if (section.id === 'employees-payroll') {
+                      hasAccessToSection = hasAccessToEmployeeSection('payroll');
+                    }
+                  }
+                  
+                  return (
+                    <li key={section.id}>
+                      <button
+                        onClick={() => {
+                          if (isSectionFunctional(section.id) && hasAccessToSection) {
+                            if (isItemActive(section.id)) {
+                              return;
+                            }
+                            onItemClick(section.id);
+                            setExpanded(itemId);
                           }
-                          onItemClick(section.id);
-                          setExpanded(itemId); // Keep the parent expanded
-                        }
-                      }}
-                      className={`w-full flex items-center gap-3 py-2 px-4 text-left rounded-lg transition-all duration-200 text-sm ${
-                        isItemActive(section.id) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300'
-                      } ${isSectionFunctional(section.id) ? 'hover:bg-[#FFFFFF33] cursor-pointer' : 'cursor-default opacity-60'}`}
-                    >
-                      <span className="whitespace-nowrap">+ {section.label}</span>
-                      {!isSectionFunctional(section.id) && (
-                        <span className="text-xs text-gray-500 ml-auto">(Soon)</span>
-                      )}
-                    </button>
-                  </li>
-                ))}
+                        }}
+                        disabled={!hasAccessToSection}
+                        className={`w-full flex items-center gap-3 py-2 px-4 text-left rounded-lg transition-all duration-200 text-sm ${
+                          isItemActive(section.id) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300'
+                        } ${
+                          isSectionFunctional(section.id) && hasAccessToSection 
+                            ? 'hover:bg-[#FFFFFF33] cursor-pointer' 
+                            : 'cursor-not-allowed opacity-40'
+                        }`}
+                      >
+                        <span className="whitespace-nowrap">+ {section.label}</span>
+                        {!hasAccessToSection && (
+                          <span className="text-xs text-red-400 ml-auto">(No Access)</span>
+                        )}
+                        {!isSectionFunctional(section.id) && hasAccessToSection && (
+                          <span className="text-xs text-gray-500 ml-auto">(Soon)</span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
-
-          {/* Show check-out button if logged in */}
-          {/* {currentUser && (
-            <div className="mt-auto">
-              <button
-                onClick={checkOut}
-                className="w-full py-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors duration-200"
-              >
-                Check Out
-              </button>
-            </div>
-          )} */}
         </div>
       </div>
     );
