@@ -8,6 +8,7 @@ import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
 import CheckIn from '../components/support/CheckIn';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 // Define the section information type
 interface SectionInfo {
@@ -22,12 +23,15 @@ const Dashboard: React.FC = () => {
     section: undefined 
   });
 
-const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
-  const saved = localStorage.getItem('sidebarDefaultExpanded');
-  return saved !== 'true';
-});
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    const saved = localStorage.getItem('sidebarDefaultExpanded');
+    return saved !== 'true';
+  });
 
   const [showCheckInModal, setShowCheckInModal] = useState<boolean>(false);
+
+  // Get auth context
+  const { isCheckedIn, checkOut } = useAuth();
 
   useEffect(() => {
     if (currentSection.page === 'inventory' && currentSection.section) {
@@ -88,16 +92,12 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     if (sectionMapping[itemId]) {
       setCurrentSection(sectionMapping[itemId]);
     } else if (itemId === 'inventory') {
-      // If it's the main inventory item, default to inventory section
       setCurrentSection({ page: 'inventory', section: 'inventory' });
     } else if (itemId === 'employees') {
-      // If it's the main employees item, default to staff section
       setCurrentSection({ page: 'employees', section: 'staff' });
     } else if (itemId === 'e-wallet') {
-      // If it's the main e-wallet item, default to Overview section
       setCurrentSection({ page: 'e-wallet', section: 'Overview' });
     } else {
-      // For other pages, reset the section
       setCurrentSection({ page: itemId, section: undefined });
     }
   };
@@ -182,7 +182,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
   };
 
   const getPageTitle = (): string => {
-    // If we're in inventory and have a specific section, use that
     if (currentSection.page === 'inventory' && currentSection.section) {
       switch (currentSection.section) {
         case 'inventory':
@@ -196,7 +195,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
       }
     }
 
-    // Handle E-Wallet sections
     if (activeItem.startsWith('e-wallet')) {
       if (activeItem === 'e-wallet') {
         return 'E-Wallet';
@@ -214,7 +212,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
       }
     }
 
-    // Handle Employees sections
     if (activeItem.startsWith('employees')) {
       if (activeItem === 'employees-attendance') {
         return 'Attendance';
@@ -224,7 +221,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
       return 'Employees';
     }
 
-    // Handle About sections
     if (activeItem.startsWith('about')) {
       if (activeItem === 'about') {
         return 'About';
@@ -244,7 +240,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
       }
     }
 
-    // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
         return 'Overview';
@@ -264,7 +259,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
   };
 
   const getHeaderSubtitle = (): string => {
-    // If we're in inventory and have a specific section, use section-specific subtitles
     if (currentSection.page === 'inventory' && currentSection.section) {
       switch (currentSection.section) {
         case 'inventory':
@@ -278,7 +272,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
       }
     }
 
-    // Handle E-Wallet sections
     if (activeItem.startsWith('e-wallet')) {
       if (activeItem === 'e-wallet') {
         return 'Complete overview of all your e-wallet accounts';
@@ -296,7 +289,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
       }
     }
 
-    // Handle Employees sections
     if (activeItem.startsWith('employees')) {
       if (activeItem === 'employees-attendance') {
         return 'Track employee attendance and schedules';
@@ -306,7 +298,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
       return 'Manage your team members and roles';
     }
 
-    // Handle About sections
     if (activeItem.startsWith('about')) {
       if (activeItem === 'about') {
         return 'Learn more about JIMS and its features';
@@ -326,7 +317,6 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
       }
     }
 
-    // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
         return 'Monitor your inventory at a glance';
@@ -343,6 +333,14 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
 
   const handleCheckIn = () => {
     setShowCheckInModal(true);
+  };
+
+  const handleCheckOut = () => {
+    checkOut();
+  };
+
+  const handleCloseModal = () => {
+    setShowCheckInModal(false);
   };
 
   return (
@@ -365,9 +363,21 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
               </div>
               {activeItem === 'dashboard' && (
                 <div className='flex items-center'>
-                  <button onClick={handleCheckIn} className='bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0'>
-                    Check In
-                  </button>
+                  {isCheckedIn ? (
+                    <button 
+                      onClick={handleCheckOut} 
+                      className='bg-red-600 border-2 border-red-700 rounded-md px-4 py-2 text-white hover:bg-red-700 focus:outline-none flex-shrink-0'
+                    >
+                      Check Out
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={handleCheckIn} 
+                      className='bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0'
+                    >
+                      Check In
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -375,10 +385,10 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
           </div>
         </main>
       </div>
-      {activeItem === 'dashboard' && showCheckInModal && (
+      {showCheckInModal && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50"
-          onClick={() => setShowCheckInModal(false)}
+          onClick={handleCloseModal}
           style={{
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
             backdropFilter: 'blur(4px)',
@@ -386,7 +396,7 @@ const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
           }}
         >
           <div onClick={(e) => e.stopPropagation()}>
-            <CheckIn onClose={() => setShowCheckInModal(false)} />
+            <CheckIn onClose={handleCloseModal} />
           </div>
         </div>
       )}

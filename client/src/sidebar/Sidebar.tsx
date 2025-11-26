@@ -202,7 +202,7 @@ const renderMenuItem = (item: MenuItem) => {
             if (expanded === item.id && !isActive) {
               setExpanded(null);
             } else {
-              setExpanded(item.id);
+              
               onItemClick(item.id);
             }
           }}
@@ -316,7 +316,7 @@ const renderMenuItem = (item: MenuItem) => {
           )}
 
           {/* Show check-out button if logged in */}
-          {currentUser && (
+          {/* {currentUser && (
             <div className="mt-auto">
               <button
                 onClick={checkOut}
@@ -325,7 +325,7 @@ const renderMenuItem = (item: MenuItem) => {
                 Check Out
               </button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     );
