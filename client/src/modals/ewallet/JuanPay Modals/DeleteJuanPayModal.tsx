@@ -17,6 +17,7 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
   record,
   isDeleting
 }) => {
+  const [isClosing, setIsClosing] = React.useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,8 +79,7 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={!isDeleting ? onClose : undefined}
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm modal-backdrop"
         style={{
           backdropFilter: 'blur(4px)',
           WebkitBackdropFilter: 'blur(4px)'
@@ -88,7 +88,9 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
 
       <div 
         ref={modalRef}
-        className="bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+        className={`bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -168,7 +170,10 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
           <button 
             type="button"
             className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={onClose}
+            onClick={() => {
+              setIsClosing(true);
+              setTimeout(() => onClose(), 300);
+            }}
             disabled={isDeleting}
           >
             Cancel

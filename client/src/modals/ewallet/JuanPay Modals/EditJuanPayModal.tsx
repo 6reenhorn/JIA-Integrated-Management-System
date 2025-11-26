@@ -18,6 +18,7 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
     record,
     isEditing
 }) => {
+    const [isClosing, setIsClosing] = React.useState(false);
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
         const local = new Date(date.getTime() - tzOffset);
@@ -202,17 +203,18 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={!isEditing ? onClose : undefined}
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm modal-backdrop"
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
                 }}
             />
 
-            <div 
+            <div
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 ${
+                    isClosing ? 'animate-modal-out' : 'animate-modal-in'
+                }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>
@@ -317,7 +319,10 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
                     <button 
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={handleCancel}
+                        onClick={() => {
+                            setIsClosing(true);
+                            setTimeout(() => handleCancel(), 300);
+                        }}
                         disabled={isEditing}
                     >
                         Cancel

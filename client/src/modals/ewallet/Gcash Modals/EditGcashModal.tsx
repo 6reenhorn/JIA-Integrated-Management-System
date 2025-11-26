@@ -307,7 +307,7 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
                 className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
-                onClick={!isEditing ? handleCancel : undefined}
+                // onClick={!isEditing ? handleCancel : undefined}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'

@@ -13,6 +13,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     onClose,
     onAddRecord,
 }) => {
+    const [isClosing, setIsClosing] = useState(false);
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
         const local = new Date(date.getTime() - tzOffset);
@@ -86,21 +87,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                     formData.date !== '';
         setIsFormValid(valid);
     }, [formData.amount, formData.transactionType, formData.chargeMOP, formData.date]);
-
-    // Close dropdowns when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (transactionTypeRef.current && !transactionTypeRef.current.contains(event.target as Node)) {
-                setDropdowns(prev => ({ ...prev, transactionType: false }));
-            }
-            if (chargeMOPRef.current && !chargeMOPRef.current.contains(event.target as Node)) {
-                setDropdowns(prev => ({ ...prev, chargeMOP: false }));
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     // Close modal on escape key
     useEffect(() => {
@@ -277,15 +263,19 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     };
 
     const handleCancel = () => {
-        setFormData({
-            amount: '',
-            serviceCharge: '',
-            transactionType: '',
-            chargeMOP: '',
-            referenceNumber: '',
-            date: getLocalISODate(new Date()),
-        });
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            setFormData({
+                amount: '',
+                serviceCharge: '',
+                transactionType: '',
+                chargeMOP: '',
+                referenceNumber: '',
+                date: getLocalISODate(new Date()),
+            });
+            setIsClosing(false);
+            onClose();
+        }, 300);
     };
 
     if (!isOpen) return null;
@@ -294,7 +284,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={onClose}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -303,7 +292,8 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
 
             <div 
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 
+                            ${isClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>

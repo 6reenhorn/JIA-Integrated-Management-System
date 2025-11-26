@@ -16,6 +16,7 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
     onAddRecord,
     lastEndingBalance = null,
 }) => {
+    const [isClosing, setIsClosing] = React.useState(false);
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
         const local = new Date(date.getTime() - tzOffset);
@@ -204,7 +205,6 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
             {/* Background overlay */}
             <div 
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={onClose}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -212,9 +212,11 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
             />
 
             {/* Modal content */}
-            <div 
+            <div
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 ${
+                    isClosing ? 'animate-modal-out' : 'animate-modal-in'
+                }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>
@@ -314,7 +316,10 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
                     <button 
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm"
-                        onClick={handleCancel}
+                        onClick={() => {
+                            setIsClosing(true);
+                            setTimeout(() => handleCancel(), 300);
+                        }}
                     >
                         Cancel
                     </button>

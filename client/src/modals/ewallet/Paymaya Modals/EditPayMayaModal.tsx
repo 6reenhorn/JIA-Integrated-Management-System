@@ -17,6 +17,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     record,
     isEditing = false
 }) => {
+    const [isClosing, setIsClosing] = useState(false);
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
         const local = new Date(date.getTime() - tzOffset);
@@ -104,21 +105,6 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                     formData.date !== '';
         setIsFormValid(valid);
     }, [formData.amount, formData.transactionType, formData.chargeMOP, formData.date]);
-
-    // Close dropdowns when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (transactionTypeRef.current && !transactionTypeRef.current.contains(event.target as Node)) {
-                setDropdowns(prev => ({ ...prev, transactionType: false }));
-            }
-            if (chargeMOPRef.current && !chargeMOPRef.current.contains(event.target as Node)) {
-                setDropdowns(prev => ({ ...prev, chargeMOP: false }));
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     // Close modal on escape key
     useEffect(() => {
@@ -293,7 +279,11 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
 
     const handleCancel = () => {
         if (!isEditing) {
-            onClose();
+            setIsClosing(true);
+            setTimeout(() => {
+                setIsClosing(false);
+                onClose();
+            }, 300);
         }
     };
 
@@ -310,9 +300,11 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                 }}
             />
 
-            <div 
+            <div
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 ${
+                    isClosing ? 'animate-modal-out' : 'animate-modal-in'
+                }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>
