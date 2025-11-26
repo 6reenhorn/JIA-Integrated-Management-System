@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Portal from '../../components/common/Portal';
 
 interface AddCategoryModalProps {
   isOpen: boolean;
@@ -79,100 +80,102 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px]">
-        <div>
-          <h3 className="text-[20px] font-bold">Add Category</h3>
-          <p className="text-[12px]">Create a new category with a custom name and color.</p>
-        </div>
-        
-        <div className="overflow-y-auto max-h-[550px] mt-4 text-[12px]">
-          <div className="flex flex-col gap-3">
-            {/* Category Details Section */}
-            <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4">
-              <h3 className="text-[16px] font-bold">Category Details</h3>
-              
-              {/* Category Name Field */}
-              <div className="mt-2">
-                <label className="text-[12px] font-bold">Category Name</label>
-                <input
-                  type="text"
-                  value={categoryName}
-                  onChange={(e) => handleInputChange(e.target.value)}
-                  placeholder="Enter category name"
-                  className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
-                    errors.categoryName ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSubmit(e);
-                    }
-                  }}
-                />
-                {errors.categoryName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.categoryName}</p>
-                )}
-              </div>
-
-              {/* Color Picker */}
-              <div className="mt-2">
-                <label className="text-[12px] font-bold">Category Color</label>
-                <div className="grid grid-cols-6 gap-3 mt-2">
-                  {colors.map((color, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setSelectedColor(color)}
-                      className={`w-10 h-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#02367B] ${
-                        selectedColor === color 
-                          ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' 
-                          : 'hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      aria-label={`Select color ${color}`}
-                    />
-                  ))}
+    <Portal>
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px]">
+          <div>
+            <h3 className="text-[20px] font-bold">Add Category</h3>
+            <p className="text-[12px]">Create a new category with a custom name and color.</p>
+          </div>
+          
+          <div className="overflow-y-auto max-h-[550px] mt-4 text-[12px]">
+            <div className="flex flex-col gap-3">
+              {/* Category Details Section */}
+              <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4">
+                <h3 className="text-[16px] font-bold">Category Details</h3>
+                
+                {/* Category Name Field */}
+                <div className="mt-2">
+                  <label className="text-[12px] font-bold">Category Name</label>
+                  <input
+                    type="text"
+                    value={categoryName}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    placeholder="Enter category name"
+                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                      errors.categoryName ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSubmit(e);
+                      }
+                    }}
+                  />
+                  {errors.categoryName && (
+                    <p className="text-red-500 text-xs mt-1">{errors.categoryName}</p>
+                  )}
                 </div>
-              </div>
 
-              {/* Preview */}
-              <div className="mt-4 p-3 bg-white rounded-md border border-gray-200">
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-bold text-gray-700">Preview:</span>
+                {/* Color Picker */}
+                <div className="mt-2">
+                  <label className="text-[12px] font-bold">Category Color</label>
+                  <div className="grid grid-cols-6 gap-3 mt-2">
+                    {colors.map((color, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setSelectedColor(color)}
+                        className={`w-10 h-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#02367B] ${
+                          selectedColor === color 
+                            ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' 
+                            : 'hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: color }}
+                        aria-label={`Select color ${color}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="mt-4 p-3 bg-white rounded-md border border-gray-200">
                   <div className="flex items-center gap-2">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: selectedColor }}
-                    />
-                    <span className="text-[12px] text-gray-600">
-                      {categoryName || 'Category Name'}
-                    </span>
+                    <span className="text-[12px] font-bold text-gray-700">Preview:</span>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: selectedColor }}
+                      />
+                      <span className="text-[12px] text-gray-600">
+                        {categoryName || 'Category Name'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300"
-          >
-            Add Category
-          </button>
+          {/* Action Buttons */}
+          <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300"
+            >
+              Add Category
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Portal>
   );
 };
 

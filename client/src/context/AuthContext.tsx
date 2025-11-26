@@ -15,6 +15,7 @@ interface AuthContextType {
   checkIn: (user: User) => void;
   checkOut: () => void;
   hasAccess: (page: 'inventory' | 'ewallet' | 'employees' | 'settings' | 'about') => boolean;
+  hasAccessToEmployeeSection: (section: 'staff' | 'attendance' | 'payroll') => boolean; // ADD THIS LINE
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -72,10 +73,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // General Manager has access to everything
     if (role === 'General Manager') return true;
 
-    // Settings and About are only for General Manager
-    if (page === 'settings' || page === 'about') return false;
+    // About is accessible to everyone
+    if (page === 'about') return true;
 
-    // Employees page is accessible to all (for attendance)
+    // Settings is only for General Manager
+    if (page === 'settings') return false;
+
+    // Employees page is accessible to all
     if (page === 'employees') return true;
 
     // Role-specific access
@@ -94,8 +98,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const hasAccessToEmployeeSection = (section: 'staff' | 'attendance' | 'payroll'): boolean => {
+    if (!currentUser) return false;
+
+    const { role } = currentUser;
+
+    // General Manager has access to all sections
+    if (role === 'General Manager') return true;
+
+    // Inventory Manager can only access Attendance
+    if (role === 'Inventory Manager') {
+      return section === 'attendance';
+    }
+
+    // Inventory Transaction Manager can only access Attendance
+    if (role === 'Inventory Transaction Manager') {
+      return section === 'attendance';
+    }
+
+    // E-Wallet Recorder can only access Attendance
+    if (role === 'E-Wallet Recorder') {
+      return section === 'attendance';
+    }
+
+    // Other roles have full access to employees sections
+    return true;
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser, isCheckedIn, checkIn, checkOut, hasAccess }}>
+    <AuthContext.Provider value={{ currentUser, isCheckedIn, checkIn, checkOut, hasAccess, hasAccessToEmployeeSection }}>
       {children}
     </AuthContext.Provider>
   );
