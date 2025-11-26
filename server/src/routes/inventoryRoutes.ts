@@ -149,6 +149,91 @@ router.delete('/categories/:categoryName', async (req: Request, res: Response): 
   }
 });
 
+
+router.put('/categories/:categoryName', async (req: Request, res: Response): Promise<void> => {
+  const { categoryName } = req.params;
+  const decodedCategoryName = decodeURIComponent(categoryName);
+  const { name, color }: { name: string; color?: string } = req.body;
+
+  if (!name) {
+    res.status(400).json({ error: 'Category name is required' });
+    return;
+  }
+
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    // 1. Check if category exists
+    const categoryCheck = await client.query(
+      'SELECT * FROM categories WHERE category_name = $1',
+      [decodedCategoryName]
+    );
+    
+    if (categoryCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      res.status(404).json({ error: 'Category not found' });
+      return;
+    }
+
+    // 2. If name is being changed, check if new name already exists
+    if (name !== decodedCategoryName) {
+      const duplicateCheck = await client.query(
+        'SELECT * FROM categories WHERE category_name = $1',
+        [name]
+      );
+      
+      if (duplicateCheck.rows.length > 0) {
+        await client.query('ROLLBACK');
+        res.status(400).json({ 
+          error: `Category name "${name}" already exists. Please choose a different name.`
+        });
+        return;
+      }
+    }
+
+    // 3. Update the category
+    const updateQuery = `
+      UPDATE categories 
+      SET category_name = $1, color = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE category_name = $3
+      RETURNING *
+    `;
+    const updateResult = await client.query(updateQuery, [name, color || '#6B7280', decodedCategoryName]);
+    const updatedCategory = updateResult.rows[0];
+
+    // 4. Update all inventory items that use this category (if name changed)
+    if (name !== decodedCategoryName) {
+      await client.query(
+        'UPDATE inventory_items SET category = $1, updated_at = CURRENT_TIMESTAMP WHERE category = $2',
+        [name, decodedCategoryName]
+      );
+    }
+
+    await client.query('COMMIT');
+    
+    const category: Category = {
+      id: updatedCategory.id,
+      name: updatedCategory.category_name,
+      color: updatedCategory.color,
+      createdAt: updatedCategory.created_at
+    };
+
+    res.json(category);
+    
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error updating category:', err);
+    res.status(500).json({ 
+      error: 'Internal server error'
+    });
+  } finally {
+    client.release();
+  }
+});
+
+
 // ============================================
 // SALES ROUTES
 // ============================================
