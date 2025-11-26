@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import type { InventoryItem } from '../../types/inventory_types';
 
@@ -17,12 +17,22 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
     item,
     isDeleting = false
 }) => {
+    const [isClosing, setIsClosing] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
+
+    const handleCancel = useCallback(() => {
+        if (isDeleting) return;
+        setIsClosing(true);
+        setTimeout(() => {
+            onClose();
+            setIsClosing(false);
+        }, 300);
+    }, [isDeleting, onClose]);
 
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && !isDeleting) {
-                onClose();
+                handleCancel();
             }
         };
 
@@ -35,7 +45,23 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
             document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen, onClose, isDeleting]);
+    }, [isOpen, isDeleting, handleCancel]);
+
+    // Close modal when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+                if (!isDeleting) {
+                    handleCancel();
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isDeleting, handleCancel]);
 
     const handleConfirm = () => {
         if (item && !isDeleting) {
@@ -56,13 +82,14 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
         }
     };
 
-    if (!isOpen || !item) return null;
+    if (!isOpen && !isClosing) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={!isDeleting ? onClose : undefined}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+                    isClosing ? 'opacity-0' : 'opacity-100'
+                }`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -71,8 +98,9 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
 
             <div 
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
-                onClick={(e) => e.stopPropagation()}
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 ${
+                    isClosing ? 'animate-modal-out' : 'animate-modal-in'
+                }`}
             >
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
@@ -85,7 +113,7 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
                         </div>
                     </div>
                     <button
-                        onClick={onClose}
+                        onClick={handleCancel}
                         disabled={isDeleting}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -102,31 +130,31 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
                         <div className="grid grid-cols-2 gap-3 text-xs">
                             <div className="col-span-2">
                                 <span className="text-gray-600 font-medium">Product Name:</span>
-                                <div className="text-gray-900 font-semibold truncate">{item.productName}</div>
+                                <div className="text-gray-900 font-semibold truncate">{item?.productName}</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Category:</span>
-                                <div className="text-gray-900">{item.category}</div>
+                                <div className="text-gray-900">{item?.category}</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Stock:</span>
-                                <div className="text-gray-900">{item.stock} Units</div>
+                                <div className="text-gray-900">{item?.stock} Units</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Status:</span>
                                 <div className="text-gray-900">
-                                    <span className={`inline-flex px-2 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
-                                        {item.status}
+                                    <span className={`inline-flex px-2 text-xs font-semibold rounded-full ${getStatusColor(item?.status || '')}`}>
+                                        {item?.status}
                                     </span>
                                 </div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Price:</span>
-                                <div className="text-gray-900">₱{item.productPrice.toFixed(2)}</div>
+                                <div className="text-gray-900">₱{item?.productPrice.toFixed(2)}</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Total Value:</span>
-                                <div className="text-gray-900 font-semibold">₱{item.totalAmount.toFixed(2)}</div>
+                                <div className="text-gray-900 font-semibold">₱{item?.totalAmount.toFixed(2)}</div>
                             </div>
                         </div>
                     </div>
@@ -143,7 +171,7 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
                     <button 
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={onClose}
+                        onClick={handleCancel}
                         disabled={isDeleting}
                     >
                         Cancel
