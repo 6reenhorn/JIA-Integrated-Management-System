@@ -193,18 +193,9 @@ const renderMenuItem = (item: MenuItem) => {
               return;
             }
 
-            // Prevent re-clicking when already on the main item and expanded
-            if (isActive && expanded === item.id) {
-              return; // Do nothing if already active and expanded
-            }
-
-            // Toggle expansion or set to current item
-            if (expanded === item.id && !isActive) {
-              setExpanded(null);
-            } else {
-              
-              onItemClick(item.id);
-            }
+            // Always update expanded state and trigger item click
+            setExpanded(item.id);
+            onItemClick(item.id);
           }}
           disabled={!hasAccessToItem}
           className={`w-full flex items-center justify-center gap-3 py-3 px-2 text-left rounded-lg transition-all duration-200 ${
