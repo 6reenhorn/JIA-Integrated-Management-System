@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import type { GCashRecord } from '../../../types/ewallet_types';
 
@@ -18,6 +18,7 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
     isDeleting = false
 }) => {
     const modalRef = useRef<HTMLDivElement>(null);
+    const [isClosing, setIsClosing] = useState(false);
 
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
@@ -73,8 +74,11 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={!isDeleting ? onClose : undefined}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+                onClick={!isDeleting ? () => {
+                    setIsClosing(true);
+                    setTimeout(onClose, 300);
+                } : undefined}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -83,7 +87,7 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
 
             <div 
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 ${isClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-6">
@@ -97,7 +101,12 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
                         </div>
                     </div>
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            if (!isDeleting) {
+                                setIsClosing(true);
+                                setTimeout(onClose, 300);
+                            }
+                        }}
                         disabled={isDeleting}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
