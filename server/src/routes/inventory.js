@@ -116,6 +116,92 @@ router.delete('/categories/:categoryName', async (req, res) => {
   }
 });
 
+
+// PUT /api/inventory/categories/:categoryName - Update a category
+router.put('/categories/:categoryName', async (req, res) => {
+  const { categoryName } = req.params;
+  const decodedCategoryName = decodeURIComponent(categoryName);
+  const { name, color } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ error: 'Category name is required' });
+  }
+
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    // 1. Check if category exists
+    const categoryCheck = await client.query(
+      'SELECT * FROM categories WHERE category_name = $1',
+      [decodedCategoryName]
+    );
+    
+    if (categoryCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    // 2. If name is being changed, check if new name already exists
+    if (name !== decodedCategoryName) {
+      const duplicateCheck = await client.query(
+        'SELECT * FROM categories WHERE category_name = $1',
+        [name]
+      );
+      
+      if (duplicateCheck.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          error: `Category name "${name}" already exists. Please choose a different name.`
+        });
+      }
+    }
+
+    // 3. Update the category (WITHOUT updated_at if column doesn't exist)
+    const updateQuery = `
+      UPDATE categories 
+      SET category_name = $1, color = $2
+      WHERE category_name = $3
+      RETURNING *
+    `;
+    const updateResult = await client.query(updateQuery, [name, color || '#6B7280', decodedCategoryName]);
+    const updatedCategory = updateResult.rows[0];
+
+    // 4. Update all inventory items that use this category (if name changed)
+    if (name !== decodedCategoryName) {
+      await client.query(
+        'UPDATE inventory_items SET category = $1 WHERE category = $2',
+        [name, decodedCategoryName]
+      );
+    }
+
+    await client.query('COMMIT');
+    
+    const category = {
+      id: updatedCategory.id,
+      name: updatedCategory.category_name,
+      color: updatedCategory.color,
+      createdAt: updatedCategory.created_at
+    };
+
+    res.json(category);
+    
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error updating category:', err);
+    console.error('Error details:', err.message);
+    console.error('Error stack:', err.stack);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      details: err.message 
+    });
+  } finally {
+    client.release();
+  }
+});
+
+
 // Helper function to format date in Philippines timezone (UTC+8)
 const formatDatePH = (date) => {
   const d = new Date(date);

@@ -515,6 +515,53 @@ const handleDeleteCategory = async (categoryName: string) => {
   }
 };
 
+const handleEditCategory = async (oldName: string, newName: string, color: string) => {
+  try {
+    console.log('Editing category:', { oldName, newName, color });
+    
+    const response = await axios.put(
+      `http://localhost:3001/api/inventory/categories/${encodeURIComponent(oldName)}`,
+      {
+        name: newName,
+        color: color,
+      }
+    );
+    
+    console.log('Category updated:', response.data);
+    
+    // Update the categories in state
+    setCategoriesData(prev => 
+      prev.map(cat => 
+        cat.name === oldName 
+          ? { ...cat, name: newName, color: color }
+          : cat
+      )
+    );
+    
+    // If the edited category was selected in filter, update the selection
+    if (selectedCategory === oldName) {
+      setSelectedCategory(newName);
+    }
+    
+  } catch (err: unknown) {
+    console.error('Error editing category:', err);
+    if (axios.isAxiosError(err)) {
+      console.error('Error details:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      console.error('Error message:', err.message);
+      // THIS IS THE KEY - Log the full response
+      console.error('Full error response:', JSON.stringify(err.response?.data, null, 2));
+    } else if (err instanceof Error) {
+      console.error('Error message:', err.message);
+    } else {
+      console.error('Error details:', String(err));
+    }
+    
+    // Re-throw the error so CategoryContent can handle it
+    throw err;
+  }
+};
+
 const handleCloseCategoryModal = () => {
   setIsAddCategoryModalOpen(false);
 };
@@ -832,7 +879,8 @@ const handleCloseCategoryModal = () => {
           onViewProducts={handleViewProducts}
           showHeaderStats={true}
           onAddCategory={handleAddCategory}
-          onDeleteCategory={handleDeleteCategory} 
+          onDeleteCategory={handleDeleteCategory}
+          onEditCategory={handleEditCategory} 
           searchQuery={categorySearchTerm}
           onSearchChange={setCategorySearchTerm}
           sections={sections}

@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Trash2, AlertCircle, X } from 'lucide-react';
+import { Trash2, AlertCircle, X, PenSquare } from 'lucide-react';
 import MainLayoutCard from '../../layout/MainLayoutCard';
 import LayoutCard from '../../layout/LayoutCard';
 import CategoryActions from './CategoryActions';
 import CategoryFilters from './CategoryFilters';
 import DeleteCategoryModal from '../../../modals/Inventory/DeleteCategoryModal';
+import EditCategoryModal from '../../../modals/Inventory/EditCategoryModal';
 
 interface Category {
   name: string;
@@ -44,6 +45,7 @@ interface CategoryContentProps {
   onRefresh?: () => void;
   isRefreshing?: boolean;
   onDeleteCategory?: (categoryName: string) => void;
+  onEditCategory?: (oldName: string, newName: string, color: string) => void;
 }
 
 // Error Modal Component
@@ -115,17 +117,22 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
   isLoading = false,
   onRefresh,
   isRefreshing = false,
-  onDeleteCategory
+  onDeleteCategory,
+  onEditCategory
 }) => {
   const defaultColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'];
   
-  const ITEMS_PER_PAGE = 9;
+  const ITEMS_PER_PAGE = 8;
   
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const categoryStats = useMemo(() => {
     const totalCategories = Array.from(new Set(inventoryItems.map(item => item.category))).length;
@@ -153,6 +160,12 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
     e.stopPropagation();
     setCategoryToDelete(category);
     setDeleteModalOpen(true);
+  };
+
+  const handleEditClick = (category: Category, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCategoryToEdit(category);
+    setEditModalOpen(true);
   };
 
   const handleConfirmDelete = async (categoryName: string) => {
@@ -186,6 +199,32 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
     }
   };
 
+  const handleConfirmEdit = async (oldName: string, newName: string, color: string) => {
+    if (onEditCategory) {
+      setIsEditing(true);
+      try {
+        await onEditCategory(oldName, newName, color);
+        setEditModalOpen(false);
+        setCategoryToEdit(null);
+      } catch (error: unknown) {
+        console.error('Error editing category:', error);
+        
+        // Show error message
+        let errorMsg = 'Failed to update category. Please try again.';
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response?: { data?: { error?: string } }; message?: string };
+          errorMsg = axiosError.response?.data?.error || axiosError.message || errorMsg;
+        } else if (error instanceof Error) {
+          errorMsg = error.message;
+        }
+        
+        alert(errorMsg);
+      } finally {
+        setIsEditing(false);
+      }
+    }
+  };
+
   const categoryContent = (
     <>
       <div className="bg-none rounded-l p-0 mt-4">
@@ -203,8 +242,8 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
         
         {isLoading ? (
           <div className="h-[392px] overflow-hidden p-6 mt-1 mb-8 border-t border-b border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: Math.min(categories.length || 3, ITEMS_PER_PAGE) }).map((_, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, index) => (
                 <LayoutCard key={`skeleton-${index}`}>
                   {/* Category Header Skeleton */}
                   <div className="flex items-center justify-between mb-6">
@@ -251,12 +290,12 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
           </div>
         ) : (
           <div className="h-[392px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {paginatedCategories.map((category, index) => {
                 const actualIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
                 return (
                   <LayoutCard key={`${category.name}-${actualIndex}`}>
-                    {/* Category Header with Color Dot and Delete Button */}
+                    {/* Category Header with Color Dot and Action Buttons */}
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
                         <div 
@@ -266,14 +305,23 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                         <h4 className="text-lg font-semibold text-gray-900">{category.name}</h4>
                       </div>
                       
-                      {/* Delete Button */}
-                      <button
-                        onClick={(e) => handleDeleteClick(category, e)}
-                        className="p-1.5 hover:bg-red-50 rounded-md transition-colors group"
-                        title="Delete category"
-                      >
-                        <Trash2 className="w-4 h-4 text-gray-800 group-hover:text-red-600" />
-                      </button>
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => handleEditClick(category, e)}
+                          className="p-1.5 hover:bg-blue-50 rounded-md transition-colors group"
+                          title="Edit category"
+                        >
+                          <PenSquare className="w-4 h-4 text-gray-800 group-hover:text-blue-600" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteClick(category, e)}
+                          className="p-1.5 hover:bg-red-50 rounded-md transition-colors group"
+                          title="Delete category"
+                        >
+                          <Trash2 className="w-4 h-4 text-gray-800 group-hover:text-red-600" />
+                        </button>
+                      </div>
                     </div>
                     
                     {/* Stats Grid */}
@@ -331,6 +379,18 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
         onConfirmDelete={handleConfirmDelete}
         category={categoryToDelete}
         isDeleting={isDeleting}
+      />
+
+      {/* Edit Category Modal */}
+      <EditCategoryModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setCategoryToEdit(null);
+        }}
+        onSave={handleConfirmEdit}
+        initialData={categoryToEdit || undefined}
+        isUpdating={isEditing}
       />
 
       {/* Error Modal */}
