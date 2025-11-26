@@ -111,6 +111,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return section === 'attendance';
     }
 
+    // Inventory Transaction Manager can only access Attendance
+    if (role === 'Inventory Transaction Manager') {
+      return section === 'attendance';
+    }
+
+    // E-Wallet Recorder can only access Attendance
+    if (role === 'E-Wallet Recorder') {
+      return section === 'attendance';
+    }
+
     // Other roles have full access to employees sections
     return true;
   };
