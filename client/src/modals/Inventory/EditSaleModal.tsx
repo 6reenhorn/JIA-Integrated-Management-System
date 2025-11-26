@@ -366,6 +366,9 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                         </div>
                       )}
                     </div>
+                    {errors.productName && (
+                      <p className="text-red-500 text-xs mt-1">{errors.productName}</p>
+                    )}
                     {selectedProduct && (
                       <p className="text-green-600 text-xs mt-1">
                         Available stock: {selectedProduct.stock} units
