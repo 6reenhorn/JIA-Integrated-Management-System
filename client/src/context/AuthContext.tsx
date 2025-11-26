@@ -11,6 +11,7 @@ interface User {
 
 interface AuthContextType {
   currentUser: User | null;
+  isCheckedIn: boolean;
   checkIn: (user: User) => void;
   checkOut: () => void;
   hasAccess: (page: 'inventory' | 'ewallet' | 'employees' | 'settings' | 'about') => boolean;
@@ -26,9 +27,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return stored ? JSON.parse(stored) : null;
     } catch (error) {
       console.error('Error parsing stored user data:', error);
-      sessionStorage.removeItem('currentUser'); // Clear corrupted data
+      sessionStorage.removeItem('currentUser');
       return null;
     }
+  });
+
+  const [isCheckedIn, setIsCheckedIn] = useState<boolean>(() => {
+    // Restore check-in status from sessionStorage
+    const stored = sessionStorage.getItem('isCheckedIn');
+    return stored === 'true';
   });
 
   useEffect(() => {
@@ -40,13 +47,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    // Persist check-in status to sessionStorage
+    sessionStorage.setItem('isCheckedIn', String(isCheckedIn));
+  }, [isCheckedIn]);
+
   const checkIn = (user: User) => {
     setCurrentUser(user);
+    setIsCheckedIn(true); // THIS WAS MISSING!
   };
 
   const checkOut = () => {
     setCurrentUser(null);
+    setIsCheckedIn(false); // THIS WAS MISSING!
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('isCheckedIn');
   };
 
   const hasAccess = (page: 'inventory' | 'ewallet' | 'employees' | 'settings' | 'about'): boolean => {
@@ -80,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, checkIn, checkOut, hasAccess }}>
+    <AuthContext.Provider value={{ currentUser, isCheckedIn, checkIn, checkOut, hasAccess }}>
       {children}
     </AuthContext.Provider>
   );
