@@ -14,6 +14,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [password, setPassword] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
 
     const employeeDropdownRef = useRef<HTMLDivElement>(null);
     const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -42,11 +43,14 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
 
     useEffect(() => {
         const fetchEmployees = async () => {
+            setIsLoadingEmployees(true);
             try {
                 const response = await axios.get('http://localhost:3001/api/employees');
                 setEmployees(response.data);
             } catch (error) {
                 console.error('Error fetching employees:', error);
+            } finally {
+                setIsLoadingEmployees(false);
             }
         };
         fetchEmployees();
@@ -120,18 +124,28 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                             </div>
                             {isDropdownOpen && (
                                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-2xl shadow-lg max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                                    {employees.map((employee) => (
-                                        <div
-                                            key={employee.id}
-                                            onClick={() => {
-                                                setSelectedEmployee(employee);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                        >
-                                            {employee.name} ({employee.empId})
+                                    {isLoadingEmployees ? (
+                                        <div className="px-4 py-4 text-center text-gray-500">
+                                            Loading employees...
                                         </div>
-                                    ))}
+                                    ) : employees.length === 0 ? (
+                                        <div className="px-4 py-4 text-center text-gray-500">
+                                            No employees found
+                                        </div>
+                                    ) : (
+                                        employees.map((employee) => (
+                                            <div
+                                                key={employee.id}
+                                                onClick={() => {
+                                                    setSelectedEmployee(employee);
+                                                    setIsDropdownOpen(false);
+                                                }}
+                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                            >
+                                                {employee.name} ({employee.empId})
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             )}
                         </div>
