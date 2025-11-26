@@ -19,6 +19,7 @@ import PayrollRecords from './employee-sections/PayrollRecords';
 import PayrollStats from '../components/employees/payroll/PayrollStats';
 import DeleteEmployeeModal from '../modals/employee/DeleteStaffModal';
 import RefreshBtn from '../components/common/RefreshBtn';
+import { useAuth } from '../context/AuthContext';
 
 interface PayrollRecord {
   id: number;
@@ -80,11 +81,13 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
   const [isSpinning, setIsSpinning] = useState(false);
 
+  const { hasAccessToEmployeeSection } = useAuth();
+
   const sections = [
     { label: 'Staff Management', key: 'staff' },
     { label: 'Attendance', key: 'attendance' },
     { label: 'Payroll Records', key: 'payroll' }
-  ];
+  ].filter(section => hasAccessToEmployeeSection(section.key as 'staff' | 'attendance' | 'payroll'));
 
   const handleSectionChange = (section: string) => {
     if (onSectionChange) {
@@ -118,6 +121,13 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       setPayrollLoading(false);
     }
   };
+
+  // Redirect to attendance if user doesn't have access to current section
+  useEffect(() => {
+    if (!hasAccessToEmployeeSection(activeSection as 'staff' | 'attendance' | 'payroll')) {
+      handleSectionChange('attendance');
+    }
+  }, [activeSection, hasAccessToEmployeeSection]);
 
   // Always fetch payroll records on mount and clear any stale local storage
   useEffect(() => {
