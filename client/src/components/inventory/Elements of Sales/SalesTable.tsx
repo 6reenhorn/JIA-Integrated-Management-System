@@ -126,25 +126,25 @@ const SalesTable: React.FC<SalesTableProps> = ({
                 {Array.from({ length: skeletonCount }).map((_, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-24" />
                     </td>
                     <td className="py-4 px-5 w-[140px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-28" />
                     </td>
                     <td className="py-4 px-4 w-[100px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-14" />
                     </td>
                     <td className="py-4 px-6 w-[120px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-16" />
                     </td>
                     <td className="py-4 px-4 w-[130px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-16" />
                     </td>
                     <td className="py-4 px-3.5 w-[130px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-20" />
                     </td>
                     <td className="py-4 px-4 w-[100px]">
-                      <div className="flex justify-start space-x-2">
+                      <div className="flex justify-start space-x-3">
                         <Skeleton className="w-6 h-6" />
                         <Skeleton className="w-6 h-6" />
                       </div>
