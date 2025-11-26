@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import checkInIcon from '../../assets/JIA_CheckIn.ico';
 import type { Employee } from '../../types/employee_types';
+import { useAuth } from '../../context/AuthContext';
+import type { UserRole } from '../../context/AuthContext';
 
 interface CheckInProps {
   onClose: () => void;
@@ -12,19 +14,33 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [password, setPassword] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [focusedEmployeeOption, setFocusedEmployeeOption] = useState(0);
+    const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [countdown, setCountdown] = useState<number>(0);
+    const [isProcessing, setIsProcessing] = useState(false);
+
     const employeeDropdownRef = useRef<HTMLDivElement>(null);
+    const passwordInputRef = useRef<HTMLInputElement>(null);
 
     const selectedEmployeeText = selectedEmployee ? `${selectedEmployee.name} (${selectedEmployee.empId})` : 'Select Employee';
+
+    const { checkIn } = useAuth();
 
     const toggleEmployeeDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
-    const handleEmployeeOptionClick = (employee: Employee) => {
-        setSelectedEmployee(employee);
-        setIsDropdownOpen(false);
-    };
+    // Handle countdown and auto-close
+    useEffect(() => {
+        if (countdown > 0) {
+            const timer = setTimeout(() => {
+                setCountdown(countdown - 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else if (countdown === 0 && message?.type === 'success') {
+            onClose();
+        }
+    }, [countdown, message, onClose]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -42,14 +58,24 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
 
     useEffect(() => {
         const fetchEmployees = async () => {
+            setIsLoadingEmployees(true);
             try {
                 const response = await axios.get('http://localhost:3001/api/employees');
                 setEmployees(response.data);
             } catch (error) {
                 console.error('Error fetching employees:', error);
+            } finally {
+                setIsLoadingEmployees(false);
             }
         };
         fetchEmployees();
+    }, []);
+
+    // Reset form when modal opens
+    useEffect(() => {
+        setSelectedEmployee(null);
+        setPassword('');
+        setIsDropdownOpen(false);
     }, []);
 
     return (
@@ -86,7 +112,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                     </div>
                     <div className="space-y-4 w-full">
                         {/* Custom Dropdown for Employees */}
-                        <div className="relative">
+                        <div className="relative" ref={employeeDropdownRef}>
                             <div
                                 className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-3xl px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[40px]"
                                 onClick={toggleEmployeeDropdown}
@@ -113,65 +139,130 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                             </div>
                             {isDropdownOpen && (
                                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-2xl shadow-lg max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                                    {employees.map((employee) => (
-                                        <div
-                                            key={employee.id}
-                                            onClick={() => {
-                                                setSelectedEmployee(employee);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                        >
-                                            {employee.name} ({employee.empId})
+                                    {isLoadingEmployees ? (
+                                        <div className="px-4 py-4 text-center text-gray-500">
+                                            Loading employees...
                                         </div>
-                                    ))}
+                                    ) : employees.length === 0 ? (
+                                        <div className="px-4 py-4 text-center text-gray-500">
+                                            No employees found
+                                        </div>
+                                    ) : (
+                                        employees.map((employee) => (
+                                            <div
+                                                key={employee.id}
+                                                onClick={() => {
+                                                    setSelectedEmployee(employee);
+                                                    setIsDropdownOpen(false);
+                                                }}
+                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                            >
+                                                {employee.name} ({employee.empId})
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             )}
                         </div>
                         {/* Password Input */}
                         <input
+                            ref={passwordInputRef}
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Enter Password"
                             className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 h-[40px]"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    // Trigger check-in on Enter key
+                                    document.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
+                                }
+                            }}
                         />
+
+                        {/* Message Display */}
+                        <div className="relative h-0">
+                            {message && (
+                                <div className={`absolute top-2 left-0 right-0 text-center text-sm font-medium ${
+                                    message.type === 'success' ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                    {message.text}
+                                    {message.type === 'success' && countdown > 0 && (
+                                        <span className="ml-2">closing in {countdown}...</span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
                     </div>
                     <div className='w-full'>
                         <button
-                            className='w-full py-2 rounded-3xl bg-[#02367B] text-white'
+                            type="submit"
+                            disabled={isProcessing}
+                            className={`w-full py-2 rounded-3xl text-white transition-colors ${
+                                isProcessing 
+                                    ? 'bg-gray-400 cursor-not-allowed' 
+                                    : 'bg-[#02367B] hover:bg-[#1C4A9E]'
+                            }`}
                             onClick={async () => {
+
+                                if (isProcessing) return;
+                                setMessage(null);
+                                setCountdown(0);
+                                
                                 if (!selectedEmployee) {
-                                    alert('Please select an employee.');
+                                    setMessage({ type: 'error', text: 'Please select an employee.' });
                                     return;
                                 }
                                 if (!password) {
-                                    alert('Please enter your password.');
+                                    setMessage({ type: 'error', text: 'Please enter your password.' });
                                     return;
                                 }
+                                setIsProcessing(true);                               
                                 try {
                                     // Check in with password verification on server
-                                    const response = await axios.post('http://localhost:3001/api/attendance/checkin', {
+                                    await axios.post('http://localhost:3001/api/attendance/checkin', {
                                         employeeId: selectedEmployee.id,
                                         password: password
                                     });
-                                    alert('Check-in successful!');
-                                    // Close the modal after successful check-in
-                                    onClose();
-                                    // Optionally reset form
+                                    
+                                    setMessage({ type: 'success', text: 'Check-in successful!' });
+                                    setCountdown(3); //successful check-in countdown
+
+                                    checkIn({
+                                        id: selectedEmployee.id,
+                                        empId: selectedEmployee.empId,
+                                        name: selectedEmployee.name,
+                                        role: selectedEmployee.role as UserRole,
+                                    })
+                                    
+                                    // Reset form
                                     setSelectedEmployee(null);
                                     setPassword('');
+                                    
                                 } catch (error: any) {
                                     console.error('Error during check-in:', error);
                                     if (error.response?.data?.error) {
-                                        alert(error.response.data.error);
+                                        setMessage({ type: 'error', text: error.response.data.error });
                                     } else {
-                                        alert('An error occurred during check-in.');
+                                        setMessage({ type: 'error', text: 'An error occurred during check-in.' });
                                     }
+                                } finally {
+                                    setIsProcessing(false);
                                 }
                             }}
                         >
-                            Check In
+                            {isProcessing ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processing...
+                                </span>
+                            ) : (
+                                'Check In'
+                            )}
                         </button>
                     </div>
                 </div>

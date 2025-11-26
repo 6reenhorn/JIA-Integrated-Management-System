@@ -5,8 +5,9 @@ import EmployeeStats from '../components/employees/management/EmployeeStats';
 import EmployeeFilters from '../components/employees/management/EmployeeFilters';
 import EmployeeTable from '../components/employees/management/EmployeeTable';
 import EmployeeActions from '../components/employees/management/EmployeeActions';
-import type { Employee } from '../types/employee_types';
+import type { Employee, AttendanceRecord } from '../types/employee_types';
 import { filterEmployees, calculateStats } from '../utils/employee_utils';
+import { calculateAttendanceStats } from '../utils/attendance_utils';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
 import EmployeeSearchBar from '../components/employees/management/EmployeeSearchBar';
 import AddStaffModal from '../modals/employee/AddStaffModal';
@@ -18,7 +19,7 @@ import PayrollRecords from './employee-sections/PayrollRecords';
 import PayrollStats from '../components/employees/payroll/PayrollStats';
 import DeleteEmployeeModal from '../modals/employee/DeleteStaffModal';
 import RefreshBtn from '../components/common/RefreshBtn';
-import CheckIn from '../components/support/CheckIn';
+import { useAuth } from '../context/AuthContext';
 
 interface PayrollRecord {
   id: number;
@@ -80,11 +81,13 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
   const [isSpinning, setIsSpinning] = useState(false);
 
+  const { hasAccessToEmployeeSection } = useAuth();
+
   const sections = [
     { label: 'Staff Management', key: 'staff' },
     { label: 'Attendance', key: 'attendance' },
     { label: 'Payroll Records', key: 'payroll' }
-  ];
+  ].filter(section => hasAccessToEmployeeSection(section.key as 'staff' | 'attendance' | 'payroll'));
 
   const handleSectionChange = (section: string) => {
     if (onSectionChange) {
@@ -99,6 +102,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
   const [payrollLoading, setPayrollLoading] = useState(true);
+
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
 
   // Fetch payroll records function
   const fetchPayrollRecords = async () => {
@@ -116,6 +122,13 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     }
   };
 
+  // Redirect to attendance if user doesn't have access to current section
+  useEffect(() => {
+    if (!hasAccessToEmployeeSection(activeSection as 'staff' | 'attendance' | 'payroll')) {
+      handleSectionChange('attendance');
+    }
+  }, [activeSection, hasAccessToEmployeeSection]);
+
   // Always fetch payroll records on mount and clear any stale local storage
   useEffect(() => {
     try {
@@ -131,8 +144,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     const fetchEmployees = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/employees');
-      const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
-      setEmployees(data);
+        const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
+        console.log('Fetched employees:', data.length);
+        setEmployees(data);
       } catch (err) {
         console.error('Error fetching employees:', err);
         setEmployees([]);
@@ -141,6 +155,23 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       }
     };
     fetchEmployees();
+  }, []);
+
+  // Fetch attendance records on mount
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/attendance');
+        const data = Array.isArray(response.data) ? response.data : [];
+        setAttendanceRecords(data);
+      } catch (err) {
+        console.error('Error fetching attendance records:', err);
+        setAttendanceRecords([]);
+      } finally {
+        setAttendanceLoading(false);
+      }
+    };
+    fetchAttendance();
   }, []);
 
   // Update localStorage when employees change
@@ -177,6 +208,14 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
     return { totalPayroll, paidPayroll, pendingPayroll, overduePayroll };
   }, [payrollRecords]);
+
+  // Calculate attendance stats (only when both data sets are loaded)
+  const attendanceStats = useMemo(() => {
+    if (employees.length === 0 || attendanceRecords.length === 0) {
+      return { present: 0, absent: 0, onLeave: 0 };
+    }
+    return calculateAttendanceStats(attendanceRecords, employees.length);
+  }, [attendanceRecords, employees.length]);
 
   // Filter employees based on search and filters
   const filteredEmployees = useMemo(() =>
@@ -282,15 +321,30 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const handleRefreshSpinning = async () => {
     setIsSpinning(true);
     setIsLoading(true);
+    setAttendanceLoading(true);
+    setPayrollLoading(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/employees');
-      const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
-      setEmployees(data);
+      // Fetch employees
+      const employeeResponse = await axios.get('http://localhost:3001/api/employees');
+      const employeeData = Array.isArray(employeeResponse.data) ? sortEmployeesByNewest(employeeResponse.data) : [];
+      setEmployees(employeeData);
+
+      // Fetch attendance
+      const attendanceResponse = await axios.get('http://localhost:3001/api/attendance');
+      const attendanceData = Array.isArray(attendanceResponse.data) ? attendanceResponse.data : [];
+      setAttendanceRecords(attendanceData);
+
+      // Fetch payroll
+      const payrollResponse = await axios.get('http://localhost:3001/api/payroll');
+      const payrollData = Array.isArray(payrollResponse.data) ? payrollResponse.data.sort((a, b) => b.id - a.id) : [];
+      setPayrollRecords(payrollData);
     } catch (err) {
-      console.error('Error refreshing employees:', err);
+      console.error('Error refreshing data:', err);
     } finally {
       setIsSpinning(false);
       setIsLoading(false);
+      setAttendanceLoading(false);
+      setPayrollLoading(false);
     }
   };
 
@@ -298,11 +352,11 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     <div className="space-y-6">
       {/* Employee Stats Section */}
       {activeSection === 'staff' && (
-        <EmployeeStats stats={stats} />
+        <EmployeeStats stats={stats} loading={isLoading} />
       )}
       {/* Attendance Stats Section */}
       {activeSection === 'attendance' && (
-        <AttendanceStats />
+        <AttendanceStats stats={attendanceStats} loading={attendanceLoading} />
       )}
       {/* Payroll Stats Section */}
       {activeSection === 'payroll' && (
@@ -311,6 +365,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
           paidPayroll={payrollStats.paidPayroll}
           pendingPayroll={payrollStats.pendingPayroll}
           overduePayroll={payrollStats.overduePayroll}
+          loading={payrollLoading}
         />
       )}
 
@@ -365,7 +420,11 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         )}
         {/* Attendance Management Section */}
         {activeSection === 'attendance' && (
-          <Attendance />
+          <Attendance
+            attendanceRecords={attendanceRecords}
+            attendanceLoading={attendanceLoading}
+            onRefresh={handleRefreshSpinning}
+          />
         )}
         {/* Payroll Records Section */}
         {activeSection === 'payroll' && (

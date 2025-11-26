@@ -36,15 +36,24 @@ export const checkIn = async (employeeId: number, password: string): Promise<{ s
   return { success: true, message: 'Check-in successful' };
 };
 
-export const getAttendanceRecords = async (): Promise<AttendanceRecord[]> => {
-  const query = 'SELECT * FROM attendance ORDER BY date DESC, time_in DESC';
+export const getAttendanceRecords = async (): Promise<any[]> => {
+  const query = `
+    SELECT
+      a.id as "attendanceId",
+      e.name,
+      e.emp_id as "empId",
+      e.role,
+      a.date,
+      TO_CHAR(a.time_in, 'HH12:MI AM') as "timeIn",
+      CASE
+        WHEN a.time_out IS NOT NULL THEN TO_CHAR(a.time_out, 'HH12:MI AM')
+        ELSE NULL
+      END as "timeOut",
+      a.status
+    FROM attendance a
+    JOIN employees e ON a.employee_id = e.id
+    ORDER BY a.date DESC, a.time_in DESC
+  `;
   const result = await pool.query(query);
-  return result.rows.map(row => ({
-    id: row.id,
-    employeeId: row.employee_id,
-    date: row.date,
-    timeIn: row.time_in,
-    timeOut: row.time_out,
-    status: row.status
-  }));
+  return result.rows;
 };

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import InventoryActions from './InventoryActions';
 import DeleteInventoryItemModal from '../../../modals/Inventory/DeleteInventoryItemModal';
+import Skeleton from '../../common/Skeleton';
 import type { InventoryItem } from '../../../types/inventory_types';
 
 interface InventoryTableProps {
@@ -35,6 +36,18 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const ITEMS_PER_PAGE = 10;
 
+  // Sort items with newest first (assuming items have createdAt or id for sorting)
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      // Sort by createdAt if available, otherwise by id (assuming higher id = newer)
+      if (a.createdAt && b.createdAt) {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      // Fallback: sort by id in descending order (newest first)
+      return b.id - a.id;
+    });
+  }, [items]);
+
   const handleDeleteClick = (item: InventoryItem, event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     setItemToDelete(item);
@@ -63,22 +76,68 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     }
   };
 
-  // Paginate items - get only items for current page
+  // Paginate sorted items - get only items for current page
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedItems = items.slice(startIndex, endIndex);
+  const paginatedItems = sortedItems.slice(startIndex, endIndex);
 
-  // Calculate actual total pages based on items length - ensure at least 1 page
-  const actualTotalPages = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+  // Calculate actual total pages based on sortedItems length - ensure at least 1 page
+  const actualTotalPages = Math.max(1, Math.ceil(sortedItems.length / ITEMS_PER_PAGE));
 
-  // Loading State
+  // Loading State with Skeleton
   if (isLoading) {
+    const skeletonCount = Math.min(items.length || 10, ITEMS_PER_PAGE);
+    
     return (
       <div className="space-y-6">
-        <div className="border-2 border-[#E5E7EB] rounded-lg min-h-[390px] flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-            <p className="mt-4 text-gray-500">Loading inventory items...</p>
+        <div className="border-2 border-[#E5E7EB] rounded-lg overflow-hidden">
+          <table className="table-fixed w-full bg-[#EDEDED]">
+            <thead className="border-[#E5E7EB] border-b bg-[#EDEDED]">
+              <tr>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">Product Name</th>
+                <th className="text-left py-4 px-5.5 text-sm font-medium text-gray-500 w-[140px]">Category</th>
+                <th className="text-left py-4 px-4.5 text-sm font-medium text-gray-500 w-[100px]">Stock</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">Status</th>
+                <th className="text-left py-4 px-3.5 text-sm font-medium text-gray-500 w-[130px]">Product Price</th>
+                <th className="text-left py-4 px-3 text-sm font-medium text-gray-500 w-[130px]">Total Amount</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 w-[100px]">Actions</th>
+              </tr>
+            </thead>
+          </table>
+          
+          <div className="h-[335px] overflow-hidden">
+            <table className="table-fixed w-full">
+              <tbody className="divide-y divide-gray-200">
+                {Array.from({ length: skeletonCount }).map((_, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="py-4 px-6 w-[180px]">
+                      <Skeleton className="h-4" />
+                    </td>
+                    <td className="py-4 px-6 w-[140px]">
+                      <Skeleton className="h-4" />
+                    </td>
+                    <td className="py-4 px-6 w-[100px]">
+                      <Skeleton className="h-4" />
+                    </td>
+                    <td className="py-4 px-6 w-[120px]">
+                      <Skeleton className="h-6 rounded-full w-20" />
+                    </td>
+                    <td className="py-4 px-6 w-[130px]">
+                      <Skeleton className="h-4" />
+                    </td>
+                    <td className="py-4 px-6 w-[130px]">
+                      <Skeleton className="h-4" />
+                    </td>
+                    <td className="py-4 px-6 w-[100px]">
+                      <div className="flex justify-start space-x-2">
+                        <Skeleton className="w-6 h-6" />
+                        <Skeleton className="w-6 h-6" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -94,7 +153,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     );
   }
 
-  if (items.length === 0) {
+  if (sortedItems.length === 0) {
     return (
       <div className="space-y-6">
         <div className="overflow-x-auto border-2 border-[#E5E7EB] rounded-lg">
@@ -152,7 +211,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-y-auto">
+          <div className="h-[335px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <table className="table-fixed w-full h-full">
               <tbody className="divide-y divide-gray-200">
                 {paginatedItems.map((item) => (

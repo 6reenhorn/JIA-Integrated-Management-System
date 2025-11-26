@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
 import CustomDatePicker from '../../components/common/CustomDatePicker';
 import axios from 'axios';
+import Portal from '../../components/common/Portal';
 
 interface InventoryProduct {
   id: number;
@@ -67,6 +67,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<InventoryProduct | null>(null);
   const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [focusedPaymentOption, setFocusedPaymentOption] = useState(0);
   
   const paymentMethodRef = useRef<HTMLDivElement>(null);
   const productDropdownRef = useRef<HTMLDivElement>(null);
@@ -183,48 +184,48 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (validateForm()) {
-    try {
-      // Just add the sale - the backend will handle stock deduction
-      onAddSale({
-        ...formData,
-        quantity: Number(formData.quantity),
-        price: Number(formData.price)
-      });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      try {
+        // Just add the sale - the backend will handle stock deduction
+        onAddSale({
+          ...formData,
+          quantity: Number(formData.quantity),
+          price: Number(formData.price)
+        });
 
-      // Trigger inventory refresh
-      if (onInventoryUpdate) {
-        onInventoryUpdate();
-      }
-
-      handleClose();
-    } catch (err) {
-      console.error('Error processing sale:', err);
-      
-      // Refresh inventory data in case it's stale
-      await fetchInventoryProducts();
-      
-      // Update selected product with latest data
-      if (selectedProduct) {
-        const updatedProduct = inventoryProducts.find(p => p.id === selectedProduct.id);
-        if (updatedProduct) {
-          setSelectedProduct(updatedProduct);
-          // Update the form with current stock info
-          setFormData(prev => ({
-            ...prev,
-            price: updatedProduct.productPrice
-          }));
+        // Trigger inventory refresh
+        if (onInventoryUpdate) {
+          onInventoryUpdate();
         }
+
+        handleClose();
+      } catch (err) {
+        console.error('Error processing sale:', err);
+        
+        // Refresh inventory data in case it's stale
+        await fetchInventoryProducts();
+        
+        // Update selected product with latest data
+        if (selectedProduct) {
+          const updatedProduct = inventoryProducts.find(p => p.id === selectedProduct.id);
+          if (updatedProduct) {
+            setSelectedProduct(updatedProduct);
+            // Update the form with current stock info
+            setFormData(prev => ({
+              ...prev,
+              price: updatedProduct.productPrice
+            }));
+          }
+        }
+        
+        // The error will be handled by the parent component
+        throw err; // Re-throw to let parent handle the error
       }
-      
-      // The error will be handled by the parent component
-      throw err; // Re-throw to let parent handle the error
     }
-  }
-};
+  };
 
   const handleClose = () => {
     setFormData({
@@ -243,234 +244,293 @@ const handleSubmit = async (e: React.FormEvent) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4">
+    <Portal>
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px]">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Add Sales</h2>
-            <p className="text-gray-500 text-sm mt-1">
-              Record a new product sales with quantity and price.
-            </p>
+            <h3 className="text-[20px] font-bold">Add Sales</h3>
+            <p className="text-[12px]">Record a new product sales with quantity and price.</p>
           </div>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 rounded-md p-1"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Form Content */}
-        <div className="px-6 pb-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Details Section */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-4">Details</h3>
-              
-              {/* Product Name Dropdown */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Product Name
-                </label>
-                <div className="relative" ref={productDropdownRef}>
-                  <input
-                    type="text"
-                    value={productSearchTerm}
-                    onChange={(e) => {
-                      setProductSearchTerm(e.target.value);
-                      setIsProductDropdownOpen(true);
-                    }}
-                    onFocus={() => setIsProductDropdownOpen(true)}
-                    placeholder="Search and select product"
-                    className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none ${
-                      errors.productName ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  
-                  {/* Product Dropdown */}
-                  {isProductDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
-                      {isLoadingProducts ? (
-                        <div className="px-3 py-4 text-center text-gray-500">
-                          Loading products...
-                        </div>
-                      ) : filteredProducts.length === 0 ? (
-                        <div className="px-3 py-4 text-center text-gray-500">
-                          No products found
-                        </div>
-                      ) : (
-                        filteredProducts.map((product) => (
-                          <button
-                            key={product.id}
-                            type="button"
-                            onClick={() => handleProductSelect(product)}
-                            className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                              selectedProduct?.id === product.id ? 'bg-blue-50 text-blue-600' : ''
-                            }`}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <div className="font-medium">{product.productName}</div>
-                                <div className="text-xs text-gray-500">
-                                  Stock: {product.stock} | Price: ₱{product.productPrice.toFixed(2)}
+          
+          <div className="overflow-y-auto max-h-[550px] mt-4 text-[12px]">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              {/* Details Section */}
+              <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4">
+                <h3 className="text-[16px] font-bold">Details</h3>
+                
+                {/* Product Name Dropdown */}
+                <div className="mt-2">
+                  <label className="text-[12px] font-bold">Product Name</label>
+                  <div className="relative" ref={productDropdownRef}>
+                    <input
+                      type="text"
+                      value={productSearchTerm}
+                      onChange={(e) => {
+                        setProductSearchTerm(e.target.value);
+                        setIsProductDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsProductDropdownOpen(true)}
+                      placeholder="Search and select product"
+                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                        errors.productName ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                    />
+                    
+                    {/* Product Dropdown */}
+                    {isProductDropdownOpen && (
+                      <div
+                        className="dropdown-options mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                        style={{
+                          display: isProductDropdownOpen ? 'block' : 'none',
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          backgroundColor: 'white',
+                          border: '1px solid #ccc',
+                          zIndex: 10,
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                          width: '100%',
+                          maxWidth: '100%',
+                          boxSizing: 'border-box',
+                          maxHeight: '180px',
+                          overflowY: 'auto'
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            // Add keyboard navigation logic if needed
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            // Add keyboard navigation logic if needed
+                          } else if (e.key === 'Escape') {
+                            e.preventDefault();
+                            setIsProductDropdownOpen(false);
+                          }
+                        }}
+                        tabIndex={isProductDropdownOpen ? 0 : -1}
+                      >
+                        {isLoadingProducts ? (
+                          <div className="px-4 py-4 text-center text-gray-500">
+                            Loading products...
+                          </div>
+                        ) : filteredProducts.length === 0 ? (
+                          <div className="px-4 py-4 text-center text-gray-500">
+                            No products found
+                          </div>
+                        ) : (
+                          filteredProducts.map((product) => (
+                            <div
+                              key={product.id}
+                              className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0 ${
+                                selectedProduct?.id === product.id ? 'bg-blue-50 text-blue-600' : ''
+                              }`}
+                              onClick={() => handleProductSelect(product)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleProductSelect(product);
+                                }
+                              }}
+                              tabIndex={isProductDropdownOpen ? 0 : -1}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <div className="font-medium">{product.productName}</div>
+                                  <div className="text-xs text-gray-500">
+                                    Stock: {product.stock} | Price: ₱{product.productPrice.toFixed(2)}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
-                {errors.productName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.productName}</p>
-                )}
-                {selectedProduct && (
-                  <p className="text-green-600 text-xs mt-1">
-                    Available stock: {selectedProduct.stock} units
-                  </p>
-                )}
-              </div>
-
-              {/* Quantity and Price Row */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quantity
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max={selectedProduct?.stock || undefined}
-                    value={formData.quantity}
-                    onChange={(e) => handleInputChange('quantity', e.target.value === '' ? '' : parseFloat(e.target.value))}
-                    placeholder="0"
-                    className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                      errors.quantity ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.quantity && (
-                    <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Price per Item (₱)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange('price', e.target.value === '' ? '' : parseFloat(e.target.value))}
-                    placeholder="0.00"
-                    className={`w-full px-3 py-2 bg-gray-100 border rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                      errors.price ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.price && (
-                    <p className="text-red-500 text-xs mt-1">{errors.price}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Total Amount Display */}
-              {formData.quantity && formData.price && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">Total Amount:</span>
-                    <span className="text-lg font-bold text-blue-600">
-                      ₱{(Number(formData.quantity) * Number(formData.price)).toFixed(2)}
-                    </span>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
+                  {errors.productName && (
+                    <p className="text-red-500 text-xs mt-1">{errors.productName}</p>
+                  )}
+                  {selectedProduct && (
+                    <p className="text-green-600 text-xs mt-1">
+                      Available stock: {selectedProduct.stock} units
+                    </p>
+                  )}
                 </div>
-              )}
 
-              {/* Payment Method */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Payment Method
-                </label>
-                <div className="relative" ref={paymentMethodRef}>
-                  <div
-                    onClick={() => setIsPaymentMethodOpen(!isPaymentMethodOpen)}
-                    className="w-full px-3 py-1.5 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none cursor-pointer flex items-center justify-between text-sm"
-                  >
-                    <span>{formData.paymentMethod}</span>
-                    <svg 
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className={`text-gray-500 transition-transform duration-200 ease-in-out flex-shrink-0 ml-2 ${
-                        isPaymentMethodOpen ? 'rotate-180' : ''
+                {/* Quantity and Price Row */}
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div>
+                    <label className="text-[12px] font-bold">Quantity</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={selectedProduct?.stock || undefined}
+                      value={formData.quantity}
+                      onChange={(e) => handleInputChange('quantity', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                      placeholder="0"
+                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                        errors.quantity ? 'border-red-300' : 'border-gray-300'
                       }`}
-                    >
-                      <polygon points="4,6 12,6 8,12" fill="currentColor" />
-                    </svg>
+                    />
+                    {errors.quantity && (
+                      <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>
+                    )}
                   </div>
-                  
-                  {/* Dropdown Menu */}
-                  {isPaymentMethodOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
-                      {paymentMethodOptions.map((method) => (
-                        <button
+
+                  <div>
+                    <label className="text-[12px] font-bold">Price per Item (₱)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => handleInputChange('price', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                      placeholder="0.00"
+                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                        errors.price ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                    />
+                    {errors.price && (
+                      <p className="text-red-500 text-xs mt-1">{errors.price}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Total Amount Display */}
+                {formData.quantity && formData.price && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] font-bold text-gray-700">Total Amount:</span>
+                      <span className="text-[16px] font-bold text-blue-600">
+                        ₱{(Number(formData.quantity) * Number(formData.price)).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Payment Method */}
+                <div className="mt-2">
+                  <label className="text-[12px] font-bold">Payment Method</label>
+                  <div className="relative" ref={paymentMethodRef}>
+                    <div
+                      onClick={() => setIsPaymentMethodOpen(!isPaymentMethodOpen)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          setIsPaymentMethodOpen(!isPaymentMethodOpen);
+                          e.preventDefault();
+                        }
+                      }}
+                      tabIndex={0}
+                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                    >
+                      <span>{formData.paymentMethod}</span>
+                      <svg 
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className={`transition-transform ${isPaymentMethodOpen ? 'rotate-180' : ''}`}
+                      >
+                        <polygon points="4,6 12,6 8,12" fill="currentColor" />
+                      </svg>
+                    </div>
+                    
+                    {/* Dropdown Menu */}
+                    <div
+                      className="dropdown-options mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                      style={{
+                        display: isPaymentMethodOpen ? 'block' : 'none',
+                        position: 'absolute',
+                        top: '-550%',
+                        left: 0,
+                        right: 0,
+                        backgroundColor: 'white',
+                        border: '1px solid #ccc',
+                        zIndex: 10,
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box'
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setFocusedPaymentOption((prev) => (prev + 1) % paymentMethodOptions.length);
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setFocusedPaymentOption((prev) => (prev - 1 + paymentMethodOptions.length) % paymentMethodOptions.length);
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleInputChange('paymentMethod', paymentMethodOptions[focusedPaymentOption]);
+                          setIsPaymentMethodOpen(false);
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setIsPaymentMethodOpen(false);
+                        }
+                      }}
+                      tabIndex={isPaymentMethodOpen ? 0 : -1}
+                    >
+                      {paymentMethodOptions.map((method, idx) => (
+                        <div
                           key={method}
-                          type="button"
+                          className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${
+                            formData.paymentMethod === method ? 'bg-blue-50 text-blue-600' : ''
+                          } ${focusedPaymentOption === idx ? 'bg-blue-100' : ''}`}
                           onClick={() => {
                             handleInputChange('paymentMethod', method);
                             setIsPaymentMethodOpen(false);
                           }}
-                          className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors ${
-                            formData.paymentMethod === method ? 'bg-blue-50 text-blue-600' : ''
-                          }`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleInputChange('paymentMethod', method);
+                              setIsPaymentMethodOpen(false);
+                            }
+                          }}
+                          tabIndex={isPaymentMethodOpen ? 0 : -1}
                         >
                           {method}
-                        </button>
+                        </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+
+                {/* Sale Date */}
+                <div className="mt-2">
+                  <label className="text-[12px] font-bold">Sale Date</label>
+                  <CustomDatePicker
+                    selected={formData.date ? parseDateFromMMDDYYYY(formData.date) : null}
+                    onChange={(date: Date | null) => handleInputChange('date', date ? formatDateToMMDDYYYY(date) : '')}
+                    className={errors.date ? 'border-red-300' : ''}
+                  />
+                  {errors.date && (
+                    <p className="text-red-500 text-xs mt-1">{errors.date}</p>
                   )}
                 </div>
               </div>
+            </form>
+          </div>
 
-              {/* Sale Date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sale Date
-                </label>
-                <CustomDatePicker
-                  selected={formData.date ? parseDateFromMMDDYYYY(formData.date) : null}
-                  onChange={(date: Date | null) => handleInputChange('date', date ? formatDateToMMDDYYYY(date) : '')}
-                  className={errors.date ? 'border-red-300' : ''}
-                />
-                {errors.date && (
-                  <p className="text-red-500 text-xs mt-1">{errors.date}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-2 pt-4">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="px-4 py-1.5 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 bg-[#02367B] text-white rounded-md hover:bg-[#02367B]/90 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1"
-              >
-                Add Sales
-              </button>
-            </div>
-          </form>
+          {/* Action Buttons */}
+          <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300"
+            >
+              Add Sales
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Portal>
   );
 };
 

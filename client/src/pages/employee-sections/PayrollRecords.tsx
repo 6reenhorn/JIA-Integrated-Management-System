@@ -43,9 +43,11 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [monthFilter, setMonthFilter] = useState('All Months');
-  const [yearFilter, setYearFilter] = useState('All Years');
-  const [statusFilter, setStatusFilter] = useState('All Status');
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
+  const [filterType, setFilterType] = useState<'preset' | 'custom'>('preset');
+  const [selectedPreset, setSelectedPreset] = useState('All Status');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -54,7 +56,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [tableHeadColor, setTableHeadColor] = useState<'normal' | 'green' | 'red'>('normal');
 
-   const [isSpinning, setIsSpinning] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
 
   // Use props if provided, otherwise use local state
   const [localPayrollRecords, setLocalPayrollRecords] = useState<PayrollRecord[]>([]);
@@ -109,13 +111,22 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
     return payrollRecords.filter(record => {
       const matchesSearch = record.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            record.empId.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesMonth = monthFilter === 'All Months' || record.month === monthFilter;
-      const matchesYear = yearFilter === 'All Years' || record.year === yearFilter;
-      const matchesStatus = statusFilter === 'All Status' || record.status === statusFilter;
 
-      return matchesSearch && matchesMonth && matchesYear && matchesStatus;
+      let matchesFilter = true;
+      if (filterType === 'preset') {
+        matchesFilter = selectedPreset === 'All Status' || record.status === selectedPreset;
+      } else if (filterType === 'custom' && dateRange) {
+        if (record.paymentDate) {
+          const recordDate = new Date(record.paymentDate);
+          matchesFilter = recordDate >= dateRange.start && recordDate <= dateRange.end;
+        } else {
+          matchesFilter = false; // If no paymentDate, exclude from custom range
+        }
+      }
+
+      return matchesSearch && matchesFilter;
     });
-  }, [payrollRecords, searchTerm, monthFilter, yearFilter, statusFilter]);
+  }, [payrollRecords, searchTerm, filterType, selectedPreset, dateRange]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -146,9 +157,11 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   const handlePageChange = (page: number) => setCurrentPage(page);
 
   const handleResetFilters = () => {
-    setMonthFilter('All Months');
-    setYearFilter('All Years');
-    setStatusFilter('All Status');
+    setFilterType('preset');
+    setSelectedPreset('All Status');
+    setCustomStart('');
+    setCustomEnd('');
+    setDateRange(null);
     setSearchTerm('');
     setCurrentPage(1);
   };
@@ -206,6 +219,45 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
       setTableHeadColor('normal');
     }
   };
+
+const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecord, 'id' | 'netSalary'> & { netSalary: number }) => {
+  setTableHeadColor('green');
+  try {
+    console.log('Sending update data:', updatedPayroll); // Add this debug log
+    
+    const response = await fetch(`http://localhost:3001/api/payroll/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedPayroll),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json(); // Get error details
+      console.error('Backend error:', errorData); // Log backend error
+      throw new Error('Failed to update payroll record');
+    }
+
+    const updatedRecord = await response.json();
+
+    // Update parent state if callback provided
+    if (onUpdatePayrollRecords) {
+      onUpdatePayrollRecords((prev: PayrollRecord[]) => 
+        prev.map(record => record.id === id ? updatedRecord : record)
+      );
+    } else {
+      // Update local state
+      setLocalPayrollRecords(prev => 
+        prev.map(record => record.id === id ? updatedRecord : record)
+      );
+    }
+  } catch (error) {
+    console.error('Error updating payroll record:', error);
+  } finally {
+    setTableHeadColor('normal');
+  }
+};
 
   const handleDeletePayroll = async (id: number) => {
     setTableHeadColor('red');
@@ -307,12 +359,15 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
               {isFiltersOpen && (
                 <div ref={filterRef} className="absolute top-full mt-2 right-0 z-50">
                   <PayrollFilters
-                    monthFilter={monthFilter}
-                    yearFilter={yearFilter}
-                    statusFilter={statusFilter}
-                    onMonthChange={setMonthFilter}
-                    onYearChange={setYearFilter}
-                    onStatusChange={setStatusFilter}
+                    filterType={filterType}
+                    onFilterTypeChange={setFilterType}
+                    selectedPreset={selectedPreset}
+                    onSelectedPresetChange={setSelectedPreset}
+                    customStart={customStart}
+                    onCustomStartChange={setCustomStart}
+                    customEnd={customEnd}
+                    onCustomEndChange={setCustomEnd}
+                    onApply={setDateRange}
                     onReset={handleResetFilters}
                   />
                 </div>
@@ -328,7 +383,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
           </div>
         </div>
 
-        <PayrollTable payrollRecords={paginatedRecords} isLoading={payrollLoading} onDelete={handleDeletePayroll} headColor={tableHeadColor} />
+        <PayrollTable payrollRecords={paginatedRecords} isLoading={payrollLoading} onDelete={handleDeletePayroll} onUpdate={handleUpdatePayroll} employees={employees} headColor={tableHeadColor} />
 
         <PayrollActions
           currentPage={currentPage}

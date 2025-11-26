@@ -1,16 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import AttendanceSearchBar from "../../components/employees/attendance/AttendanceSearchBar";
 import AttendanceFilters from "../../components/employees/attendance/AttendanceFilters";
 import AttendanceTable from '../../components/employees/attendance/AttendanceTable';
 import type { AttendanceRecord } from "../../types/employee_types";
 import AttendanceActions from '../../components/employees/attendance/AttendanceActions';
+import RefreshBtn from '../../components/common/RefreshBtn';
 
 interface DateRange {
   start: Date;
   end: Date;
 }
 
-const Attendance: React.FC = () => {
+interface AttendanceProps {
+  attendanceRecords: AttendanceRecord[];
+  attendanceLoading: boolean;
+  onRefresh: () => Promise<void>;
+}
+
+const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLoading, onRefresh }) => {
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [filterType, setFilterType] = useState<'preset' | 'custom'>('preset');
@@ -21,129 +28,16 @@ const Attendance: React.FC = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Temporary mock employees data for attendance section
-  const [employees] = useState<AttendanceRecord[]>([
-    {
-      attendanceId: 12,
-      name: "Julien Marabe",
-      empId: "EMP006",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "On Leave",
-    },
-    {
-      attendanceId: 11,
-      name: "Sophia Marie Flores",
-      empId: "EMP005",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 10,
-      name: "John Cyril Espina",
-      empId: "EMP004",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 9,
-      name: "John Jaybird Casia",
-      empId: "EMP003",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 8,
-      name: "Den Jester Antonio",
-      empId: "EMP002",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 7,
-      name: "Glenn Mark Anino",
-      empId: "EMP001",
-      role: "Developer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 6,
-      name: "Julien Marabe",
-      empId: "EMP006",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "On Leave",
-    },
-    {
-      attendanceId: 5,
-      name: "Sophia Marie Flores",
-      empId: "EMP005",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 4,
-      name: "John Cyril Espina",
-      empId: "EMP004",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 3,
-      name: "John Jaybird Casia",
-      empId: "EMP003",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 2,
-      name: "Den Jester Antonio",
-      empId: "EMP002",
-      role: "Designer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-    {
-      attendanceId: 1,
-      name: "Glenn Mark Anino",
-      empId: "EMP001",
-      role: "Developer",
-      date: "2024-10-01",
-      timeIn: "09:00 AM",
-      timeOut: "05:00 PM",
-      status: "Present",
-    },
-  ]);
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  // Filtered employees based on date range
+  const filteredEmployees = useMemo(() => {
+    if (!dateRange) return attendanceRecords;
+    return attendanceRecords.filter(employee => {
+      const employeeDate = new Date(employee.date);
+      return employeeDate >= dateRange.start && employeeDate <= dateRange.end;
+    });
+  }, [attendanceRecords, dateRange]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(() => {
@@ -151,18 +45,17 @@ const Attendance: React.FC = () => {
     return saved ? parseInt(saved, 10) : 1;
   });
   const pageSize = 4;
-  const pageCount = Math.ceil(employees.length / pageSize);
+  const pageCount = Math.ceil(filteredEmployees.length / pageSize);
   const handlePageChange = (page: number) => setCurrentPage(page);
 
   useEffect(() => {
     localStorage.setItem('attendanceCurrentPage', currentPage.toString());
   }, [currentPage]);
-  const paginatedEmployees = employees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginatedEmployees = filteredEmployees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleApply = (range: DateRange | null) => {
     setDateRange(range);
-    // Here you can add logic to filter attendance data based on the date range
-    console.log('Applied date range:', range);
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   const handleReset = () => {
@@ -171,6 +64,7 @@ const Attendance: React.FC = () => {
     setCustomStart('');
     setCustomEnd('');
     setDateRange(null);
+    setCurrentPage(1); // Reset to first page when resetting
   };
 
   const toggleFilters = () => {
@@ -193,10 +87,24 @@ const Attendance: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleRefreshSpinning = async () => {
+    if (onRefresh) {
+      onRefresh();
+    } else {
+      // Fallback: just show spinning for a moment
+      setIsSpinning(true);
+      setTimeout(() => setIsSpinning(false), 1000);
+    }
+  };
+
+
   return (
     <div className="space-y-5">
       <div className="flex justify-between items-center pt-5 relative">
-        <AttendanceSearchBar />
+        <div className='flex items-center gap-4'>
+          <AttendanceSearchBar />
+          <RefreshBtn onClick={handleRefreshSpinning} isSpinning={isSpinning} />
+        </div>
         <div className="relative">
           <button
             ref={buttonRef}
@@ -239,16 +147,10 @@ const Attendance: React.FC = () => {
           )}
         </div>
       </div>
-      {dateRange && (
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-          <p className="text-blue-800">
-            Filtering attendance from {dateRange.start.toLocaleDateString()} to {dateRange.end.toLocaleDateString()}
-          </p>
-        </div>
-      )}
+
       
       {/* Attendance Table */}
-      <AttendanceTable employees={paginatedEmployees} />
+      <AttendanceTable employees={paginatedEmployees} isLoading={attendanceLoading} />
 
       <div className='pt-1'>
         {/* Pagination Actions */}
