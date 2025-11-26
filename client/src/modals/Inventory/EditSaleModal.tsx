@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import CustomDatePicker from '../../components/common/CustomDatePicker';
 import Portal from '../../components/common/Portal';
 import axios from 'axios';
@@ -71,6 +71,8 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const productDropdownRef = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<{ productName?: string }>({});
+  const [isClosing, setIsClosing] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (sale) {
@@ -89,14 +91,8 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
     }
   }, [sale]);
 
-  // Fetch inventory products when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      fetchInventoryProducts();
-    }
-  }, [isOpen]);
-
-  const fetchInventoryProducts = async () => {
+  // Fetch inventory products when modal opens - FIXED ESLINT WARNING
+  const fetchInventoryProducts = useCallback(async () => {
     setIsLoadingProducts(true);
     try {
       const response = await axios.get('http://localhost:3001/api/inventory');
@@ -115,7 +111,13 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
     } finally {
       setIsLoadingProducts(false);
     }
-  };
+  }, [sale]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchInventoryProducts();
+    }
+  }, [isOpen, fetchInventoryProducts]); // Added fetchInventoryProducts to dependency array
 
   // Filter products based on search term
   const filteredProducts = inventoryProducts.filter(product =>
@@ -150,13 +152,17 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
       if (productDropdownRef.current && !productDropdownRef.current.contains(event.target as Node)) {
         setIsProductDropdownOpen(false);
       }
+      // Close modal when clicking outside (on the backdrop)
+      if (modalRef.current && !modalRef.current.contains(event.target as Node) && !isUpdating) {
+        onClose();
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isUpdating, onClose]);
 
   // Handle escape key
   useEffect(() => {
@@ -250,16 +256,39 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
     onSave(updatedSale);
   };
 
+  // Animation close handler
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 300);
+  };
+
   const totalAmount = (Number(formData.quantity) || 0) * (Number(formData.price) || 0);
 
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
   const paymentMethods: Array<'Cash' | 'Gcash' | 'PayMaya' | 'Juanpay'> = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
 
   return (
     <Portal>
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px]">
+        {/* Backdrop with animation */}
+        <div className={`fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
+          isClosing ? 'opacity-0' : 'opacity-100'
+        }`} style={{
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)'
+        }} />
+        
+        {/* Modal with animation */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            ref={modalRef}
+            className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] ${
+              isClosing ? 'animate-modal-out' : 'animate-modal-in'
+            }`}
+          >
             <div>
               <h3 className="text-[20px] font-bold">Edit Sales</h3>
               <p className="text-[12px]">Update sale record details</p>
@@ -498,8 +527,9 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                               }
                             }}
                             tabIndex={isSelectOpen && !isUpdating ? 0 : -1}
-                            className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${
-                              focusedPaymentOption === idx ? 'bg-blue-100' : ''
+                            className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer  ${
+                            formData.paymentMethod === method ? 'bg-blue-50 text-blue-600' : ''}${
+                              focusedPaymentOption === idx ? '' : ''
                             }`}
                           >
                             {method}
@@ -527,9 +557,9 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
             <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={isUpdating}
-                className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 Cancel
               </button>
@@ -537,7 +567,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                 type="button"
                 onClick={handleSubmit}
                 disabled={isUpdating}
-                className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors duration-200"
               >
                 {isUpdating ? (
                   <>
