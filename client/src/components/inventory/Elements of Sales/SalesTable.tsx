@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import DeleteSalesRecordModal from '../../../modals/Inventory/DeleteSalesRecordModal';
+import Skeleton from '../../common/Skeleton';
 import { useDateFormat } from '../../../context/DateFormatContext';
 
 export type SalesRecord = {
@@ -125,27 +126,27 @@ const SalesTable: React.FC<SalesTableProps> = ({
                 {Array.from({ length: skeletonCount }).map((_, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-5 w-[140px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-4 w-[100px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-6 w-[120px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-4 w-[130px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-3.5 w-[130px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-4 w-[100px]">
                       <div className="flex justify-start space-x-2">
-                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                        <Skeleton className="w-6 h-6" />
+                        <Skeleton className="w-6 h-6" />
                       </div>
                     </td>
                   </tr>

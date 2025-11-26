@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import InventoryActions from './InventoryActions';
 import DeleteInventoryItemModal from '../../../modals/Inventory/DeleteInventoryItemModal';
+import Skeleton from '../../common/Skeleton';
 import type { InventoryItem } from '../../../types/inventory_types';
 
 interface InventoryTableProps {
@@ -110,27 +111,27 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                 {Array.from({ length: skeletonCount }).map((_, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-6 w-[140px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-6 w-[100px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-6 w-[120px]">
-                      <div className="h-6 bg-gray-200 rounded-full animate-pulse w-20"></div>
+                      <Skeleton className="h-6 rounded-full w-20" />
                     </td>
                     <td className="py-4 px-6 w-[130px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-6 w-[130px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4" />
                     </td>
                     <td className="py-4 px-6 w-[100px]">
                       <div className="flex justify-start space-x-2">
-                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                        <Skeleton className="w-6 h-6" />
+                        <Skeleton className="w-6 h-6" />
                       </div>
                     </td>
                   </tr>
