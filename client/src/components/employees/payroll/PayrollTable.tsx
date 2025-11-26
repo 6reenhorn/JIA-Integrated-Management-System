@@ -209,13 +209,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
-                  {record.paymentDate ? (() => {
-                    const dateStr = record.paymentDate.split(' ')[0];
-                    const [yy, mm, dd] = dateStr.split('-');
-                    const fullYear = `20${yy}`;
-                    const dateObj = new Date(parseInt(fullYear), parseInt(mm) - 1, parseInt(dd));
-                    return formatDate(dateObj);
-                  })() : '-'}
+                  {record.paymentDate ? formatDate(new Date(record.paymentDate)) : '-'}
                 </div>
               </td>
               <td className="py-4 px-6 w-[80px]">

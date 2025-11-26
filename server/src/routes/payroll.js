@@ -27,15 +27,7 @@ router.get('/', async (req, res) => {
       deductions: row.deductions,
       netSalary: row.net_salary,
       status: row.status,
-      paymentDate: row.payment_date ? (() => {
-        const date = new Date(row.payment_date);
-        const YY = date.getFullYear() % 100;
-        const DD = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const Hr = String(date.getHours()).padStart(2, '0');
-        const Min = String(date.getMinutes()).padStart(2, '0');
-        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
-      })() : null
+      paymentDate: row.payment_date || null
     }));
     res.json(payrollRecords);
   } catch (err) {
@@ -101,15 +93,7 @@ router.post('/', async (req, res) => {
       deductions: newRecord.deductions,
       netSalary: newRecord.net_salary,
       status: newRecord.status,
-      paymentDate: newRecord.payment_date ? (() => {
-        const date = new Date(newRecord.payment_date);
-        const YY = date.getFullYear() % 100;
-        const DD = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const Hr = String(date.getHours()).padStart(2, '0');
-        const Min = String(date.getMinutes()).padStart(2, '0');
-        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
-      })() : null
+      paymentDate: newRecord.payment_date || null
     };
 
     res.status(201).json(payrollRecord);
@@ -234,20 +218,7 @@ router.put('/:id', async (req, res) => {
       deductions: updatedRecord.deductions,
       netSalary: updatedRecord.net_salary,
       status: updatedRecord.status,
-      paymentDate: updatedRecord.payment_date ? (() => {
-        try {
-          const date = new Date(updatedRecord.payment_date);
-          if (isNaN(date.getTime())) return null;
-          const YY = date.getFullYear() % 100;
-          const DD = String(date.getDate()).padStart(2, '0');
-          const MM = String(date.getMonth() + 1).padStart(2, '0');
-          const Hr = String(date.getHours()).padStart(2, '0');
-          const Min = String(date.getMinutes()).padStart(2, '0');
-          return `${YY}-${MM}-${DD} ${Hr}-${Min}`;
-        } catch (e) {
-          return null;
-        }
-      })() : null
+      paymentDate: updatedRecord.payment_date || null
     };
 
     res.json(payrollRecord);
