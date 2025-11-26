@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import checkInIcon from '../../assets/JIA_CheckIn.ico';
+// import checkInIcon from '../../assets/JIA_CheckIn.ico';
+import CheckIn_Icon from '../../assets/JIA_Official_Light.ico';
 import type { Employee } from '../../types/employee_types';
 import { useAuth } from '../../context/AuthContext';
 import type { UserRole } from '../../context/AuthContext';
@@ -90,7 +91,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                     </p>
                 </div>
                 <div className='flex justify-center w-full'>
-                    <img src={checkInIcon} alt="JIA Icon" className='w-[250px]' />
+                    <img src={CheckIn_Icon} alt="JIA Icon" />
                 </div>
                 <div>
                     <p className="text-white font-semibold">

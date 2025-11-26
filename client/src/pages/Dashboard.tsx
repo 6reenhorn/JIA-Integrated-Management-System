@@ -7,7 +7,7 @@ import EWallet from './EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
-import CheckIn from '../components/support/CheckIn';
+import CheckIn from '../components/common/CheckIn';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 // Define the section information type
