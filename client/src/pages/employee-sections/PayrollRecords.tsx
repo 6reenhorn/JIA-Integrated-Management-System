@@ -220,6 +220,45 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
     }
   };
 
+const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecord, 'id' | 'netSalary'> & { netSalary: number }) => {
+  setTableHeadColor('green');
+  try {
+    console.log('Sending update data:', updatedPayroll); // Add this debug log
+    
+    const response = await fetch(`http://localhost:3001/api/payroll/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedPayroll),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json(); // Get error details
+      console.error('Backend error:', errorData); // Log backend error
+      throw new Error('Failed to update payroll record');
+    }
+
+    const updatedRecord = await response.json();
+
+    // Update parent state if callback provided
+    if (onUpdatePayrollRecords) {
+      onUpdatePayrollRecords((prev: PayrollRecord[]) => 
+        prev.map(record => record.id === id ? updatedRecord : record)
+      );
+    } else {
+      // Update local state
+      setLocalPayrollRecords(prev => 
+        prev.map(record => record.id === id ? updatedRecord : record)
+      );
+    }
+  } catch (error) {
+    console.error('Error updating payroll record:', error);
+  } finally {
+    setTableHeadColor('normal');
+  }
+};
+
   const handleDeletePayroll = async (id: number) => {
     setTableHeadColor('red');
     try {
@@ -344,7 +383,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
           </div>
         </div>
 
-        <PayrollTable payrollRecords={paginatedRecords} isLoading={payrollLoading} onDelete={handleDeletePayroll} headColor={tableHeadColor} />
+        <PayrollTable payrollRecords={paginatedRecords} isLoading={payrollLoading} onDelete={handleDeletePayroll} onUpdate={handleUpdatePayroll} employees={employees} headColor={tableHeadColor} />
 
         <PayrollActions
           currentPage={currentPage}

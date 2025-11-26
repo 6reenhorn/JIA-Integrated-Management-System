@@ -27,15 +27,7 @@ router.get('/', async (req, res) => {
       deductions: row.deductions,
       netSalary: row.net_salary,
       status: row.status,
-      paymentDate: row.payment_date ? (() => {
-        const date = new Date(row.payment_date);
-        const YY = date.getFullYear() % 100;
-        const DD = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const Hr = String(date.getHours()).padStart(2, '0');
-        const Min = String(date.getMinutes()).padStart(2, '0');
-        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
-      })() : null
+      paymentDate: row.payment_date || null
     }));
     res.json(payrollRecords);
   } catch (err) {
@@ -101,15 +93,7 @@ router.post('/', async (req, res) => {
       deductions: newRecord.deductions,
       netSalary: newRecord.net_salary,
       status: newRecord.status,
-      paymentDate: newRecord.payment_date ? (() => {
-        const date = new Date(newRecord.payment_date);
-        const YY = date.getFullYear() % 100;
-        const DD = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const Hr = String(date.getHours()).padStart(2, '0');
-        const Min = String(date.getMinutes()).padStart(2, '0');
-        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
-      })() : null
+      paymentDate: newRecord.payment_date || null
     };
 
     res.status(201).json(payrollRecord);
@@ -143,6 +127,108 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     console.error('Error deleting payroll record:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/payroll/:id - Update a payroll record by ID
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const idNum = parseInt(String(id), 10);
+  
+  if (Number.isNaN(idNum)) {
+    return res.status(400).json({ error: 'Invalid payroll record id' });
+  }
+
+  const {
+    employeeName,
+    empId,
+    role,
+    month,
+    year,
+    basicSalary,
+    deductions,
+    netSalary,
+    status,
+    paymentDate
+  } = req.body;
+
+  // Month conversion map
+  const monthMap = {
+    'January': 1, 'February': 2, 'March': 3, 'April': 4,
+    'May': 5, 'June': 6, 'July': 7, 'August': 8,
+    'September': 9, 'October': 10, 'November': 11, 'December': 12
+  };
+
+  // Reverse month map for response
+  const reverseMonthMap = {
+    1: 'January', 2: 'February', 3: 'March', 4: 'April',
+    5: 'May', 6: 'June', 7: 'July', 8: 'August',
+    9: 'September', 10: 'October', 11: 'November', 12: 'December'
+  };
+
+  try {
+    const query = `
+      UPDATE payroll_records 
+      SET employee_name = $1, 
+          emp_id = $2, 
+          role = $3, 
+          month = $4, 
+          year = $5, 
+          basic_salary = $6, 
+          deductions = $7, 
+          net_salary = $8, 
+          status = $9, 
+          payment_date = $10
+      WHERE id = $11
+      RETURNING *
+    `;
+    
+    const values = [
+      employeeName,
+      empId,
+      role,
+      monthMap[month] || month, // Convert month name to number
+      parseInt(year),           // Convert year to integer
+      parseFloat(basicSalary),  // Add parseFloat
+      parseFloat(deductions),   // Add parseFloat
+      parseFloat(netSalary),    // Add parseFloat
+      status,
+      paymentDate && paymentDate !== '' ? paymentDate : null, // Just pass as-is or null
+      idNum
+    ];
+
+    console.log('Updating payroll record with values:', values); // Debug log
+
+    const result = await pool.query(query, values);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Payroll record not found' });
+    }
+
+    const updatedRecord = result.rows[0];
+
+    const payrollRecord = {
+      id: updatedRecord.id,
+      employeeName: updatedRecord.employee_name,
+      empId: updatedRecord.emp_id,
+      role: updatedRecord.role,
+      month: reverseMonthMap[updatedRecord.month] || updatedRecord.month,
+      year: updatedRecord.year,
+      basicSalary: updatedRecord.basic_salary,
+      deductions: updatedRecord.deductions,
+      netSalary: updatedRecord.net_salary,
+      status: updatedRecord.status,
+      paymentDate: updatedRecord.payment_date || null
+    };
+
+    res.json(payrollRecord);
+  } catch (err) {
+    console.error('Error updating payroll record:', err);
+    console.error('Error details:', err.message);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: err.message 
+    });
   }
 });
 
