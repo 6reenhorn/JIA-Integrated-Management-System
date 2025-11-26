@@ -293,7 +293,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                           width: '100%',
                           maxWidth: '100%',
                           boxSizing: 'border-box',
-                          maxHeight: '100px',
+                          maxHeight: '180px',
                           overflowY: 'auto'
                         }}
                         onKeyDown={(e) => {

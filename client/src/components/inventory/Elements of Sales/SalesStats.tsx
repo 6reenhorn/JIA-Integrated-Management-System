@@ -4,6 +4,7 @@ import LayoutCard from '../../layout/LayoutCard';
 import SalesFilters from './SalesFilters';
 import SalesTable from './SalesTable';
 import SalesActions from './SalesActions';
+import Skeleton from '../../common/Skeleton';
 
 interface SalesStatsProps {
   totalSales: number;
@@ -69,43 +70,64 @@ const SalesStats: React.FC<SalesStatsProps> = ({
   // Calculate total pages based on filtered sales records
   const totalPages = Math.max(1, Math.ceil(salesRecords.length / 10));
 
+  // Skeleton Card Component
+  const SkeletonCard = () => (
+    <LayoutCard>
+      <Skeleton className="h-4 w-3/4 mb-3" />
+      <Skeleton className="h-9 w-1/2 mb-2" />
+      <Skeleton className="h-3 w-2/3" />
+    </LayoutCard>
+  );
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Total Transactions */}
-        <LayoutCard>
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Total Transactions</h3>
-          <p className="text-3xl font-bold text-gray-900">{totalSales}</p>
-          <p className="text-xs text-gray-500 mt-1">
-            {selectedDate ? 'Selected Date' : 'All Time'}
-          </p>
-        </LayoutCard>
+        {isLoading || isRefreshingSales ? (
+          // Show skeleton loading for all 4 cards
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : (
+          <>
+            {/* Total Transactions */}
+            <LayoutCard>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Total Transactions</h3>
+              <p className="text-3xl font-bold text-gray-900">{totalSales}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedDate ? 'Selected Date' : 'All Time'}
+              </p>
+            </LayoutCard>
 
-        {/* Items Sold */}
-        <LayoutCard>
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Items Sold</h3>
-          <p className="text-3xl font-bold text-gray-900">{totalItemsSold}</p>
-          <p className="text-xs text-gray-500 mt-1">
-            {selectedDate ? 'Selected Date' : 'Total Quantity'}
-          </p>
-        </LayoutCard>
+            {/* Items Sold */}
+            <LayoutCard>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Items Sold</h3>
+              <p className="text-3xl font-bold text-gray-900">{totalItemsSold}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedDate ? 'Selected Date' : 'Total Quantity'}
+              </p>
+            </LayoutCard>
 
-        {/* Total Revenue */}
-        <LayoutCard>
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Total Revenue</h3>
-          <p className="text-3xl font-bold text-gray-900">₱{totalAmount.toFixed(2)}</p>
-          <p className="text-xs text-gray-500 mt-1">
-            {selectedDate ? 'Selected Date' : 'All Time'}
-          </p>
-        </LayoutCard>
+            {/* Total Revenue */}
+            <LayoutCard>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Total Revenue</h3>
+              <p className="text-3xl font-bold text-gray-900">₱{totalAmount.toFixed(2)}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedDate ? 'Selected Date' : 'All Time'}
+              </p>
+            </LayoutCard>
 
-        {/* Average Sale */}
-        <LayoutCard>
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Average Sale</h3>
-          <p className="text-3xl font-bold text-gray-900">₱{averageSale.toFixed(2)}</p>
-          <p className="text-xs text-gray-500 mt-1">Per Transaction</p>
-        </LayoutCard>
+            {/* Average Sale */}
+            <LayoutCard>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Average Sale</h3>
+              <p className="text-3xl font-bold text-gray-900">₱{averageSale.toFixed(2)}</p>
+              <p className="text-xs text-gray-500 mt-1">Per Transaction</p>
+            </LayoutCard>
+          </>
+        )}
       </div>
 
       {/* Sales Section with MainLayoutCard */}

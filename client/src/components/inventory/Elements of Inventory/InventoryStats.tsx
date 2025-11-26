@@ -2,6 +2,7 @@ import React from 'react';
 import MainLayoutCard from '../../layout/MainLayoutCard';
 import LayoutCard from '../../layout/LayoutCard';
 import InventoryFilters from './InventoryFilters';
+import Skeleton from '../../common/Skeleton';
 import type { InventoryStats as InventoryStatsType } from '../../../types/inventory_types';
 
 interface InventoryStatsProps {
@@ -22,6 +23,7 @@ interface InventoryStatsProps {
   children?: React.ReactNode;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  isLoading?: boolean; // Add this prop
 }
 
 const InventoryStats: React.FC<InventoryStatsProps> = ({ 
@@ -41,47 +43,69 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
   sections,
   children,
   onRefresh,
-  isRefreshing
+  isRefreshing,
+  isLoading = false // Add default value
 }) => {
+  // Skeleton Card Component
+  const SkeletonCard = () => (
+    <LayoutCard>
+      <Skeleton className="h-4 w-3/4 mb-3" />
+      <Skeleton className="h-9 w-1/2 mb-2" />
+      <Skeleton className="h-3 w-2/3" />
+    </LayoutCard>
+  );
+
   return (
     <>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Total Products */}
-        <LayoutCard>
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Total Products</h3>
-          <p className="text-3xl font-bold text-gray-900 mb-1">{stats.totalItems}</p>
-          <p className="text-xs text-gray-500">All inventory items</p>
-        </LayoutCard>
+        {isLoading || isRefreshing ? (
+          // Show skeleton loading for all 4 cards
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : (
+          <>
+            {/* Total Products */}
+            <LayoutCard>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Total Products</h3>
+              <p className="text-3xl font-bold text-gray-900 mb-1">{stats.totalItems}</p>
+              <p className="text-xs text-gray-500">All inventory items</p>
+            </LayoutCard>
 
-        {/* Inventory Value */}
-        <LayoutCard>
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Inventory Value</h3>
-          <p className="text-3xl font-bold text-gray-900 mb-1">₱{(stats.inventoryValue || 0).toFixed(2)}</p>
-          <p className="text-xs text-gray-500">Across all items</p>
-        </LayoutCard>
+            {/* Inventory Value */}
+            <LayoutCard>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Inventory Value</h3>
+              <p className="text-3xl font-bold text-gray-900 mb-1">₱{(stats.inventoryValue || 0).toFixed(2)}</p>
+              <p className="text-xs text-gray-500">Across all items</p>
+            </LayoutCard>
 
-        {/* Low Stock Items */}
-        <LayoutCard>
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Low Stock Items</h3>
-          <p className="text-3xl font-bold text-red-600 mb-1">{stats.lowStockItems}</p>
-          <div className="h-6 flex items-end">
-            <span className="inline-block px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
-              Needs Attention
-            </span>
-          </div>
-        </LayoutCard>
+            {/* Low Stock Items */}
+            <LayoutCard>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Low Stock Items</h3>
+              <p className="text-3xl font-bold text-red-600 mb-1">{stats.lowStockItems}</p>
+              <div className="h-6 flex items-end">
+                <span className="inline-block px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
+                  Needs Attention
+                </span>
+              </div>
+            </LayoutCard>
 
-        {/* Out of Stock Items */}
-        <LayoutCard>
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Out of Stock Items</h3>
-          <p className="text-3xl font-bold text-red-600 mb-1">{stats.outOfStockItems}</p>
-          <div className="h-6 flex items-end">
-            <span className="inline-block px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
-              Restock Immediately
-            </span>
-          </div>
-        </LayoutCard>
+            {/* Out of Stock Items */}
+            <LayoutCard>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Out of Stock Items</h3>
+              <p className="text-3xl font-bold text-red-600 mb-1">{stats.outOfStockItems}</p>
+              <div className="h-6 flex items-end">
+                <span className="inline-block px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full">
+                  Restock Immediately
+                </span>
+              </div>
+            </LayoutCard>
+          </>
+        )}
       </div>
 
       {/* MainLayoutCard with filters and content */}

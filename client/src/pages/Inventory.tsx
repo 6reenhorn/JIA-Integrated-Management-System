@@ -851,6 +851,7 @@ const handleCloseCategoryModal = () => {
           sections={sections}
           onRefresh={handleRefreshInventory}
           isRefreshing={isRefreshingInventory}
+          isLoading={isLoadingInventory}
         >
           <InventoryTable
             items={filteredItems}
