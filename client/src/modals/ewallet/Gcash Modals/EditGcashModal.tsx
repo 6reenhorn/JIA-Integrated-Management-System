@@ -17,6 +17,8 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
     record,
     isEditing = false
 }) => {
+    const [isClosing, setIsClosing] = useState(false);
+
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
         const local = new Date(date.getTime() - tzOffset);
@@ -294,7 +296,8 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
 
     const handleCancel = () => {
         if (!isEditing) {
-            onClose();
+            setIsClosing(true);
+            setTimeout(onClose, 300);
         }
     };
 
@@ -303,8 +306,8 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={!isEditing ? onClose : undefined}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+                onClick={!isEditing ? handleCancel : undefined}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -313,7 +316,7 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
 
             <div 
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 ${isClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>

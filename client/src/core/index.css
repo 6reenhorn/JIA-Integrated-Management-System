@@ -90,7 +90,7 @@
   margin-left: 0 !important;
 }
 
-/* Modal animations */
+/* checkin modal animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -145,6 +145,69 @@
 
 .modal-content-out {
   animation: slideDown 0.3s ease-out;
+}
+
+/* Modal animations */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+/* Dropdown animations */
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdownSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Utility classes for animations */
+.animate-modal-in {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.animate-modal-out {
+  animation: modalSlideOut 0.3s ease-out;
+}
+
+.animate-dropdown-in {
+  animation: dropdownSlideIn 0.2s ease-out;
+}
+
+.animate-dropdown-out {
+  animation: dropdownSlideOut 0.2s ease-out;
 }
 
 /* Gradient animation */
