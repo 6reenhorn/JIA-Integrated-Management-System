@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import type { Employee } from '../../types/employee_types';
-import CustomDatePicker from '../../components/common/CustomDatePicker';
+
+interface Employee {
+  id: number;
+  name: string;
+  empId: string;
+  role: string;
+  salary: string;
+}
 
 interface PayrollRecord {
   id: number;
@@ -16,13 +22,26 @@ interface PayrollRecord {
   paymentDate?: string;
 }
 
-interface AddPayrollModalProps {
+interface EditPayrollModalProps {
   onClose?: () => void;
-  onAddPayroll?: (payroll: Omit<PayrollRecord, 'id' | 'netSalary'> & { netSalary: number }) => void;
+  onUpdatePayroll?: (id: number, payroll: Omit<PayrollRecord, 'id' | 'netSalary'> & { netSalary: number }) => void;
   employees: Employee[];
+  payrollRecord: PayrollRecord;
 }
 
-const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalProps) => {
+// CustomDatePicker placeholder - replace with your actual component
+const CustomDatePicker = ({ selected, onChange, className }: any) => {
+  return (
+    <input
+      type="date"
+      value={selected ? selected.toISOString().split('T')[0] : ''}
+      onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
+      className={className}
+    />
+  );
+};
+
+const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }: EditPayrollModalProps) => {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [selectedEmployeeText, setSelectedEmployeeText] = useState('Select Employee');
   const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
@@ -64,6 +83,57 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => (currentYear - i).toString());
+
+  // Initialize form with payrollRecord data
+  useEffect(() => {
+    if (payrollRecord) {
+      // Find and set the employee
+      const employee = employees.find(emp => emp.empId === payrollRecord.empId);
+      if (employee) {
+        setSelectedEmployee(employee);
+        setSelectedEmployeeText(`${employee.name} (${employee.empId})`);
+      }
+
+      // Set month
+      const monthIndex = months.findIndex(m => m === payrollRecord.month);
+      if (monthIndex !== -1) {
+        setSelectedMonth((monthIndex + 1).toString());
+        setSelectedMonthText(payrollRecord.month);
+      }
+
+      // Set year
+      setSelectedYear(payrollRecord.year);
+      setSelectedYearText(payrollRecord.year);
+
+      // Set salary details
+      setBasicSalary((payrollRecord.basicSalary ?? 0).toString());
+      setDeductions((payrollRecord.deductions ?? 0).toString());
+      setNetSalary(payrollRecord.netSalary ?? 0);
+
+      // Set status
+      setSelectedStatus(payrollRecord.status);
+      setSelectedStatusText(payrollRecord.status);
+
+      // Set payment date
+      if (payrollRecord.paymentDate) {
+        try {
+          // Parse the date if it's in YY-MM-DD format
+          const dateStr = payrollRecord.paymentDate.split(' ')[0];
+          const parts = dateStr.split('-');
+          
+          if (parts.length === 3) {
+            const [yy, mm, dd] = parts;
+            // Check if it's 2-digit year format
+            const fullYear = yy.length === 2 ? `20${yy}` : yy;
+            setPaymentDate(`${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`);
+          }
+        } catch (e) {
+          console.error('Error parsing payment date:', e);
+          setPaymentDate('');
+        }
+      }
+    }
+  }, [payrollRecord, employees]);
 
   const toggleEmployeeDropdown = () => {
     setIsEmployeeDropdownOpen(!isEmployeeDropdownOpen);
@@ -157,8 +227,8 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
   return (
     <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
       <div>
-        <h3 className="text-[20px] font-bold">Add Payroll Record</h3>
-        <p className="text-[12px]">Add a new payroll record for an employee with salary details and payment status.</p>
+        <h3 className="text-[20px] font-bold">Edit Payroll Record</h3>
+        <p className="text-[12px]">Update the payroll record for {payrollRecord.employeeName}.</p>
       </div>
       <div className="overflow-y-auto max-h-[650px] mt-4 text-[12px]">
         <form action="submit" className='flex flex-col gap-3'>
@@ -530,8 +600,14 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   <label htmlFor="payment_date" className="text-[12px] font-bold">Payment Date</label>
                   <div className="relative w-full">
                     <CustomDatePicker
-                      selected={paymentDate ? new Date(paymentDate) : null}
-                      onChange={(date: Date | null) => setPaymentDate(date ? date.toISOString().split('T')[0] : '')}
+                      selected={paymentDate && !isNaN(new Date(paymentDate).getTime()) ? new Date(paymentDate) : null}
+                      onChange={(date: Date | null) => {
+                        if (date && !isNaN(date.getTime())) {
+                          setPaymentDate(date.toISOString().split('T')[0]);
+                        } else {
+                          setPaymentDate('');
+                        }
+                      }}
                       className="w-full px-4 py-[5px] border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
@@ -550,9 +626,9 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
         <button
           className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E]' : 'bg-gray-400 cursor-not-allowed'}`}
           onClick={() => {
-            if (isFormValid && !isSaving && onAddPayroll && selectedEmployee) {
+            if (isFormValid && !isSaving && onUpdatePayroll && selectedEmployee) {
               setIsSaving(true);
-              onAddPayroll({
+              onUpdatePayroll(payrollRecord.id, {
                 employeeName: selectedEmployee.name,
                 empId: selectedEmployee.empId,
                 role: selectedEmployee.role,
@@ -568,11 +644,11 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
           }}
           disabled={!isFormValid || isSaving}
         >
-          {isSaving ? 'Adding...' : 'Add Payroll'}
+          {isSaving ? 'Updating...' : 'Update Payroll'}
         </button>
       </div>
     </div>
   );
 }
 
-export default AddPayrollModal;
+export default EditPayrollModal;

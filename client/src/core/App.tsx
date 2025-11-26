@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Dashboard from '../pages/Dashboard';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import LoadingScreen from '../components/common/LoadingScreen';
 
 const App: React.FC = () => {
