@@ -1,7 +1,25 @@
 import React, { useMemo, useState } from 'react';
-import { User, Trash2 } from "lucide-react";
+import { User, Edit, Trash2 } from "lucide-react";
 import DeletePayrollRecordModal from '../../../modals/employee/DeletePayrollRecordModal';
 import { useDateFormat } from '../../../context/DateFormatContext';
+import EditPayrollDetailsModal from '../../../modals/employee/EditPayrollDetailsModal';
+import Portal from '../../common/Portal';
+
+interface Employee {
+  id: number;
+  name: string;
+  empId: string;
+  role: string;
+  contact: string;
+  status: string;
+  lastLogin: string;
+  address: string;
+  salary: string;
+  contactName: string;
+  contactNumber: string;
+  relationship: string;
+  password: string;
+}
 
 interface PayrollRecord {
   id: number;
@@ -21,14 +39,24 @@ interface PayrollTableProps {
   payrollRecords: PayrollRecord[];
   isLoading: boolean;
   onDelete: (id: number) => void;
+  onUpdate: (id: number, updatedData: Omit<PayrollRecord, 'id' | 'netSalary'> & { netSalary: number }) => void; // Add this
+  employees: Employee[]; // Add this
   headColor?: 'normal' | 'green' | 'red';
 }
 
-const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, onDelete, headColor = 'normal' }) => {
+const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, onDelete, onUpdate, employees, headColor = 'normal' }) => {
   const { formatDate } = useDateFormat();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // In PayrollTable component, add state for edit modal
+  const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const targetEditRecord = useMemo(() => {
+    return payrollRecords.find(r => r.id === editTargetId) || null;
+  }, [editTargetId, payrollRecords]);
 
   const targetRecord = useMemo(() => {
     return payrollRecords.find(r => r.id === deleteTargetId) || null;
@@ -161,17 +189,17 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
-                  ₱{record.basicSalary.toLocaleString()}
+                  ₱{(record.basicSalary ?? 0).toLocaleString()}
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
-                  ₱{record.deductions.toLocaleString()}
+                  ₱{(record.deductions ?? 0).toLocaleString()}
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
-                  ₱{record.netSalary.toLocaleString()}
+                  ₱{(record.netSalary ?? 0).toLocaleString()}
                 </div>
               </td>
               <td className="py-4 px-6 w-[100px]">
@@ -181,16 +209,17 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
-                  {record.paymentDate ? (() => {
-                    const dateStr = record.paymentDate.split(' ')[0];
-                    const [yy, mm, dd] = dateStr.split('-');
-                    const fullYear = `20${yy}`;
-                    const dateObj = new Date(parseInt(fullYear), parseInt(mm) - 1, parseInt(dd));
-                    return formatDate(dateObj);
-                  })() : '-'}
+                  {record.paymentDate ? formatDate(new Date(record.paymentDate)) : '-'}
                 </div>
               </td>
               <td className="py-4 px-6 w-[80px]">
+                <button
+                  onClick={() => { setEditTargetId(record.id); setIsEditModalOpen(true); }}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  title="Edit"
+                >
+                  <Edit className="w-4 h-4 text-gray-600" />
+                </button>
                 <button
                   onClick={() => { setDeleteTargetId(record.id); setIsDeleteModalOpen(true); }}
                   className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -222,6 +251,36 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
           }
         }}
       />
+
+      {isEditModalOpen && targetEditRecord && (
+        <Portal>
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+              onClick={() => {
+                setIsEditModalOpen(false);
+                setEditTargetId(null);
+              }}
+            />
+            <div className="relative z-[1010]">
+              <EditPayrollDetailsModal
+                payrollRecord={targetEditRecord}
+                employees={employees}
+                onClose={() => { 
+                  setIsEditModalOpen(false); 
+                  setEditTargetId(null); 
+                }}
+                onUpdatePayroll={(id, updatedData) => {
+                  onUpdate(id, updatedData); 
+                  setIsEditModalOpen(false);
+                  setEditTargetId(null);
+                }}
+              />
+            </div>
+          </div>
+        </Portal>
+      )}
     </div>
   );
 };
