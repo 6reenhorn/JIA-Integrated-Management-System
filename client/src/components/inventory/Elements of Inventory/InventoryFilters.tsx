@@ -192,10 +192,10 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                   <button
                     onClick={() => handleCategorySelect('all')}
                     className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors ${
-                      selectedCategory === 'all' ? 'bg-blue-50 text-blue-600' : ''
+                      selectedCategory === 'all' ? ' text-blue-600' : ''
                     }`}
                   >
-                    All Categories
+                    Categories:
                   </button>
                   {categories.map((category) => (
                     <button
