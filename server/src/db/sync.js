@@ -253,7 +253,7 @@ const insertSampleEmployees = async () => {
     {
       emp_id: 'EMP001',
       name: 'John Cyril Espina',
-      role: 'Manager',
+      role: 'General Manager',
       department: 'Front Desk',
       contact: 'johncyril.espina@gmail.com\n+1 (555) 123-4567\nLingion, Manolo Fortich, Bukidnon',
       status: 'Active',
@@ -268,7 +268,7 @@ const insertSampleEmployees = async () => {
     {
       emp_id: 'EMP002',
       name: 'Den Jester Antonio',
-      role: 'Admin',
+      role: 'Inventory Manager',
       department: 'Administrative',
       contact: 'denjester.antonio@gmail.com\n+1 (555) 234-5678\nManolo Fortich, Bukidnon',
       status: 'Active',
@@ -277,12 +277,13 @@ const insertSampleEmployees = async () => {
       salary: '55000',
       contact_name: 'John Smith',
       contact_number: '555-234-5678',
-      relationship: 'Parent'
+      relationship: 'Parent',
+      password: 'TempPass123'
     },
     {
       emp_id: 'EMP003',
       name: 'John Jaybord Casia',
-      role: 'Sales Associate',
+      role: 'E-Wallet Recorder',
       department: 'Front Desk',
       contact: 'johnjaybord.casia@gmail.com\n+1 (555) 345-6789\nTagoloan, Misamis Oriental',
       status: 'Active',
@@ -291,12 +292,13 @@ const insertSampleEmployees = async () => {
       salary: '45000',
       contact_name: 'Mary Johnson',
       contact_number: '555-345-6789',
-      relationship: 'Sibling'
+      relationship: 'Sibling',
+      password: 'TempPass123'
     },
     {
       emp_id: 'EMP004',
       name: 'Sophia Marie Flores',
-      role: 'Cashier',
+      role: 'Inventory Transaction Manager',
       department: 'Front Desk',
       contact: 'sophiamarie.flores@gmail.com\n+1 (555) 456-7890\nPatag, Cagayyan de Oro City',
       status: 'Active',
@@ -305,12 +307,13 @@ const insertSampleEmployees = async () => {
       salary: '40000',
       contact_name: 'Robert Brown',
       contact_number: '555-456-7890',
-      relationship: 'Friend'
+      relationship: 'Friend',
+      password: 'TempPass123'
     },
     {
       emp_id: 'EMP005',
       name: 'Glenn Mark Anino',
-      role: 'Maintenance',
+      role: 'E-Wallet Recorder',
       department: 'Maintenance',
       contact: 'glennmark.anino@gmail.com\n+1 (555) 567-8901\nCamaman-an, Cagayyan de Oro City',
       status: 'Inactive',
@@ -319,7 +322,8 @@ const insertSampleEmployees = async () => {
       salary: '35000',
       contact_name: 'N/A',
       contact_number: 'N/A',
-      relationship: 'Other'
+      relationship: 'Other',
+      password: 'TempPass123'
     }
   ];
 
