@@ -18,6 +18,8 @@ interface SectionInfo {
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
+  const [showCheckOutConfirm, setShowCheckOutConfirm] = useState<boolean>(false);
+
   const [currentSection, setCurrentSection] = useState<SectionInfo>({ 
     page: 'dashboard', 
     section: undefined 
@@ -32,6 +34,24 @@ const Dashboard: React.FC = () => {
 
   // Get auth context
   const { isCheckedIn, checkOut } = useAuth();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showCheckOutConfirm) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.relative')) {
+          setShowCheckOutConfirm(false);
+        }
+      }
+    };
+
+    if (showCheckOutConfirm) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showCheckOutConfirm]);
 
   useEffect(() => {
     if (currentSection.page === 'inventory' && currentSection.section) {
@@ -361,25 +381,63 @@ const Dashboard: React.FC = () => {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
                 <p className="text-gray-600">{getHeaderSubtitle()}</p>
               </div>
-              {activeItem === 'dashboard' && (
-                <div className='flex items-center'>
-                  {isCheckedIn ? (
+            {activeItem === 'dashboard' && (
+              <div className='flex items-center relative'>
+                {isCheckedIn ? (
+                  <div className='relative'>
                     <button 
-                      onClick={handleCheckOut} 
-                      className='bg-red-600 border-2 border-red-700 rounded-md px-5 py-2 text-white hover:bg-red-700 focus:outline-none flex-shrink-0'
+                      onClick={() => setShowCheckOutConfirm(!showCheckOutConfirm)} 
+                      className='bg-red-600 border-2 border-red-700 rounded-md px-5 py-2 text-white hover:bg-red-700 focus:outline-none flex-shrink-0 transition-all duration-200'
                     >
                       Check Out
                     </button>
-                  ) : (
-                    <button 
-                      onClick={handleCheckIn} 
-                      className='bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-7 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0'
-                    >
-                      Check In
-                    </button>
-                  )}
-                </div>
-              )}
+                    {showCheckOutConfirm && (
+                      <div className='absolute top-full right-0 mt-3 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl shadow-2xl p-6 w-80 z-50 animate-in fade-in slide-in-from-top-2 duration-200'>
+                        <div className='flex flex-col items-center'>
+                          {/* Warning Icon */}
+                          <div className='w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3'>
+                            <svg className='w-6 h-6 text-red-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' />
+                            </svg>
+                          </div>
+                          
+                          {/* Message */}
+                          <p className='text-gray-800 text-base mb-5 text-center font-semibold leading-relaxed'>
+                            Are you sure you want to check out?
+                          </p>
+                          
+                          {/* Buttons */}
+                          <div className='flex gap-3 w-full'>
+                            <button
+                              onClick={() => setShowCheckOutConfirm(false)}
+                              className='flex-1 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200'
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleCheckOut();
+                                setShowCheckOutConfirm(false);
+                              }}
+                              className='flex-1 bg-red-600 border border-red-700 rounded-md px-4 py-2.5 text-white font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200 shadow-md hover:shadow-lg'
+                            >
+                              Confirm
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button 
+                    onClick={handleCheckIn} 
+                    className='bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-7 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0 transition-all duration-200'
+                  >
+                    Check In
+                  </button>
+                )}
+              </div>
+            )}
             </div>
             {renderContent()}
           </div>
