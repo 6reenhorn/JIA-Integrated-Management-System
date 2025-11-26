@@ -55,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
 
   const supportItems: MenuItem[] = [
     { id: 'settings', label: 'Settings', icon: <Settings size={20} />, category: 'Support', page: 'settings' as const },
-    { id: 'about', label: 'About', icon: <Info size={20} />, page: 'about' as const },
+    { id: 'about', label: 'About', icon: <Info size={20} />, requiresAuth: false },
   ];
 
   // Define functional sections for E-Wallet
@@ -270,6 +270,20 @@ const renderMenuItem = (item: MenuItem) => {
           <div className="mb-6">
             <button
               onClick={() => {
+                // Check if user has access to this page
+                const hasAccessToPage = item.requiresAuth === false || !item.page || hasAccess(item.page);
+
+                if (itemId === 'employees') {
+                  const hasStaffAccess = hasAccessToEmployeeSection('staff');
+                  if (!hasStaffAccess) {
+                    return;
+                  }
+                }
+                
+                if (!hasAccessToPage) {
+                  return;
+                }
+
                 // For inventory, clicking the main button should go to inventory section
                 if (itemId === 'inventory') {
                   // Don't allow re-clicking if already on main inventory section
@@ -285,8 +299,17 @@ const renderMenuItem = (item: MenuItem) => {
                 }
                 setExpanded(itemId);
               }}
+              disabled={
+                (item.requiresAuth !== false && item.page && !hasAccess(item.page)) ||
+                (itemId === 'employees' && !hasAccessToEmployeeSection('staff'))
+              }
               className={`w-full flex items-center gap-3 py-3 px-3 text-left rounded-lg transition-all duration-200 ${
-                (activeItem === itemId || (itemId === 'about' && activeItem === 'about-main')) ? 'bg-[#FFFFFF33] text-white' : 'text-gray-300 hover:bg-[#FFFFFF33]'
+                (item.requiresAuth !== false && item.page && !hasAccess(item.page)) ||
+                (itemId === 'employees' && !hasAccessToEmployeeSection('staff'))
+                  ? 'opacity-40 cursor-not-allowed text-gray-400'
+                  : (activeItem === itemId || (itemId === 'about' && activeItem === 'about-main')) 
+                    ? 'bg-[#FFFFFF33] text-white' 
+                    : 'text-gray-300 hover:bg-[#FFFFFF33]'
               }`}
             >
               <span className="flex-shrink-0">{item.icon}</span>
