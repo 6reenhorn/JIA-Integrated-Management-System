@@ -106,16 +106,9 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
       // Set payment date
       if (payrollRecord.paymentDate) {
         try {
-          // Parse the date if it's in YY-MM-DD format
-          const dateStr = payrollRecord.paymentDate.split(' ')[0];
-          const parts = dateStr.split('-');
-          
-          if (parts.length === 3) {
-            const [yy, mm, dd] = parts;
-            // Check if it's 2-digit year format
-            const fullYear = yy.length === 2 ? `20${yy}` : yy;
-            setPaymentDate(`${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`);
-          }
+          // Parse ISO format date (e.g., "2025-11-26T00:00:00.000Z" or "2025-11-26")
+          const isoDate = payrollRecord.paymentDate.split('T')[0]; // Get just the date part
+          setPaymentDate(isoDate);
         } catch (e) {
           console.error('Error parsing payment date:', e);
           setPaymentDate('');
