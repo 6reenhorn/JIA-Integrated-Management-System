@@ -31,6 +31,7 @@ const Dashboard: React.FC = () => {
   });
 
   const [showCheckInModal, setShowCheckInModal] = useState<boolean>(false);
+  const [isClosingModal, setIsClosingModal] = useState<boolean>(false);
 
   // Get auth context
   const { isCheckedIn, checkOut } = useAuth();
@@ -360,8 +361,12 @@ const Dashboard: React.FC = () => {
   };
 
   const handleCloseModal = () => {
-    setShowCheckInModal(false);
-  };
+    setIsClosingModal(true);
+    setTimeout(() => {
+      setShowCheckInModal(false);
+      setIsClosingModal(false);
+    }, 300);
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -445,7 +450,9 @@ const Dashboard: React.FC = () => {
       </div>
       {showCheckInModal && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50"
+          className={`fixed inset-0 flex items-center justify-center z-50 ${
+            isClosingModal ? 'modal-backdrop-out' : 'modal-backdrop'
+          }`}
           onClick={handleCloseModal}
           style={{
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -453,7 +460,10 @@ const Dashboard: React.FC = () => {
             WebkitBackdropFilter: 'blur(4px)'
           }}
         >
-          <div onClick={(e) => e.stopPropagation()}>
+          <div 
+            className={isClosingModal ? 'modal-content-out' : ''}
+            onClick={(e) => e.stopPropagation()}
+          >
             <CheckIn onClose={handleCloseModal} />
           </div>
         </div>
