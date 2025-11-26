@@ -15,6 +15,8 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [password, setPassword] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [countdown, setCountdown] = useState<number>(0);
 
     const employeeDropdownRef = useRef<HTMLDivElement>(null);
     const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +28,18 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const toggleEmployeeDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
+
+    // Handle countdown and auto-close
+    useEffect(() => {
+        if (countdown > 0) {
+            const timer = setTimeout(() => {
+                setCountdown(countdown - 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else if (countdown === 0 && message?.type === 'success') {
+            onClose();
+        }
+    }, [countdown, message, onClose]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -164,18 +178,37 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                 }
                             }}
                         />
+
+                        {/* Message Display */}
+                        <div className="relative h-0">
+                            {message && (
+                                <div className={`absolute top-2 left-0 right-0 text-center text-sm font-medium ${
+                                    message.type === 'success' ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                    {message.text}
+                                    {message.type === 'success' && countdown > 0 && (
+                                        <span className="ml-2">closing in {countdown}...</span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
                     </div>
                     <div className='w-full'>
                         <button
                             type="submit"
                             className='w-full py-2 rounded-3xl bg-[#02367B] text-white hover:bg-[#1C4A9E] transition-colors'
                             onClick={async () => {
+                                // Clear previous messages
+                                setMessage(null);
+                                setCountdown(0);
+                                
                                 if (!selectedEmployee) {
-                                    alert('Please select an employee.');
+                                    setMessage({ type: 'error', text: 'Please select an employee.' });
                                     return;
                                 }
                                 if (!password) {
-                                    alert('Please enter your password.');
+                                    setMessage({ type: 'error', text: 'Please enter your password.' });
                                     return;
                                 }
                                 try {
@@ -185,7 +218,8 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                         password: password
                                     });
                                     
-                                    alert('Check-in successful!');
+                                    setMessage({ type: 'success', text: 'Check-in successful!' });
+                                    setCountdown(3); //successful check-in countdown
 
                                     checkIn({
                                         id: selectedEmployee.id,
@@ -198,14 +232,12 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                     setSelectedEmployee(null);
                                     setPassword('');
                                     
-                                    // Close the modal after successful check-in
-                                    onClose();
                                 } catch (error: any) {
                                     console.error('Error during check-in:', error);
                                     if (error.response?.data?.error) {
-                                        alert(error.response.data.error);
+                                        setMessage({ type: 'error', text: error.response.data.error });
                                     } else {
-                                        alert('An error occurred during check-in.');
+                                        setMessage({ type: 'error', text: 'An error occurred during check-in.' });
                                     }
                                 }
                             }}

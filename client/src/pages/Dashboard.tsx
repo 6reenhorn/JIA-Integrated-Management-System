@@ -366,14 +366,14 @@ const Dashboard: React.FC = () => {
                   {isCheckedIn ? (
                     <button 
                       onClick={handleCheckOut} 
-                      className='bg-red-600 border-2 border-red-700 rounded-md px-4 py-2 text-white hover:bg-red-700 focus:outline-none flex-shrink-0'
+                      className='bg-red-600 border-2 border-red-700 rounded-md px-5 py-2 text-white hover:bg-red-700 focus:outline-none flex-shrink-0'
                     >
                       Check Out
                     </button>
                   ) : (
                     <button 
                       onClick={handleCheckIn} 
-                      className='bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0'
+                      className='bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-7 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0'
                     >
                       Check In
                     </button>
