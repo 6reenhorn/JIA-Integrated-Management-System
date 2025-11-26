@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Portal from '../../components/common/Portal';
 
 interface Category {
@@ -27,12 +27,23 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
   const [categoryName, setCategoryName] = useState('');
   const [categoryColor, setCategoryColor] = useState('#3B82F6');
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const colorPickerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const defaultColors = [
     '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6',
     '#06B6D4', '#F97316', '#14B8A6', '#A855F7', '#84CC16', '#F43F5E'
   ];
+
+  const handleCancel = useCallback(() => {
+    if (isUpdating) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 300);
+  }, [isUpdating, onClose]);
 
   // Close color picker when clicking outside
   useEffect(() => {
@@ -55,19 +66,37 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
         if (showColorPicker) {
           setShowColorPicker(false);
         } else {
-          onClose();
+          handleCancel();
         }
       }
     };
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose, isUpdating, showColorPicker]);
+  }, [isOpen, isUpdating, showColorPicker, handleCancel]);
+
+  // Close modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        if (!isUpdating) {
+          handleCancel();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUpdating, handleCancel]);
 
   useEffect(() => {
     if (initialData && isOpen) {
@@ -95,14 +124,26 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
   return (
     <Portal>
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div 
-          className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px]"
-          onClick={(e) => e.stopPropagation()}
+          className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
+            isClosing ? 'opacity-0' : 'opacity-100'
+          }`}
+          style={{
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)'
+          }}
+        />
+
+        <div 
+          ref={modalRef}
+          className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] relative z-10 ${
+            isClosing ? 'animate-modal-out' : 'animate-modal-in'
+          }`}
         >
           {/* Header */}
           <div>
@@ -127,7 +168,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                     disabled={isUpdating}
                     placeholder="Enter category name"
                     autoFocus
-                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   />
                 </div>
 
@@ -135,7 +176,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                 <div className="mt-2 relative" ref={colorPickerRef}>
                   <label className="text-[12px] font-bold">Category Color</label>
                   <div
-                    className={`relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 cursor-pointer h-[29px] ${
+                    className={`relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 cursor-pointer h-[29px] transition-all duration-200 ${
                       isUpdating 
                         ? 'opacity-50 cursor-not-allowed' 
                         : 'hover:bg-gray-200'
@@ -151,7 +192,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                   >
                     <div className="flex items-center gap-2">
                       <div
-                        className="w-4 h-4 rounded border border-gray-300 flex-shrink-0"
+                        className="w-4 h-4 rounded border border-gray-300 flex-shrink-0 transition-colors duration-200"
                         style={{ backgroundColor: categoryColor }}
                       />
                       <span className="text-[12px] font-mono">{categoryColor.toUpperCase()}</span>
@@ -161,7 +202,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                       height="16"
                       viewBox="0 0 16 16"
                       fill="none"
-                      className={`transition-transform ${showColorPicker ? 'rotate-180' : ''}`}
+                      className={`transition-transform duration-200 ${showColorPicker ? 'rotate-180' : ''}`}
                     >
                       <polygon points="4,6 12,6 8,12" fill="currentColor" />
                     </svg>
@@ -170,7 +211,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                   {/* Color Picker Dropdown */}
                   {showColorPicker && !isUpdating && (
                     <div
-                      className="mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                      className="mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in-0 zoom-in-95 duration-200"
                       style={{
                         display: 'block',
                         position: 'absolute',
@@ -198,7 +239,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                               <button
                                 key={color}
                                 type="button"
-                                className={`w-full aspect-square rounded-md border-2 transition-all hover:scale-110 ${
+                                className={`w-full aspect-square rounded-md border-2 transition-all duration-200 hover:scale-110 ${
                                   categoryColor === color
                                     ? 'border-gray-800 ring-2 ring-offset-2 ring-gray-400 shadow-md'
                                     : 'border-gray-300 hover:border-gray-400'
@@ -221,14 +262,14 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                               type="color"
                               value={categoryColor}
                               onChange={(e) => setCategoryColor(e.target.value)}
-                              className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                              className="w-12 h-8 rounded border border-gray-300 cursor-pointer transition-colors duration-200"
                             />
                             <input
                               type="text"
                               value={categoryColor}
                               onChange={(e) => setCategoryColor(e.target.value)}
                               placeholder="#000000"
-                              className="flex-1 px-2 py-1 border border-gray-300 rounded-md text-[12px] font-mono focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none"
+                              className="flex-1 px-2 py-1 border border-gray-300 rounded-md text-[12px] font-mono focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none transition-colors duration-200"
                             />
                           </div>
                         </div>
@@ -265,9 +306,9 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
           <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleCancel}
               disabled={isUpdating}
-              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               Cancel
             </button>
@@ -275,7 +316,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
               type="button"
               onClick={handleSubmit}
               disabled={isUpdating || !categoryName.trim()}
-              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors duration-200"
             >
               {isUpdating ? (
                 <>
