@@ -174,7 +174,7 @@ const Overview: React.FC = () => {
     
     return Array.from(productMap.values())
       .sort((a: any, b: any) => b.revenue - a.revenue)
-      .slice(0, 5);
+      .slice(0, 10); // Top 10 products
   }, [salesRecords]);
 
   // Calculate e-wallet data
@@ -590,7 +590,7 @@ const Overview: React.FC = () => {
                 <table className="w-full">
                   <thead className="bg-[#EDEDED] border-b border-[#E5E7EB] sticky top-0 ">
                     <tr>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 w-[60px]">#</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-gray-500 w-[60px]">#</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Product</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Units</th>
                       <th className="text-center py-3 px-4 text-sm font-medium text-gray-500w-[190px]">Revenue</th>
@@ -600,7 +600,15 @@ const Overview: React.FC = () => {
                     {topProducts.map((product, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="py-3 px-4">
-                          <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg flex items-center justify-center">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            index === 0 
+                              ? 'bg-red-500' 
+                              : index === 1 
+                              ? 'bg-blue-500' 
+                              : index === 2 
+                              ? 'bg-green-500'
+                              : 'bg-gray-500'
+                          }`}>
                             <span className="text-white font-bold text-sm">{index + 1}</span>
                           </div>
                         </td>

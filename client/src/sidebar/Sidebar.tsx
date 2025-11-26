@@ -432,7 +432,7 @@ const renderMenuItem = (item: MenuItem) => {
       
       {/* Animated expandable sidebar */}
       <div 
-        className={`bg-[#02367b] text-white min-h-screen transition-all duration-150 ease-out overflow-hidden ${
+        className={`bg-[#02367b] text-white min-h-screen transition-all duration-150 ease-in-out overflow-hidden ${
           shouldShowExpanded ? 'w-64' : 'w-0'
         }`}
       >
