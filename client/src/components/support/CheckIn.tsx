@@ -16,6 +16,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const employeeDropdownRef = useRef<HTMLDivElement>(null);
+    const passwordInputRef = useRef<HTMLInputElement>(null);
 
     const selectedEmployeeText = selectedEmployee ? `${selectedEmployee.name} (${selectedEmployee.empId})` : 'Select Employee';
 
@@ -49,6 +50,13 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
             }
         };
         fetchEmployees();
+    }, []);
+
+    // Reset form when modal opens
+    useEffect(() => {
+        setSelectedEmployee(null);
+        setPassword('');
+        setIsDropdownOpen(false);
     }, []);
 
     return (
@@ -85,7 +93,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                     </div>
                     <div className="space-y-4 w-full">
                         {/* Custom Dropdown for Employees */}
-                        <div className="relative">
+                        <div className="relative" ref={employeeDropdownRef}>
                             <div
                                 className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-3xl px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[40px]"
                                 onClick={toggleEmployeeDropdown}
@@ -129,16 +137,24 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                         </div>
                         {/* Password Input */}
                         <input
+                            ref={passwordInputRef}
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Enter Password"
                             className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 h-[40px]"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    // Trigger check-in on Enter key
+                                    document.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
+                                }
+                            }}
                         />
                     </div>
                     <div className='w-full'>
                         <button
-                            className='w-full py-2 rounded-3xl bg-[#02367B] text-white'
+                            type="submit"
+                            className='w-full py-2 rounded-3xl bg-[#02367B] text-white hover:bg-[#1C4A9E] transition-colors'
                             onClick={async () => {
                                 if (!selectedEmployee) {
                                     alert('Please select an employee.');
@@ -163,11 +179,13 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                         name: selectedEmployee.name,
                                         role: selectedEmployee.role as UserRole,
                                     })
-                                    // Close the modal after successful check-in
-                                    onClose();
-                                    // Optionally reset form
+                                    
+                                    // Reset form
                                     setSelectedEmployee(null);
                                     setPassword('');
+                                    
+                                    // Close the modal after successful check-in
+                                    onClose();
                                 } catch (error: any) {
                                     console.error('Error during check-in:', error);
                                     if (error.response?.data?.error) {
