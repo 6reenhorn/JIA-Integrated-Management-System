@@ -40,7 +40,10 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
 
     const handleConfirm = () => {
         if (record && !isDeleting) {
-            onConfirmDelete(record.id);
+            setIsClosing(true);
+            setTimeout(() => {
+                onConfirmDelete(record.id);
+            }, 300);
         }
     };
 

@@ -276,22 +276,28 @@ const EditGCashRecordModal: React.FC<EditGCashRecordModalProps> = ({
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!isFormValid || !record || isEditing) {
-            return;
-        }
+    e.preventDefault();
 
-        const updatedRecord: Omit<GCashRecord, 'id'> = {
-            amount: parseFormattedNumber(formData.amount),
-            serviceCharge: parseFormattedNumber(formData.serviceCharge),
-            transactionType: formData.transactionType as 'Cash-In' | 'Cash-Out',
-            chargeMOP: formData.chargeMOP as 'Cash' | 'GCash',
-            referenceNumber: formData.referenceNumber,
-            date: formData.date,
-        };
+    if (!isFormValid || !record || isEditing) {
+        return;
+    }
 
-        onEditRecord(record.id, updatedRecord);
+    const updatedRecord: Omit<GCashRecord, 'id'> = {
+        amount: parseFormattedNumber(formData.amount),
+        serviceCharge: parseFormattedNumber(formData.serviceCharge),
+        transactionType: formData.transactionType as 'Cash-In' | 'Cash-Out',
+        chargeMOP: formData.chargeMOP as 'Cash' | 'GCash',
+        referenceNumber: formData.referenceNumber,
+        date: formData.date,
+    };
+
+    onEditRecord(record.id, updatedRecord);
+    setTimeout(() => {
+        setIsClosing(true);
+        setTimeout(() => {
+        onClose();
+        }, 300);
+    }, 100);
     };
 
     const handleCancel = () => {
