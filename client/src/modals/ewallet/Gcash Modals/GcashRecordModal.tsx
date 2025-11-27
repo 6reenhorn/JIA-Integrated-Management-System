@@ -261,19 +261,23 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
             date: formData.date,
         };
 
-        onAddRecord(newRecord);
-        
-        // Reset form
-        setFormData({
-            amount: '',
-            serviceCharge: '',
-            transactionType: '',
-            chargeMOP: '',
-            referenceNumber: '',
-            date: getLocalISODate(new Date()),
-        });
-        
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            onAddRecord(newRecord);
+            
+            // Reset form
+            setFormData({
+                amount: '',
+                serviceCharge: '',
+                transactionType: '',
+                chargeMOP: '',
+                referenceNumber: '',
+                date: getLocalISODate(new Date()),
+            });
+            
+            onClose();
+            setIsClosing(false);
+        }, 300);
     };
 
     const handleCancel = () => {

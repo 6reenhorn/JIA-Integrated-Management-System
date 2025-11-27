@@ -219,7 +219,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
     setDateRangeWarning('');
     setStartDate(tempStartDate);
     setEndDate(tempEndDate);
-    setShowDateFilter(false);
+    closeDateFilter();
   };
 
   const handleClearAndClose = () => {
@@ -227,7 +227,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
     setTempEndDate(null);
     setStartDate(null);
     setEndDate(null);
-    setShowDateFilter(false);
+    closeDateFilter();
   };
 
   const handleApplySummaryFilter = () => {
@@ -254,6 +254,15 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
     setSummaryEndDate(new Date());
     setShowSummaryDateFilter(false);
   };
+
+  const closeDateFilter = () => {
+    setIsClosingDateFilter(true);
+    setTimeout(() => {
+      setShowDateFilter(false);
+      setIsClosingDateFilter(false);
+    }, 200);
+  };
+
 
   const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => {
     const isFiltered = summaryStartDate && summaryEndDate && 
@@ -521,7 +530,13 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
       <div className="flex h-10.5 items-center justify-between">
         <div className="flex items-center gap-3 relative" ref={dateFilterRef}>
           <button
-            onClick={() => setShowDateFilter(!showDateFilter)}
+              onClick={() => {
+                if (showDateFilter) {
+                  closeDateFilter();
+                } else {
+                  setShowDateFilter(true);
+                }
+              }}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
           >
             <Calendar className="w-4 h-6" />
@@ -594,7 +609,17 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
         <div className="flex items-center gap-3 relative" ref={summaryDateFilterRef}>
           <span className="text-sm text-gray-600">Summary cards filter</span>
           <button
-            onClick={() => setShowSummaryDateFilter(!showSummaryDateFilter)}
+            onClick={() => {
+              if (showSummaryDateFilter) {
+                setIsClosingSummaryFilter(true);
+                setTimeout(() => {
+                  setShowSummaryDateFilter(false);
+                  setIsClosingSummaryFilter(false);
+                }, 200);
+              } else {
+                setShowSummaryDateFilter(true);
+              }
+            }}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
           >
             <Calendar className="w-4 h-6" />

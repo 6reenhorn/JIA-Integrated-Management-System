@@ -40,7 +40,17 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
 
     const handleConfirm = () => {
         if (record && !isDeleting) {
-            onConfirmDelete(record.id);
+            setIsClosing(true);
+            setTimeout(() => {
+                onConfirmDelete(record.id);
+            }, 300);
+        }
+    };
+
+    const closeModal = () => {
+        if (!isDeleting) {
+            setIsClosing(true);
+            setTimeout(onClose, 300);
         }
     };
 
@@ -75,10 +85,7 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
                 className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
-                onClick={!isDeleting ? () => {
-                    setIsClosing(true);
-                    setTimeout(onClose, 300);
-                } : undefined}
+
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -158,7 +165,7 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
                     <button 
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={onClose}
+                        onClick={closeModal}
                         disabled={isDeleting}
                     >
                         Cancel
