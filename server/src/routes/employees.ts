@@ -1,27 +1,29 @@
 import { Router } from 'express';
-import pool from '../db/postgres';
+import { dbHelper } from '../db/dbHelper';
 
 const router = Router();
 
 // GET /api/employees - Fetch all employees
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM employees ORDER BY id DESC');
-    const employees = result.rows.map(row => ({
+    const rows = await dbHelper.query('SELECT * FROM employees WHERE deleted_at IS NULL ORDER BY id DESC');
+    const employees = rows.map((row: any) => ({
       id: row.id,
       empId: row.emp_id,
-      name: row.name,
+      name: row.name || (row.first_name && row.last_name ? `${row.first_name} ${row.last_name}` : ''),
+      firstName: row.first_name || null,
+      lastName: row.last_name || null,
       role: row.role,
-      department: row.department,
+      department: row.department || null,
       contact: row.contact,
       status: row.status,
-      lastLogin: row.last_login ? row.last_login.toISOString().slice(0, 16).replace('T', ' ') : 'Never',
-      avatar: row.avatar,
-      address: row.address,
+      lastLogin: row.last_login ? new Date(row.last_login).toISOString().slice(0, 16).replace('T', ' ') : 'Never',
+      avatar: row.avatar || null,
+      address: row.address || null,
       salary: row.salary,
-      contactName: row.contact_name,
-      contactNumber: row.contact_number,
-      relationship: row.relationship,
+      contactName: row.contact_name || null,
+      contactNumber: row.contact_number || null,
+      relationship: row.relationship || null,
       password: row.password
     }));
     res.json(employees);
@@ -35,6 +37,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const {
     name,
+    firstName,
+    lastName,
     role,
     contact,
     status,
@@ -48,49 +52,55 @@ router.post('/', async (req, res) => {
   } = req.body;
 
   try {
-    // Generate empId
-    const empIdResult = await pool.query('SELECT COALESCE(MAX(CAST(SUBSTRING(emp_id FROM 4) AS INTEGER)), 0) as max_id FROM employees');
-    const maxId = parseInt(empIdResult.rows[0].max_id) + 1;
+    // Generate empId - get max emp_id number
+    const maxIdResult = await dbHelper.query('SELECT MAX(CAST(SUBSTR(emp_id, 4) AS INTEGER)) as max_id FROM employees WHERE emp_id LIKE "EMP%"');
+    const maxId = (maxIdResult[0]?.max_id || 0) + 1;
     const empId = `EMP${String(maxId).padStart(3, '0')}`;
 
+    // Use provided name or construct from firstName/lastName
+    const fullName = name || (firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || '');
+
     const query = `
-      INSERT INTO employees (emp_id, name, role, contact, status, avatar, address, salary, contact_name, contact_number, relationship, password)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      RETURNING *
+      INSERT INTO employees (emp_id, name, first_name, last_name, role, contact, status, avatar, address, salary, contact_name, contact_number, relationship, password)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [
       empId,
-      name,
+      fullName,
+      firstName || null,
+      lastName || null,
       role,
       contact,
       status || 'Active',
-      avatar,
-      address,
+      avatar || null,
+      address || null,
       salary,
-      contactName,
-      contactNumber,
-      relationship,
+      contactName || null,
+      contactNumber || null,
+      relationship || null,
       password
     ];
 
-    const result = await pool.query(query, values);
-    const newEmployee = result.rows[0];
+    const result = await dbHelper.run(query, values);
+    const newEmployee = await dbHelper.getById('employees', result.lastID);
 
     const employee = {
       id: newEmployee.id,
       empId: newEmployee.emp_id,
-      name: newEmployee.name,
+      name: newEmployee.name || (newEmployee.first_name && newEmployee.last_name ? `${newEmployee.first_name} ${newEmployee.last_name}` : ''),
+      firstName: newEmployee.first_name || null,
+      lastName: newEmployee.last_name || null,
       role: newEmployee.role,
-      department: newEmployee.department,
+      department: newEmployee.department || null,
       contact: newEmployee.contact,
       status: newEmployee.status,
       lastLogin: 'Never',
-      avatar: newEmployee.avatar,
-      address: newEmployee.address,
+      avatar: newEmployee.avatar || null,
+      address: newEmployee.address || null,
       salary: newEmployee.salary,
-      contactName: newEmployee.contact_name,
-      contactNumber: newEmployee.contact_number,
-      relationship: newEmployee.relationship,
+      contactName: newEmployee.contact_name || null,
+      contactNumber: newEmployee.contact_number || null,
+      relationship: newEmployee.relationship || null,
       password: newEmployee.password
     };
 
@@ -106,6 +116,8 @@ router.put('/:id', async (req, res): Promise<void> => {
   const { id } = req.params;
   const {
     name,
+    firstName,
+    lastName,
     role,
     department,
     contact,
@@ -120,50 +132,64 @@ router.put('/:id', async (req, res): Promise<void> => {
   } = req.body;
 
   try {
+    // Use provided name or construct from firstName/lastName, or keep existing if not provided
+    let fullName = name;
+    if (!fullName && firstName && lastName) {
+      fullName = `${firstName} ${lastName}`;
+    } else if (!fullName && firstName) {
+      fullName = firstName;
+    } else if (!fullName && lastName) {
+      fullName = lastName;
+    }
+
     const query = `
       UPDATE employees
-      SET name = $1, role = $2, department = $3, contact = $4, status = $5, avatar = $6, address = $7, salary = $8, contact_name = $9, contact_number = $10, relationship = $11, password = $12
-      WHERE id = $13
-      RETURNING *
+      SET name = ?, first_name = ?, last_name = ?, role = ?, department = ?, contact = ?, status = ?, avatar = ?, address = ?, salary = ?, contact_name = ?, contact_number = ?, relationship = ?, password = ?
+      WHERE id = ? AND deleted_at IS NULL
     `;
     const values = [
-      name,
+      fullName || null,
+      firstName || null,
+      lastName || null,
       role,
-      department,
+      department || null,
       contact,
       status,
-      avatar,
-      address,
+      avatar || null,
+      address || null,
       salary,
-      contactName,
-      contactNumber,
-      relationship,
+      contactName || null,
+      contactNumber || null,
+      relationship || null,
       password,
       id
     ];
 
-    const result = await pool.query(query, values);
-    if (result.rows.length === 0) {
+    await dbHelper.run(query, values);
+    const updatedEmployee = await dbHelper.getById('employees', id);
+    
+    if (!updatedEmployee || updatedEmployee.deleted_at) {
       res.status(404).json({ error: 'Employee not found' });
       return;
     }
 
-    const updatedEmployee = result.rows[0];
     const employee = {
       id: updatedEmployee.id,
       empId: updatedEmployee.emp_id,
-      name: updatedEmployee.name,
+      name: updatedEmployee.name || (updatedEmployee.first_name && updatedEmployee.last_name ? `${updatedEmployee.first_name} ${updatedEmployee.last_name}` : ''),
+      firstName: updatedEmployee.first_name || null,
+      lastName: updatedEmployee.last_name || null,
       role: updatedEmployee.role,
-      department: updatedEmployee.department,
+      department: updatedEmployee.department || null,
       contact: updatedEmployee.contact,
       status: updatedEmployee.status,
-      lastLogin: updatedEmployee.last_login ? updatedEmployee.last_login.toISOString().slice(0, 16).replace('T', ' ') : 'Never',
-      avatar: updatedEmployee.avatar,
-      address: updatedEmployee.address,
+      lastLogin: updatedEmployee.last_login ? new Date(updatedEmployee.last_login).toISOString().slice(0, 16).replace('T', ' ') : 'Never',
+      avatar: updatedEmployee.avatar || null,
+      address: updatedEmployee.address || null,
       salary: updatedEmployee.salary,
-      contactName: updatedEmployee.contact_name,
-      contactNumber: updatedEmployee.contact_number,
-      relationship: updatedEmployee.relationship,
+      contactName: updatedEmployee.contact_name || null,
+      contactNumber: updatedEmployee.contact_number || null,
+      relationship: updatedEmployee.relationship || null,
       password: updatedEmployee.password
     };
 
@@ -176,22 +202,45 @@ router.put('/:id', async (req, res): Promise<void> => {
   }
 });
 
-// DELETE /api/employees/:id - Delete an employee
+// DELETE /api/employees/:id - Soft delete an employee
 router.delete('/:id', async (req, res): Promise<void> => {
   const { id } = req.params;
+  const employeeId = parseInt(id, 10);
 
   try {
-    const result = await pool.query('DELETE FROM employees WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
+    console.log(`Attempting to soft delete employee with ID: ${id} (parsed: ${employeeId})`);
+    
+    if (isNaN(employeeId)) {
+      console.log(`Invalid employee ID: ${id}`);
+      res.status(400).json({ error: 'Invalid employee ID' });
+      return;
+    }
+    
+    // Check if employee exists and is not already deleted
+    const employee = await dbHelper.queryOne('SELECT * FROM employees WHERE id = ? AND deleted_at IS NULL', [employeeId]);
+    if (!employee) {
+      console.log(`Employee ${employeeId} not found or already deleted`);
+      // Check if it exists but is deleted
+      const deletedEmployee = await dbHelper.queryOne('SELECT id, deleted_at FROM employees WHERE id = ?', [employeeId]);
+      if (deletedEmployee) {
+        res.status(404).json({ error: 'Employee already deleted' });
+        return;
+      }
       res.status(404).json({ error: 'Employee not found' });
       return;
     }
 
+    console.log(`Soft deleting employee:`, { id: employee.id, name: employee.name, emp_id: employee.emp_id });
+
+    // Use soft delete - set deleted_at timestamp
+    await dbHelper.delete('employees', employeeId);
+
+    console.log(`Successfully soft deleted employee ${employeeId}`);
     res.json({ message: 'Employee deleted successfully' });
     return;
   } catch (err) {
     console.error('Error deleting employee:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err instanceof Error ? err.message : 'Unknown error' });
     return;
   }
 });

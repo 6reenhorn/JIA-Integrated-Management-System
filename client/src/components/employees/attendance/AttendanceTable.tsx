@@ -92,7 +92,15 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ employees, isLoading 
                 </td>
                 <td className="py-4 px-6 text-sm w-[150px] min-w-[150px] text-gray-600">
                   <div>
-                    {formatDate(new Date(employee.date))}
+                    {employee.date ? (() => {
+                      try {
+                        const date = new Date(employee.date);
+                        if (isNaN(date.getTime())) return employee.date;
+                        return formatDate(date);
+                      } catch {
+                        return employee.date;
+                      }
+                    })() : '-'}
                   </div>
                 </td>
                 <td className="py-4 px-6 text-sm w-[120px] min-w-[120px]">

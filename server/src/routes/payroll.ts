@@ -1,13 +1,29 @@
 import { Router } from 'express';
-import pool from '../db/postgres';
+import { dbHelper } from '../db/dbHelper';
 
 const router = Router();
+
+// Helper function to format payment date
+const formatPaymentDate = (dateStr: string | null): string | null => {
+  if (!dateStr) return null;
+  try {
+    const date = new Date(dateStr);
+    const YY = date.getFullYear() % 100;
+    const DD = String(date.getDate()).padStart(2, '0');
+    const MM = String(date.getMonth() + 1).padStart(2, '0');
+    const Hr = String(date.getHours()).padStart(2, '0');
+    const Min = String(date.getMinutes()).padStart(2, '0');
+    return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
+  } catch {
+    return dateStr;
+  }
+};
 
 // GET /api/payroll - Fetch all payroll records
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM payroll_records ORDER BY id DESC');
-    const payrollRecords = result.rows.map(row => ({
+    const rows = await dbHelper.query('SELECT * FROM payroll_records WHERE deleted_at IS NULL ORDER BY id DESC');
+    const payrollRecords = rows.map((row: any) => ({
       id: row.id,
       employeeName: row.employee_name,
       empId: row.emp_id,
@@ -18,15 +34,7 @@ router.get('/', async (req, res) => {
       deductions: row.deductions,
       netSalary: row.net_salary,
       status: row.status,
-      paymentDate: row.payment_date ? (() => {
-        const date = new Date(row.payment_date);
-        const YY = date.getFullYear() % 100;
-        const DD = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const Hr = String(date.getHours()).padStart(2, '0');
-        const Min = String(date.getMinutes()).padStart(2, '0');
-        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
-      })() : null
+      paymentDate: formatPaymentDate(row.payment_date)
     }));
     res.json(payrollRecords);
   } catch (err) {
@@ -53,8 +61,7 @@ router.post('/', async (req, res) => {
   try {
     const query = `
       INSERT INTO payroll_records (employee_name, emp_id, role, month, year, basic_salary, deductions, net_salary, status, payment_date)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING *
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [
       employeeName,
@@ -69,8 +76,8 @@ router.post('/', async (req, res) => {
       paymentDate || null
     ];
 
-    const result = await pool.query(query, values);
-    const newRecord = result.rows[0];
+    const result = await dbHelper.run(query, values);
+    const newRecord = await dbHelper.getById('payroll_records', result.lastID);
 
     const payrollRecord = {
       id: newRecord.id,
@@ -83,15 +90,7 @@ router.post('/', async (req, res) => {
       deductions: newRecord.deductions,
       netSalary: newRecord.net_salary,
       status: newRecord.status,
-      paymentDate: newRecord.payment_date ? (() => {
-        const date = new Date(newRecord.payment_date);
-        const YY = date.getFullYear() % 100;
-        const DD = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const Hr = String(date.getHours()).padStart(2, '0');
-        const Min = String(date.getMinutes()).padStart(2, '0');
-        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
-      })() : null
+      paymentDate: formatPaymentDate(newRecord.payment_date)
     };
 
     res.status(201).json(payrollRecord);
@@ -110,12 +109,12 @@ router.delete('/:id', async (req, res) => {
   }
 
   try {
-    const query = 'DELETE FROM payroll_records WHERE id = $1 RETURNING *';
-    const result = await pool.query(query, [idNum]);
-
-    if (result.rowCount === 0) {
+    const record = await dbHelper.getById('payroll_records', idNum);
+    if (!record || record.deleted_at) {
       return res.status(404).json({ error: 'Payroll record not found' });
     }
+
+    await dbHelper.hardDelete('payroll_records', idNum);
 
     res.json({ message: 'Payroll record deleted successfully' });
   } catch (err) {

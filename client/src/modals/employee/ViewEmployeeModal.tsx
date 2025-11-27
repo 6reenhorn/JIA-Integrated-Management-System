@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Employee } from '../../types/employee_types';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface ViewEmployeeModalProps {
   employee: Employee;
@@ -7,6 +8,7 @@ interface ViewEmployeeModalProps {
 }
 
 const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose }) => {
+  const [showPassword, setShowPassword] = useState(false);
   const contactLines = employee.contact.split('\n');
 
   return (
@@ -100,11 +102,18 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose
                 <label className="text-[12px] font-bold text-gray-600">Password</label>
                 <div className="flex items-center gap-2">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={employee.password}
                     readOnly
                     className="text-[14px] border border-gray-300 rounded px-2 py-1 w-full bg-gray-50"
                   />
+                  <button
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="px-3 py-1 bg-gray-500 border-2 border-gray-600 text-white rounded text-sm hover:bg-gray-600 flex items-center gap-1"
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                   <button
                     onClick={() => navigator.clipboard.writeText(employee.password)}
                     className="px-3 py-1 bg-[#02367B] border-2 border-[#1C4A9E] text-white rounded text-sm hover:bg-[#1C4A9E]"

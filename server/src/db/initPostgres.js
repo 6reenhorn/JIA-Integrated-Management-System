@@ -16,7 +16,10 @@ const createEmployeesTable = async () => {
       contact_name VARCHAR(255),
       contact_number VARCHAR(50),
       relationship VARCHAR(100),
-      password VARCHAR(255) NOT NULL
+      password VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
+      deleted_at TIMESTAMP DEFAULT NULL
     );
   `;
 

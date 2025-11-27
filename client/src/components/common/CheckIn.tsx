@@ -79,6 +79,86 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
         setIsDropdownOpen(false);
     }, []);
 
+    const handleCheckIn = async () => {
+        if (isProcessing) return;
+        setMessage(null);
+        setCountdown(0);
+        
+        if (!selectedEmployee) {
+            setMessage({ type: 'error', text: 'Please select an employee.' });
+            return;
+        }
+        if (!password) {
+            setMessage({ type: 'error', text: 'Please enter your password.' });
+            return;
+        }
+        
+        setIsProcessing(true);
+        
+        try {
+            const response = await axios.post('http://localhost:3001/api/attendance/checkin', {
+                employeeId: selectedEmployee.id,
+                password: password
+            });
+
+            // Handle successful check-in
+            setMessage({ 
+                type: 'success', 
+                text: response.data.message || 'Check-in successful!' 
+            });
+
+            // Set user in auth context
+            checkIn({
+                id: response.data.user.id,
+                empId: response.data.user.empId,
+                name: response.data.user.name,
+                role: response.data.user.role as UserRole,
+                isAdmin: response.data.user.role.toLowerCase() === 'admin'
+            });
+
+            // Set countdown for auto-close
+            setCountdown(3);
+
+            // Reset form
+            setSelectedEmployee(null);
+            setPassword('');
+
+        } catch (error: any) {
+            console.error('Error during check-in:', error);
+            const errorMessage = error.response?.data?.error || 'An error occurred during check-in.';
+            setMessage({ type: 'error', text: errorMessage });
+            
+            // If it's an admin login error, try with emp_id
+            if (errorMessage.includes('Employee not found') && selectedEmployee.empId === 'ADMIN001') {
+                try {
+                    const adminResponse = await axios.post('http://localhost:3001/api/attendance/checkin', {
+                        employeeId: 'ADMIN001', // Try with emp_id instead of id
+                        password: password
+                    });
+                    
+                    checkIn({
+                        id: adminResponse.data.user.id,
+                        empId: adminResponse.data.user.empId,
+                        name: adminResponse.data.user.name,
+                        role: adminResponse.data.user.role as UserRole,
+                        isAdmin: true
+                    });
+                    
+                    setMessage({ 
+                        type: 'success', 
+                        text: 'Admin access granted' 
+                    });
+                    setCountdown(3);
+                    return;
+                } catch (adminError) {
+                    console.error('Admin login error:', adminError);
+                }
+            }
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <div className="relative w-[55vw] h-[60vh] px-8 py-16 bg-gradient-to-b from-[#02367B] to-[#016CA5] rounded-2xl rounded-tl-[14px] rounded-bl-[14px]">
             {/* Left Side */}
@@ -198,60 +278,14 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                     </div>
                     <div className='w-full'>
                         <button
-                            type="submit"
+                            type="button"
                             disabled={isProcessing}
                             className={`w-full py-2 rounded-3xl text-white transition-colors ${
                                 isProcessing 
                                     ? 'bg-gray-400 cursor-not-allowed' 
                                     : 'bg-[#02367B] hover:bg-[#1C4A9E]'
                             }`}
-                            onClick={async () => {
-
-                                if (isProcessing) return;
-                                setMessage(null);
-                                setCountdown(0);
-                                
-                                if (!selectedEmployee) {
-                                    setMessage({ type: 'error', text: 'Please select an employee.' });
-                                    return;
-                                }
-                                if (!password) {
-                                    setMessage({ type: 'error', text: 'Please enter your password.' });
-                                    return;
-                                }
-                                setIsProcessing(true);                               
-                                try {
-                                    // Check in with password verification on server
-                                    await axios.post('http://localhost:3001/api/attendance/checkin', {
-                                        employeeId: selectedEmployee.id,
-                                        password: password
-                                    });
-                                    
-                                    setMessage({ type: 'success', text: 'Check-in successful!' });
-                                    setCountdown(3); //successful check-in countdown
-
-                                    checkIn({
-                                        id: selectedEmployee.id,
-                                        empId: selectedEmployee.empId,
-                                        name: selectedEmployee.name,
-                                        role: selectedEmployee.role as UserRole,
-                                    })
-                                    
-                                    // Reset form
-                                    setSelectedEmployee(null);
-                                    setPassword('');
-                                    
-                                } catch (error: any) {
-                                    console.error('Error during check-in:', error);
-                                    if (error.response?.data?.error) {
-                                        setMessage({ type: 'error', text: error.response.data.error });
-                                    } else {
-                                        setMessage({ type: 'error', text: 'An error occurred during check-in.' });
-                                    }
-                                } finally {
-                                    setIsProcessing(false);
-                                }
-                            }}
+                            onClick={handleCheckIn}
                         >
                             {isProcessing ? (
                                 <span className="flex items-center justify-center gap-2">

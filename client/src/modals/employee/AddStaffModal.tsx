@@ -569,7 +569,9 @@ const AddStaffModal = ({
                 password += chars.charAt(Math.floor(Math.random() * chars.length));
               }
               onAddEmployee({
-                name: `${firstName} ${lastName}`,
+                name: `${firstName} ${lastName}`.trim(),
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
                 role: selectedRoleText,
                 contact: `${email}\n${phone}\n${address}`,
                 status: selectedStatus,

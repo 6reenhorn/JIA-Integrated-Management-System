@@ -7,6 +7,7 @@ interface User {
   empId: string;
   name: string;
   role: UserRole;
+  isAdmin: boolean;
 }
 
 interface AuthContextType {
@@ -15,7 +16,7 @@ interface AuthContextType {
   checkIn: (user: User) => void;
   checkOut: () => void;
   hasAccess: (page: 'inventory' | 'ewallet' | 'employees' | 'settings' | 'about') => boolean;
-  hasAccessToEmployeeSection: (section: 'staff' | 'attendance' | 'payroll') => boolean; // ADD THIS LINE
+  hasAccessToEmployeeSection: (section: 'staff' | 'attendance' | 'payroll') => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,18 +56,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkIn = (user: User) => {
     setCurrentUser(user);
-    setIsCheckedIn(true); // THIS WAS MISSING!
+    setIsCheckedIn(true);
   };
 
   const checkOut = () => {
     setCurrentUser(null);
-    setIsCheckedIn(false); // THIS WAS MISSING!
+    setIsCheckedIn(false);
     sessionStorage.removeItem('currentUser');
     sessionStorage.removeItem('isCheckedIn');
   };
 
   const hasAccess = (page: 'inventory' | 'ewallet' | 'employees' | 'settings' | 'about'): boolean => {
     if (!currentUser) return false;
+
+    // Admin has access to everything
+    if (currentUser.isAdmin) return true;
 
     const { role } = currentUser;
 
@@ -76,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // About is accessible to everyone
     if (page === 'about') return true;
 
-    // Settings is only for General Manager
+    // Settings is only for General Manager and Admin
     if (page === 'settings') return false;
 
     // Employees page is accessible to all
@@ -100,6 +104,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const hasAccessToEmployeeSection = (section: 'staff' | 'attendance' | 'payroll'): boolean => {
     if (!currentUser) return false;
+
+    // Admin has access to all sections
+    if (currentUser.isAdmin) return true;
 
     const { role } = currentUser;
 

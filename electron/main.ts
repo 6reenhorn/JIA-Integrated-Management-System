@@ -1,16 +1,24 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { isDev } from './util.js';
-import { ipcMain } from 'electron';
 import { fileURLToPath } from 'url';
+import { syncFromPostgresToSQLite, syncFromSQLiteToPostgres } from '../server/src/db/sync.js';
+import { initializeSQLite } from '../server/src/db/sqlite.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
+let syncInterval: NodeJS.Timeout | null = null;
 
 // Create the main application window
-app.on('ready', () => {
+app.on('ready', async () => {
+    // Initialize SQLite database
+    initializeSQLite();
+    
     mainWindow = new BrowserWindow({
         width: 1200,
         minWidth: 1200,
@@ -63,8 +71,40 @@ app.on('ready', () => {
 
     mainWindow.on('closed', () => {
         mainWindow = null;
+        // Clear sync interval when window closes
+        if (syncInterval) {
+            clearInterval(syncInterval);
+            syncInterval = null;
+        }
     });
+
+    // 🔥 INITIAL SYNC - Try to sync on app start if online
+    try {
+        console.log('🚀 App started - checking connection...');
+        await syncFromPostgresToSQLite();
+        console.log('✅ Initial sync completed');
+        
+        // Start background sync (every 5 minutes)
+        startBackgroundSync();
+    } catch (error) {
+        console.log('⚠️ Starting in offline mode:', error);
+        // App will use SQLite cache
+    }
 });
+
+// 🔄 Background sync function
+function startBackgroundSync() {
+    syncInterval = setInterval(async () => {
+        try {
+            console.log('🔄 Background sync starting...');
+            await syncFromSQLiteToPostgres(); // Push local changes first
+            await syncFromPostgresToSQLite(); // Then pull latest data
+            console.log('✅ Background sync completed');
+        } catch (error) {
+            console.log('⚠️ Background sync failed (offline?):', error);
+        }
+    }, 5 * 60 * 1000); // Every 5 minutes
+}
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -93,4 +133,43 @@ ipcMain.on('window-maximize', () => {
 
 ipcMain.on('window-close', () => {
     mainWindow?.close();
+});
+
+// 🌐 Handle online/offline events from renderer
+ipcMain.on('online', async () => {
+    console.log('🌐 Connection restored - syncing...');
+    try {
+        await syncFromSQLiteToPostgres(); // Push any offline changes
+        await syncFromPostgresToSQLite(); // Pull latest data
+        console.log('✅ Online sync completed');
+        
+        // Restart background sync if it was stopped
+        if (!syncInterval) {
+            startBackgroundSync();
+        }
+    } catch (error) {
+        console.error('❌ Sync failed:', error);
+    }
+});
+
+ipcMain.on('offline', () => {
+    console.log('📴 Connection lost - entering offline mode');
+    // Stop background sync to avoid errors
+    if (syncInterval) {
+        clearInterval(syncInterval);
+        syncInterval = null;
+    }
+});
+
+// 🔄 Manual sync trigger (optional - for a "Sync Now" button in UI)
+ipcMain.handle('manual-sync', async () => {
+    try {
+        console.log('🔄 Manual sync triggered...');
+        await syncFromSQLiteToPostgres();
+        await syncFromPostgresToSQLite();
+        return { success: true, message: 'Sync completed successfully' };
+    } catch (error: any) {
+        console.error('❌ Manual sync failed:', error);
+        return { success: false, message: error.message };
+    }
 });

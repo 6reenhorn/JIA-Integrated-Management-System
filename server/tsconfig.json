@@ -24,10 +24,9 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": true,
-    "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedIndexedAccess": false
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../electron/sqlite.ts", "../electron/sync.ts"],
   "exclude": ["node_modules", "dist"]
 }

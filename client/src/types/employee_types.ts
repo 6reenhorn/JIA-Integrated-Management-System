@@ -2,6 +2,8 @@ export interface Employee {
   id: number;
   name: string;
   empId: string;
+  firstName?: string;
+  lastName?: string;
   role: string;
   contact: string;
   status: 'Active' | 'Inactive';

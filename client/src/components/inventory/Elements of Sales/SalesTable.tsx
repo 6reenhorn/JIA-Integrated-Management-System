@@ -55,9 +55,23 @@ const SalesTable: React.FC<SalesTableProps> = ({
   }, [salesRecords]);
 
   // Local date formatter to avoid timezone issues
-  const formatLocalDate = (dateString: string): string => {
+  const formatLocalDate = (dateString: string | null): string => {
+    if (!dateString) return '-';
     try {
-      const date = new Date(dateString + 'T00:00:00');
+      // If it's already an ISO string, use it directly
+      let date: Date;
+      if (dateString.includes('T')) {
+        date = new Date(dateString);
+      } else {
+        // If it's just a date string (YYYY-MM-DD), add time
+        date = new Date(dateString + 'T00:00:00');
+      }
+      
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return dateString;
+      }
+      
       return formatDate(date);
     } catch (error) {
       console.error('Error formatting date:', error);

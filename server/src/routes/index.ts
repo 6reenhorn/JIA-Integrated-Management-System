@@ -5,7 +5,7 @@ import gcashRoutes from './gcash';
 import paymayaRoutes from './paymaya';
 import inventoryRoutes from './inventoryRoutes';
 import payrollRoutes from './payroll';
-import attendanceRoutes from '../routes/';
+import attendanceRoutes from './attendance';
 
 const router = express.Router();
 
