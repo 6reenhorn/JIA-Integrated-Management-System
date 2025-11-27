@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Employee } from '../../types/employee_types';
 
 interface ViewEmployeeModalProps {
@@ -7,17 +7,60 @@ interface ViewEmployeeModalProps {
 }
 
 const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose }) => {
+  const [isClosing, setIsClosing] = useState(false);
   const contactLines = employee.contact.split('\n');
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 200);
+  };
+
+  useEffect(() => {
+    const handleEscape = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-gray-100 shadow-md rounded-md px-8 py-6 w-[60vw] max-h-[500px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className={`absolute inset-0 bg-black/10 backdrop-blur-sm transition-opacity duration-300 ${
+          isClosing ? 'opacity-0' : 'opacity-100'
+        }`}
+        onClick={handleClose}
+        style={{
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)'
+        }}
+      />
+
+      {/* Modal */}
+      <div
+        className={`bg-gray-100 shadow-md rounded-md px-8 py-6 w-[60vw] max-h-[500px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-2">
           <h3 className="text-[20px] font-bold">Employee Details</h3>
         </div>
 
         <div className="space-y-4">
-          <div className='flex items-start justify-between gap-6'>
+          <div className="flex items-start justify-between gap-6">
             {/* Basic Information */}
             <div className="shadow-md shadow-gray-200 rounded-md p-4 flex-1 h-[176px]">
               <h4 className="text-[16px] font-bold mb-3">Basic Information</h4>
@@ -40,6 +83,7 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose
                 </div>
               </div>
             </div>
+
             {/* Contact Information */}
             <div className="shadow-md shadow-gray-200 rounded-md p-4 flex-1 h-[176px]">
               <h4 className="text-[16px] font-bold mb-3">Contact Information</h4>
@@ -52,7 +96,7 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose
                   <label className="text-[12px] font-bold text-gray-600">Phone</label>
                   <p className="text-[14px]">{contactLines[1] || 'N/A'}</p>
                 </div>
-                <div>
+                <div className="col-span-2">
                   <label className="text-[12px] font-bold text-gray-600">Address</label>
                   <p className="text-[14px] whitespace-pre-line">{contactLines.slice(2).join('\n') || employee.address}</p>
                 </div>
@@ -60,11 +104,11 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose
             </div>
           </div>
 
-          <div className='flex justify-between gap-6'>
+          <div className="flex justify-between gap-6">
             {/* Work Information */}
             <div className="shadow-md shadow-gray-200 rounded-md p-4 flex-1 h-[176px]">
               <h4 className="text-[16px] font-bold mb-3">Work Information</h4>
-              <div className="">
+              <div>
                 <div>
                   <label className="text-[12px] font-bold text-gray-600">Salary</label>
                   <p className="text-[14px] mb-[16px]">{employee.salary}</p>
@@ -75,6 +119,7 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose
                 </div>
               </div>
             </div>
+
             {/* Emergency Contact */}
             <div className="shadow-md shadow-gray-200 rounded-md p-4 flex-2 h-[176px]">
               <h4 className="text-[16px] font-bold mb-3">Emergency Contact</h4>
@@ -93,10 +138,11 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose
                 </div>
               </div>
             </div>
+
             {/* Password */}
             <div className="shadow-md shadow-gray-200 rounded-md p-4 flex-1 h-[176px]">
               <h4 className="text-[16px] font-bold mb-3">Account Credentials</h4>
-              <div className='h-[60%] flex flex-col justify-center gap-2'>
+              <div className="h-[60%] flex flex-col justify-center gap-2">
                 <label className="text-[12px] font-bold text-gray-600">Password</label>
                 <div className="flex items-center gap-2">
                   <input

@@ -17,6 +17,7 @@ interface PayrollFiltersProps {
   onCustomEndChange: (end: string) => void;
   onApply: (range: DateRange | null) => void;
   onReset: () => void;
+  isClosing?: boolean;
 }
 
 const PayrollFilters: React.FC<PayrollFiltersProps> = ({
@@ -29,7 +30,8 @@ const PayrollFilters: React.FC<PayrollFiltersProps> = ({
   customEnd,
   onCustomEndChange,
   onApply,
-  onReset
+  onReset,
+  isClosing = false
 }) => {
   const presets = ['All Status', 'Paid', 'Pending', 'Overdue'];
 
@@ -69,7 +71,7 @@ const PayrollFilters: React.FC<PayrollFiltersProps> = ({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `.wide-calendar { width: 100% !important; }` }} />
-      <div className="flex flex-col gap-4 p-4 bg-white rounded-md shadow-md w-96">
+      <div className={`flex flex-col gap-4 p-4 bg-white rounded-md shadow-md w-96 ${isClosing ? 'animate-dropdown-out' : 'animate-dropdown-in'}`}>
       {/* Filter Type Tabs */}
       <div className="flex border-b-[2px] border-[#E5E7EB]">
         {(['preset', 'custom'] as const).map((type) => (
