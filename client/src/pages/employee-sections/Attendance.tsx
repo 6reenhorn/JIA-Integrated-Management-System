@@ -20,6 +20,7 @@ interface AttendanceProps {
 const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLoading, onRefresh }) => {
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isFilterClosing, setIsFilterClosing] = useState(false);
   const [filterType, setFilterType] = useState<'preset' | 'custom'>('preset');
   const [selectedPreset, setSelectedPreset] = useState('Today');
 
@@ -68,7 +69,15 @@ const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLo
   };
 
   const toggleFilters = () => {
-    setIsFiltersOpen(!isFiltersOpen);
+    if (isFiltersOpen) {
+      setIsFilterClosing(true);
+      setTimeout(() => {
+        setIsFiltersOpen(false);
+        setIsFilterClosing(false);
+      }, 100);
+    } else {
+      setIsFiltersOpen(true);
+    }
   };
 
   useEffect(() => {
@@ -77,15 +86,21 @@ const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLo
         filterRef.current &&
         !filterRef.current.contains(event.target as Node) &&
         buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
+        !buttonRef.current.contains(event.target as Node) &&
+        !isFilterClosing
       ) {
-        setIsFiltersOpen(false);
+        setIsFilterClosing(true);
+        setTimeout(() => {
+          setIsFiltersOpen(false);
+          setIsFilterClosing(false);
+        }, 100);
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
+    if (isFiltersOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }   
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isFiltersOpen, isFilterClosing]);
 
   const handleRefreshSpinning = async () => {
     if (onRefresh) {
@@ -142,6 +157,7 @@ const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLo
                 onCustomEndChange={setCustomEnd}
                 onApply={handleApply}
                 onReset={handleReset}
+                isClosing={isFilterClosing}
               />
             </div>
           )}
