@@ -431,6 +431,15 @@ router.post('/', async (req, res) => {
       throw new Error('Failed to get inventory item ID after insert');
     }
 
+    // Debug: Verify the record was created with synced = 0
+    const verifyRecord = await dbHelper.queryOne('SELECT id, product_name, synced FROM inventory_items WHERE id = ?', [itemId]);
+    if (verifyRecord) {
+      console.log(`[SYNC DEBUG] New inventory item created - ID: ${verifyRecord.id}, product_name: ${verifyRecord.product_name}, synced: ${verifyRecord.synced}`);
+      if (verifyRecord.synced !== 0) {
+        console.warn(`[SYNC WARNING] New inventory item should have synced=0 but has synced=${verifyRecord.synced}`);
+      }
+    }
+
     const newItem = await dbHelper.getById('inventory_items', itemId);
     
     if (!newItem) {

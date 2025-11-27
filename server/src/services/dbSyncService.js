@@ -616,11 +616,40 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
           console.log(`Updated PostgreSQL ${tableName} record with ${idField}: ${record[idField]}`);
         } else {
           // Insert new record into PostgreSQL
-          await pgPool.query(
-            `INSERT INTO ${tableName} (${fieldNames}) VALUES (${placeholders})`,
-            values
-          );
-          console.log(`Inserted new PostgreSQL ${tableName} record with ${idField}: ${record[idField]}`);
+          try {
+            await pgPool.query(
+              `INSERT INTO ${tableName} (${fieldNames}) VALUES (${placeholders})`,
+              values
+            );
+            console.log(`Inserted new PostgreSQL ${tableName} record with ${idField}: ${record[idField]}`);
+          } catch (insertErr) {
+            // If it's a unique constraint error, try updating instead
+            if (insertErr.code === '23505' || insertErr.message.includes('duplicate key') || insertErr.message.includes('UNIQUE constraint')) {
+              console.log(`Record with ${idField} ${record[idField]} already exists in PostgreSQL, updating instead...`);
+              const updateFields = availableFields
+                .filter(f => f !== idField)
+                .map((f, i) => `${f} = $${i + 1}`)
+                .join(', ');
+              const updateValues = availableFields
+                .filter(f => f !== idField)
+                .map(f => {
+                  const value = record[f];
+                  if (f === 'beginnings' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    return JSON.stringify(value);
+                  }
+                  return value === undefined ? null : value;
+                });
+              
+              const whereIndex = updateValues.length + 1;
+              await pgPool.query(
+                `UPDATE ${tableName} SET ${updateFields}, updated_at = CURRENT_TIMESTAMP WHERE ${idField} = $${whereIndex}`,
+                [...updateValues, record[idField]]
+              );
+              console.log(`Updated existing PostgreSQL ${tableName} record with ${idField}: ${record[idField]}`);
+            } else {
+              throw insertErr;
+            }
+          }
         }
 
         // Mark as synced in SQLite
