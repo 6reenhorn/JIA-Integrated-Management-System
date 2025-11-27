@@ -23,3 +23,14 @@ dist-electron
 *.njsproj
 *.sln
 *.sw?
+
+# Database files
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-wal
+*.db-shm
+database.sqlite
+database.sqlite-wal
+database.sqlite-shm
