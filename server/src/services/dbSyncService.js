@@ -567,19 +567,34 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           // Track that this record was actually synced
           actuallySyncedIds.push(row[idField]);
         } else {
-          // For employees table, check if this employee was hard-deleted in SQLite
-          // If an employee doesn't exist in SQLite but exists in PostgreSQL, it was likely hard-deleted
-          // We should not restore hard-deleted employees
+          // For employees table, check if this is a new database (completely empty)
+          // If the database is new, we should insert all employees from PostgreSQL
+          // Only skip if the database has some employees but this specific one is missing (might have been hard-deleted)
           if (tableName === 'employees') {
-            // Check by emp_id (the idField for employees)
-            const empIdCheck = await sqliteAll(
-              `SELECT 1 FROM employees WHERE emp_id = ?`,
-              [row.emp_id]
+            // Check if the employees table is completely empty (new database)
+            const employeeCount = await sqliteAll(
+              `SELECT COUNT(*) as count FROM employees`
             );
-            if (empIdCheck.length === 0) {
-              // Employee doesn't exist in SQLite - was likely hard-deleted, don't restore
-              console.log(`Skipping restoration of employee with emp_id: ${row.emp_id} - was likely hard-deleted in SQLite`);
-              continue;
+            const totalEmployees = employeeCount[0]?.count || 0;
+            
+            // If database is empty (new), insert all employees
+            if (totalEmployees === 0) {
+              console.log(`New database detected - inserting employee with emp_id: ${row.emp_id}`);
+              // Continue to insert below
+            } else {
+              // Database has some employees - check if this specific one exists
+              const empIdCheck = await sqliteAll(
+                `SELECT 1 FROM employees WHERE emp_id = ?`,
+                [row.emp_id]
+              );
+              if (empIdCheck.length === 0) {
+                // Employee doesn't exist but database has other employees
+                // This might have been hard-deleted, but with soft deletes we should restore it
+                // Only skip if we're certain it was intentionally hard-deleted
+                // For now, let's restore it since we're using soft deletes
+                console.log(`Restoring employee with emp_id: ${row.emp_id} - exists in PostgreSQL but not in SQLite`);
+                // Continue to insert below
+              }
             }
           }
           // Insert new record
