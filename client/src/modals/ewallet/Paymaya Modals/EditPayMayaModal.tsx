@@ -274,13 +274,11 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
             date: formData.date,
         };
 
-        onEditRecord(record.id, updatedRecord);
+        setIsClosing(true);
         setTimeout(() => {
-            setIsClosing(true);
-            setTimeout(() => {
-                onClose();
-            }, 300);
-        }, 100);
+            onEditRecord(record.id, updatedRecord);
+            onClose();
+        }, 200);
     };
 
     const handleCancel = () => {

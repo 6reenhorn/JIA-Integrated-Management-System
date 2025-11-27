@@ -109,25 +109,25 @@
   }
 }
 
-@keyframes slideUp {
+@keyframes checkin-in {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
 }
 
-@keyframes slideDown {
+@keyframes checkin-out {
   from {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
   to {
     opacity: 0;
-    transform: translateY(20px);
+    transform: scale(0.95);
   }
 }
 
@@ -140,33 +140,41 @@
 }
 
 .modal-content {
-  animation: slideUp 0.3s ease-out;
+  animation: checkin-in 0.3s ease-out;
 }
 
 .modal-content-out {
-  animation: slideDown 0.3s ease-out;
+  animation: checkin-out 0.3s ease-out;
+}
+
+.animate-checkin-in {
+  animation: checkin-in 0.3s ease-out forwards;
+}
+
+.animate-checkin-out {
+  animation: checkin-out 0.3s ease-in forwards;
 }
 
 /* Modal animations */
-@keyframes modalSlideIn {
+@keyframes modal-in {
   from {
     opacity: 0;
-    transform: translateY(-20px) scale(0.95);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1);
   }
 }
 
-@keyframes modalSlideOut {
+@keyframes modal-out {
   from {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1);
   }
   to {
     opacity: 0;
-    transform: translateY(-20px) scale(0.95);
+    transform: scale(0.95);
   }
 }
 
@@ -195,11 +203,11 @@
 
 /* Utility classes for animations */
 .animate-modal-in {
-  animation: modalSlideIn 0.3s ease-out;
+  animation: modal-in 0.2s ease-out forwards;
 }
 
 .animate-modal-out {
-  animation: modalSlideOut 0.3s ease-out;
+  animation: modal-out 0.2s ease-in forwards;
 }
 
 .animate-dropdown-in {
