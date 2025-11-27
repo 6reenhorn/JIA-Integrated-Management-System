@@ -3,17 +3,54 @@ import { dbHelper } from '../db/dbHelper';
 
 const router: Router = express.Router();
 
-// Helper function to format date
-const formatDate = (dateStr: string): string => {
-  if (!dateStr) return '';
+// Helper function to format date - handles Date objects, strings, and various formats
+const formatDate = (dateValue: string | Date | null | undefined): string => {
+  if (!dateValue) return '';
+  
   try {
+    // If it's already a Date object
+    if (dateValue instanceof Date) {
+      if (isNaN(dateValue.getTime())) return '';
+      const year = dateValue.getFullYear();
+      const month = dateValue.getMonth() + 1;
+      const day = dateValue.getDate();
+      
+      // Validate that we got valid numbers BEFORE creating the string
+      if (isNaN(year) || isNaN(month) || isNaN(day) || year < 1970 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return '';
+      
+      // Now safely create the formatted string
+      const monthStr = String(month).padStart(2, '0');
+      const dayStr = String(day).padStart(2, '0');
+      return `${year}-${monthStr}-${dayStr}`;
+    }
+    
+    // If it's a string
+    const dateStr = String(dateValue).trim();
+    if (!dateStr || dateStr === 'null' || dateStr === 'undefined' || dateStr === 'NaN' || dateStr.includes('NaN')) return '';
+    
+    // If it's already in YYYY-MM-DD format, return it (remove time part if present)
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+      return dateStr.split('T')[0].split(' ')[0]; // Remove time part if present
+    }
+    
+    // Try parsing as a date
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  } catch {
-    return dateStr;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    // Validate that we got valid numbers BEFORE creating the string
+    if (isNaN(year) || isNaN(month) || isNaN(day) || year < 1970 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return '';
+    
+    // Now safely create the formatted string
+    const monthStr = String(month).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    return `${year}-${monthStr}-${dayStr}`;
+  } catch (error) {
+    console.error('Error formatting date in paymaya route:', error, dateValue);
+    return '';
   }
 };
 

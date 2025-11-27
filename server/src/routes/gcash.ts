@@ -3,17 +3,92 @@ import { dbHelper } from '../db/dbHelper';
 
 const router: Router = express.Router();
 
-// Helper function to format date
-const formatDate = (dateStr: string): string => {
-  if (!dateStr) return '';
+// Helper function to format date - handles Date objects, strings, and various formats
+const formatDate = (dateValue: string | Date | null | undefined): string => {
+  if (!dateValue) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('GCash formatDate: received null/undefined/empty value');
+    }
+    return '';
+  }
+  
   try {
+    // If it's already a Date object
+    if (dateValue instanceof Date) {
+      if (isNaN(dateValue.getTime())) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('GCash formatDate: Invalid Date object');
+        }
+        return '';
+      }
+      const year = dateValue.getFullYear();
+      const month = dateValue.getMonth() + 1;
+      const day = dateValue.getDate();
+      
+      // Validate that we got valid numbers BEFORE creating the string
+      if (isNaN(year) || isNaN(month) || isNaN(day) || year < 1970 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('GCash formatDate: Invalid date values in Date object', { year, month, day });
+        }
+        return '';
+      }
+      
+      // Now safely create the formatted string
+      const monthStr = String(month).padStart(2, '0');
+      const dayStr = String(day).padStart(2, '0');
+      return `${year}-${monthStr}-${dayStr}`;
+    }
+    
+    // If it's a string
+    const dateStr = String(dateValue).trim();
+    if (!dateStr || dateStr === 'null' || dateStr === 'undefined' || dateStr === 'NaN' || dateStr.includes('NaN')) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('GCash formatDate: Invalid string value (contains NaN)', dateStr);
+      }
+      return '';
+    }
+    
+    // If it's already in YYYY-MM-DD format, return it (remove time part if present)
+    // Match YYYY-MM-DD with optional time part (T or space)
+    const ymdMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})(?:T|\s|$)/);
+    if (ymdMatch) {
+      // Validate the date parts are reasonable
+      const year = parseInt(ymdMatch[1], 10);
+      const month = parseInt(ymdMatch[2], 10);
+      const day = parseInt(ymdMatch[3], 10);
+      if (year >= 1970 && year <= 2100 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        return `${ymdMatch[1]}-${ymdMatch[2]}-${ymdMatch[3]}`;
+      }
+    }
+    
+    // Try parsing as a date
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('GCash formatDate: Failed to parse date string', dateStr);
+      }
+      return '';
+    }
+    
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  } catch {
-    return dateStr;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    // Validate that we got valid numbers BEFORE creating the string
+    if (isNaN(year) || isNaN(month) || isNaN(day) || year < 1970 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('GCash formatDate: Invalid date values after parsing', { year, month, day, original: dateStr });
+      }
+      return '';
+    }
+    
+    // Now safely create the formatted string
+    const monthStr = String(month).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    return `${year}-${monthStr}-${dayStr}`;
+  } catch (error) {
+    console.error('Error formatting date in gcash route:', error, dateValue);
+    return '';
   }
 };
 
@@ -21,15 +96,23 @@ const formatDate = (dateStr: string): string => {
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const rows = await dbHelper.query('SELECT * FROM gcash_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
-    const records = rows.map((row: any) => ({
-      id: row.id.toString(),
-      amount: parseFloat(row.amount || 0),
-      serviceCharge: parseFloat(row.service_charge || 0),
-      transactionType: row.transaction_type,
-      chargeMOP: row.charge_mop,
-      referenceNumber: row.reference_number || '',
-      date: formatDate(row.date)
-    }));
+    const records = rows.map((row: any) => {
+      const formattedDate = formatDate(row.date);
+      // Debug: log the date value to see what format it's in
+      if (process.env.NODE_ENV === 'development' && rows.indexOf(row) === 0) {
+        console.log('Sample GCash date - Raw:', row.date, 'Type:', typeof row.date, 'Is Date:', row.date instanceof Date, 'Formatted:', formattedDate);
+      }
+      
+      return {
+        id: row.id.toString(),
+        amount: parseFloat(row.amount || 0),
+        serviceCharge: parseFloat(row.service_charge || 0),
+        transactionType: row.transaction_type,
+        chargeMOP: row.charge_mop,
+        referenceNumber: row.reference_number || '',
+        date: formattedDate || '' // Return empty string instead of undefined
+      };
+    });
     res.json(records);
   } catch (err) {
     console.error('Error fetching GCash records:', err);

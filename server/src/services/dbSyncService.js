@@ -336,16 +336,29 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
       []
     );
     
-    // Get all records that exist in SQLite
+    // Get all records that exist in SQLite (including soft-deleted ones to check)
     const sqliteQuery = hasDeletedAt
-      ? `SELECT ${idField} FROM ${tableName} WHERE deleted_at IS NULL`
+      ? `SELECT ${idField}, deleted_at FROM ${tableName}`
       : `SELECT ${idField} FROM ${tableName}`;
     const allSqliteRecords = await sqliteAll(sqliteQuery, []);
     
-    const sqliteIds = new Set(allSqliteRecords.map(r => String(r[idField])));
+    // Only consider non-deleted records as "existing"
+    const nonDeletedSqliteIds = new Set(
+      allSqliteRecords
+        .filter(r => !hasDeletedAt || !r.deleted_at)
+        .map(r => String(r[idField]))
+    );
+    
+    // Also track soft-deleted records - we don't want to restore these from PostgreSQL
+    const softDeletedIds = new Set(
+      allSqliteRecords
+        .filter(r => hasDeletedAt && r.deleted_at)
+        .map(r => String(r[idField]))
+    );
+    
     const missingIds = allPgRecords.rows
       .map(r => String(r[idField]))
-      .filter(id => !sqliteIds.has(id));
+      .filter(id => !nonDeletedSqliteIds.has(id) && !softDeletedIds.has(id)); // Don't restore soft-deleted records
     
     // If there are missing records, fetch them
     let missingRecords = [];
@@ -358,7 +371,7 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
       const missingResult = await pool.query(missingQuery, missingIds);
       missingRecords = missingResult.rows;
       if (missingRecords.length > 0) {
-        console.log(`Found ${missingRecords.length} ${tableName} records in PostgreSQL that don't exist in SQLite`);
+        console.log(`Found ${missingRecords.length} ${tableName} records in PostgreSQL that don't exist in SQLite (excluding ${softDeletedIds.size} soft-deleted local records)`);
       }
     }
     
@@ -392,22 +405,61 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
         }
         
         // Check if the record exists and is not deleted
+        // Also check if it was soft-deleted locally - if so, don't restore it
         const deletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
         const existing = await sqliteAll(
-          `SELECT 1 FROM ${tableName} WHERE ${idField} = ? ${deletedAtFilter}`,
+          `SELECT 1, deleted_at FROM ${tableName} WHERE ${idField} = ?`,
           [row[idField]]
         );
 
-        if (existing.length > 0) {
+        // If record exists and is soft-deleted locally, skip restoring it from PostgreSQL
+        if (existing.length > 0 && hasDeletedAt && existing[0].deleted_at) {
+          console.log(`Skipping ${tableName} record ${row[idField]} - was soft-deleted locally, not restoring from PostgreSQL`);
+          continue;
+        }
+
+        if (existing.length > 0 && (!hasDeletedAt || !existing[0].deleted_at)) {
           // Update existing record (only if not deleted)
+          // Exclude idField and updated_at (we set updated_at separately)
           const updateFields = fields
-            .filter(f => f !== idField)
+            .filter(f => f !== idField && f !== 'updated_at')
             .map(f => `${f} = ?`)
             .join(', ');
           
           const updateValues = fields
-            .filter(f => f !== idField)
-            .map(f => row[f] === undefined ? null : row[f]);
+            .filter(f => f !== idField && f !== 'updated_at')
+            .map(f => {
+              const value = row[f];
+              // Format date fields when syncing from PostgreSQL to SQLite
+              if (f === 'date' || f === 'payment_date') {
+                if (value === null || value === undefined) return null;
+                // If it's a Date object, convert to YYYY-MM-DD
+                if (value instanceof Date) {
+                  if (isNaN(value.getTime())) return null;
+                  const year = value.getFullYear();
+                  const month = String(value.getMonth() + 1).padStart(2, '0');
+                  const day = String(value.getDate()).padStart(2, '0');
+                  return `${year}-${month}-${day}`;
+                }
+                // If it's already a string in YYYY-MM-DD format, return it
+                if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+                  return value.split('T')[0].split(' ')[0];
+                }
+                // Try to parse and format
+                try {
+                  const date = new Date(value);
+                  if (!isNaN(date.getTime())) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                  }
+                } catch (e) {
+                  // If parsing fails, return the original value
+                }
+              }
+              return value === undefined ? null : value;
+            });
           
           const updateDeletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
           const updateSql = `
@@ -440,7 +492,38 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             // Include synced column with value 1 (pulled from PostgreSQL, so already synced)
             const insertFields = [...fields, 'synced'].join(', ');
             const placeholders = fields.map(() => '?').concat('?').join(', ');
-            const insertValues = fields.map(f => row[f] === undefined ? null : row[f]).concat(1);
+            const insertValues = fields.map(f => {
+              const value = row[f];
+              // Format date fields when syncing from PostgreSQL to SQLite
+              if (f === 'date' || f === 'payment_date') {
+                if (value === null || value === undefined) return null;
+                // If it's a Date object, convert to YYYY-MM-DD
+                if (value instanceof Date) {
+                  if (isNaN(value.getTime())) return null;
+                  const year = value.getFullYear();
+                  const month = String(value.getMonth() + 1).padStart(2, '0');
+                  const day = String(value.getDate()).padStart(2, '0');
+                  return `${year}-${month}-${day}`;
+                }
+                // If it's already a string in YYYY-MM-DD format, return it
+                if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+                  return value.split('T')[0].split(' ')[0];
+                }
+                // Try to parse and format
+                try {
+                  const date = new Date(value);
+                  if (!isNaN(date.getTime())) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                  }
+                } catch (e) {
+                  // If parsing fails, return the original value
+                }
+              }
+              return value === undefined ? null : value;
+            }).concat(1);
             
             const insertSql = `
               INSERT OR IGNORE INTO ${tableName} (${insertFields})
@@ -458,7 +541,38 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
                 .join(', ');
               const updateValues = fields
                 .filter(f => f !== idField)
-                .map(f => row[f] === undefined ? null : row[f]);
+                .map(f => {
+                  const value = row[f];
+                  // Format date fields when syncing from PostgreSQL to SQLite
+                  if (f === 'date' || f === 'payment_date') {
+                    if (value === null || value === undefined) return null;
+                    // If it's a Date object, convert to YYYY-MM-DD
+                    if (value instanceof Date) {
+                      if (isNaN(value.getTime())) return null;
+                      const year = value.getFullYear();
+                      const month = String(value.getMonth() + 1).padStart(2, '0');
+                      const day = String(value.getDate()).padStart(2, '0');
+                      return `${year}-${month}-${day}`;
+                    }
+                    // If it's already a string in YYYY-MM-DD format, return it
+                    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+                      return value.split('T')[0].split(' ')[0];
+                    }
+                    // Try to parse and format
+                    try {
+                      const date = new Date(value);
+                      if (!isNaN(date.getTime())) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                      }
+                    } catch (e) {
+                      // If parsing fails, return the original value
+                    }
+                  }
+                  return value === undefined ? null : value;
+                });
               
               const updateSql = `
                 UPDATE ${tableName} 
@@ -525,12 +639,62 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
   }
 };
 
+// Helper function to convert timestamp numbers to ISO date strings
+const formatDateValue = (value, fieldName) => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  
+  // Check if it's a date/timestamp field
+  const isDateField = fieldName === 'created_at' || fieldName === 'updated_at' || 
+                      fieldName === 'deleted_at' || fieldName === 'date' || 
+                      fieldName === 'payment_date' || fieldName === 'time_in' || 
+                      fieldName === 'time_out';
+  
+  if (!isDateField) {
+    return value;
+  }
+  
+  // If it's already a string that looks like a date, return it
+  if (typeof value === 'string') {
+    // Check if it's already an ISO string or valid date string
+    if (value.includes('T') || value.match(/^\d{4}-\d{2}-\d{2}/)) {
+      return value;
+    }
+    // Try to parse it as a date
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+    return value;
+  }
+  
+  // If it's a number, check if it's a timestamp (milliseconds since epoch)
+  if (typeof value === 'number') {
+    // Timestamps are typically large numbers (milliseconds since 1970)
+    // Check if it's a reasonable timestamp (between 1970 and 2100)
+    const minTimestamp = new Date('1970-01-01').getTime();
+    const maxTimestamp = new Date('2100-01-01').getTime();
+    
+    if (value >= minTimestamp && value <= maxTimestamp) {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+    }
+    // If it's a small number, it might be a day/month/year, not a timestamp
+    // Return as is for non-timestamp numbers
+    return value;
+  }
+  
+  return value;
+};
+
 // Push sync: Push unsynced SQLite records to PostgreSQL
 const pushTableToPostgres = async (tableName, idField, fields) => {
   try {
     console.log(`Pushing unsynced ${tableName} records to PostgreSQL...`);
     
-    // Get unsynced records from SQLite (synced = 0 or NULL)
     // Check if deleted_at column exists first
     let hasDeletedAt = true;
     try {
@@ -542,6 +706,40 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
     }
     
     const deletedAtFilter = hasDeletedAt ? 'AND deleted_at IS NULL' : '';
+    
+    // First, check for records that exist in SQLite but not in PostgreSQL
+    // These should be marked as unsynced even if they have synced = 1
+    const allSqliteRecords = await sqliteAll(
+      `SELECT ${idField} FROM ${tableName} ${deletedAtFilter ? 'WHERE deleted_at IS NULL' : ''}`,
+      []
+    );
+    
+    if (allSqliteRecords.length > 0) {
+      const sqliteIds = allSqliteRecords.map(r => r[idField]).filter(id => id != null);
+      if (sqliteIds.length > 0) {
+        // Check which records exist in PostgreSQL
+        const placeholders = sqliteIds.map((_, i) => `$${i + 1}`).join(', ');
+        const pgCheck = await pgPool.query(
+          `SELECT ${idField} FROM ${tableName} WHERE ${idField} IN (${placeholders}) AND deleted_at IS NULL`,
+          sqliteIds
+        );
+        
+        const pgIds = new Set(pgCheck.rows.map(r => String(r[idField])));
+        const missingInPg = sqliteIds.filter(id => !pgIds.has(String(id)));
+        
+        // Mark records that exist in SQLite but not in PostgreSQL as unsynced
+        if (missingInPg.length > 0) {
+          const updatePlaceholders = missingInPg.map(() => '?').join(', ');
+          await sqliteRun(
+            `UPDATE ${tableName} SET synced = 0 WHERE ${idField} IN (${updatePlaceholders}) ${deletedAtFilter}`,
+            missingInPg
+          );
+          console.log(`Marked ${missingInPg.length} ${tableName} records as unsynced (exist in SQLite but not in PostgreSQL)`);
+        }
+      }
+    }
+    
+    // Get unsynced records from SQLite (synced = 0 or NULL)
     const unsyncedRecords = await sqliteAll(
       `SELECT * FROM ${tableName} WHERE (synced = 0 OR synced IS NULL) ${deletedAtFilter}`,
       []
@@ -588,24 +786,105 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
           if (f === 'beginnings' && typeof value === 'object' && value !== null) {
             return JSON.stringify(value);
           }
-          return value === undefined ? null : value;
+          // Convert month name to number for payroll_records
+          if (f === 'month' && tableName === 'payroll_records') {
+            if (typeof value === 'string') {
+              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                 'July', 'August', 'September', 'October', 'November', 'December'];
+              const monthIndex = monthNames.findIndex(m => m.toLowerCase() === value.toLowerCase());
+              if (monthIndex !== -1) {
+                return monthIndex + 1; // Return 1-12
+              }
+              // Try parsing as number
+              const numValue = parseInt(value, 10);
+              if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                return numValue;
+              }
+            }
+            // If it's already a number, return it
+            if (typeof value === 'number' && value >= 1 && value <= 12) {
+              return value;
+            }
+            // Default to null if can't convert
+            console.warn(`Invalid month value for payroll record: ${value}`);
+            return null;
+          }
+          // Convert year to integer for payroll_records
+          if (f === 'year' && tableName === 'payroll_records') {
+            if (typeof value === 'string') {
+              const numValue = parseInt(value, 10);
+              if (!isNaN(numValue) && numValue >= 1970 && numValue <= 2100) {
+                return numValue;
+              }
+            }
+            // If it's already a number, return it
+            if (typeof value === 'number' && value >= 1970 && value <= 2100) {
+              return value;
+            }
+            // Default to null if can't convert
+            console.warn(`Invalid year value for payroll record: ${value}`);
+            return null;
+          }
+          // Format date/timestamp fields
+          return formatDateValue(value === undefined ? null : value, f);
         });
 
         if (pgCheck.rows.length > 0) {
           // Update existing record in PostgreSQL
+          // Exclude idField, synced, and updated_at (we set updated_at separately)
           const updateFields = availableFields
-            .filter(f => f !== idField)
+            .filter(f => f !== idField && f !== 'synced' && f !== 'updated_at')
             .map((f, i) => `${f} = $${i + 1}`)
             .join(', ');
           const updateValues = availableFields
-            .filter(f => f !== idField)
+            .filter(f => f !== idField && f !== 'synced' && f !== 'updated_at')
             .map(f => {
               const value = record[f];
               // Handle JSON fields (like beginnings in juanpay_records)
-              if (f === 'beginnings' && typeof value === 'object' && value !== null) {
+              if (f === 'beginnings' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
                 return JSON.stringify(value);
               }
-              return value === undefined ? null : value;
+              // Convert month name to number for payroll_records
+              if (f === 'month' && tableName === 'payroll_records') {
+                if (typeof value === 'string') {
+                  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                     'July', 'August', 'September', 'October', 'November', 'December'];
+                  const monthIndex = monthNames.findIndex(m => m.toLowerCase() === value.toLowerCase());
+                  if (monthIndex !== -1) {
+                    return monthIndex + 1; // Return 1-12
+                  }
+                  // Try parsing as number
+                  const numValue = parseInt(value, 10);
+                  if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                    return numValue;
+                  }
+                }
+                // If it's already a number, return it
+                if (typeof value === 'number' && value >= 1 && value <= 12) {
+                  return value;
+                }
+                // Default to null if can't convert
+                console.warn(`Invalid month value for payroll record: ${value}`);
+                return null;
+              }
+              // Convert year to integer for payroll_records
+              if (f === 'year' && tableName === 'payroll_records') {
+                if (typeof value === 'string') {
+                  const numValue = parseInt(value, 10);
+                  if (!isNaN(numValue) && numValue >= 1970 && numValue <= 2100) {
+                    return numValue;
+                  }
+                }
+                // If it's already a number, return it
+                if (typeof value === 'number' && value >= 1970 && value <= 2100) {
+                  return value;
+                }
+                // Default to null if can't convert
+                console.warn(`Invalid year value for payroll record: ${value}`);
+                return null;
+              }
+              // Format date/timestamp fields
+              return formatDateValue(value === undefined ? null : value, f);
             });
           
           const whereIndex = updateValues.length + 1;
@@ -637,7 +916,8 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
                   if (f === 'beginnings' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
                     return JSON.stringify(value);
                   }
-                  return value === undefined ? null : value;
+                  // Format date/timestamp fields
+                  return formatDateValue(value === undefined ? null : value, f);
                 });
               
               const whereIndex = updateValues.length + 1;
@@ -682,9 +962,11 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
         );
         
         if (pgCheck.rows.length > 0) {
+          // Format deleted_at timestamp to ISO string
+          const formattedDeletedAt = formatDateValue(record.deleted_at, 'deleted_at');
           await pgPool.query(
             `UPDATE ${tableName} SET deleted_at = $1, updated_at = CURRENT_TIMESTAMP WHERE ${idField} = $2`,
-            [record.deleted_at, record[idField]]
+            [formattedDeletedAt, record[idField]]
           );
           await sqliteRun(
             `UPDATE ${tableName} SET synced = 1 WHERE ${idField} = ?`,

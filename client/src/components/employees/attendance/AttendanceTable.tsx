@@ -105,12 +105,36 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ employees, isLoading 
                 </td>
                 <td className="py-4 px-6 text-sm w-[120px] min-w-[120px]">
                   <div className="pf-5">
-                    {employee.timeIn}
+                    {employee.timeIn ? (() => {
+                      try {
+                        const date = new Date(employee.timeIn);
+                        if (!isNaN(date.getTime())) {
+                          return date.toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                          });
+                        }
+                      } catch {}
+                      return employee.timeIn;
+                    })() : '-'}
                   </div>
                 </td>
                 <td className="py-4 px-6 text-sm w-[120px] min-w-[120px]">
                   <div>
-                    {employee.timeOut}
+                    {employee.timeOut ? (() => {
+                      try {
+                        const date = new Date(employee.timeOut);
+                        if (!isNaN(date.getTime())) {
+                          return date.toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                          });
+                        }
+                      } catch {}
+                      return employee.timeOut;
+                    })() : '-'}
                   </div>
                 </td>
                 <td className="py-4 px-6 w-[100px] min-w-[100px]">
