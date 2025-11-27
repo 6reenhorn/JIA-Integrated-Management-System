@@ -204,22 +204,15 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const query = `
-      UPDATE gcash_records
-      SET amount = ?, service_charge = ?, transaction_type = ?, charge_mop = ?, reference_number = ?, date = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ? AND deleted_at IS NULL
-    `;
-    const values = [
+    // Use dbHelper.update which automatically marks records as synced = 0
+    await dbHelper.update('gcash_records', id, {
       amount,
-      serviceCharge || 0,
-      transactionType,
-      chargeMOP,
-      referenceNumber || null,
-      date,
-      id
-    ];
-
-    await dbHelper.run(query, values);
+      service_charge: serviceCharge || 0,
+      transaction_type: transactionType,
+      charge_mop: chargeMOP,
+      reference_number: referenceNumber || null,
+      date
+    });
     const updatedRecord = await dbHelper.getById('gcash_records', id);
     
     const result = {

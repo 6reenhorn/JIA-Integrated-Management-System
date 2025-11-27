@@ -163,8 +163,8 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Payroll record not found' });
     }
 
-    // Use hardDelete - this doesn't need to mark as unsynced since it's a hard delete
-    await dbHelper.hardDelete('payroll_records', idNum);
+    // Use soft delete which automatically marks as synced = 0 for sync
+    await dbHelper.delete('payroll_records', idNum);
 
     res.json({ message: 'Payroll record deleted successfully' });
   } catch (err) {

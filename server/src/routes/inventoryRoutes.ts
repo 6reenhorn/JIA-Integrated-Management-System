@@ -175,20 +175,23 @@ router.put('/categories/:categoryName', async (req: Request, res: Response): Pro
       }
     }
 
-    // 3. Update the category
-    await dbHelper.run(
-      'UPDATE categories SET category_name = ?, color = ? WHERE category_name = ?',
-      [name, color || '#6B7280', decodedCategoryName]
-    );
+    // 3. Update the category - use updateWhere since we're updating by category_name, not id
+    // First get the category id
+    const categoryId = categoryCheck.id;
+    await dbHelper.update('categories', categoryId, {
+      category_name: name,
+      color: color || '#6B7280'
+    });
     const updatedCategory = await dbHelper.queryOne(
       'SELECT * FROM categories WHERE category_name = ?',
       [name]
     );
 
     // 4. Update all inventory items that use this category (if name changed)
+    // Mark them as unsynced so they get pushed to PostgreSQL
     if (name !== decodedCategoryName) {
       await dbHelper.run(
-        'UPDATE inventory_items SET category = ? WHERE category = ?',
+        'UPDATE inventory_items SET category = ?, synced = 0 WHERE category = ?',
         [name, decodedCategoryName]
       );
     }
@@ -330,15 +333,15 @@ router.put('/sales/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const total = quantity * price;
 
-    const query = `
-      UPDATE sales_records
-      SET date = ?, product_name = ?, quantity = ?, price = ?, total = ?, 
-          payment_method = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `;
-    const values = [date, productName, quantity, price, total, paymentMethod, id];
-
-    await dbHelper.run(query, values);
+    // Use dbHelper.update which automatically marks records as synced = 0
+    await dbHelper.update('sales_records', id, {
+      date,
+      product_name: productName,
+      quantity,
+      price,
+      total,
+      payment_method: paymentMethod
+    });
     const updatedSale = await dbHelper.getById('sales_records', id);
     
     if (!updatedSale) {
@@ -487,15 +490,15 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     const totalAmount = stock * productPrice;
     const status = stock === 0 ? 'Out Of Stock' : stock <= 10 ? 'Low Stock' : 'In Stock';
 
-    const query = `
-      UPDATE inventory_items
-      SET product_name = ?, category = ?, stock = ?, status = ?, 
-          product_price = ?, total_amount = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `;
-    const values = [productName, category, stock, status, productPrice, totalAmount, id];
-
-    await dbHelper.run(query, values);
+    // Use dbHelper.update which automatically marks records as synced = 0
+    await dbHelper.update('inventory_items', id, {
+      product_name: productName,
+      category,
+      stock,
+      status,
+      product_price: productPrice,
+      total_amount: totalAmount
+    });
     const updatedItem = await dbHelper.getById('inventory_items', id);
     
     if (!updatedItem) {

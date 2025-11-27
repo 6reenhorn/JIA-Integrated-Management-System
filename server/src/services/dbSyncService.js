@@ -330,7 +330,13 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
       }
     }
     
-    // Get all non-deleted records from PostgreSQL
+    // Get ALL records from PostgreSQL (including deleted ones) to check what should exist
+    const allPgRecordsIncludingDeleted = await pool.query(
+      `SELECT ${idField}, deleted_at FROM ${tableName}`,
+      []
+    );
+    
+    // Get all non-deleted records from PostgreSQL (for finding missing records)
     const allPgRecords = await pool.query(
       `SELECT ${idField} FROM ${tableName} WHERE deleted_at IS NULL`,
       []
@@ -386,7 +392,74 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
     
     console.log(`Found ${allRecordsToSync.length} ${tableName} records to sync (${pgResult.rows.length} updated, ${missingRecords.length} missing)`);
 
+    // Check for records that exist in SQLite but are deleted in PostgreSQL
+    // These should be soft-deleted locally
+    if (hasDeletedAt) {
+      // Create a map of all PostgreSQL records: id -> deleted_at status
+      const pgRecordMap = new Map();
+      for (const pgRecord of allPgRecordsIncludingDeleted.rows) {
+        pgRecordMap.set(String(pgRecord[idField]), {
+          exists: true,
+          deleted: !!pgRecord.deleted_at
+        });
+      }
+      
+      const sqliteNonDeleted = allSqliteRecords.filter(r => !r.deleted_at);
+      
+      for (const sqliteRecord of sqliteNonDeleted) {
+        const sqliteId = String(sqliteRecord[idField]);
+        const pgRecord = pgRecordMap.get(sqliteId);
+        
+        // If record exists in SQLite but is deleted in PostgreSQL, soft-delete it locally
+        if (pgRecord && pgRecord.deleted) {
+          // Check if it's unsynced - if so, don't delete it (it will be pushed)
+          const existingCheck = await sqliteAll(
+            `SELECT synced FROM ${tableName} WHERE ${idField} = ?`,
+            [sqliteRecord[idField]]
+          );
+          
+          if (existingCheck.length > 0 && existingCheck[0].synced !== 0 && existingCheck[0].synced !== '0') {
+            // Soft-delete the record locally
+            await sqliteRun(
+              `UPDATE ${tableName} SET deleted_at = CURRENT_TIMESTAMP, synced = 1 WHERE ${idField} = ?`,
+              [sqliteRecord[idField]]
+            );
+            console.log(`Soft-deleted ${tableName} record ${sqliteRecord[idField]} - was deleted in PostgreSQL`);
+          } else {
+            console.log(`Skipping soft-delete of ${tableName} record ${sqliteRecord[idField]} - has unsynced local changes`);
+          }
+        } else if (!pgRecord) {
+          // Record exists in SQLite but doesn't exist at all in PostgreSQL
+          // This means it was deleted remotely (hard delete or never existed)
+          // Check if it's unsynced - if so, it might be a new local record, don't delete it
+          const existingCheck = await sqliteAll(
+            `SELECT synced, created_at FROM ${tableName} WHERE ${idField} = ?`,
+            [sqliteRecord[idField]]
+          );
+          
+          if (existingCheck.length > 0) {
+            const syncedValue = existingCheck[0].synced;
+            // If synced = 1, it was previously synced, so it was deleted remotely - soft-delete it
+            // If synced = 0 or NULL, it's a new local record that hasn't been pushed yet - keep it
+            if (syncedValue === 1 || syncedValue === '1') {
+              // Soft-delete the record locally
+              await sqliteRun(
+                `UPDATE ${tableName} SET deleted_at = CURRENT_TIMESTAMP, synced = 1 WHERE ${idField} = ?`,
+                [sqliteRecord[idField]]
+              );
+              console.log(`Soft-deleted ${tableName} record ${sqliteRecord[idField]} - doesn't exist in PostgreSQL (was previously synced)`);
+            } else {
+              console.log(`Keeping ${tableName} record ${sqliteRecord[idField]} - new local record (synced=${syncedValue}), not in PostgreSQL yet`);
+            }
+          }
+        }
+      }
+    }
+
     // Sync to SQLite
+    // Track which records were actually updated/inserted (not skipped)
+    const actuallySyncedIds = [];
+    
     for (const row of allRecordsToSync) {
       try {
         if (!row[idField]) {
@@ -406,9 +479,10 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
         
         // Check if the record exists and is not deleted
         // Also check if it was soft-deleted locally - if so, don't restore it
+        // Also check if it's unsynced (synced = 0) - if so, don't overwrite local changes
         const deletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
         const existing = await sqliteAll(
-          `SELECT 1, deleted_at FROM ${tableName} WHERE ${idField} = ?`,
+          `SELECT 1, deleted_at, synced FROM ${tableName} WHERE ${idField} = ?`,
           [row[idField]]
         );
 
@@ -418,16 +492,36 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           continue;
         }
 
+        // If record exists and is unsynced (synced = 0), skip overwriting it - it will be pushed later
+        if (existing.length > 0) {
+          const syncedValue = existing[0].synced;
+          const syncedType = typeof syncedValue;
+          console.log(`[DEBUG SYNC] ${tableName} record ${row[idField]}: existing=${existing.length > 0}, synced=${syncedValue} (type: ${syncedType}), deleted_at=${existing[0].deleted_at || 'null'}`);
+          
+          if (syncedValue === 0 || syncedValue === '0') {
+            console.log(`Skipping ${tableName} record ${row[idField]} - has unsynced local changes (synced=${syncedValue}), not overwriting with remote data`);
+            continue;
+          }
+        }
+
         if (existing.length > 0 && (!hasDeletedAt || !existing[0].deleted_at)) {
           // Update existing record (only if not deleted)
-          // Exclude idField and updated_at (we set updated_at separately)
+          // IMPORTANT: If the record has synced = 0, we should NOT overwrite it
+          // The check above should have skipped it, but let's be extra safe
+          if (existing[0].synced === 0 || existing[0].synced === '0') {
+            console.log(`[WARNING] ${tableName} record ${row[idField]} has synced=0 but reached update block - this should not happen!`);
+            continue;
+          }
+          
+          // Update existing record (only if not deleted)
+          // Exclude idField, updated_at, and synced (we preserve synced, set updated_at separately)
           const updateFields = fields
-            .filter(f => f !== idField && f !== 'updated_at')
+            .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
             .map(f => `${f} = ?`)
             .join(', ');
           
           const updateValues = fields
-            .filter(f => f !== idField && f !== 'updated_at')
+            .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
             .map(f => {
               const value = row[f];
               // Format date fields when syncing from PostgreSQL to SQLite
@@ -470,6 +564,8 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           
           await sqliteRun(updateSql, [...updateValues, row[idField]]);
           console.log(`Updated ${tableName} record with ${idField}:`, row[idField]);
+          // Track that this record was actually synced
+          actuallySyncedIds.push(row[idField]);
         } else {
           // For employees table, check if this employee was hard-deleted in SQLite
           // If an employee doesn't exist in SQLite but exists in PostgreSQL, it was likely hard-deleted
@@ -533,6 +629,8 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             const insertResult = await sqliteRun(insertSql, insertValues);
             if (insertResult.changes > 0) {
               console.log(`Inserted new ${tableName} record with ${idField}:`, row[idField]);
+              // Track that this record was actually synced
+              actuallySyncedIds.push(row[idField]);
             } else {
               // Record already exists, update it instead
               const updateFields = fields
@@ -581,6 +679,8 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
               `;
               await sqliteRun(updateSql, [...updateValues, row[idField]]);
               console.log(`Updated existing ${tableName} record with ${idField}:`, row[idField]);
+              // Track that this record was actually synced
+              actuallySyncedIds.push(row[idField]);
             }
           } catch (insertError) {
             if (insertError.code === 'SQLITE_CONSTRAINT' && insertError.message.includes('FOREIGN KEY')) {
@@ -605,17 +705,16 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
       }
     }
 
-    // Mark all synced records as synced=1 (records that were pulled from PostgreSQL)
-    if (allRecordsToSync.length > 0) {
-      const syncedIds = allRecordsToSync.map(row => row[idField]).filter(id => id != null);
-      if (syncedIds.length > 0) {
-        const placeholders = syncedIds.map(() => '?').join(', ');
-        await sqliteRun(`
-          UPDATE ${tableName} 
-          SET synced = 1 
-          WHERE ${idField} IN (${placeholders})
-        `, syncedIds);
-      }
+    // Mark only the records that were actually synced (updated/inserted) as synced=1
+    // Don't mark records that were skipped (e.g., because they had synced = 0)
+    if (actuallySyncedIds.length > 0) {
+      const placeholders = actuallySyncedIds.map(() => '?').join(', ');
+      await sqliteRun(`
+        UPDATE ${tableName} 
+        SET synced = 1 
+        WHERE ${idField} IN (${placeholders})
+      `, actuallySyncedIds);
+      console.log(`Marked ${actuallySyncedIds.length} ${tableName} records as synced=1`);
     }
 
     // Update last sync time for pull
@@ -649,7 +748,7 @@ const formatDateValue = (value, fieldName) => {
   const isDateField = fieldName === 'created_at' || fieldName === 'updated_at' || 
                       fieldName === 'deleted_at' || fieldName === 'date' || 
                       fieldName === 'payment_date' || fieldName === 'time_in' || 
-                      fieldName === 'time_out';
+                      fieldName === 'time_out' || fieldName === 'last_login';
   
   if (!isDateField) {
     return value;
@@ -740,15 +839,20 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
     }
     
     // Get unsynced records from SQLite (synced = 0 or NULL)
-    const unsyncedRecords = await sqliteAll(
-      `SELECT * FROM ${tableName} WHERE (synced = 0 OR synced IS NULL) ${deletedAtFilter}`,
-      []
-    );
+    const query = `SELECT * FROM ${tableName} WHERE (synced = 0 OR synced IS NULL) ${deletedAtFilter}`;
+    console.log(`[PUSH DEBUG] ${tableName} query: ${query}`);
+    const unsyncedRecords = await sqliteAll(query, []);
     
     // Debug: Check total records and their synced status
     const totalRecords = await sqliteAll(`SELECT COUNT(*) as count FROM ${tableName} WHERE deleted_at IS NULL`, []);
     const syncedCount = await sqliteAll(`SELECT COUNT(*) as count FROM ${tableName} WHERE synced = 1 AND deleted_at IS NULL`, []);
     const unsyncedCount = await sqliteAll(`SELECT COUNT(*) as count FROM ${tableName} WHERE (synced = 0 OR synced IS NULL) AND deleted_at IS NULL`, []);
+    
+    // Debug: For employees, also check by id to see if we can find the updated record
+    if (tableName === 'employees') {
+      const allEmployees = await sqliteAll(`SELECT id, emp_id, synced, name, deleted_at FROM employees WHERE deleted_at IS NULL`, []);
+      console.log(`[PUSH DEBUG] All employees synced status:`, allEmployees.map(e => ({ id: e.id, emp_id: e.emp_id, synced: e.synced, name: e.name })));
+    }
     
     console.log(`[${tableName}] Total: ${totalRecords[0]?.count || 0}, Synced: ${syncedCount[0]?.count || 0}, Unsynced: ${unsyncedCount[0]?.count || 0}`);
     console.log(`Found ${unsyncedRecords.length} unsynced ${tableName} records to push`);
@@ -770,18 +874,50 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
           continue;
         }
 
+        // Special handling for attendance table: map employee_id from SQLite to PostgreSQL
+        let mappedRecord = { ...record };
+        if (tableName === 'attendance' && record.employee_id) {
+          // Get the employee's emp_id from SQLite
+          const sqliteEmployee = await sqliteAll(
+            'SELECT emp_id FROM employees WHERE id = ?',
+            [record.employee_id]
+          );
+          
+          if (sqliteEmployee.length > 0) {
+            const empId = sqliteEmployee[0].emp_id;
+            // Find the employee's PostgreSQL id by emp_id
+            const pgEmployee = await pgPool.query(
+              'SELECT id FROM employees WHERE emp_id = $1 AND deleted_at IS NULL',
+              [empId]
+            );
+            
+            if (pgEmployee.rows.length > 0) {
+              mappedRecord.employee_id = pgEmployee.rows[0].id;
+              console.log(`[ATTENDANCE SYNC] Mapped employee_id: SQLite ${record.employee_id} (emp_id: ${empId}) -> PostgreSQL ${mappedRecord.employee_id}`);
+            } else {
+              console.warn(`[ATTENDANCE SYNC] Employee with emp_id ${empId} not found in PostgreSQL, skipping attendance record ${record.id}`);
+              continue;
+            }
+          } else {
+            console.warn(`[ATTENDANCE SYNC] Employee with id ${record.employee_id} not found in SQLite, skipping attendance record ${record.id}`);
+            continue;
+          }
+        }
+
         // Check if record exists in PostgreSQL
         const pgCheck = await pgPool.query(
           `SELECT ${idField} FROM ${tableName} WHERE ${idField} = $1`,
-          [record[idField]]
+          [mappedRecord[idField]]
         );
 
         // Filter out fields that don't exist in the record or are undefined
-        const availableFields = fields.filter(f => f !== 'synced' && record.hasOwnProperty(f));
+        // Use mappedRecord for attendance, regular record for others
+        const recordToUse = tableName === 'attendance' ? mappedRecord : record;
+        const availableFields = fields.filter(f => f !== 'synced' && recordToUse.hasOwnProperty(f));
         const fieldNames = availableFields.join(', ');
         const placeholders = availableFields.map((_, i) => `$${i + 1}`).join(', ');
         const values = availableFields.map(f => {
-          const value = record[f];
+          const value = recordToUse[f];
           // Handle JSON fields (like beginnings in juanpay_records)
           if (f === 'beginnings' && typeof value === 'object' && value !== null) {
             return JSON.stringify(value);
@@ -826,6 +962,37 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
             return null;
           }
           // Format date/timestamp fields
+          // Special handling for last_login which can be a timestamp number
+          if (f === 'last_login') {
+            if (value === null || value === undefined) {
+              return null;
+            }
+            // If it's a number (timestamp), convert to Date then ISO string
+            if (typeof value === 'number') {
+              const date = new Date(value);
+              if (!isNaN(date.getTime())) {
+                return date.toISOString();
+              }
+              return null;
+            }
+            // If it's already a string, try to parse it
+            if (typeof value === 'string') {
+              // If it's a timestamp string, parse it
+              if (/^\d+$/.test(value)) {
+                const date = new Date(parseInt(value, 10));
+                if (!isNaN(date.getTime())) {
+                  return date.toISOString();
+                }
+              }
+              // If it's already an ISO string or valid date format, return it
+              if (value.includes('T') || value.match(/^\d{4}-\d{2}-\d{2}/)) {
+                return value;
+              }
+            }
+            // Use formatDateValue for other cases
+            return formatDateValue(value === undefined ? null : value, f);
+          }
+          // Format date/timestamp fields
           return formatDateValue(value === undefined ? null : value, f);
         });
 
@@ -839,7 +1006,7 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
           const updateValues = availableFields
             .filter(f => f !== idField && f !== 'synced' && f !== 'updated_at')
             .map(f => {
-              const value = record[f];
+              const value = recordToUse[f];
               // Handle JSON fields (like beginnings in juanpay_records)
               if (f === 'beginnings' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
                 return JSON.stringify(value);
@@ -884,15 +1051,46 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
                 return null;
               }
               // Format date/timestamp fields
+              // Special handling for last_login which can be a timestamp number
+              if (f === 'last_login') {
+                if (value === null || value === undefined) {
+                  return null;
+                }
+                // If it's a number (timestamp), convert to Date then ISO string
+                if (typeof value === 'number') {
+                  const date = new Date(value);
+                  if (!isNaN(date.getTime())) {
+                    return date.toISOString();
+                  }
+                  return null;
+                }
+                // If it's already a string, try to parse it
+                if (typeof value === 'string') {
+                  // If it's a timestamp string, parse it
+                  if (/^\d+$/.test(value)) {
+                    const date = new Date(parseInt(value, 10));
+                    if (!isNaN(date.getTime())) {
+                      return date.toISOString();
+                    }
+                  }
+                  // If it's already an ISO string or valid date format, return it
+                  if (value.includes('T') || value.match(/^\d{4}-\d{2}-\d{2}/)) {
+                    return value;
+                  }
+                }
+                // Use formatDateValue for other cases
+                return formatDateValue(value === undefined ? null : value, f);
+              }
+              // Format date/timestamp fields
               return formatDateValue(value === undefined ? null : value, f);
             });
           
           const whereIndex = updateValues.length + 1;
           await pgPool.query(
             `UPDATE ${tableName} SET ${updateFields}, updated_at = CURRENT_TIMESTAMP WHERE ${idField} = $${whereIndex}`,
-            [...updateValues, record[idField]]
+            [...updateValues, mappedRecord[idField]]
           );
-          console.log(`Updated PostgreSQL ${tableName} record with ${idField}: ${record[idField]}`);
+          console.log(`Updated PostgreSQL ${tableName} record with ${idField}: ${mappedRecord[idField]}`);
         } else {
           // Insert new record into PostgreSQL
           try {
@@ -900,11 +1098,11 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
               `INSERT INTO ${tableName} (${fieldNames}) VALUES (${placeholders})`,
               values
             );
-            console.log(`Inserted new PostgreSQL ${tableName} record with ${idField}: ${record[idField]}`);
+            console.log(`Inserted new PostgreSQL ${tableName} record with ${idField}: ${mappedRecord[idField]}`);
           } catch (insertErr) {
             // If it's a unique constraint error, try updating instead
             if (insertErr.code === '23505' || insertErr.message.includes('duplicate key') || insertErr.message.includes('UNIQUE constraint')) {
-              console.log(`Record with ${idField} ${record[idField]} already exists in PostgreSQL, updating instead...`);
+              console.log(`Record with ${idField} ${mappedRecord[idField]} already exists in PostgreSQL, updating instead...`);
               const updateFields = availableFields
                 .filter(f => f !== idField)
                 .map((f, i) => `${f} = $${i + 1}`)
@@ -912,7 +1110,7 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
               const updateValues = availableFields
                 .filter(f => f !== idField)
                 .map(f => {
-                  const value = record[f];
+                  const value = recordToUse[f];
                   if (f === 'beginnings' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
                     return JSON.stringify(value);
                   }
@@ -923,21 +1121,22 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
               const whereIndex = updateValues.length + 1;
               await pgPool.query(
                 `UPDATE ${tableName} SET ${updateFields}, updated_at = CURRENT_TIMESTAMP WHERE ${idField} = $${whereIndex}`,
-                [...updateValues, record[idField]]
+                [...updateValues, mappedRecord[idField]]
               );
-              console.log(`Updated existing PostgreSQL ${tableName} record with ${idField}: ${record[idField]}`);
+              console.log(`Updated existing PostgreSQL ${tableName} record with ${idField}: ${mappedRecord[idField]}`);
             } else {
               throw insertErr;
             }
           }
         }
 
-        // Mark as synced in SQLite
+        // Mark as synced in SQLite (use original record idField, not mapped)
         await sqliteRun(
           `UPDATE ${tableName} SET synced = 1 WHERE ${idField} = ?`,
           [record[idField]]
         );
         pushedCount++;
+        console.log(`Successfully pushed ${tableName} record ${record[idField]} to PostgreSQL`);
       } catch (err) {
         console.error(`Error pushing ${tableName} record:`, {
           error: err.message,

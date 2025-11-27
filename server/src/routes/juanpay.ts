@@ -155,20 +155,14 @@ router.put('/:id', async (req: Request<{ id: string }, {}, JuanPayRequestBody>, 
       return;
     }
 
-    const query = `
-      UPDATE juanpay_records
-      SET date = ?, beginnings = ?, ending = ?, sales = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ? AND deleted_at IS NULL
-    `;
-    const values = [
+    // Use dbHelper.update which automatically marks records as synced = 0
+    const beginningsJson = Array.isArray(beginnings) ? JSON.stringify(beginnings) : beginnings;
+    await dbHelper.update('juanpay_records', id, {
       date,
-      JSON.stringify(beginnings || []),
-      ending || 0,
-      sales || 0,
-      id
-    ];
-
-    await dbHelper.run(query, values);
+      beginnings: beginningsJson,
+      ending: ending || 0,
+      sales: sales || 0
+    });
     const updatedRecord = await dbHelper.getById('juanpay_records', id);
     const result = transformRecord(updatedRecord);
 
