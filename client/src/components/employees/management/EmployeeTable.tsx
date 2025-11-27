@@ -161,7 +161,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         </thead>
         <tbody className="divide-y divide-gray-200">
           {employees.map((employee, index) => (
-            <tr key={employee.id} className="hover:bg-gray-50">
+            <tr key={employee.id || `employee-${index}`} className="hover:bg-gray-50">
               <td className="py-4 px-6 w-[220px]">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">

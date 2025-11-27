@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
     // Use provided name or construct from firstName/lastName
     const fullName = name || (firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || '');
 
-    const result = await dbHelper.insert('employees', {
+    const employeeData = {
       emp_id: empId,
       name: fullName,
       first_name: firstName || null,
@@ -71,10 +71,21 @@ router.post('/', async (req, res) => {
       contact_number: contactNumber || null,
       relationship: relationship || null,
       password: password || 'password123' // In a real app, hash the password
-    });
+    };
+
+    const result = await dbHelper.insert('employees', employeeData);
+    
+    // Debug: Verify the record was created with synced = 0
+    const verifyRecord = await dbHelper.queryOne('SELECT id, emp_id, synced FROM employees WHERE id = ?', [result.id]);
+    if (verifyRecord) {
+      console.log(`[SYNC DEBUG] New employee created - ID: ${verifyRecord.id}, emp_id: ${verifyRecord.emp_id}, synced: ${verifyRecord.synced}`);
+      if (verifyRecord.synced !== 0) {
+        console.warn(`[SYNC WARNING] New employee should have synced=0 but has synced=${verifyRecord.synced}`);
+      }
+    }
 
     const newEmployee = {
-      id: result.lastID || result.insertId,
+      id: result.id,
       empId,
       name: fullName,
       firstName: firstName || null,

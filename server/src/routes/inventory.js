@@ -129,7 +129,7 @@ router.put('/categories/:categoryName', async (req, res) => {
     // Update inventory items if name changed
     if (name !== decodedCategoryName) {
       await dbHelper.run(
-        'UPDATE inventory_items SET category = ? WHERE category = ?',
+        'UPDATE inventory_items SET category = ?, synced = 0 WHERE category = ?',
         [name, decodedCategoryName]
       );
     }
@@ -208,7 +208,7 @@ router.post('/sales', async (req, res) => {
 
     // Update inventory
     await dbHelper.run(
-      'UPDATE inventory_items SET stock=?, status=?, total_amount=? WHERE id=?',
+      'UPDATE inventory_items SET stock=?, status=?, total_amount=?, synced=0 WHERE id=?',
       [newStock, newStatus, newTotalAmount, prod.id]
     );
 
@@ -303,16 +303,16 @@ router.put('/sales/:id', async (req, res) => {
     const newTotal = newStock * item.product_price;
 
     await dbHelper.run(
-      'UPDATE inventory_items SET stock=?, status=?, total_amount=? WHERE id=?',
+      'UPDATE inventory_items SET stock=?, status=?, total_amount=?, synced=0 WHERE id=?',
       [newStock, newStatus, newTotal, item.id]
     );
 
-    const total = quantity * price;
-    await dbHelper.run(`
-      UPDATE sales_records
-      SET date=?, product_name=?, quantity=?, price=?, total=?, payment_method=?
-      WHERE id=?
-    `, [date, productName, quantity, price, total, paymentMethod, saleId]);
+      const total = quantity * price;
+      await dbHelper.run(`
+        UPDATE sales_records
+        SET date=?, product_name=?, quantity=?, price=?, total=?, payment_method=?, synced=0
+        WHERE id=?
+      `, [date, productName, quantity, price, total, paymentMethod, saleId]);
 
     const updatedSale = await dbHelper.getById('sales_records', saleId);
     if (!updatedSale) {
@@ -349,7 +349,8 @@ router.delete('/sales/:id', async (req, res) => {
             WHEN (stock + ?) = 0 THEN 'Out Of Stock'
             WHEN (stock + ?) <= COALESCE(minimum_stock,5) THEN 'Low Stock'
             ELSE 'In Stock'
-          END
+          END,
+          synced = 0
       WHERE product_name = ?
     `, [sale.quantity, sale.quantity, sale.quantity, sale.quantity, sale.product_name]);
 

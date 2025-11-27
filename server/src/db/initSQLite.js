@@ -25,6 +25,8 @@ const createEmployeesTable = async () => {
       role TEXT NOT NULL,
       department TEXT,
       contact TEXT,
+      email TEXT,
+      phone TEXT,
       status TEXT CHECK(status IN ('Active', 'Inactive')) DEFAULT 'Active',
       last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       avatar TEXT,
@@ -56,6 +58,16 @@ const createEmployeesTable = async () => {
     }
     try {
       await dbHelper.run('ALTER TABLE employees ADD COLUMN last_name TEXT');
+    } catch (err) {
+      // Column already exists, ignore
+    }
+    try {
+      await dbHelper.run('ALTER TABLE employees ADD COLUMN email TEXT');
+    } catch (err) {
+      // Column already exists, ignore
+    }
+    try {
+      await dbHelper.run('ALTER TABLE employees ADD COLUMN phone TEXT');
     } catch (err) {
       // Column already exists, ignore
     }

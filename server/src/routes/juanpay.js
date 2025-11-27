@@ -14,11 +14,56 @@ const formatDatePH = (date) => {
 };
 
 // Helper function to safely parse JSON
-const safeJsonParse = (str, defaultValue = []) => {
+const safeJsonParse = (value, defaultValue = []) => {
   try {
-    return str ? JSON.parse(str) : defaultValue;
+    // If it's already an array, return it
+    if (Array.isArray(value)) {
+      return value;
+    }
+    // If it's null or undefined, return default
+    if (value === null || value === undefined) {
+      return defaultValue;
+    }
+    // If it's already an object (but not an array), it might be a parsed JSON object
+    // Check if it looks like it should be an array
+    if (typeof value === 'object') {
+      // If it has a length property and numeric keys, it might be an array-like object
+      if (value.length !== undefined && typeof value.length === 'number') {
+        try {
+          return Array.from(value);
+        } catch {
+          // If conversion fails, try to stringify and parse
+          return JSON.parse(JSON.stringify(value));
+        }
+      }
+      // If it's a plain object, try to stringify and parse to ensure it's valid
+      // This handles cases where SQLite returns objects differently
+      const stringified = JSON.stringify(value);
+      if (stringified === '{}') {
+        return defaultValue;
+      }
+      return JSON.parse(stringified);
+    }
+    // If it's a string, try to parse it
+    if (typeof value === 'string') {
+      // If it's an empty string, return default
+      if (value.trim() === '' || value.trim() === 'null') {
+        return defaultValue;
+      }
+      // If the string is "[object Object]", it means an object was stringified incorrectly
+      if (value === '[object Object]') {
+        console.warn('Received "[object Object]" string, returning default');
+        return defaultValue;
+      }
+      return JSON.parse(value);
+    }
+    // For any other type, return default
+    return defaultValue;
   } catch (e) {
-    console.error('Error parsing JSON:', e);
+    // Don't log the error if it's just because value is already parsed
+    if (e.message && !e.message.includes('Unexpected token')) {
+      console.error('Error parsing JSON:', e.message, 'Value type:', typeof value);
+    }
     return defaultValue;
   }
 };
@@ -32,6 +77,7 @@ router.get('/', async (req, res) => {
 
     const records = rows.map(row => {
       // Safely parse the 'beginnings' field
+      // The safeJsonParse function now handles all cases
       const beginnings = safeJsonParse(row.beginnings, []);
       
       return {

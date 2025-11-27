@@ -18,6 +18,7 @@ interface SectionInfo {
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
+  const [dashboardKey, setDashboardKey] = useState<number>(0);
   const [showCheckOutConfirm, setShowCheckOutConfirm] = useState<boolean>(false);
 
   const [currentSection, setCurrentSection] = useState<SectionInfo>({ 
@@ -191,13 +192,14 @@ const Dashboard: React.FC = () => {
     // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
-        return <Overview />;
+        // Add key to force remount and refetch when dashboard is opened
+        return <Overview key={`dashboard-${dashboardKey}`} />;
       case 'settings':
         return <Settings />;
       case 'about':
         return <About activeSection="main" />;
       default:
-        return <Overview />;
+        return <Overview key={`dashboard-${dashboardKey}`} />;
     }
   };
 

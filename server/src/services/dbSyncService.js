@@ -20,9 +20,10 @@ const pgPool = new Pool({
 });
 
 // Initialize SQLite database with error handling
+// Use the same database path as dbHelper
 let sqliteDb;
 try {
-  const dbPath = path.join(__dirname, '../../db/database.sqlite');
+  const dbPath = path.join(__dirname, '../db/database.sqlite');
   ensureDirectoryExists(dbPath);
   sqliteDb = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -247,11 +248,43 @@ async function initializeSQLiteTables() {
       )
     `);
 
+    // Add synced column to all tables for tracking unsynced records
+    const tablesToAddSynced = [
+      'employees', 'gcash_records', 'paymaya_records', 'juanpay_records',
+      'inventory_items', 'categories', 'sales_records', 'payroll_records', 'attendance'
+    ];
+    
+    for (const table of tablesToAddSynced) {
+      try {
+        // Check if column already exists by querying table info
+        const tableInfo = await sqliteAll(`PRAGMA table_info(${table})`);
+        const hasSyncedColumn = tableInfo.some(col => col.name === 'synced');
+        
+        if (!hasSyncedColumn) {
+          await sqliteRun(`ALTER TABLE ${table} ADD COLUMN synced INTEGER DEFAULT 1`);
+          console.log(`Added synced column to ${table}`);
+        }
+      } catch (err) {
+        // Column already exists or other error, ignore duplicate column errors
+        if (!err.message.includes('duplicate column') && !err.message.includes('duplicate column name')) {
+          console.warn(`Could not add synced column to ${table}:`, err.message);
+        }
+      }
+    }
+
     // Create indexes for better performance
     await sqliteRun('CREATE INDEX IF NOT EXISTS idx_employees_emp_id ON employees(emp_id)');
     await sqliteRun('CREATE INDEX IF NOT EXISTS idx_attendance_employee_id ON attendance(employee_id)');
     await sqliteRun('CREATE INDEX IF NOT EXISTS idx_sales_records_date ON sales_records(date)');
     await sqliteRun('CREATE INDEX IF NOT EXISTS idx_payroll_records_emp_id ON payroll_records(emp_id)');
+    // Create index for synced column for faster queries
+    for (const table of tablesToAddSynced) {
+      try {
+        await sqliteRun(`CREATE INDEX IF NOT EXISTS idx_${table}_synced ON ${table}(synced)`);
+      } catch (err) {
+        // Ignore errors
+      }
+    }
 
     console.log('All SQLite tables created successfully');
   } catch (error) {
@@ -275,8 +308,8 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
       ? new Date(lastSyncResult[0].last_sync) 
       : new Date(0); // Unix epoch
 
-    // Get records from PostgreSQL that were updated since last sync
-    // Exclude records that have deleted_at set (soft-deleted records)
+    // Get records from PostgreSQL that were updated since last sync OR don't exist in SQLite
+    // First, get all records that were updated/created since last sync
     const pgQuery = `
       SELECT * FROM ${tableName} 
       WHERE (updated_at > $1 OR (updated_at IS NULL AND created_at > $1))
@@ -285,19 +318,83 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
     `;
     
     const pgResult = await pool.query(pgQuery, [lastSync.toISOString()]);
-    console.log(`Found ${pgResult.rows.length} ${tableName} records to sync`);
+    
+    // Also check for records that exist in PostgreSQL but not in SQLite (might have been missed)
+    // Check if deleted_at column exists in SQLite
+    let hasDeletedAt = true;
+    try {
+      await sqliteAll(`SELECT deleted_at FROM ${tableName} LIMIT 1`, []);
+    } catch (err) {
+      if (err.message.includes('no such column: deleted_at')) {
+        hasDeletedAt = false;
+      }
+    }
+    
+    // Get all non-deleted records from PostgreSQL
+    const allPgRecords = await pool.query(
+      `SELECT ${idField} FROM ${tableName} WHERE deleted_at IS NULL`,
+      []
+    );
+    
+    // Get all records that exist in SQLite
+    const sqliteQuery = hasDeletedAt
+      ? `SELECT ${idField} FROM ${tableName} WHERE deleted_at IS NULL`
+      : `SELECT ${idField} FROM ${tableName}`;
+    const allSqliteRecords = await sqliteAll(sqliteQuery, []);
+    
+    const sqliteIds = new Set(allSqliteRecords.map(r => String(r[idField])));
+    const missingIds = allPgRecords.rows
+      .map(r => String(r[idField]))
+      .filter(id => !sqliteIds.has(id));
+    
+    // If there are missing records, fetch them
+    let missingRecords = [];
+    if (missingIds.length > 0) {
+      const placeholders = missingIds.map((_, i) => `$${i + 1}`).join(', ');
+      const missingQuery = `
+        SELECT * FROM ${tableName} 
+        WHERE ${idField} IN (${placeholders}) AND deleted_at IS NULL
+      `;
+      const missingResult = await pool.query(missingQuery, missingIds);
+      missingRecords = missingResult.rows;
+      if (missingRecords.length > 0) {
+        console.log(`Found ${missingRecords.length} ${tableName} records in PostgreSQL that don't exist in SQLite`);
+      }
+    }
+    
+    // Combine both sets of records (avoid duplicates)
+    const allRecordsToSync = [...pgResult.rows];
+    const existingIds = new Set(pgResult.rows.map(r => String(r[idField])));
+    for (const record of missingRecords) {
+      if (!existingIds.has(String(record[idField]))) {
+        allRecordsToSync.push(record);
+      }
+    }
+    
+    console.log(`Found ${allRecordsToSync.length} ${tableName} records to sync (${pgResult.rows.length} updated, ${missingRecords.length} missing)`);
 
     // Sync to SQLite
-    for (const row of pgResult.rows) {
+    for (const row of allRecordsToSync) {
       try {
         if (!row[idField]) {
           console.warn(`Skipping ${tableName} record with missing ${idField}:`, row);
           continue;
         }
 
+        // Check if deleted_at column exists
+        let hasDeletedAt = true;
+        try {
+          await sqliteAll(`SELECT deleted_at FROM ${tableName} LIMIT 1`, []);
+        } catch (err) {
+          if (err.message.includes('no such column: deleted_at')) {
+            hasDeletedAt = false;
+          }
+        }
+        
         // Check if the record exists and is not deleted
+        const deletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
         const existing = await sqliteAll(
-          `SELECT 1 FROM ${tableName} WHERE ${idField} = ? AND (deleted_at IS NULL OR deleted_at = '')`,
+          `SELECT 1 FROM ${tableName} WHERE ${idField} = ? ${deletedAtFilter}`,
           [row[idField]]
         );
 
@@ -312,10 +409,11 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             .filter(f => f !== idField)
             .map(f => row[f] === undefined ? null : row[f]);
           
+          const updateDeletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
           const updateSql = `
             UPDATE ${tableName} 
             SET ${updateFields}, updated_at = CURRENT_TIMESTAMP
-            WHERE ${idField} = ? AND (deleted_at IS NULL OR deleted_at = '')
+            WHERE ${idField} = ? ${updateDeletedAtFilter}
           `;
           
           await sqliteRun(updateSql, [...updateValues, row[idField]]);
@@ -338,17 +436,38 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           }
           // Insert new record
           try {
-            const insertFields = fields.join(', ');
-            const placeholders = fields.map(() => '?').join(', ');
-            const insertValues = fields.map(f => row[f] === undefined ? null : row[f]);
+            // Use INSERT OR IGNORE to handle duplicate key errors gracefully
+            // Include synced column with value 1 (pulled from PostgreSQL, so already synced)
+            const insertFields = [...fields, 'synced'].join(', ');
+            const placeholders = fields.map(() => '?').concat('?').join(', ');
+            const insertValues = fields.map(f => row[f] === undefined ? null : row[f]).concat(1);
             
             const insertSql = `
-              INSERT INTO ${tableName} (${insertFields})
+              INSERT OR IGNORE INTO ${tableName} (${insertFields})
               VALUES (${placeholders})
             `;
             
-            await sqliteRun(insertSql, insertValues);
-            console.log(`Inserted new ${tableName} record with ${idField}:`, row[idField]);
+            const insertResult = await sqliteRun(insertSql, insertValues);
+            if (insertResult.changes > 0) {
+              console.log(`Inserted new ${tableName} record with ${idField}:`, row[idField]);
+            } else {
+              // Record already exists, update it instead
+              const updateFields = fields
+                .filter(f => f !== idField)
+                .map(f => `${f} = ?`)
+                .join(', ');
+              const updateValues = fields
+                .filter(f => f !== idField)
+                .map(f => row[f] === undefined ? null : row[f]);
+              
+              const updateSql = `
+                UPDATE ${tableName} 
+                SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1
+                WHERE ${idField} = ?
+              `;
+              await sqliteRun(updateSql, [...updateValues, row[idField]]);
+              console.log(`Updated existing ${tableName} record with ${idField}:`, row[idField]);
+            }
           } catch (insertError) {
             if (insertError.code === 'SQLITE_CONSTRAINT' && insertError.message.includes('FOREIGN KEY')) {
               console.warn(`Skipping ${tableName} record due to missing foreign key:`, {
@@ -372,7 +491,20 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
       }
     }
 
-    // Update last sync time
+    // Mark all synced records as synced=1 (records that were pulled from PostgreSQL)
+    if (allRecordsToSync.length > 0) {
+      const syncedIds = allRecordsToSync.map(row => row[idField]).filter(id => id != null);
+      if (syncedIds.length > 0) {
+        const placeholders = syncedIds.map(() => '?').join(', ');
+        await sqliteRun(`
+          UPDATE ${tableName} 
+          SET synced = 1 
+          WHERE ${idField} IN (${placeholders})
+        `, syncedIds);
+      }
+    }
+
+    // Update last sync time for pull
     await sqliteRun(`
       INSERT OR REPLACE INTO sync_metadata (table_name, last_sync)
       VALUES (?, CURRENT_TIMESTAMP)
@@ -381,7 +513,7 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
     return { 
       success: true, 
       table: tableName, 
-      synced: pgResult.rows.length 
+      synced: allRecordsToSync.length 
     };
   } catch (error) {
     console.error(`Error syncing table ${tableName}:`, error);
@@ -389,6 +521,165 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
       success: false, 
       table: tableName, 
       error: error.message 
+    };
+  }
+};
+
+// Push sync: Push unsynced SQLite records to PostgreSQL
+const pushTableToPostgres = async (tableName, idField, fields) => {
+  try {
+    console.log(`Pushing unsynced ${tableName} records to PostgreSQL...`);
+    
+    // Get unsynced records from SQLite (synced = 0 or NULL)
+    // Check if deleted_at column exists first
+    let hasDeletedAt = true;
+    try {
+      await sqliteAll(`SELECT deleted_at FROM ${tableName} LIMIT 1`, []);
+    } catch (err) {
+      if (err.message.includes('no such column: deleted_at')) {
+        hasDeletedAt = false;
+      }
+    }
+    
+    const deletedAtFilter = hasDeletedAt ? 'AND deleted_at IS NULL' : '';
+    const unsyncedRecords = await sqliteAll(
+      `SELECT * FROM ${tableName} WHERE (synced = 0 OR synced IS NULL) ${deletedAtFilter}`,
+      []
+    );
+    
+    // Debug: Check total records and their synced status
+    const totalRecords = await sqliteAll(`SELECT COUNT(*) as count FROM ${tableName} WHERE deleted_at IS NULL`, []);
+    const syncedCount = await sqliteAll(`SELECT COUNT(*) as count FROM ${tableName} WHERE synced = 1 AND deleted_at IS NULL`, []);
+    const unsyncedCount = await sqliteAll(`SELECT COUNT(*) as count FROM ${tableName} WHERE (synced = 0 OR synced IS NULL) AND deleted_at IS NULL`, []);
+    
+    console.log(`[${tableName}] Total: ${totalRecords[0]?.count || 0}, Synced: ${syncedCount[0]?.count || 0}, Unsynced: ${unsyncedCount[0]?.count || 0}`);
+    console.log(`Found ${unsyncedRecords.length} unsynced ${tableName} records to push`);
+    
+    // Debug: Log first few unsynced records if any
+    if (unsyncedRecords.length > 0) {
+      console.log(`[${tableName}] Sample unsynced records:`, unsyncedRecords.slice(0, 3).map(r => ({
+        id: r[idField],
+        synced: r.synced,
+        hasDeletedAt: r.deleted_at
+      })));
+    }
+    
+    let pushedCount = 0;
+    for (const record of unsyncedRecords) {
+      try {
+        if (!record[idField]) {
+          console.warn(`Skipping ${tableName} record with missing ${idField}`);
+          continue;
+        }
+
+        // Check if record exists in PostgreSQL
+        const pgCheck = await pgPool.query(
+          `SELECT ${idField} FROM ${tableName} WHERE ${idField} = $1`,
+          [record[idField]]
+        );
+
+        // Filter out fields that don't exist in the record or are undefined
+        const availableFields = fields.filter(f => f !== 'synced' && record.hasOwnProperty(f));
+        const fieldNames = availableFields.join(', ');
+        const placeholders = availableFields.map((_, i) => `$${i + 1}`).join(', ');
+        const values = availableFields.map(f => {
+          const value = record[f];
+          // Handle JSON fields (like beginnings in juanpay_records)
+          if (f === 'beginnings' && typeof value === 'object' && value !== null) {
+            return JSON.stringify(value);
+          }
+          return value === undefined ? null : value;
+        });
+
+        if (pgCheck.rows.length > 0) {
+          // Update existing record in PostgreSQL
+          const updateFields = availableFields
+            .filter(f => f !== idField)
+            .map((f, i) => `${f} = $${i + 1}`)
+            .join(', ');
+          const updateValues = availableFields
+            .filter(f => f !== idField)
+            .map(f => {
+              const value = record[f];
+              // Handle JSON fields (like beginnings in juanpay_records)
+              if (f === 'beginnings' && typeof value === 'object' && value !== null) {
+                return JSON.stringify(value);
+              }
+              return value === undefined ? null : value;
+            });
+          
+          const whereIndex = updateValues.length + 1;
+          await pgPool.query(
+            `UPDATE ${tableName} SET ${updateFields}, updated_at = CURRENT_TIMESTAMP WHERE ${idField} = $${whereIndex}`,
+            [...updateValues, record[idField]]
+          );
+          console.log(`Updated PostgreSQL ${tableName} record with ${idField}: ${record[idField]}`);
+        } else {
+          // Insert new record into PostgreSQL
+          await pgPool.query(
+            `INSERT INTO ${tableName} (${fieldNames}) VALUES (${placeholders})`,
+            values
+          );
+          console.log(`Inserted new PostgreSQL ${tableName} record with ${idField}: ${record[idField]}`);
+        }
+
+        // Mark as synced in SQLite
+        await sqliteRun(
+          `UPDATE ${tableName} SET synced = 1 WHERE ${idField} = ?`,
+          [record[idField]]
+        );
+        pushedCount++;
+      } catch (err) {
+        console.error(`Error pushing ${tableName} record:`, {
+          error: err.message,
+          idField: record[idField],
+          table: tableName
+        });
+        // Continue with next record
+      }
+    }
+
+    // Handle soft-deleted records - push deletions to PostgreSQL
+    const deletedRecordsQuery = hasDeletedAt
+      ? `SELECT ${idField}, deleted_at FROM ${tableName} WHERE deleted_at IS NOT NULL AND (synced = 0 OR synced IS NULL)`
+      : `SELECT ${idField} FROM ${tableName} WHERE 1=0`; // No deleted_at column, so no deleted records
+    const deletedRecords = await sqliteAll(deletedRecordsQuery, []);
+
+    for (const record of deletedRecords) {
+      try {
+        const pgCheck = await pgPool.query(
+          `SELECT ${idField} FROM ${tableName} WHERE ${idField} = $1`,
+          [record[idField]]
+        );
+        
+        if (pgCheck.rows.length > 0) {
+          await pgPool.query(
+            `UPDATE ${tableName} SET deleted_at = $1, updated_at = CURRENT_TIMESTAMP WHERE ${idField} = $2`,
+            [record.deleted_at, record[idField]]
+          );
+          await sqliteRun(
+            `UPDATE ${tableName} SET synced = 1 WHERE ${idField} = ?`,
+            [record[idField]]
+          );
+          console.log(`Pushed deletion of ${tableName} record ${idField}: ${record[idField]}`);
+          pushedCount++;
+        }
+      } catch (err) {
+        console.error(`Error pushing deletion for ${tableName} record:`, err.message);
+      }
+    }
+
+    return {
+      success: true,
+      table: tableName,
+      pushed: pushedCount
+    };
+  } catch (error) {
+    console.error(`Error pushing table ${tableName}:`, error);
+    return {
+      success: false,
+      table: tableName,
+      error: error.message
     };
   }
 };
@@ -415,16 +706,41 @@ const initializeSync = async () => {
       )
     `);
 
+    // Fix any records with NULL synced values (from before column was added)
+    // Set them to 1 (synced) since they're old records that should have been synced
+    const tablesToFix = [
+      'employees', 'gcash_records', 'paymaya_records', 'juanpay_records',
+      'inventory_items', 'categories', 'sales_records', 'payroll_records', 'attendance'
+    ];
+    
+    for (const table of tablesToFix) {
+      try {
+        const result = await sqliteRun(
+          `UPDATE ${table} SET synced = 1 WHERE synced IS NULL AND deleted_at IS NULL`
+        );
+        if (result.changes > 0) {
+          console.log(`Fixed ${result.changes} ${table} records with NULL synced values`);
+        }
+      } catch (err) {
+        // Table might not exist or column might not exist yet
+        if (!err.message.includes('no such column')) {
+          console.warn(`Could not fix NULL synced values in ${table}:`, err.message);
+        }
+      }
+    }
+
     // Define tables to sync with their fields and conflict fields
     const tables = [
       { 
         name: 'employees', 
         idField: 'emp_id',
-        fields: ['emp_id', 'name', 'role', 'contact', 'status', 'last_login', 'avatar', 
-                'address', 'salary', 'contact_name', 'contact_number', 'relationship', 'password',
+        fields: ['emp_id', 'name', 'first_name', 'last_name', 'role', 'department', 'contact', 
+                'email', 'phone', 'status', 'last_login', 'avatar', 'address', 'salary', 
+                'contact_name', 'contact_number', 'relationship', 'password',
                 'created_at', 'updated_at', 'deleted_at'],
-        conflictFields: ['name', 'role', 'contact', 'status', 'avatar', 'address', 
-                        'salary', 'contact_name', 'contact_number', 'relationship', 'password',
+        conflictFields: ['name', 'first_name', 'last_name', 'role', 'department', 'contact', 
+                        'email', 'phone', 'status', 'avatar', 'address', 'salary', 
+                        'contact_name', 'contact_number', 'relationship', 'password',
                         'updated_at', 'deleted_at']
       },
       { 
@@ -491,19 +807,30 @@ const initializeSync = async () => {
       }
     ];
 
-    // Sync each table
+    // Sync each table (bidirectional: pull from PostgreSQL, then push to PostgreSQL)
     const results = [];
     for (const table of tables) {
       try {
         console.log(`Syncing table: ${table.name}`);
-        const result = await syncTable(
+        
+        // Step 1: Pull from PostgreSQL to SQLite
+        const pullResult = await syncTable(
           table.name,
           table.idField,
           table.fields,
           table.conflictFields
         );
-        results.push(result);
-        console.log(`Successfully synced table: ${table.name}`);
+        results.push({ ...pullResult, direction: 'pull' });
+        
+        // Step 2: Push unsynced SQLite records to PostgreSQL
+        const pushResult = await pushTableToPostgres(
+          table.name,
+          table.idField,
+          table.fields
+        );
+        results.push({ ...pushResult, direction: 'push' });
+        
+        console.log(`Successfully synced table: ${table.name} (pulled: ${pullResult.synced || 0}, pushed: ${pushResult.pushed || 0})`);
       } catch (err) {
         console.error(`Error syncing table ${table.name}:`, err);
         results.push({ success: false, table: table.name, error: err.message });
@@ -511,7 +838,7 @@ const initializeSync = async () => {
       }
     }
     
-    console.log('Initial database sync completed');
+    console.log('Bidirectional database sync completed');
     return { success: true, results };
   } catch (error) {
     console.error('Error initializing sync:', error);
