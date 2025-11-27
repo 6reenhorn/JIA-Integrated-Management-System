@@ -290,18 +290,22 @@ useEffect(() => {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-[12px] font-bold">Price (₱)</label>
-                    <input
-                      type="number"
-                      value={formData.productPrice || ''}
-                      onChange={(e) => handleInputChange('productPrice', parseFloat(e.target.value) || 0)}
-                      disabled={isUpdating}
-                      min="0"
-                      step="0.01"
-                      className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  </div>
+                <div>
+                  <label className="text-[12px] font-bold">Price (₱)</label>
+                  <input
+                    type="text"
+                    value={formData.productPrice ? formData.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
+                    onChange={(e) => {
+                      // Remove all non-numeric characters except decimal point
+                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      // Parse to float and update
+                      handleInputChange('productPrice', parseFloat(value) || 0);
+                    }}
+                    disabled={isUpdating}
+                    placeholder="0.00"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-2">

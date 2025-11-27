@@ -242,10 +242,10 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                       </span>
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
-                      ₱{item.productPrice.toFixed(2)}
+                      ₱{item.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
-                      ₱{item.totalAmount.toFixed(2)}
+                      ₱{item.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-left text-sm w-[100px]">
                       <div className="flex justify-start space-x-2">

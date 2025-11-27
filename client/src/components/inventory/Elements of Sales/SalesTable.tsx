@@ -229,10 +229,10 @@ const SalesTable: React.FC<SalesTableProps> = ({
                       {record.quantity}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[120px]">
-                      ₱{record.price.toFixed(2)}
+                      ₱{record.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
-                      ₱{record.total.toFixed(2)}
+                      ₱{record.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
                       <div className="truncate">

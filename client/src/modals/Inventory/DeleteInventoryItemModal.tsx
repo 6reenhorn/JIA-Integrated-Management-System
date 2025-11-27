@@ -176,11 +176,11 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Price:</span>
-                                <div className="text-gray-900">₱{item?.productPrice.toFixed(2)}</div>
+                            <div className="text-gray-900">₱{item?.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Total Value:</span>
-                                <div className="text-gray-900 font-semibold">₱{item?.totalAmount.toFixed(2)}</div>
+                            <div className="text-gray-900 font-semibold">₱{item?.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                             </div>
                         </div>
                     </div>
