@@ -6,6 +6,7 @@ import CategoryActions from './CategoryActions';
 import CategoryFilters from './CategoryFilters';
 import DeleteCategoryModal from '../../../modals/Inventory/DeleteCategoryModal';
 import EditCategoryModal from '../../../modals/Inventory/EditCategoryModal';
+import Skeleton from '../../common/Skeleton';
 
 interface Category {
   name: string;
@@ -173,12 +174,12 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       setIsDeleting(true);
       try {
         await onDeleteCategory(categoryName);
-        setDeleteModalOpen(false);
-        setCategoryToDelete(null);
+        // Delete successful - modal will close automatically after animation
+        // The modal's useEffect will handle the closing animation when isDeleting becomes false
       } catch (error: unknown) {
         console.error('Error deleting category:', error);
         
-        // Close delete modal
+        // On error, close delete modal immediately (no animation needed for errors)
         setDeleteModalOpen(false);
         setCategoryToDelete(null);
         
@@ -199,15 +200,24 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
     }
   };
 
+  const handleCloseDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setCategoryToDelete(null);
+    setIsDeleting(false);
+  };
+
   const handleConfirmEdit = async (oldName: string, newName: string, color: string) => {
     if (onEditCategory) {
       setIsEditing(true);
       try {
         await onEditCategory(oldName, newName, color);
-        setEditModalOpen(false);
-        setCategoryToEdit(null);
+        // Edit successful - modal will close automatically after animation
       } catch (error: unknown) {
         console.error('Error editing category:', error);
+        
+        // On error, close modal immediately
+        setEditModalOpen(false);
+        setCategoryToEdit(null);
         
         // Show error message
         let errorMsg = 'Failed to update category. Please try again.';
@@ -225,6 +235,55 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
     }
   };
 
+  // Skeleton Card Component for category cards
+  const SkeletonCategoryCard = () => (
+    <LayoutCard>
+      {/* Category Header Skeleton */}
+      <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3 flex-1">
+            <Skeleton className="w-3 h-3 rounded-full" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-6 h-6" />
+            <Skeleton className="w-6 h-6" />
+          </div>
+        </div>
+      
+      {/* Stats Grid Skeleton */}
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="text-center">
+          <Skeleton className="h-9 mb-2 mx-auto w-16" />
+          <Skeleton className="h-4 mx-auto w-20" />
+        </div>
+        
+        <div className="text-center">
+          <Skeleton className="h-9 mb-2 mx-auto w-16" />
+          <Skeleton className="h-4 mx-auto w-24" />
+        </div>
+      </div>
+      
+      {/* Category Value Skeleton */}
+      <div className="pt-8">
+        <div className="flex justify-between items-center mb-4">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+        
+        <Skeleton className="h-4 w-32 mx-auto" />
+      </div>
+    </LayoutCard>
+  );
+
+  // Skeleton Card Component for header stats
+  const SkeletonStatCard = ({ isRedCard = false, showBottomSkeleton = false }) => (
+    <LayoutCard>
+      <Skeleton className="h-4 w-24 mb-2" />
+      <Skeleton className={`h-9 w-20 mb-2 ${isRedCard ? 'bg-red-200' : ''}`} />
+      {showBottomSkeleton && <Skeleton className="h-3 w-28" />}
+    </LayoutCard>
+  );
+
   const categoryContent = (
     <>
       <div className="bg-none rounded-l p-0 mt-4">
@@ -240,43 +299,11 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
           isRefreshing={isRefreshing}
         />
         
-        {isLoading ? (
+        {isLoading || isRefreshing ? (
           <div className="h-[392px] overflow-hidden p-6 mt-1 mb-8 border-t border-b border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {Array.from({ length: 8 }).map((_, index) => (
-                <LayoutCard key={`skeleton-${index}`}>
-                  {/* Category Header Skeleton */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-3 h-3 rounded-full bg-gray-200 animate-pulse" />
-                      <div className="h-5 bg-gray-200 rounded animate-pulse w-32"></div>
-                    </div>
-                    <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                  
-                  {/* Stats Grid Skeleton */}
-                  <div className="grid grid-cols-2 gap-6 mb-6">
-                    <div className="text-center">
-                      <div className="h-9 bg-gray-200 rounded animate-pulse mb-2 mx-auto w-16"></div>
-                      <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-20"></div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <div className="h-9 bg-gray-200 rounded animate-pulse mb-2 mx-auto w-16"></div>
-                      <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-24"></div>
-                    </div>
-                  </div>
-                  
-                  {/* Category Value Skeleton */}
-                  <div className="pt-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse w-28"></div>
-                      <div className="h-6 bg-gray-200 rounded animate-pulse w-24"></div>
-                    </div>
-                    
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mx-auto"></div>
-                  </div>
-                </LayoutCard>
+                <SkeletonCategoryCard key={`skeleton-${index}`} />
               ))}
             </div>
           </div>
@@ -372,10 +399,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       {/* Delete Category Modal */}
       <DeleteCategoryModal
         isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setCategoryToDelete(null);
-        }}
+        onClose={handleCloseDeleteModal}  // Use the new handler
         onConfirmDelete={handleConfirmDelete}
         category={categoryToDelete}
         isDeleting={isDeleting}
@@ -406,28 +430,40 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
     <>
       {showHeaderStats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <LayoutCard>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Categories</h3>
-            <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
-          </LayoutCard>
+          {isLoading || isRefreshing ? (
+            // Show skeleton loading for all 4 stat cards
+            <>
+              <SkeletonStatCard />
+              <SkeletonStatCard showBottomSkeleton={true} />
+              <SkeletonStatCard />
+              <SkeletonStatCard isRedCard={true} />
+            </>
+          ) : (
+            <>
+              <LayoutCard>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Total Categories</h3>
+                <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
+              </LayoutCard>
 
-          <LayoutCard>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Products</h3>
-            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalProducts}</p>
-            <p className="text-xs text-gray-400 mt-1">Across all categories</p>
-          </LayoutCard>
+              <LayoutCard>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Total Products</h3>
+                <p className="text-3xl font-bold text-gray-900">{categoryStats.totalProducts}</p>
+                <p className="text-xs text-gray-400 mt-1">Across all categories</p>
+              </LayoutCard>
 
-          <LayoutCard>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Stock</h3>
-            <p className="text-3xl font-bold text-gray-900">{categoryStats.totalStock}</p>
-          </LayoutCard>
+              <LayoutCard>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Total Stock</h3>
+                <p className="text-3xl font-bold text-gray-900">{categoryStats.totalStock}</p>
+              </LayoutCard>
 
-          <LayoutCard>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
-            <p className="text-3xl font-bold text-gray-900">
-              ₱{categoryStats.totalValue.toLocaleString()}
-            </p>
-          </LayoutCard>
+              <LayoutCard>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
+                <p className="text-3xl font-bold text-red-500">
+                  ₱{categoryStats.totalValue.toLocaleString()}
+                </p>
+              </LayoutCard>
+            </>
+          )}
         </div>
       )}
       

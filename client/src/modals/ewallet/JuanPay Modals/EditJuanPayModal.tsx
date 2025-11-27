@@ -18,6 +18,7 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
     record,
     isEditing
 }) => {
+    const [isClosing, setIsClosing] = React.useState(false);
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
         const local = new Date(date.getTime() - tzOffset);
@@ -175,21 +176,28 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
             sales: parseFloat(formData.sales) || 0,
         };
 
-        onEditRecord(record.id, updatedRecord);
+        setIsClosing(true);
+        setTimeout(() => {
+            onEditRecord(record.id, updatedRecord);
+            onClose();
+        }, 300);
     };
 
     const handleCancel = () => {
-        if (record) {
-            setFormData({
-                date: record.date,
-                beginnings: record.beginnings.map(b => ({ 
-                    amount: formatNumberWithCommas(b.amount.toString()) 
-                })),
-                ending: formatNumberWithCommas(record.ending.toString()),
-                sales: record.sales.toString(),
-            });
-        }
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            if (record) {
+                setFormData({
+                    date: record.date,
+                    beginnings: record.beginnings.map(b => ({ 
+                        amount: formatNumberWithCommas(b.amount.toString()) 
+                    })),
+                    ending: formatNumberWithCommas(record.ending.toString()),
+                    sales: record.sales.toString(),
+                });
+            }
+            onClose();
+        }, 300);
     };
 
     if (!isOpen || !record) return null;
@@ -202,17 +210,18 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={!isEditing ? onClose : undefined}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
                 }}
             />
 
-            <div 
+            <div
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 ${
+                    isClosing ? 'animate-modal-out' : 'animate-modal-in'
+                }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>

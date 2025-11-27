@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import CustomDatePicker from '../../components/common/CustomDatePicker';
 import axios from 'axios';
 import Portal from '../../components/common/Portal';
@@ -68,11 +68,31 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<InventoryProduct | null>(null);
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [focusedPaymentOption, setFocusedPaymentOption] = useState(0);
+  const [isClosing, setIsClosing] = useState(false);
   
   const paymentMethodRef = useRef<HTMLDivElement>(null);
   const productDropdownRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const paymentMethodOptions = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
+
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setFormData({
+        productName: '',
+        quantity: '',
+        price: '',
+        paymentMethod: 'Cash',
+        date: formatDateToMMDDYYYY(new Date()),
+      });
+      setErrors({});
+      setSelectedProduct(null);
+      setProductSearchTerm('');
+      onClose();
+      setIsClosing(false);
+    }, 300);
+  }, [onClose]);
 
   // Fetch inventory products when modal opens
   useEffect(() => {
@@ -93,20 +113,45 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     }
   };
 
-  // Handle click outside to close dropdowns
+  // Handle click outside to close dropdowns and modal
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Close payment method dropdown when clicking outside
       if (paymentMethodRef.current && !paymentMethodRef.current.contains(event.target as Node)) {
         setIsPaymentMethodOpen(false);
       }
+      
+      // Close product dropdown when clicking outside
       if (productDropdownRef.current && !productDropdownRef.current.contains(event.target as Node)) {
         setIsProductDropdownOpen(false);
+      }
+      
+      // Close modal when clicking outside (on the backdrop)
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        handleClose();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [handleClose]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, handleClose]);
 
   // Filter products based on search term
   const filteredProducts = inventoryProducts.filter(product =>
@@ -227,26 +272,27 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     }
   };
 
-  const handleClose = () => {
-    setFormData({
-      productName: '',
-      quantity: '',
-      price: '',
-      paymentMethod: 'Cash',
-      date: formatDateToMMDDYYYY(new Date()),
-    });
-    setErrors({});
-    setSelectedProduct(null);
-    setProductSearchTerm('');
-    onClose();
-  };
-
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
   return (
     <Portal>
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px]">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+          className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
+            isClosing ? 'opacity-0' : 'opacity-100'
+          }`}
+          style={{
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)'
+          }}
+        />
+
+        <div 
+          ref={modalRef}
+          className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] relative z-10 ${
+            isClosing ? 'animate-modal-out' : 'animate-modal-in'
+          }`}
+        >
           <div>
             <h3 className="text-[20px] font-bold">Add Sales</h3>
             <p className="text-[12px]">Record a new product sales with quantity and price.</p>
@@ -293,7 +339,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                           width: '100%',
                           maxWidth: '100%',
                           boxSizing: 'border-box',
-                          maxHeight: '100px',
+                          maxHeight: '180px',
                           overflowY: 'auto'
                         }}
                         onKeyDown={(e) => {
@@ -337,8 +383,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                 <div>
                                   <div className="font-medium">{product.productName}</div>
                                   <div className="text-xs text-gray-500">
-                                    Stock: {product.stock} | Price: ₱{product.productPrice.toFixed(2)}
-                                  </div>
+                                  Stock: {product.stock} | Price: ₱{product.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
                                 </div>
                               </div>
                             </div>
@@ -401,8 +447,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   <div className="mt-2 p-3 bg-blue-50 rounded-md">
                     <div className="flex justify-between items-center">
                       <span className="text-[12px] font-bold text-gray-700">Total Amount:</span>
-                      <span className="text-[16px] font-bold text-blue-600">
-                        ₱{(Number(formData.quantity) * Number(formData.price)).toFixed(2)}
+                      <span className="text-[16px] font-bold text-green-600">
+                        ₱{(Number(formData.quantity) * Number(formData.price)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
@@ -475,7 +521,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                           key={method}
                           className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${
                             formData.paymentMethod === method ? 'bg-blue-50 text-blue-600' : ''
-                          } ${focusedPaymentOption === idx ? 'bg-blue-100' : ''}`}
+                          } ${focusedPaymentOption === idx ? '' : ''}`}
                           onClick={() => {
                             handleInputChange('paymentMethod', method);
                             setIsPaymentMethodOpen(false);

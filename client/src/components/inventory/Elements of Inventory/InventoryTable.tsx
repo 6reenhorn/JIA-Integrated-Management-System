@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import InventoryActions from './InventoryActions';
 import DeleteInventoryItemModal from '../../../modals/Inventory/DeleteInventoryItemModal';
+import Skeleton from '../../common/Skeleton';
 import type { InventoryItem } from '../../../types/inventory_types';
 
 interface InventoryTableProps {
@@ -58,10 +59,11 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
       setIsDeleting(true);
       try {
         await onDeleteItem(itemToDelete.id);
-        setDeleteModalOpen(false);
-        setItemToDelete(null);
       } catch (error) {
         console.error('Error deleting item:', error);
+        // On error, close immediately
+        setDeleteModalOpen(false);
+        setItemToDelete(null);
       } finally {
         setIsDeleting(false);
       }
@@ -72,6 +74,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     if (!isDeleting) {
       setDeleteModalOpen(false);
       setItemToDelete(null);
+      setIsDeleting(false);
     }
   };
 
@@ -110,27 +113,27 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                 {Array.from({ length: skeletonCount }).map((_, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-44" />
                     </td>
                     <td className="py-4 px-6 w-[140px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-36" />
                     </td>
                     <td className="py-4 px-6 w-[100px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-20" />
                     </td>
                     <td className="py-4 px-6 w-[120px]">
-                      <div className="h-6 bg-gray-200 rounded-full animate-pulse w-20"></div>
+                      <Skeleton className="h-5 rounded-full w-20" />
                     </td>
                     <td className="py-4 px-6 w-[130px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-20" />
                     </td>
                     <td className="py-4 px-6 w-[130px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-28" />
                     </td>
                     <td className="py-4 px-6 w-[100px]">
-                      <div className="flex justify-start space-x-2">
-                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="flex justify-start space-x-3">
+                        <Skeleton className="w-6 h-6" />
+                        <Skeleton className="w-6 h-6" />
                       </div>
                     </td>
                   </tr>
@@ -239,10 +242,10 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                       </span>
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
-                      ₱{item.productPrice.toFixed(2)}
+                      ₱{item.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
-                      ₱{item.totalAmount.toFixed(2)}
+                      ₱{item.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-left text-sm w-[100px]">
                       <div className="flex justify-start space-x-2">

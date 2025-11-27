@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import DeleteSalesRecordModal from '../../../modals/Inventory/DeleteSalesRecordModal';
+import Skeleton from '../../common/Skeleton';
 import { useDateFormat } from '../../../context/DateFormatContext';
 
 export type SalesRecord = {
@@ -85,28 +86,30 @@ const SalesTable: React.FC<SalesTableProps> = ({
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (recordToDelete) {
-      setIsDeleting(true);
-      try {
-        await onDeleteSale(recordToDelete.id);
-        setDeleteModalOpen(false);
-        setRecordToDelete(null);
-      } catch (error) {
-        console.error('Error deleting sales record:', error);
-      } finally {
-        setIsDeleting(false);
+    const handleConfirmDelete = async () => {
+      if (recordToDelete) {
+        setIsDeleting(true);
+        try {
+          await onDeleteSale(recordToDelete.id);
+          // Delete successful - modal will close automatically after animation
+          // Don't close modal here, let the animation handle it
+        } catch (error) {
+          console.error('Error deleting sales record:', error);
+          // On error, close immediately
+          setDeleteModalOpen(false);
+          setRecordToDelete(null);
+        } finally {
+          setIsDeleting(false);
+        }
       }
-    }
-  };
+    };
 
-  const handleCloseModal = () => {
-    if (!isDeleting) {
+    const handleCloseModal = () => {
       setDeleteModalOpen(false);
       setRecordToDelete(null);
-    }
-  };
-
+      setIsDeleting(false);
+    };
+    
   // Paginate sorted items - get only items for current page
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -139,27 +142,27 @@ const SalesTable: React.FC<SalesTableProps> = ({
                 {Array.from({ length: skeletonCount }).map((_, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-24" />
                     </td>
                     <td className="py-4 px-5 w-[140px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-28" />
                     </td>
                     <td className="py-4 px-4 w-[100px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-14" />
                     </td>
                     <td className="py-4 px-6 w-[120px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-16" />
                     </td>
                     <td className="py-4 px-4 w-[130px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-16" />
                     </td>
                     <td className="py-4 px-3.5 w-[130px]">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <Skeleton className="h-4 w-20" />
                     </td>
                     <td className="py-4 px-4 w-[100px]">
-                      <div className="flex justify-start space-x-2">
-                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="flex justify-start space-x-3">
+                        <Skeleton className="w-6 h-6" />
+                        <Skeleton className="w-6 h-6" />
                       </div>
                     </td>
                   </tr>
@@ -240,10 +243,10 @@ const SalesTable: React.FC<SalesTableProps> = ({
                       {record.quantity}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[120px]">
-                      ₱{record.price.toFixed(2)}
+                      ₱{record.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
-                      ₱{record.total.toFixed(2)}
+                      ₱{record.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
                       <div className="truncate">

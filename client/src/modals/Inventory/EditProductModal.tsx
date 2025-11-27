@@ -34,39 +34,57 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   });
 
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-  const [focusedCategoryOption, setFocusedCategoryOption] = useState(0);
+  const [isClosing, setIsClosing] = useState(false);
+  const [wasUpdating, setWasUpdating] = useState(false);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null); // Add ref for the modal
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
-        setIsSelectOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !isUpdating) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
+// Close dropdown when clicking outside
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    // Close category dropdown when clicking outside
+    if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+      setIsSelectOpen(false);
     }
+    
+    // Close modal when clicking outside (on the backdrop)
+    if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      if (!isUpdating) {
+        setIsClosing(true);
+        setTimeout(() => {
+          onClose();
+          setIsClosing(false);
+        }, 300);
+      }
+    }
+  };
 
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose, isUpdating]);
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, [isUpdating, onClose]); // Add onClose as dependency
+
+// Handle escape key
+useEffect(() => {
+  const handleEscape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && !isUpdating) {
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+        setIsClosing(false);
+      }, 300);
+    }
+  };
+
+  if (isOpen) {
+    document.addEventListener('keydown', handleEscape);
+  }
+
+  return () => {
+    document.removeEventListener('keydown', handleEscape);
+  };
+}, [isOpen, isUpdating, onClose]);
 
   useEffect(() => {
     if (initialData && isOpen) {
@@ -77,6 +95,26 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
       });
     }
   }, [initialData, isOpen]);
+
+    // Watch for update completion
+  useEffect(() => {
+    if (wasUpdating && !isUpdating && isOpen) {
+      // Update just completed successfully, start closing animation
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+        setIsClosing(false);
+        setWasUpdating(false);
+      }, 300);
+    }
+  }, [isUpdating, wasUpdating, isOpen, onClose]);
+
+  // Track when update starts
+  useEffect(() => {
+    if (isUpdating) {
+      setWasUpdating(true);
+    }
+  }, [isUpdating]);
 
   const toggleCategoryDropdown = () => {
     if (!isUpdating) {
@@ -110,14 +148,31 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     };
     
     onSave(updatedFormData);
+    
   };
 
-  if (!isOpen) return null;
+  const handleCancel = () => {
+    if (isUpdating) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 300);
+  };
+
+  if (!isOpen && !isClosing) return null;
 
   return (
     <Portal>
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px]">
+      <div 
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        // Remove the onClick from here since we're handling it in useEffect
+      >
+        <div 
+          ref={modalRef} // Add ref to modal content
+          className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] ${isClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+          // Remove onClick stopPropagation since we're handling clicks in useEffect
+        >
           <div>
             <h3 className="text-[20px] font-bold">Edit Product</h3>
             <p className="text-[12px]">Update the product information and inventory details.</p>
@@ -192,6 +247,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                         <polygon points="4,6 12,6 8,12" fill="currentColor" />
                       </svg>
                     </div>
+                    
+                    {/* KEEPING YOUR EXACT DROPDOWN STYLING */}
                     <div
                       className="dropdown-options mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                       style={{
@@ -210,29 +267,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                         maxHeight: '170px',
                         overflowY: 'auto'
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          setFocusedCategoryOption((prev) => (prev + 1) % categories.length);
-                        } else if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          setFocusedCategoryOption((prev) => (prev - 1 + categories.length) % categories.length);
-                        } else if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleCategorySelect(categories[focusedCategoryOption]);
-                        } else if (e.key === 'Escape') {
-                          e.preventDefault();
-                          setIsSelectOpen(false);
-                        }
-                      }}
-                      tabIndex={isSelectOpen && !isUpdating ? 0 : -1}
                     >
-                      {categories.map((category, idx) => (
+                      {categories.map((category) => (
                         <div
                           key={category}
-                          className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center ${
-                            focusedCategoryOption === idx ? 'bg-blue-100' : ''
-                          }`}
+                          className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
                           onClick={() => handleCategorySelect(category)}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
@@ -251,18 +290,22 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-[12px] font-bold">Price (₱)</label>
-                    <input
-                      type="number"
-                      value={formData.productPrice || ''}
-                      onChange={(e) => handleInputChange('productPrice', parseFloat(e.target.value) || 0)}
-                      disabled={isUpdating}
-                      min="0"
-                      step="0.01"
-                      className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  </div>
+                <div>
+                  <label className="text-[12px] font-bold">Price (₱)</label>
+                  <input
+                    type="text"
+                    value={formData.productPrice ? formData.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
+                    onChange={(e) => {
+                      // Remove all non-numeric characters except decimal point
+                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      // Parse to float and update
+                      handleInputChange('productPrice', parseFloat(value) || 0);
+                    }}
+                    disabled={isUpdating}
+                    placeholder="0.00"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-2">
@@ -297,7 +340,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
           <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleCancel}
               disabled={isUpdating}
               className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >

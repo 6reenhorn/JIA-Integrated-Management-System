@@ -17,6 +17,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     record,
     isEditing = false
 }) => {
+    const [isClosing, setIsClosing] = useState(false);
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
         const local = new Date(date.getTime() - tzOffset);
@@ -104,21 +105,6 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                     formData.date !== '';
         setIsFormValid(valid);
     }, [formData.amount, formData.transactionType, formData.chargeMOP, formData.date]);
-
-    // Close dropdowns when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (transactionTypeRef.current && !transactionTypeRef.current.contains(event.target as Node)) {
-                setDropdowns(prev => ({ ...prev, transactionType: false }));
-            }
-            if (chargeMOPRef.current && !chargeMOPRef.current.contains(event.target as Node)) {
-                setDropdowns(prev => ({ ...prev, chargeMOP: false }));
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     // Close modal on escape key
     useEffect(() => {
@@ -274,7 +260,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!isFormValid || !record || isEditing) {
             return;
         }
@@ -288,12 +274,20 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
             date: formData.date,
         };
 
-        onEditRecord(record.id, updatedRecord);
+        setIsClosing(true);
+        setTimeout(() => {
+            onEditRecord(record.id, updatedRecord);
+            onClose();
+        }, 200);
     };
 
     const handleCancel = () => {
         if (!isEditing) {
-            onClose();
+            setIsClosing(true);
+            setTimeout(() => {
+                setIsClosing(false);
+                onClose();
+            }, 300);
         }
     };
 
@@ -302,17 +296,18 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={!isEditing ? onClose : undefined}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
                 }}
             />
 
-            <div 
+            <div
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 ${
+                    isClosing ? 'animate-modal-out' : 'animate-modal-in'
+                }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>

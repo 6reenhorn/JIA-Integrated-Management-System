@@ -160,7 +160,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     };
 
     return (
-        <div className="relative w-[55vw] h-[60vh] px-8 py-16 bg-gradient-to-b from-[#02367B] to-[#016CA5] rounded-2xl rounded-tl-[14px] rounded-bl-[14px]">
+        <div className="relative w-[55vw] h-[60vh] px-8 py-16 bg-gradient-to-b from-[#02367B] to-[#016CA5] rounded-2xl rounded-tl-[14px] rounded-bl-[14px] modal-content">
             {/* Left Side */}
             <div className="w-[50%] h-full flex flex-col justify-between text-center ml-6">
                 <div>
@@ -279,7 +279,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                     <div className='w-full'>
                         <button
                             type="button"
-                            disabled={isProcessing}
+                            disabled={isProcessing || message?.type === 'success'}
                             className={`w-full py-2 rounded-3xl text-white transition-colors ${
                                 isProcessing 
                                     ? 'bg-gray-400 cursor-not-allowed' 
