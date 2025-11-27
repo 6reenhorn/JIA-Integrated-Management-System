@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import type { InventoryItem } from '../../types/inventory_types';
+import Portal from '../../components/common/Portal';
+
 
 interface DeleteInventoryItemModalProps {
     isOpen: boolean;
@@ -18,6 +20,7 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
     isDeleting = false
 }) => {
     const [isClosing, setIsClosing] = useState(false);
+    const [wasDeleting, setWasDeleting] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
     const handleCancel = useCallback(() => {
@@ -63,6 +66,26 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
         };
     }, [isDeleting, handleCancel]);
 
+    // Watch for deletion completion
+    useEffect(() => {
+    if (wasDeleting && !isDeleting && isOpen) {
+        // Deletion just completed successfully, start closing animation
+        setIsClosing(true);
+        setTimeout(() => {
+        onClose();
+        setIsClosing(false);
+        setWasDeleting(false);
+        }, 300);
+    }
+    }, [isDeleting, wasDeleting, isOpen, onClose]);
+
+    // Track when deletion starts
+    useEffect(() => {
+    if (isDeleting) {
+        setWasDeleting(true);
+    }
+    }, [isDeleting]);
+
     const handleConfirm = () => {
         if (item && !isDeleting) {
             onConfirmDelete(item.id);
@@ -85,11 +108,13 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
     if (!isOpen && !isClosing) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <Portal>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <div 
                 className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
                     isClosing ? 'opacity-0' : 'opacity-100'
                 }`}
+                onClick={!isDeleting ? handleCancel : undefined}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -101,6 +126,7 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
                 className={`bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 ${
                     isClosing ? 'animate-modal-out' : 'animate-modal-in'
                 }`}
+                onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
@@ -194,6 +220,7 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
                 </div>
             </div>
         </div>
+        </Portal>
     );
 };
 

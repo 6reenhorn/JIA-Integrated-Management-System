@@ -72,6 +72,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
   const productDropdownRef = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<{ productName?: string }>({});
   const [isClosing, setIsClosing] = useState(false);
+  const [wasUpdating, setWasUpdating] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -196,6 +197,26 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
       }));
     }
   };
+
+  // Watch for update completion
+  useEffect(() => {
+    if (wasUpdating && !isUpdating && isOpen) {
+      // Update just completed successfully, start closing animation
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+        setIsClosing(false);
+        setWasUpdating(false);
+      }, 300);
+    }
+  }, [isUpdating, wasUpdating, isOpen, onClose]);
+
+  // Track when update starts
+  useEffect(() => {
+    if (isUpdating) {
+      setWasUpdating(true);
+    }
+  }, [isUpdating]);
 
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);

@@ -35,6 +35,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
 
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [wasUpdating, setWasUpdating] = useState(false);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null); // Add ref for the modal
 
@@ -95,6 +96,26 @@ useEffect(() => {
     }
   }, [initialData, isOpen]);
 
+    // Watch for update completion
+  useEffect(() => {
+    if (wasUpdating && !isUpdating && isOpen) {
+      // Update just completed successfully, start closing animation
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+        setIsClosing(false);
+        setWasUpdating(false);
+      }, 300);
+    }
+  }, [isUpdating, wasUpdating, isOpen, onClose]);
+
+  // Track when update starts
+  useEffect(() => {
+    if (isUpdating) {
+      setWasUpdating(true);
+    }
+  }, [isUpdating]);
+
   const toggleCategoryDropdown = () => {
     if (!isUpdating) {
       setIsSelectOpen(!isSelectOpen);
@@ -127,6 +148,7 @@ useEffect(() => {
     };
     
     onSave(updatedFormData);
+    
   };
 
   const handleCancel = () => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import type { SalesRecord } from '../../components/inventory/Elements of Sales/SalesTable';
+import Portal from '../../components/common/Portal';
 
 interface DeleteSalesRecordModalProps {
     isOpen: boolean;
@@ -18,6 +19,7 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
     isDeleting = false
 }) => {
     const [isClosing, setIsClosing] = useState(false);
+    const [wasDeleting, setWasDeleting] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
     const handleCancel = useCallback(() => {
@@ -28,6 +30,26 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
             setIsClosing(false);
         }, 300);
     }, [isDeleting, onClose]);
+
+    // Watch for deletion completion
+    useEffect(() => {
+        if (wasDeleting && !isDeleting && isOpen) {
+            // Deletion just completed successfully, start closing animation
+            setIsClosing(true);
+            setTimeout(() => {
+                onClose();
+                setIsClosing(false);
+                setWasDeleting(false);
+            }, 300);
+        }
+    }, [isDeleting, wasDeleting, isOpen, onClose]);
+
+    // Track when deletion starts
+    useEffect(() => {
+        if (isDeleting) {
+            setWasDeleting(true);
+        }
+    }, [isDeleting]);
 
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
@@ -97,6 +119,7 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
     if (!isOpen && !isClosing) return null;
 
     return (
+        <Portal>
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             {/* Backdrop with full coverage blur */}
             <div 
@@ -205,6 +228,7 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
                 </div>
             </div>
         </div>
+    </Portal>
     );
 };
 

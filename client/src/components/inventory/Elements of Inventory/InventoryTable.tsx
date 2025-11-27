@@ -59,10 +59,11 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
       setIsDeleting(true);
       try {
         await onDeleteItem(itemToDelete.id);
-        setDeleteModalOpen(false);
-        setItemToDelete(null);
       } catch (error) {
         console.error('Error deleting item:', error);
+        // On error, close immediately
+        setDeleteModalOpen(false);
+        setItemToDelete(null);
       } finally {
         setIsDeleting(false);
       }
@@ -73,6 +74,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     if (!isDeleting) {
       setDeleteModalOpen(false);
       setItemToDelete(null);
+      setIsDeleting(false);
     }
   };
 

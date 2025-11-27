@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import Portal from '../../components/common/Portal';
 
 interface Category {
   name: string;
@@ -25,6 +26,7 @@ const DeleteCategoryModal: React.FC<DeleteCategoryModalProps> = ({
     isDeleting = false
 }) => {
     const [isClosing, setIsClosing] = useState(false);
+    const [wasDeleting, setWasDeleting] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
     const handleCancel = useCallback(() => {
@@ -35,6 +37,26 @@ const DeleteCategoryModal: React.FC<DeleteCategoryModalProps> = ({
             setIsClosing(false);
         }, 300);
     }, [isDeleting, onClose]);
+
+    // Watch for deletion completion
+    useEffect(() => {
+        if (wasDeleting && !isDeleting && isOpen) {
+            // Deletion just completed successfully, start closing animation
+            setIsClosing(true);
+            setTimeout(() => {
+                onClose();
+                setIsClosing(false);
+                setWasDeleting(false);
+            }, 300);
+        }
+    }, [isDeleting, wasDeleting, isOpen, onClose]);
+
+    // Track when deletion starts
+    useEffect(() => {
+        if (isDeleting) {
+            setWasDeleting(true);
+        }
+    }, [isDeleting]);
 
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
@@ -82,6 +104,7 @@ const DeleteCategoryModal: React.FC<DeleteCategoryModalProps> = ({
     const hasProducts = category.productCount > 0;
 
     return (
+        <Portal>
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
                 className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
@@ -201,6 +224,7 @@ const DeleteCategoryModal: React.FC<DeleteCategoryModalProps> = ({
                 </div>
             </div>
         </div>
+    </Portal>
     );
 };
 

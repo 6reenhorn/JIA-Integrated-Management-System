@@ -102,8 +102,20 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     e.preventDefault();
     
     if (validateForm()) {
+      // Start closing animation
+      setIsClosing(true);
+      
+      // Call onAddCategory immediately but close after animation
       onAddCategory(categoryName.trim(), selectedColor);
-      handleClose();
+      
+      // Wait for animation to complete before actually closing
+      setTimeout(() => {
+        setCategoryName('');
+        setSelectedColor('#10B981');
+        setErrors({});
+        setIsClosing(false);
+        onClose();
+      }, 300);
     }
   };
 
