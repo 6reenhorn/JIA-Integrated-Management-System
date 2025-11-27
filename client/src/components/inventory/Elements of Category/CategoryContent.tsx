@@ -174,12 +174,12 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       setIsDeleting(true);
       try {
         await onDeleteCategory(categoryName);
-        setDeleteModalOpen(false);
-        setCategoryToDelete(null);
+        // Delete successful - modal will close automatically after animation
+        // The modal's useEffect will handle the closing animation when isDeleting becomes false
       } catch (error: unknown) {
         console.error('Error deleting category:', error);
         
-        // Close delete modal
+        // On error, close delete modal immediately (no animation needed for errors)
         setDeleteModalOpen(false);
         setCategoryToDelete(null);
         
@@ -200,15 +200,24 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
     }
   };
 
+  const handleCloseDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setCategoryToDelete(null);
+    setIsDeleting(false);
+  };
+
   const handleConfirmEdit = async (oldName: string, newName: string, color: string) => {
     if (onEditCategory) {
       setIsEditing(true);
       try {
         await onEditCategory(oldName, newName, color);
-        setEditModalOpen(false);
-        setCategoryToEdit(null);
+        // Edit successful - modal will close automatically after animation
       } catch (error: unknown) {
         console.error('Error editing category:', error);
+        
+        // On error, close modal immediately
+        setEditModalOpen(false);
+        setCategoryToEdit(null);
         
         // Show error message
         let errorMsg = 'Failed to update category. Please try again.';
@@ -390,10 +399,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       {/* Delete Category Modal */}
       <DeleteCategoryModal
         isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setCategoryToDelete(null);
-        }}
+        onClose={handleCloseDeleteModal}  // Use the new handler
         onConfirmDelete={handleConfirmDelete}
         category={categoryToDelete}
         isDeleting={isDeleting}

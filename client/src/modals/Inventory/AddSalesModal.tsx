@@ -383,8 +383,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                                 <div>
                                   <div className="font-medium">{product.productName}</div>
                                   <div className="text-xs text-gray-500">
-                                    Stock: {product.stock} | Price: ₱{product.productPrice.toFixed(2)}
-                                  </div>
+                                  Stock: {product.stock} | Price: ₱{product.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
                                 </div>
                               </div>
                             </div>
@@ -448,7 +448,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     <div className="flex justify-between items-center">
                       <span className="text-[12px] font-bold text-gray-700">Total Amount:</span>
                       <span className="text-[16px] font-bold text-green-600">
-                        ₱{(Number(formData.quantity) * Number(formData.price)).toFixed(2)}
+                        ₱{(Number(formData.quantity) * Number(formData.price)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>

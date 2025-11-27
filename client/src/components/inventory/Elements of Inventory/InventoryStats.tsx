@@ -82,12 +82,12 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
               <p className="text-xs text-gray-500">All inventory items</p>
             </LayoutCard>
 
-            {/* Inventory Value */}
-            <LayoutCard>
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Inventory Value</h3>
-              <p className="text-3xl font-bold text-gray-900 mb-1">₱{(stats.inventoryValue || 0).toFixed(2)}</p>
-              <p className="text-xs text-gray-500">Across all items</p>
-            </LayoutCard>
+          {/* Inventory Value */}
+          <LayoutCard>
+            <h3 className="text-sm font-medium text-gray-600 mb-2">Inventory Value</h3>
+            <p className="text-3xl font-bold text-gray-900 mb-1">₱{(stats.inventoryValue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p className="text-xs text-gray-500">Across all items</p>
+          </LayoutCard>
 
             {/* Low Stock Items */}
             <LayoutCard>
