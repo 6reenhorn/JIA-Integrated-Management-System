@@ -260,7 +260,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!isFormValid || !record || isEditing) {
             return;
         }
@@ -275,6 +275,12 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
         };
 
         onEditRecord(record.id, updatedRecord);
+        setTimeout(() => {
+            setIsClosing(true);
+            setTimeout(() => {
+                onClose();
+            }, 300);
+        }, 100);
     };
 
     const handleCancel = () => {
@@ -292,8 +298,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={!isEditing ? onClose : undefined}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'

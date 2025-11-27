@@ -71,19 +71,22 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
   const totalBeginning = record.beginnings.reduce((sum, b) => sum + b.amount, 0);
 
   const handleConfirm = () => {
-    if (record && !isDeleting) {
-      onConfirmDelete(record.id);
-    }
+      if (record && !isDeleting) {
+          setIsClosing(true);
+          setTimeout(() => {
+              onConfirmDelete(record.id);
+          }, 300);
+      }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm modal-backdrop"
-        style={{
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)'
-        }}
+          className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+          style={{
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)'
+          }}
       />
 
       <div 
@@ -104,11 +107,16 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
-            disabled={isDeleting}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => {
+                  if (!isDeleting) {
+                      setIsClosing(true);
+                      setTimeout(onClose, 300);
+                  }
+              }}
+              disabled={isDeleting}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <X size={20} className="text-gray-500" />
+              <X size={20} className="text-gray-500" />
           </button>
         </div>
 

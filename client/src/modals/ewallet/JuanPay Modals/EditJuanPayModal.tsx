@@ -176,21 +176,28 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
             sales: parseFloat(formData.sales) || 0,
         };
 
-        onEditRecord(record.id, updatedRecord);
+        setIsClosing(true);
+        setTimeout(() => {
+            onEditRecord(record.id, updatedRecord);
+            onClose();
+        }, 300);
     };
 
     const handleCancel = () => {
-        if (record) {
-            setFormData({
-                date: record.date,
-                beginnings: record.beginnings.map(b => ({ 
-                    amount: formatNumberWithCommas(b.amount.toString()) 
-                })),
-                ending: formatNumberWithCommas(record.ending.toString()),
-                sales: record.sales.toString(),
-            });
-        }
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            if (record) {
+                setFormData({
+                    date: record.date,
+                    beginnings: record.beginnings.map(b => ({ 
+                        amount: formatNumberWithCommas(b.amount.toString()) 
+                    })),
+                    ending: formatNumberWithCommas(record.ending.toString()),
+                    sales: record.sales.toString(),
+                });
+            }
+            onClose();
+        }, 300);
     };
 
     if (!isOpen || !record) return null;
@@ -203,7 +210,7 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm modal-backdrop"
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -319,10 +326,7 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
                     <button 
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={() => {
-                            setIsClosing(true);
-                            setTimeout(() => handleCancel(), 300);
-                        }}
+                        onClick={handleCancel}
                         disabled={isEditing}
                     >
                         Cancel

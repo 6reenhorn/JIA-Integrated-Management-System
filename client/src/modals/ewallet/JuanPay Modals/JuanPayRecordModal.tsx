@@ -170,27 +170,34 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
             sales: parseFloat(formData.sales) || 0,
         };
 
-        onAddRecord(newRecord);
-        
-        // Reset form
-        setFormData({
-            date: getLocalISODate(new Date()),
-            beginnings: [{ amount: '' }],
-            ending: '',
-            sales: '',
-        });
-        
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            onAddRecord(newRecord);
+            
+            // Reset form
+            setFormData({
+                date: getLocalISODate(new Date()),
+                beginnings: [{ amount: '' }],
+                ending: '',
+                sales: '',
+            });
+            
+            onClose();
+            setIsClosing(false);
+        }, 300);
     };
 
     const handleCancel = () => {
-        setFormData({
-            date: getLocalISODate(new Date()),
-            beginnings: [{ amount: '' }],
-            ending: '',
-            sales: '',
-        });
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            setFormData({
+                date: getLocalISODate(new Date()),
+                beginnings: [{ amount: '' }],
+                ending: '',
+                sales: '',
+            });
+            onClose();
+        }, 300);
     };
 
     if (!isOpen) return null;
@@ -204,7 +211,7 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Background overlay */}
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -316,10 +323,7 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
                     <button 
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm"
-                        onClick={() => {
-                            setIsClosing(true);
-                            setTimeout(() => handleCancel(), 300);
-                        }}
+                        onClick={handleCancel}
                     >
                         Cancel
                     </button>

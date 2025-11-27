@@ -40,7 +40,10 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
 
     const handleConfirm = () => {
         if (record && !isDeleting) {
-            onConfirmDelete(record.id);
+            setIsClosing(true);
+            setTimeout(() => {
+                onConfirmDelete(record.id);
+            }, 300);
         }
     };
 
@@ -74,7 +77,7 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'

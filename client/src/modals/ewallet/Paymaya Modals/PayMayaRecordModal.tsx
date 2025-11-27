@@ -247,19 +247,23 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
             date: formData.date,
         };
 
-        onAddRecord(newRecord);
-        
-        // Reset form
-        setFormData({
-            amount: '',
-            serviceCharge: '',
-            transactionType: '',
-            chargeMOP: '',
-            referenceNumber: '',
-            date: getLocalISODate(new Date()),
-        });
-        
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            onAddRecord(newRecord);
+            
+            // Reset form
+            setFormData({
+                amount: '',
+                serviceCharge: '',
+                transactionType: '',
+                chargeMOP: '',
+                referenceNumber: '',
+                date: getLocalISODate(new Date()),
+            });
+            
+            onClose();
+            setIsClosing(false);
+        }, 300);
     };
 
     const handleCancel = () => {
@@ -283,7 +287,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
