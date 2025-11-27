@@ -59,6 +59,7 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
 
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const employeeDropdownRef = useRef<HTMLDivElement>(null);
   const monthDropdownRef = useRef<HTMLDivElement>(null);
@@ -170,6 +171,18 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
     setIsStatusDropdownOpen(false);
   };
 
+  const handleClose = () => {
+    if (!isClosing && !isSaving) {
+      setIsClosing(true);
+    }
+  };
+
+  const handleAnimationEnd = () => {
+    if (isClosing && onClose) {
+      onClose();
+    }
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -207,7 +220,13 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
   }, [selectedEmployee, selectedMonth, selectedYear, basicSalary, selectedStatusText]);
 
   return (
-    <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
+    <div
+        className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={handleAnimationEnd}
+      >
       <div>
         <h3 className="text-[20px] font-bold">Edit Payroll Record</h3>
         <p className="text-[12px]">Update the payroll record for {payrollRecord.employeeName}.</p>
@@ -606,7 +625,8 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
       <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button 
           className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
-          onClick={onClose}>
+          onClick={handleClose}
+        >
           Cancel
         </button>
         <button
@@ -626,6 +646,7 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
                 paymentDate: paymentDate,
                 netSalary: netSalary
               });
+              setIsClosing(true);
             }
           }}
           disabled={!isFormValid || isSaving}

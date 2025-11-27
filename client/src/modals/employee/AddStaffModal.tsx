@@ -65,6 +65,7 @@ const AddStaffModal = ({
   const [focusedRoleOption, setFocusedRoleOption] = useState(0);
   const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
@@ -103,6 +104,14 @@ const AddStaffModal = ({
     setIsRelationshipDropdownOpen(false);
   };
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose?.();
+    }, 100);
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -131,7 +140,13 @@ const AddStaffModal = ({
 
 
   return (
-    <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={handleClose}>
+      <div
+        className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
       <div>
         <h3 className="text-[20px] font-bold">Add New Employee</h3>
         <p className="text-[12px]">Add a new team member to your organization with their details and role.</p>
@@ -553,7 +568,7 @@ const AddStaffModal = ({
       <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button 
           className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
-          onClick={onClose}>
+          onClick={handleClose}>
           Cancel
         </button>
         <button
@@ -561,26 +576,30 @@ const AddStaffModal = ({
           onClick={() => {
             if (isFormValid && !isSaving && onAddEmployee) {
               setIsSaving(true);
-              // Generate random password 8-10 characters
-              const length = Math.floor(Math.random() * 3) + 8; // 8 to 10
-              const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-              let password = '';
-              for (let i = 0; i < length; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
-              }
-              onAddEmployee({
-                name: `${firstName} ${lastName}`,
-                role: selectedRoleText,
-                contact: `${email}\n${phone}\n${address}`,
-                status: selectedStatus,
-                avatar: undefined,
-                address,
-                salary,
-                contactName,
-                contactNumber,
-                relationship: selectedRelationshipText,
-                password
-              });
+              setIsClosing(true);
+              setTimeout(() => {
+                // Generate random password 8-10 characters
+                const length = Math.floor(Math.random() * 3) + 8;
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+                let password = '';
+                for (let i = 0; i < length; i++) {
+                  password += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                onAddEmployee({
+                  name: `${firstName} ${lastName}`,
+                  role: selectedRoleText,
+                  contact: `${email}\n${phone}\n${address}`,
+                  status: selectedStatus,
+                  avatar: undefined,
+                  address,
+                  salary,
+                  contactName,
+                  contactNumber,
+                  relationship: selectedRelationshipText,
+                  password
+                });
+                setIsClosing(false);
+              }, 200);
             }
           }}
           disabled={!isFormValid || isSaving}
@@ -589,6 +608,7 @@ const AddStaffModal = ({
         </button>
       </div>
     </div>
+  </div>
   );
 }
 

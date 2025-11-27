@@ -252,7 +252,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
           emp.id === updatedEmployee.id ? response.data : emp
         )
       );
-      setIsEditModalOpen(false);
+
     } catch (err) {
       console.error('Error updating employee:', err);
       // Handle error (could show a toast or alert)
@@ -439,7 +439,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         )}
       </MainLayoutCard>
 
-      {/* Employee Modal */}
+      {/* Add Employee Modal */}
       {isModalOpen && (
         <Portal>
           <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
@@ -479,6 +479,8 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
           </div>
         </Portal>
       )}
+      
+      {/* Edit Employee Modal */}
       {isEditModalOpen && selectedEmployee && (
         <Portal>
           <div className='fixed inset-0 z-[1000] flex items-center justify-center'>

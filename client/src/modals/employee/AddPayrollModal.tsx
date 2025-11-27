@@ -51,6 +51,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
 
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const employeeDropdownRef = useRef<HTMLDivElement>(null);
   const monthDropdownRef = useRef<HTMLDivElement>(null);
@@ -118,6 +119,14 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
     setIsStatusDropdownOpen(false);
   };
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose?.();
+    }, 100);
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -155,7 +164,13 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
   }, [selectedEmployee, selectedMonth, selectedYear, basicSalary, selectedStatusText]);
 
   return (
-    <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
       <div>
         <h3 className="text-[20px] font-bold">Add Payroll Record</h3>
         <p className="text-[12px]">Add a new payroll record for an employee with salary details and payment status.</p>
@@ -554,7 +569,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
       <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button 
           className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
-          onClick={onClose}>
+          onClick={handleClose}>
           Cancel
         </button>
         <button
@@ -562,18 +577,22 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
           onClick={() => {
             if (isFormValid && !isSaving && onAddPayroll && selectedEmployee) {
               setIsSaving(true);
-              onAddPayroll({
-                employeeName: selectedEmployee.name,
-                empId: selectedEmployee.empId,
-                role: selectedEmployee.role,
-                month: selectedMonthText,
-                year: selectedYear,
-                basicSalary: parseFloat(basicSalary),
-                deductions: parseFloat(deductions),
-                status: selectedStatus,
-                paymentDate: paymentDate,
-                netSalary: netSalary
-              });
+              setIsClosing(true);
+              setTimeout(() => {
+                onAddPayroll({
+                  employeeName: selectedEmployee.name,
+                  empId: selectedEmployee.empId,
+                  role: selectedEmployee.role,
+                  month: selectedMonthText,
+                  year: selectedYear,
+                  basicSalary: parseFloat(basicSalary),
+                  deductions: parseFloat(deductions),
+                  status: selectedStatus,
+                  paymentDate: paymentDate,
+                  netSalary: netSalary
+                });
+                setIsClosing(false);
+              }, 100);
             }
           }}
           disabled={!isFormValid || isSaving}
@@ -581,6 +600,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
           {isSaving ? 'Adding...' : 'Add Payroll'}
         </button>
       </div>
+    </div>
     </div>
   );
 }

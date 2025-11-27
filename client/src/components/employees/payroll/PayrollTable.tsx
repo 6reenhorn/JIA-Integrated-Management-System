@@ -273,8 +273,6 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
                 }}
                 onUpdatePayroll={(id, updatedData) => {
                   onUpdate(id, updatedData); 
-                  setIsEditModalOpen(false);
-                  setEditTargetId(null);
                 }}
               />
             </div>
