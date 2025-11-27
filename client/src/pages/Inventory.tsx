@@ -405,10 +405,14 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       
       console.log('Product updated:', response.data);
       setInventoryItems(prev => prev.map(i => (i.id === response.data.id ? response.data : i)));
-      setIsEditModalOpen(false);
-      setEditingItem(undefined);
+      
     } catch (err: unknown) {
       console.error('Error updating product:', err);
+      
+      // On error, close modal immediately (no animation for errors)
+      setIsEditModalOpen(false);
+      setEditingItem(undefined);
+      
       if (axios.isAxiosError(err)) {
         console.error('Error details:', err.response?.data);
       } else if (err instanceof Error) {
@@ -726,10 +730,13 @@ const handleCloseCategoryModal = () => {
           record.id === response.data.id ? response.data : record
         )
       );
-      setIsEditSaleModalOpen(false);
-      setEditingSale(null);
     } catch (err: unknown) {
       console.error('Error updating sales record:', err);
+      
+      // On error, close modal immediately (no animation for errors)
+      setIsEditSaleModalOpen(false);
+      setEditingSale(null);
+      
       if (axios.isAxiosError(err)) {
         console.error('Error details:', err.response?.data);
       } else if (err instanceof Error) {

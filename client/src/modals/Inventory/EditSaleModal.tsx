@@ -72,6 +72,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
   const productDropdownRef = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<{ productName?: string }>({});
   const [isClosing, setIsClosing] = useState(false);
+  const [wasUpdating, setWasUpdating] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -196,6 +197,26 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
       }));
     }
   };
+
+  // Watch for update completion
+  useEffect(() => {
+    if (wasUpdating && !isUpdating && isOpen) {
+      // Update just completed successfully, start closing animation
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+        setIsClosing(false);
+        setWasUpdating(false);
+      }, 300);
+    }
+  }, [isUpdating, wasUpdating, isOpen, onClose]);
+
+  // Track when update starts
+  useEffect(() => {
+    if (isUpdating) {
+      setWasUpdating(true);
+    }
+  }, [isUpdating]);
 
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
@@ -385,8 +406,8 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                                   <div>
                                     <div className="font-medium">{product.productName}</div>
                                     <div className="text-xs text-gray-500">
-                                      Stock: {product.stock} | Price: ₱{product.productPrice.toFixed(2)}
-                                    </div>
+                                    Stock: {product.stock} | Price: ₱{product.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </div>
                                   </div>
                                 </div>
                               </div>
@@ -444,12 +465,12 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                       <div>
                         <p className="text-[12px] font-bold text-gray-700">Total Amount:</p>
                         <p className="text-[10px] text-gray-500">
-                          {formData.quantity || 0} x ₱{(Number(formData.price) || 0).toFixed(2)}
-                        </p>
+                        {formData.quantity || 0} x ₱{(Number(formData.price) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
                       </div>
-                      <div className="text-[16px] font-bold text-green-600">
-                        ₱{totalAmount.toFixed(2)}
-                      </div>
+                    <div className="text-[16px] font-bold text-green-600">
+                      ₱{totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
                     </div>
                   </div>
 

@@ -72,28 +72,30 @@ const SalesTable: React.FC<SalesTableProps> = ({
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (recordToDelete) {
-      setIsDeleting(true);
-      try {
-        await onDeleteSale(recordToDelete.id);
-        setDeleteModalOpen(false);
-        setRecordToDelete(null);
-      } catch (error) {
-        console.error('Error deleting sales record:', error);
-      } finally {
-        setIsDeleting(false);
+    const handleConfirmDelete = async () => {
+      if (recordToDelete) {
+        setIsDeleting(true);
+        try {
+          await onDeleteSale(recordToDelete.id);
+          // Delete successful - modal will close automatically after animation
+          // Don't close modal here, let the animation handle it
+        } catch (error) {
+          console.error('Error deleting sales record:', error);
+          // On error, close immediately
+          setDeleteModalOpen(false);
+          setRecordToDelete(null);
+        } finally {
+          setIsDeleting(false);
+        }
       }
-    }
-  };
+    };
 
-  const handleCloseModal = () => {
-    if (!isDeleting) {
+    const handleCloseModal = () => {
       setDeleteModalOpen(false);
       setRecordToDelete(null);
-    }
-  };
-
+      setIsDeleting(false);
+    };
+    
   // Paginate sorted items - get only items for current page
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -227,10 +229,10 @@ const SalesTable: React.FC<SalesTableProps> = ({
                       {record.quantity}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[120px]">
-                      ₱{record.price.toFixed(2)}
+                      ₱{record.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
-                      ₱{record.total.toFixed(2)}
+                      ₱{record.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
                       <div className="truncate">

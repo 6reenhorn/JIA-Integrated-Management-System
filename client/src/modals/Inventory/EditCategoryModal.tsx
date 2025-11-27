@@ -28,6 +28,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
   const [categoryColor, setCategoryColor] = useState('#3B82F6');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [wasUpdating, setWasUpdating] = useState(false);
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +45,26 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
       setIsClosing(false);
     }, 300);
   }, [isUpdating, onClose]);
+
+  // Watch for update completion
+  useEffect(() => {
+    if (wasUpdating && !isUpdating && isOpen) {
+      // Update just completed successfully, start closing animation
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+        setIsClosing(false);
+        setWasUpdating(false);
+      }, 300);
+    }
+  }, [isUpdating, wasUpdating, isOpen, onClose]);
+
+  // Track when update starts
+  useEffect(() => {
+    if (isUpdating) {
+      setWasUpdating(true);
+    }
+  }, [isUpdating]);
 
   // Close color picker when clicking outside
   useEffect(() => {

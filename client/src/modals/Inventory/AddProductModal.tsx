@@ -33,13 +33,15 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     quantity: number | string;
     minimumStock: number | string;
     description?: string;
+    productPriceDisplay?: string; 
   }>({
     productName: '',
     category: '',
     productPrice: '',
     quantity: '',
     minimumStock: '',
-    description: ''
+    description: '',
+    productPriceDisplay: ''
   });
 
   const [isSelectOpen, setIsSelectOpen] = useState(false);
@@ -123,21 +125,37 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     handleClose();
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    
-    if (name === 'productPrice' || name === 'quantity' || name === 'minimumStock') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value === '' ? '' : parseFloat(value)
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
+      const formatNumberWithCommas = (value: string): string => {
+      const cleanValue = value.replace(/[^\d.]/g, '');
+      const parts = cleanValue.split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return parts.length > 1 ? `${parts[0]}.${parts[1].slice(0, 2)}` : parts[0];
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      
+      if (name === 'productPrice') {
+        const numericValue = value.replace(/,/g, '');
+        const formattedValue = formatNumberWithCommas(value);
+        
+        setFormData(prev => ({
+          ...prev,
+          productPrice: numericValue === '' ? '' : numericValue,
+          productPriceDisplay: formattedValue
+        }));
+      } else if (name === 'quantity' || name === 'minimumStock') {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value === '' ? '' : parseFloat(value)
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+    };
 
   if (!isOpen && !isClosing) return null;
 
@@ -269,14 +287,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                 <div>
                   <label className="text-[12px] font-bold">Price (₱)</label>
                   <input
-                    type="number"
+                    type="text"
                     name="productPrice"
-                    value={formData.productPrice}
+                    value={formData.productPriceDisplay || ''}
                     onChange={handleChange}
                     placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none"
                     required
                   />
                 </div>
