@@ -36,7 +36,8 @@ const createEmployeesTable = async () => {
       password TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      deleted_at TIMESTAMP DEFAULT NULL
+      deleted_at TIMESTAMP DEFAULT NULL,
+      synced INTEGER DEFAULT 1
     )
   `;
   
@@ -55,6 +56,11 @@ const createEmployeesTable = async () => {
     }
     try {
       await dbHelper.run('ALTER TABLE employees ADD COLUMN last_name TEXT');
+    } catch (err) {
+      // Column already exists, ignore
+    }
+    try {
+      await dbHelper.run('ALTER TABLE employees ADD COLUMN synced INTEGER DEFAULT 1');
     } catch (err) {
       // Column already exists, ignore
     }
@@ -105,12 +111,19 @@ const createGCashRecordsTable = async () => {
       date TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      deleted_at TIMESTAMP DEFAULT NULL
+      deleted_at TIMESTAMP DEFAULT NULL,
+      synced INTEGER DEFAULT 1
     )
   `;
   
   try {
     await dbHelper.run(query);
+    // Add synced column if it doesn't exist
+    try {
+      await dbHelper.run('ALTER TABLE gcash_records ADD COLUMN synced INTEGER DEFAULT 1');
+    } catch (err) {
+      // Column already exists, ignore
+    }
     // Add new columns if they don't exist (for existing databases)
     try {
       await dbHelper.run('ALTER TABLE gcash_records ADD COLUMN amount REAL');
@@ -157,7 +170,8 @@ const createPayMayaRecordsTable = async () => {
       date TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      deleted_at TIMESTAMP DEFAULT NULL
+      deleted_at TIMESTAMP DEFAULT NULL,
+      synced INTEGER DEFAULT 1
     )
   `;
   
@@ -207,12 +221,18 @@ const createJuanPayRecordsTable = async () => {
       sales REAL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      deleted_at TIMESTAMP DEFAULT NULL
+      deleted_at TIMESTAMP DEFAULT NULL,
+      synced INTEGER DEFAULT 1
     )
   `;
   
   try {
     await dbHelper.run(query);
+    try {
+      await dbHelper.run('ALTER TABLE juanpay_records ADD COLUMN synced INTEGER DEFAULT 1');
+    } catch (err) {
+      // Column already exists, ignore
+    }
     await dbHelper.run('CREATE INDEX IF NOT EXISTS idx_juanpay_records_date ON juanpay_records(date)');
     console.log('SQLite: JuanPay records table created or already exists');
   } catch (err) {
@@ -235,12 +255,18 @@ const createInventoryItemsTable = async () => {
       minimum_stock INTEGER DEFAULT 5,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      deleted_at TIMESTAMP DEFAULT NULL
+      deleted_at TIMESTAMP DEFAULT NULL,
+      synced INTEGER DEFAULT 1
     )
   `;
   
   try {
     await dbHelper.run(query);
+    try {
+      await dbHelper.run('ALTER TABLE inventory_items ADD COLUMN synced INTEGER DEFAULT 1');
+    } catch (err) {
+      // Column already exists, ignore
+    }
     await dbHelper.run('CREATE INDEX IF NOT EXISTS idx_inventory_items_product_name ON inventory_items(product_name)');
     await dbHelper.run('CREATE INDEX IF NOT EXISTS idx_inventory_items_category ON inventory_items(category)');
     console.log('SQLite: Inventory items table created or already exists');
@@ -256,12 +282,31 @@ const createCategoriesTable = async () => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       category_name TEXT NOT NULL UNIQUE,
       color TEXT DEFAULT '#6B7280',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
+      deleted_at TIMESTAMP DEFAULT NULL,
+      synced INTEGER DEFAULT 1
     )
   `;
   
   try {
     await dbHelper.run(query);
+    // Add missing columns if they don't exist
+    try {
+      await dbHelper.run('ALTER TABLE categories ADD COLUMN updated_at TIMESTAMP DEFAULT NULL');
+    } catch (err) {
+      // Column already exists, ignore
+    }
+    try {
+      await dbHelper.run('ALTER TABLE categories ADD COLUMN deleted_at TIMESTAMP DEFAULT NULL');
+    } catch (err) {
+      // Column already exists, ignore
+    }
+    try {
+      await dbHelper.run('ALTER TABLE categories ADD COLUMN synced INTEGER DEFAULT 1');
+    } catch (err) {
+      // Column already exists, ignore
+    }
     console.log('SQLite: Categories table created or already exists');
   } catch (err) {
     console.error('SQLite: Error creating categories table:', err);
@@ -281,12 +326,18 @@ const createSalesRecordsTable = async () => {
       payment_method TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      deleted_at TIMESTAMP DEFAULT NULL
+      deleted_at TIMESTAMP DEFAULT NULL,
+      synced INTEGER DEFAULT 1
     )
   `;
   
   try {
     await dbHelper.run(query);
+    try {
+      await dbHelper.run('ALTER TABLE sales_records ADD COLUMN synced INTEGER DEFAULT 1');
+    } catch (err) {
+      // Column already exists, ignore
+    }
     await dbHelper.run('CREATE INDEX IF NOT EXISTS idx_sales_records_date ON sales_records(date)');
     await dbHelper.run('CREATE INDEX IF NOT EXISTS idx_sales_records_product_name ON sales_records(product_name)');
     console.log('SQLite: Sales records table created or already exists');
@@ -312,12 +363,18 @@ const createPayrollRecordsTable = async () => {
       payment_date TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      deleted_at TIMESTAMP DEFAULT NULL
+      deleted_at TIMESTAMP DEFAULT NULL,
+      synced INTEGER DEFAULT 1
     )
   `;
   
   try {
     await dbHelper.run(query);
+    try {
+      await dbHelper.run('ALTER TABLE payroll_records ADD COLUMN synced INTEGER DEFAULT 1');
+    } catch (err) {
+      // Column already exists, ignore
+    }
     
     // Check if table exists and has the correct columns
     try {
@@ -400,12 +457,18 @@ const createAttendanceTable = async () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       deleted_at TIMESTAMP DEFAULT NULL,
+      synced INTEGER DEFAULT 1,
       FOREIGN KEY (employee_id) REFERENCES employees (id) ON DELETE CASCADE
     )
   `;
   
   try {
     await dbHelper.run(query);
+    try {
+      await dbHelper.run('ALTER TABLE attendance ADD COLUMN synced INTEGER DEFAULT 1');
+    } catch (err) {
+      // Column already exists, ignore
+    }
     await dbHelper.run('CREATE INDEX IF NOT EXISTS idx_attendance_employee_id ON attendance(employee_id)');
     await dbHelper.run('CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(date)');
     console.log('SQLite: Attendance table created or already exists');
