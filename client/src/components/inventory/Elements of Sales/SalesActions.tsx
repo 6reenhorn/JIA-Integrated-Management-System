@@ -53,7 +53,7 @@ const SalesActions: React.FC<SalesActionsProps> = ({
   const displayTotalPages = totalPages || 1;
 
   return (
-    <div className="flex items-center justify-between mt-8">
+    <div className="flex items-center justify-between mt-[27px]">
       <div className={`text-sm text-gray-500 ${isLoading ? 'opacity-50' : ''}`}>
         Page {currentPage} of {displayTotalPages}
       </div>

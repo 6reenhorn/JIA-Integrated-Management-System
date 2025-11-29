@@ -42,7 +42,7 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
   return (
     <div className="w-full">
       {/* Header Section */}
-      <div className="flex items-center justify-between mt-6 w-full">
+      <div className="flex items-center justify-between mt-5 w-full">
         {/* Left side: Title and Search */}
         <div className="flex items-center gap-4">
           {/* Title */}

@@ -300,7 +300,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
         />
         
         {isLoading || isRefreshing ? (
-          <div className="h-[392px] overflow-hidden p-6 mt-1 mb-8 border-t border-b border-gray-200">
+          <div className="h-[421px] overflow-hidden p-6 mb-8 border-t border-b border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {Array.from({ length: 8 }).map((_, index) => (
                 <SkeletonCategoryCard key={`skeleton-${index}`} />
@@ -308,7 +308,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             </div>
           </div>
         ) : paginatedCategories.length === 0 ? (
-          <div className="h-[392px] flex items-center justify-center border-t border-b border-gray-200 mt-1 mb-8">
+          <div className="h-[421px] flex items-center justify-center border-t border-b border-gray-200 mb-8">
             <p className="text-gray-500">
               {categories.length === 0 
                 ? "No categories found. Add your first category to get started."
@@ -316,7 +316,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             </p>
           </div>
         ) : (
-          <div className="h-[392px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
+          <div className="h-[421px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {paginatedCategories.map((category, index) => {
                 const actualIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;

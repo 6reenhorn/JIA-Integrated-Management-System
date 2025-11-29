@@ -136,7 +136,7 @@ const SalesStats: React.FC<SalesStatsProps> = ({
         activeSection={activeSection} 
         onSectionChange={onSectionChange}
       >
-        <div className="space-y-6">
+        <div className="space-y-5">
           <SalesFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}

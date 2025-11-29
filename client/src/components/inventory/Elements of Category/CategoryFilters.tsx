@@ -25,7 +25,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
   isRefreshing = false,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 mt-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 mt-5">
       {/* Left side - Category Title and Search Bar */}
       <div className="flex items-center gap-4">
         

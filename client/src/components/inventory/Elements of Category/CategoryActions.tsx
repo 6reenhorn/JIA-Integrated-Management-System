@@ -48,7 +48,7 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({
   const visiblePages = getVisiblePages();
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between mt-[27px]">
       <div className="text-sm text-gray-500">
         Page {currentPage} of {totalPages || 1}
       </div>
