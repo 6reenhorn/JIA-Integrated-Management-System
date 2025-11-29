@@ -76,7 +76,10 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
   const handleEmployeeOptionClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setSelectedEmployeeText(`${employee.name} (${employee.empId})`);
-    setBasicSalary(employee.salary);
+    // Convert salary to string to ensure it works with the input field
+    // Ensure the salary is properly parsed as a number first, then convert to string
+    const salary = parseFloat(employee.salary) || 0;
+    setBasicSalary(salary.toString());
     setIsEmployeeDropdownOpen(false);
   };
 
@@ -157,9 +160,15 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
     setNetSalary(basic - ded);
   }, [basicSalary, deductions]);
 
-  // Validate form
+  // Validate form - Fixed to handle string validation properly
   useEffect(() => {
-    const valid = selectedEmployee !== null && selectedMonth !== '' && selectedYear !== '' && basicSalary.trim() !== '' && selectedStatusText !== 'Select Status';
+    const salaryStr = basicSalary.toString().trim();
+    const valid = selectedEmployee !== null && 
+                selectedMonth !== '' && 
+                selectedYear !== '' && 
+                salaryStr !== '' && 
+                !isNaN(Number(salaryStr)) && 
+                selectedStatusText !== 'Select Status';
     setIsFormValid(valid);
   }, [selectedEmployee, selectedMonth, selectedYear, basicSalary, selectedStatusText]);
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import pool from '../db/postgres';
+import { dbHelper } from '../db/dbHelper';
 
 const router = express.Router();
 
@@ -10,14 +10,12 @@ router.post('/login', async (req, res): Promise<void> => {
 
   try {
     // Example query - adjust based on your user table
-    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+    const user = await dbHelper.queryOne('SELECT * FROM users WHERE username = ?', [username]);
 
-    if (result.rows.length === 0) {
+    if (!user) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
-
-    const user = result.rows[0];
 
     // In a real app, you'd hash and compare passwords
     if (password !== user.password) {
@@ -25,7 +23,7 @@ router.post('/login', async (req, res): Promise<void> => {
       return;
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'default-secret', { expiresIn: '1h' });
 
     res.json({ token, user: { id: user.id, username: user.username } });
   } catch (error) {

@@ -34,8 +34,16 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
       // Populate form fields when employee changes
       useEffect(() => {
         if (employee) {
-          setFirstName(employee.name.split(' ')[0] || '');
-          setLastName(employee.name.split(' ').slice(1).join(' ') || '');
+          // Use firstName/lastName if available, otherwise split the name
+          if ((employee as any).firstName && (employee as any).lastName) {
+            setFirstName((employee as any).firstName);
+            setLastName((employee as any).lastName);
+          } else {
+            // Fallback: split name on first space (first word = firstName, rest = lastName)
+            const nameParts = employee.name.split(' ');
+            setFirstName(nameParts[0] || '');
+            setLastName(nameParts.slice(1).join(' ') || '');
+          }
 
           // Parse contact string (email\nphone\naddress)
           const contactParts = employee.contact.split('\n');

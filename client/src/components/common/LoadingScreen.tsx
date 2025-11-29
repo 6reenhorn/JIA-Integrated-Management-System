@@ -1,5 +1,5 @@
 import React from 'react';
-import LoadingIcon from '../../assets/JIA_CheckIn.ico';
+import Loading_Icon from '../../assets/JIA_Official_Light.ico';
 
 interface LoadingScreenProps {
   percentage: number;
@@ -12,8 +12,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ percentage }) => {
         {/* Icon with pulse animation */}
         <div className="relative">
           <img 
-            src={LoadingIcon} 
-            alt="JIA Logo" 
+            src={Loading_Icon} 
+            alt="JIA Logo"
+            className='w-[200px]' 
           />
         </div>
 

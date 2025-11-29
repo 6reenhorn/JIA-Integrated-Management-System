@@ -7,7 +7,7 @@ import EWallet from './EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
-import CheckIn from '../components/support/CheckIn';
+import CheckIn from '../components/common/CheckIn';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 // Define the section information type
@@ -18,6 +18,7 @@ interface SectionInfo {
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
+  const [dashboardKey, setDashboardKey] = useState<number>(0);
   const [showCheckOutConfirm, setShowCheckOutConfirm] = useState<boolean>(false);
 
   const [currentSection, setCurrentSection] = useState<SectionInfo>({ 
@@ -192,13 +193,14 @@ const Dashboard: React.FC = () => {
     // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
-        return <Overview />;
+        // Add key to force remount and refetch when dashboard is opened
+        return <Overview key={`dashboard-${dashboardKey}`} />;
       case 'settings':
         return <Settings />;
       case 'about':
         return <About activeSection="main" />;
       default:
-        return <Overview />;
+        return <Overview key={`dashboard-${dashboardKey}`} />;
     }
   };
 

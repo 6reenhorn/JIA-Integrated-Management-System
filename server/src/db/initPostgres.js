@@ -6,8 +6,13 @@ const createEmployeesTable = async () => {
       id SERIAL PRIMARY KEY,
       emp_id VARCHAR(10) UNIQUE NOT NULL,
       name VARCHAR(255) NOT NULL,
+      first_name VARCHAR(255),
+      last_name VARCHAR(255),
       role VARCHAR(100) NOT NULL,
+      department VARCHAR(100),
       contact TEXT,
+      email VARCHAR(255),
+      phone VARCHAR(50),
       status VARCHAR(10) CHECK (status IN ('Active', 'Inactive')) DEFAULT 'Active',
       last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       avatar TEXT,
@@ -16,13 +21,36 @@ const createEmployeesTable = async () => {
       contact_name VARCHAR(255),
       contact_number VARCHAR(50),
       relationship VARCHAR(100),
-      password VARCHAR(255) NOT NULL
+      password VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
+      deleted_at TIMESTAMP DEFAULT NULL
     );
   `;
 
   try {
     await pool.query(query);
     console.log('Employees table created or already exists');
+    
+    // Add missing columns if they don't exist (for existing databases)
+    const columnsToAdd = [
+      { name: 'first_name', type: 'VARCHAR(255)' },
+      { name: 'last_name', type: 'VARCHAR(255)' },
+      { name: 'department', type: 'VARCHAR(100)' },
+      { name: 'email', type: 'VARCHAR(255)' },
+      { name: 'phone', type: 'VARCHAR(50)' }
+    ];
+    
+    for (const col of columnsToAdd) {
+      try {
+        await pool.query(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS ${col.name} ${col.type}`);
+      } catch (err) {
+        // Column might already exist or error occurred, continue
+        if (!err.message.includes('already exists') && !err.message.includes('duplicate')) {
+          console.warn(`Could not add column ${col.name}:`, err.message);
+        }
+      }
+    }
   } catch (err) {
     console.error('Error creating employees table:', err);
   }

@@ -1,27 +1,39 @@
 import { Router } from 'express';
-import pool from '../db/postgres';
+import { dbHelper } from '../db/dbHelper';
 
 const router = Router();
+
+// Log all requests to employees routes for debugging
+router.use((req, res, next) => {
+  console.log(`[EMPLOYEES ROUTE] ${req.method} ${req.path}`, {
+    params: req.params,
+    query: req.query,
+    bodyKeys: req.body ? Object.keys(req.body) : []
+  });
+  next();
+});
 
 // GET /api/employees - Fetch all employees
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM employees ORDER BY id DESC');
-    const employees = result.rows.map(row => ({
+    const rows = await dbHelper.query('SELECT * FROM employees WHERE deleted_at IS NULL ORDER BY id DESC');
+    const employees = rows.map((row: any) => ({
       id: row.id,
       empId: row.emp_id,
-      name: row.name,
+      name: row.name || (row.first_name && row.last_name ? `${row.first_name} ${row.last_name}` : ''),
+      firstName: row.first_name || null,
+      lastName: row.last_name || null,
       role: row.role,
-      department: row.department,
+      department: row.department || null,
       contact: row.contact,
       status: row.status,
-      lastLogin: row.last_login ? row.last_login.toISOString().slice(0, 16).replace('T', ' ') : 'Never',
-      avatar: row.avatar,
-      address: row.address,
+      lastLogin: row.last_login ? new Date(row.last_login).toISOString().slice(0, 16).replace('T', ' ') : 'Never',
+      avatar: row.avatar || null,
+      address: row.address || null,
       salary: row.salary,
-      contactName: row.contact_name,
-      contactNumber: row.contact_number,
-      relationship: row.relationship,
+      contactName: row.contact_name || null,
+      contactNumber: row.contact_number || null,
+      relationship: row.relationship || null,
       password: row.password
     }));
     res.json(employees);
@@ -35,6 +47,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const {
     name,
+    firstName,
+    lastName,
     role,
     contact,
     status,
@@ -48,49 +62,51 @@ router.post('/', async (req, res) => {
   } = req.body;
 
   try {
-    // Generate empId
-    const empIdResult = await pool.query('SELECT COALESCE(MAX(CAST(SUBSTRING(emp_id FROM 4) AS INTEGER)), 0) as max_id FROM employees');
-    const maxId = parseInt(empIdResult.rows[0].max_id) + 1;
+    // Generate empId - get max emp_id number
+    const maxIdResult = await dbHelper.query('SELECT MAX(CAST(SUBSTR(emp_id, 4) AS INTEGER)) as max_id FROM employees WHERE emp_id LIKE "EMP%"');
+    const maxId = (maxIdResult[0]?.max_id || 0) + 1;
     const empId = `EMP${String(maxId).padStart(3, '0')}`;
 
-    const query = `
-      INSERT INTO employees (emp_id, name, role, contact, status, avatar, address, salary, contact_name, contact_number, relationship, password)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      RETURNING *
-    `;
-    const values = [
-      empId,
-      name,
-      role,
-      contact,
-      status || 'Active',
-      avatar,
-      address,
-      salary,
-      contactName,
-      contactNumber,
-      relationship,
-      password
-    ];
+    // Use provided name or construct from firstName/lastName
+    const fullName = name || (firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || '');
 
-    const result = await pool.query(query, values);
-    const newEmployee = result.rows[0];
+    // Use dbHelper.insert to automatically set synced = 0 for new records
+    const result = await dbHelper.insert('employees', {
+      emp_id: empId,
+      name: fullName,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      role: role,
+      contact: contact,
+      status: status || 'Active',
+      avatar: avatar || null,
+      address: address || null,
+      salary: salary,
+      contact_name: contactName || null,
+      contact_number: contactNumber || null,
+      relationship: relationship || null,
+      password: password
+    });
+
+    const newEmployee = await dbHelper.getById('employees', result.id);
 
     const employee = {
       id: newEmployee.id,
       empId: newEmployee.emp_id,
-      name: newEmployee.name,
+      name: newEmployee.name || (newEmployee.first_name && newEmployee.last_name ? `${newEmployee.first_name} ${newEmployee.last_name}` : ''),
+      firstName: newEmployee.first_name || null,
+      lastName: newEmployee.last_name || null,
       role: newEmployee.role,
-      department: newEmployee.department,
+      department: newEmployee.department || null,
       contact: newEmployee.contact,
       status: newEmployee.status,
       lastLogin: 'Never',
-      avatar: newEmployee.avatar,
-      address: newEmployee.address,
+      avatar: newEmployee.avatar || null,
+      address: newEmployee.address || null,
       salary: newEmployee.salary,
-      contactName: newEmployee.contact_name,
-      contactNumber: newEmployee.contact_number,
-      relationship: newEmployee.relationship,
+      contactName: newEmployee.contact_name || null,
+      contactNumber: newEmployee.contact_number || null,
+      relationship: newEmployee.relationship || null,
       password: newEmployee.password
     };
 
@@ -103,9 +119,25 @@ router.post('/', async (req, res) => {
 
 // PUT /api/employees/:id - Update an employee
 router.put('/:id', async (req, res): Promise<void> => {
+  console.log(`[EMPLOYEE PUT] ========== ROUTE CALLED ==========`);
+  console.log(`[EMPLOYEE PUT] Params:`, req.params);
+  console.log(`[EMPLOYEE PUT] Body:`, req.body);
+  
   const { id } = req.params;
+  const employeeId = parseInt(id, 10);
+  
+  console.log(`[EMPLOYEE PUT] Parsed employeeId: ${employeeId}`);
+  
+  if (isNaN(employeeId)) {
+    console.log(`[EMPLOYEE PUT] ERROR: Invalid employee ID: ${id}`);
+    res.status(400).json({ error: 'Invalid employee ID' });
+    return;
+  }
+  
   const {
     name,
+    firstName,
+    lastName,
     role,
     department,
     contact,
@@ -120,50 +152,102 @@ router.put('/:id', async (req, res): Promise<void> => {
   } = req.body;
 
   try {
-    const query = `
-      UPDATE employees
-      SET name = $1, role = $2, department = $3, contact = $4, status = $5, avatar = $6, address = $7, salary = $8, contact_name = $9, contact_number = $10, relationship = $11, password = $12
-      WHERE id = $13
-      RETURNING *
-    `;
-    const values = [
-      name,
-      role,
-      department,
-      contact,
-      status,
-      avatar,
-      address,
-      salary,
-      contactName,
-      contactNumber,
-      relationship,
-      password,
-      id
-    ];
+    // Use provided name or construct from firstName/lastName, or keep existing if not provided
+    let fullName = name;
+    if (!fullName && firstName && lastName) {
+      fullName = `${firstName} ${lastName}`;
+    } else if (!fullName && firstName) {
+      fullName = firstName;
+    } else if (!fullName && lastName) {
+      fullName = lastName;
+    }
 
-    const result = await pool.query(query, values);
-    if (result.rows.length === 0) {
+    // Use dbHelper.update to automatically mark as synced = 0
+    console.log(`[DEBUG] ========== EMPLOYEE UPDATE START ==========`);
+    console.log(`[DEBUG] Updating employee with id: ${employeeId} (original: ${id})`);
+    
+    // Check current state before update
+    const beforeUpdate = await dbHelper.getById('employees', employeeId);
+    if (!beforeUpdate) {
+      console.log(`[DEBUG] ERROR: Employee ${employeeId} not found!`);
+      res.status(404).json({ error: 'Employee not found' });
+      return;
+    }
+    console.log(`[DEBUG] Before update - id: ${beforeUpdate.id}, emp_id: ${beforeUpdate.emp_id}, synced: ${beforeUpdate.synced}, name: ${beforeUpdate.name}`);
+    
+    // Perform the update
+    const updateResult = await dbHelper.update('employees', employeeId, {
+      name: fullName || null,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      role: role,
+      department: department || null,
+      contact: contact,
+      status: status,
+      avatar: avatar || null,
+      address: address || null,
+      salary: salary,
+      contact_name: contactName || null,
+      contact_number: contactNumber || null,
+      relationship: relationship || null,
+      password: password
+    });
+    console.log(`[DEBUG] dbHelper.update() returned:`, updateResult ? 'success' : 'null');
+    
+    // Verify the update worked
+    const updatedEmployee = await dbHelper.getById('employees', employeeId);
+    
+    // Debug: Verify synced flag was set to 0
+    if (updatedEmployee) {
+      console.log(`[DEBUG] After update - id: ${updatedEmployee.id}, emp_id: ${updatedEmployee.emp_id}, synced: ${updatedEmployee.synced}, name: ${updatedEmployee.name}`);
+      
+      // Double-check by querying directly with both id and emp_id
+      const directCheckById = await dbHelper.queryOne(
+        'SELECT id, emp_id, synced, name FROM employees WHERE id = ?',
+        [employeeId]
+      );
+      console.log(`[DEBUG] Direct check by id - id: ${directCheckById?.id}, emp_id: ${directCheckById?.emp_id}, synced: ${directCheckById?.synced}, name: ${directCheckById?.name}`);
+      
+      if (updatedEmployee.emp_id) {
+        const directCheckByEmpId = await dbHelper.queryOne(
+          'SELECT id, emp_id, synced, name FROM employees WHERE emp_id = ?',
+          [updatedEmployee.emp_id]
+        );
+        console.log(`[DEBUG] Direct check by emp_id - id: ${directCheckByEmpId?.id}, emp_id: ${directCheckByEmpId?.emp_id}, synced: ${directCheckByEmpId?.synced}, name: ${directCheckByEmpId?.name}`);
+      }
+      
+      if (updatedEmployee.synced !== 0 && updatedEmployee.synced !== '0') {
+        console.log(`[DEBUG] WARNING: synced is not 0! It is: ${updatedEmployee.synced} (type: ${typeof updatedEmployee.synced})`);
+      } else {
+        console.log(`[DEBUG] SUCCESS: synced = 0 confirmed!`);
+      }
+    } else {
+      console.log(`[DEBUG] ERROR: Employee ${employeeId} not found after update!`);
+    }
+    console.log(`[DEBUG] ========== EMPLOYEE UPDATE END ==========`);
+    
+    if (!updatedEmployee || updatedEmployee.deleted_at) {
       res.status(404).json({ error: 'Employee not found' });
       return;
     }
 
-    const updatedEmployee = result.rows[0];
     const employee = {
       id: updatedEmployee.id,
       empId: updatedEmployee.emp_id,
-      name: updatedEmployee.name,
+      name: updatedEmployee.name || (updatedEmployee.first_name && updatedEmployee.last_name ? `${updatedEmployee.first_name} ${updatedEmployee.last_name}` : ''),
+      firstName: updatedEmployee.first_name || null,
+      lastName: updatedEmployee.last_name || null,
       role: updatedEmployee.role,
-      department: updatedEmployee.department,
+      department: updatedEmployee.department || null,
       contact: updatedEmployee.contact,
       status: updatedEmployee.status,
-      lastLogin: updatedEmployee.last_login ? updatedEmployee.last_login.toISOString().slice(0, 16).replace('T', ' ') : 'Never',
-      avatar: updatedEmployee.avatar,
-      address: updatedEmployee.address,
+      lastLogin: updatedEmployee.last_login ? new Date(updatedEmployee.last_login).toISOString().slice(0, 16).replace('T', ' ') : 'Never',
+      avatar: updatedEmployee.avatar || null,
+      address: updatedEmployee.address || null,
       salary: updatedEmployee.salary,
-      contactName: updatedEmployee.contact_name,
-      contactNumber: updatedEmployee.contact_number,
-      relationship: updatedEmployee.relationship,
+      contactName: updatedEmployee.contact_name || null,
+      contactNumber: updatedEmployee.contact_number || null,
+      relationship: updatedEmployee.relationship || null,
       password: updatedEmployee.password
     };
 
@@ -176,22 +260,54 @@ router.put('/:id', async (req, res): Promise<void> => {
   }
 });
 
-// DELETE /api/employees/:id - Delete an employee
+// DELETE /api/employees/:id - Soft delete an employee
 router.delete('/:id', async (req, res): Promise<void> => {
   const { id } = req.params;
+  const employeeId = parseInt(id, 10);
 
   try {
-    const result = await pool.query('DELETE FROM employees WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
+    console.log(`Attempting to soft delete employee with ID: ${id} (parsed: ${employeeId})`);
+    
+    if (isNaN(employeeId)) {
+      console.log(`Invalid employee ID: ${id}`);
+      res.status(400).json({ error: 'Invalid employee ID' });
+      return;
+    }
+    
+    // Check if employee exists and is not already deleted
+    const employee = await dbHelper.queryOne('SELECT * FROM employees WHERE id = ? AND deleted_at IS NULL', [employeeId]);
+    if (!employee) {
+      console.log(`Employee ${employeeId} not found or already deleted`);
+      // Check if it exists but is deleted
+      const deletedEmployee = await dbHelper.queryOne('SELECT id, deleted_at FROM employees WHERE id = ?', [employeeId]);
+      if (deletedEmployee) {
+        res.status(404).json({ error: 'Employee already deleted' });
+        return;
+      }
       res.status(404).json({ error: 'Employee not found' });
       return;
     }
 
+    console.log(`Soft deleting employee:`, { id: employee.id, name: employee.name, emp_id: employee.emp_id });
+
+    // Use soft delete - set deleted_at timestamp
+    await dbHelper.delete('employees', employeeId);
+
+    // Cascade soft delete: Also soft delete all attendance records for this employee
+    const attendanceCount = await dbHelper.run(
+      `UPDATE attendance 
+       SET deleted_at = CURRENT_TIMESTAMP, synced = 0 
+       WHERE employee_id = ? AND deleted_at IS NULL`,
+      [employeeId]
+    );
+    console.log(`Soft deleted ${attendanceCount.changes || 0} attendance records for employee ${employeeId}`);
+
+    console.log(`Successfully soft deleted employee ${employeeId}`);
     res.json({ message: 'Employee deleted successfully' });
     return;
   } catch (err) {
     console.error('Error deleting employee:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err instanceof Error ? err.message : 'Unknown error' });
     return;
   }
 });

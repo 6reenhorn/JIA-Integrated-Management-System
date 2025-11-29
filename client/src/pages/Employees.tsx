@@ -210,12 +210,17 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   }, [payrollRecords]);
 
   // Calculate attendance stats (only when both data sets are loaded)
+  // Exclude admin employees from attendance calculations
   const attendanceStats = useMemo(() => {
     if (employees.length === 0 || attendanceRecords.length === 0) {
       return { present: 0, absent: 0, onLeave: 0 };
     }
-    return calculateAttendanceStats(attendanceRecords, employees.length);
-  }, [attendanceRecords, employees.length]);
+    // Filter out admin employees for attendance stats
+    const nonAdminEmployees = employees.filter(emp => 
+      emp.role && emp.role.toLowerCase() !== 'admin'
+    );
+    return calculateAttendanceStats(attendanceRecords, nonAdminEmployees.length, employees);
+  }, [attendanceRecords, employees]);
 
   // Filter employees based on search and filters
   const filteredEmployees = useMemo(() =>
@@ -278,7 +283,15 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setIsModalOpen(false); // Close modal immediately
     try {
       const response = await axios.post('http://localhost:3001/api/employees', newEmployee);
-      setEmployees(prevEmployees => sortEmployeesByNewest([response.data, ...prevEmployees]));
+      // Add new employee at the start of the list (newest first)
+      // Use functional update to ensure we get the latest state
+      setEmployees(prevEmployees => {
+        // Create new array with new employee first, then sort
+        const updated = [response.data, ...prevEmployees];
+        return sortEmployeesByNewest(updated);
+      });
+      // Reset to first page to show the new employee
+      setCurrentPage(1);
     } catch (err) {
       console.error('Error adding employee:', err);
       // Handle error (could show a toast or alert)
