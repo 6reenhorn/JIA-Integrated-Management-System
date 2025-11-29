@@ -170,7 +170,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     setFormData(prev => ({
       ...prev,
       productName: product.productName,
-      price: product.productPrice,
+      price: formatNumberWithCommas(product.productPrice.toString()),
     }));
     setProductSearchTerm(product.productName);
     setIsProductDropdownOpen(false);
@@ -273,8 +273,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
           }
         }
         
-        // The error will be handled by the parent component
-        throw err; // Re-throw to let parent handle the error
+        throw err;
       }
     }
   };
@@ -438,14 +437,12 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     <input
                       type="text"
                       min="0"
+                      step="0.01"
                       value={formData.price}
-                      onChange={(e) => {
-                        const numericValue = e.target.value.replace(/[^0-9.]/g, '');
-                        const formatted = formatNumberWithCommas(numericValue);
-                        handleInputChange('price', formatted === '' ? '' : formatted);
-                      }}
+                      onChange={(e) => handleInputChange('price', e.target.value)}
+                      readOnly={true}
                       placeholder="0.00"
-                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none cursor-not-allowed ${
                         errors.price ? 'border-red-300' : 'border-gray-300'
                       }`}
                     />

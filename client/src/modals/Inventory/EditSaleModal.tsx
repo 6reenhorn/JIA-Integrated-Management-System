@@ -452,20 +452,21 @@ useEffect(() => {
                       />
                     </div>
                     <div>
-                      <label className="text-[12px] font-bold">Price per Item (₱)</label>
-                      <input
-                        type="text"
-                        name="price"
-                        value={formData.price}
-                        onChange={handleInputChange}
-                        disabled={isUpdating}
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                        required
-                      />
-                    </div>
+                    <label className="text-[12px] font-bold">Price per Item (₱)</label>
+                    <input
+                      type="text"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      disabled={isUpdating}
+                      readOnly={true}
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-not-allowed"
+                      required
+                    />
+                  </div>
                   </div>
                   
                   {/* Total Amount Display */}
