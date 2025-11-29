@@ -162,9 +162,9 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 onClick={toggleDropdown}
                 className="relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-full min-w-[140px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <span className="truncate">{getDisplayText()}</span>
+                <span className="truncate ml-5">{getDisplayText()}</span>
                 <svg
-                  width="16"
+                  width="30"
                   height="16"
                   viewBox="0 0 16 16"
                   fill="none"

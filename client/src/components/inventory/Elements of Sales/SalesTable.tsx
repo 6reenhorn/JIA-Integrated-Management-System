@@ -145,7 +145,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-hidden">
+          <div className="h-[373px] overflow-hidden">
             <table className="table-fixed w-full">
               <tbody className="divide-y divide-gray-200">
                 {Array.from({ length: skeletonCount }).map((_, index) => (
@@ -233,7 +233,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
+          <div className="h-[373px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <table className="table-fixed w-full h-full">
               <tbody className="divide-y divide-gray-200">
                 {paginatedItems.map((record) => (
