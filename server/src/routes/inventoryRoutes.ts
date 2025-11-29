@@ -65,14 +65,51 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
   }
 
   try {
-    const query = `
-      INSERT INTO categories (category_name, color)
-      VALUES (?, ?)
-    `;
-    const values = [name, color || '#6B7280'];
+    // Check for duplicate category name (including soft-deleted ones)
+    const existing = await dbHelper.queryOne('SELECT * FROM categories WHERE category_name = ?', [name]);
+    if (existing) {
+      if (existing.deleted_at) {
+        // Category exists but is soft-deleted - restore it
+        await dbHelper.update('categories', existing.id, {
+          category_name: name,
+          color: color || '#6B7280',
+          deleted_at: null
+        });
+        const restoredCat = await dbHelper.getById('categories', existing.id);
+        const category: Category = {
+          id: restoredCat.id,
+          name: restoredCat.category_name,
+          color: restoredCat.color,
+          createdAt: restoredCat.created_at
+        };
+        res.status(200).json(category);
+        return;
+      } else {
+        // Category already exists and is not deleted
+        res.status(400).json({ error: `Category "${name}" already exists` });
+        return;
+      }
+    }
 
-    const result = await dbHelper.run(query, values);
-    const newCategory = await dbHelper.getById('categories', result.lastID);
+    // Use dbHelper.insert to ensure synced = 0 is set
+    const result = await dbHelper.insert('categories', {
+      category_name: name,
+      color: color || '#6B7280'
+    });
+
+    // For SQLite, insert returns { id: ..., ...data }
+    // For PostgreSQL, insert returns the full row
+    const categoryId = result.id || result.lastID;
+    
+    if (!categoryId) {
+      throw new Error('Failed to get category ID after insert');
+    }
+
+    const newCategory = await dbHelper.getById('categories', categoryId);
+    
+    if (!newCategory) {
+      throw new Error('Failed to retrieve newly created category');
+    }
 
     const category: Category = {
       id: newCategory.id,
@@ -82,9 +119,14 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
     };
 
     res.status(201).json(category);
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error adding category:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    // If it's a UNIQUE constraint error, provide a more user-friendly message
+    if (err.code === 'SQLITE_CONSTRAINT' || err.code === '23505') {
+      res.status(400).json({ error: `Category "${name}" already exists` });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 
