@@ -33,6 +33,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     minimumStock: 5
   });
 
+  const [productPriceDisplay, setProductPriceDisplay] = useState<string>('');
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [wasUpdating, setWasUpdating] = useState(false);
@@ -93,6 +94,14 @@ useEffect(() => {
         description: initialData.description || '',
         minimumStock: initialData.minimumStock || 5
       });
+      // Set the display value for price
+      if (initialData.productPrice) {
+        setProductPriceDisplay(
+          initialData.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        );
+      } else {
+        setProductPriceDisplay('');
+      }
     }
   }, [initialData, isOpen]);
 
@@ -129,11 +138,36 @@ useEffect(() => {
     }
   };
 
+  const formatNumberWithCommas = (value: string): string => {
+    const cleanValue = value.replace(/[^\d.]/g, '');
+    const parts = cleanValue.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.length > 1 ? `${parts[0]}.${parts[1].slice(0, 2)}` : parts[0];
+  };
+
   const handleInputChange = (field: keyof InventoryItem, value: string | number) => {
     setFormData((prev: InventoryItem) => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Remove all non-numeric characters except decimal point
+    const numericValue = value.replace(/[^\d.]/g, '');
+    
+    // Prevent multiple decimal points
+    const parts = numericValue.split('.');
+    const cleanedNumeric = parts.length > 2 
+      ? parts[0] + '.' + parts.slice(1).join('') 
+      : numericValue;
+    
+    // Format the cleaned numeric value
+    const formattedValue = formatNumberWithCommas(cleanedNumeric);
+    
+    setProductPriceDisplay(formattedValue);
+    handleInputChange('productPrice', cleanedNumeric === '' ? 0 : parseFloat(cleanedNumeric) || 0);
   };
 
   const handleSubmit = () => {
@@ -294,13 +328,8 @@ useEffect(() => {
                   <label className="text-[12px] font-bold">Price (₱)</label>
                   <input
                     type="text"
-                    value={formData.productPrice ? formData.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
-                    onChange={(e) => {
-                      // Remove all non-numeric characters except decimal point
-                      const value = e.target.value.replace(/[^0-9.]/g, '');
-                      // Parse to float and update
-                      handleInputChange('productPrice', parseFloat(value) || 0);
-                    }}
+                    value={productPriceDisplay}
+                    onChange={handlePriceChange}
                     disabled={isUpdating}
                     placeholder="0.00"
                     className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
