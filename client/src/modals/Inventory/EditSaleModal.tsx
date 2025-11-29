@@ -46,7 +46,14 @@ const parseDateFromMMDDYYYY = (dateString: string): Date | null => {
 };
 
 const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, onSave, isUpdating = false }) => {
-  const [formData, setFormData] = useState<{
+  // Format number with commas
+  const formatNumberWithCommas = (value: string): string => {
+    const numericValue = value.replace(/,/g, '');
+    if (!numericValue || isNaN(Number(numericValue))) return '';
+    return Number(numericValue).toLocaleString('en-US');
+  };
+
+const [formData, setFormData] = useState<{
     date: string;
     productName: string;
     quantity: number | string;
@@ -55,8 +62,8 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
   }>({
     date: sale?.date || '',
     productName: sale?.productName || '',
-    quantity: sale?.quantity || '',
-    price: sale?.price || '',
+    quantity: sale?.quantity ? formatNumberWithCommas(sale.quantity.toString()) : '',
+    price: sale?.price ? formatNumberWithCommas(sale.price.toString()) : '',
     paymentMethod: sale?.paymentMethod || 'Cash'
   });
 
@@ -75,13 +82,13 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
   const [wasUpdating, setWasUpdating] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+useEffect(() => {
     if (sale) {
       setFormData({
         date: sale.date,
         productName: sale.productName,
-        quantity: sale.quantity,
-        price: sale.price,
+        quantity: formatNumberWithCommas(sale.quantity.toString()),
+        price: formatNumberWithCommas(sale.price.toString()),
         paymentMethod: sale.paymentMethod
       });
       
@@ -183,20 +190,22 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
   }, [isOpen, onClose, isUpdating]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    if (name === 'quantity' || name === 'price') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value === '' ? '' : parseFloat(value)
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
+      const { name, value } = e.target;
+      
+      if (name === 'quantity' || name === 'price') {
+        const numericValue = value.replace(/[^0-9.]/g, '');
+        const formatted = formatNumberWithCommas(numericValue);
+        setFormData(prev => ({
+          ...prev,
+          [name]: formatted === '' ? '' : formatted
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+    };
 
   // Watch for update completion
   useEffect(() => {
@@ -431,21 +440,21 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                     <div>
                       <label className="text-[12px] font-bold">Quantity</label>
                       <input
-                        type="number"
+                        type="text"
                         name="quantity"
                         value={formData.quantity}
                         onChange={handleInputChange}
                         disabled={isUpdating}
                         min="1"
                         placeholder="0"
-                        className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         required
                       />
                     </div>
                     <div>
                       <label className="text-[12px] font-bold">Price per Item (₱)</label>
                       <input
-                        type="number"
+                        type="text"
                         name="price"
                         value={formData.price}
                         onChange={handleInputChange}
@@ -453,7 +462,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({ isOpen, onClose, sale, on
                         step="0.01"
                         min="0"
                         placeholder="0.00"
-                        className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         required
                       />
                     </div>

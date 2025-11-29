@@ -136,6 +136,13 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [handleClose]);
 
+  // Format number with commas
+  const formatNumberWithCommas = (value: string): string => {
+    const numericValue = value.replace(/,/g, '');
+    if (!numericValue || isNaN(Number(numericValue))) return '';
+    return Number(numericValue).toLocaleString('en-US');
+  };
+
   // Handle escape key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -408,13 +415,16 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   <div>
                     <label className="text-[12px] font-bold">Quantity</label>
                     <input
-                      type="number"
+                      type="text"
                       min="1"
-                      max={selectedProduct?.stock || undefined}
                       value={formData.quantity}
-                      onChange={(e) => handleInputChange('quantity', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/[^0-9.]/g, '');
+                        const formatted = formatNumberWithCommas(numericValue);
+                        handleInputChange('quantity', formatted === '' ? '' : formatted);
+                      }}
                       placeholder="0"
-                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
                         errors.quantity ? 'border-red-300' : 'border-gray-300'
                       }`}
                     />
@@ -426,13 +436,16 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                   <div>
                     <label className="text-[12px] font-bold">Price per Item (₱)</label>
                     <input
-                      type="number"
+                      type="text"
                       min="0"
-                      step="0.01"
                       value={formData.price}
-                      onChange={(e) => handleInputChange('price', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/[^0-9.]/g, '');
+                        const formatted = formatNumberWithCommas(numericValue);
+                        handleInputChange('price', formatted === '' ? '' : formatted);
+                      }}
                       placeholder="0.00"
-                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
                         errors.price ? 'border-red-300' : 'border-gray-300'
                       }`}
                     />
