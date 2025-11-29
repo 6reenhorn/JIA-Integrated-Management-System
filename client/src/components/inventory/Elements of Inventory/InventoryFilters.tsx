@@ -138,7 +138,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-between mt-6 w-full">
+      <div className="flex items-center justify-between mt-5 w-full">
         {/* Left side: Search and Refresh */}
         <div className="flex items-center gap-4">
           <div className="relative">
