@@ -9,7 +9,36 @@ const createAdminUser = async () => {
     );
 
     if (adminExists) {
-      console.log('Admin user already exists');
+      console.log('Admin user already exists, updating missing fields...');
+      
+      // Update existing admin with missing fields
+      const adminName = adminExists.name || 'System Administrator';
+      const nameParts = adminName.trim().split(/\s+/);
+      const firstName = nameParts[0] || 'System';
+      const lastName = nameParts.slice(1).join(' ') || 'Administrator';
+      
+      // Extract email and phone from contact if available
+      const contact = adminExists.contact || 'admin@example.com';
+      const emailMatch = contact.match(/[\w\.-]+@[\w\.-]+\.\w+/);
+      const phoneMatch = contact.match(/[\d\s\+\-\(\)]+/);
+      const email = emailMatch ? emailMatch[0] : 'admin@example.com';
+      const phone = phoneMatch ? phoneMatch[0].trim() : '+1 (555) 000-0000';
+      
+      const updateData = {
+        first_name: adminExists.first_name || firstName,
+        last_name: adminExists.last_name || lastName,
+        department: adminExists.department || 'Administrative',
+        email: adminExists.email || email,
+        phone: adminExists.phone || phone
+      };
+      
+      await dbHelper.update('employees', adminExists.id, updateData);
+      console.log('✅ Admin user updated with missing fields');
+      console.log('First Name:', updateData.first_name);
+      console.log('Last Name:', updateData.last_name);
+      console.log('Department:', updateData.department);
+      console.log('Email:', updateData.email);
+      console.log('Phone:', updateData.phone);
       return;
     }
 
@@ -18,16 +47,27 @@ const createAdminUser = async () => {
     const hashedPassword = await bcrypt.hash('admin123', salt);
 
     // Create admin user with all employee fields
+    // Split "System Administrator" into first_name and last_name
+    const adminName = 'System Administrator';
+    const nameParts = adminName.trim().split(/\s+/);
+    const firstName = nameParts[0] || 'System';
+    const lastName = nameParts.slice(1).join(' ') || 'Administrator';
+    
     const adminUser = {
       emp_id: 'ADMIN001',
-      name: 'System Administrator',
+      name: adminName,
+      first_name: firstName,
+      last_name: lastName,
       role: 'admin',
-      contact: 'admin@example.com',
+      department: 'Administrative',
+      contact: 'admin@example.com\n+1 (555) 000-0000\n123 Admin St, Admin City',
+      email: 'admin@example.com',
+      phone: '+1 (555) 000-0000',
       status: 'Active',
       last_login: null,
       avatar: null,
       address: '123 Admin St, Admin City',
-      salary: 0, // Set appropriate salary
+      salary: '50000', // Set appropriate salary
       contact_name: 'Emergency Contact',
       contact_number: '09123456789',
       relationship: 'Self',

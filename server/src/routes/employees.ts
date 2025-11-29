@@ -3,6 +3,16 @@ import { dbHelper } from '../db/dbHelper';
 
 const router = Router();
 
+// Log all requests to employees routes for debugging
+router.use((req, res, next) => {
+  console.log(`[EMPLOYEES ROUTE] ${req.method} ${req.path}`, {
+    params: req.params,
+    query: req.query,
+    bodyKeys: req.body ? Object.keys(req.body) : []
+  });
+  next();
+});
+
 // GET /api/employees - Fetch all employees
 router.get('/', async (req, res) => {
   try {
@@ -60,29 +70,25 @@ router.post('/', async (req, res) => {
     // Use provided name or construct from firstName/lastName
     const fullName = name || (firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || '');
 
-    const query = `
-      INSERT INTO employees (emp_id, name, first_name, last_name, role, contact, status, avatar, address, salary, contact_name, contact_number, relationship, password)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    const values = [
-      empId,
-      fullName,
-      firstName || null,
-      lastName || null,
-      role,
-      contact,
-      status || 'Active',
-      avatar || null,
-      address || null,
-      salary,
-      contactName || null,
-      contactNumber || null,
-      relationship || null,
-      password
-    ];
+    // Use dbHelper.insert to automatically set synced = 0 for new records
+    const result = await dbHelper.insert('employees', {
+      emp_id: empId,
+      name: fullName,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      role: role,
+      contact: contact,
+      status: status || 'Active',
+      avatar: avatar || null,
+      address: address || null,
+      salary: salary,
+      contact_name: contactName || null,
+      contact_number: contactNumber || null,
+      relationship: relationship || null,
+      password: password
+    });
 
-    const result = await dbHelper.run(query, values);
-    const newEmployee = await dbHelper.getById('employees', result.lastID);
+    const newEmployee = await dbHelper.getById('employees', result.id);
 
     const employee = {
       id: newEmployee.id,
@@ -113,7 +119,21 @@ router.post('/', async (req, res) => {
 
 // PUT /api/employees/:id - Update an employee
 router.put('/:id', async (req, res): Promise<void> => {
+  console.log(`[EMPLOYEE PUT] ========== ROUTE CALLED ==========`);
+  console.log(`[EMPLOYEE PUT] Params:`, req.params);
+  console.log(`[EMPLOYEE PUT] Body:`, req.body);
+  
   const { id } = req.params;
+  const employeeId = parseInt(id, 10);
+  
+  console.log(`[EMPLOYEE PUT] Parsed employeeId: ${employeeId}`);
+  
+  if (isNaN(employeeId)) {
+    console.log(`[EMPLOYEE PUT] ERROR: Invalid employee ID: ${id}`);
+    res.status(400).json({ error: 'Invalid employee ID' });
+    return;
+  }
+  
   const {
     name,
     firstName,
@@ -142,31 +162,69 @@ router.put('/:id', async (req, res): Promise<void> => {
       fullName = lastName;
     }
 
-    const query = `
-      UPDATE employees
-      SET name = ?, first_name = ?, last_name = ?, role = ?, department = ?, contact = ?, status = ?, avatar = ?, address = ?, salary = ?, contact_name = ?, contact_number = ?, relationship = ?, password = ?
-      WHERE id = ? AND deleted_at IS NULL
-    `;
-    const values = [
-      fullName || null,
-      firstName || null,
-      lastName || null,
-      role,
-      department || null,
-      contact,
-      status,
-      avatar || null,
-      address || null,
-      salary,
-      contactName || null,
-      contactNumber || null,
-      relationship || null,
-      password,
-      id
-    ];
-
-    await dbHelper.run(query, values);
-    const updatedEmployee = await dbHelper.getById('employees', id);
+    // Use dbHelper.update to automatically mark as synced = 0
+    console.log(`[DEBUG] ========== EMPLOYEE UPDATE START ==========`);
+    console.log(`[DEBUG] Updating employee with id: ${employeeId} (original: ${id})`);
+    
+    // Check current state before update
+    const beforeUpdate = await dbHelper.getById('employees', employeeId);
+    if (!beforeUpdate) {
+      console.log(`[DEBUG] ERROR: Employee ${employeeId} not found!`);
+      res.status(404).json({ error: 'Employee not found' });
+      return;
+    }
+    console.log(`[DEBUG] Before update - id: ${beforeUpdate.id}, emp_id: ${beforeUpdate.emp_id}, synced: ${beforeUpdate.synced}, name: ${beforeUpdate.name}`);
+    
+    // Perform the update
+    const updateResult = await dbHelper.update('employees', employeeId, {
+      name: fullName || null,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      role: role,
+      department: department || null,
+      contact: contact,
+      status: status,
+      avatar: avatar || null,
+      address: address || null,
+      salary: salary,
+      contact_name: contactName || null,
+      contact_number: contactNumber || null,
+      relationship: relationship || null,
+      password: password
+    });
+    console.log(`[DEBUG] dbHelper.update() returned:`, updateResult ? 'success' : 'null');
+    
+    // Verify the update worked
+    const updatedEmployee = await dbHelper.getById('employees', employeeId);
+    
+    // Debug: Verify synced flag was set to 0
+    if (updatedEmployee) {
+      console.log(`[DEBUG] After update - id: ${updatedEmployee.id}, emp_id: ${updatedEmployee.emp_id}, synced: ${updatedEmployee.synced}, name: ${updatedEmployee.name}`);
+      
+      // Double-check by querying directly with both id and emp_id
+      const directCheckById = await dbHelper.queryOne(
+        'SELECT id, emp_id, synced, name FROM employees WHERE id = ?',
+        [employeeId]
+      );
+      console.log(`[DEBUG] Direct check by id - id: ${directCheckById?.id}, emp_id: ${directCheckById?.emp_id}, synced: ${directCheckById?.synced}, name: ${directCheckById?.name}`);
+      
+      if (updatedEmployee.emp_id) {
+        const directCheckByEmpId = await dbHelper.queryOne(
+          'SELECT id, emp_id, synced, name FROM employees WHERE emp_id = ?',
+          [updatedEmployee.emp_id]
+        );
+        console.log(`[DEBUG] Direct check by emp_id - id: ${directCheckByEmpId?.id}, emp_id: ${directCheckByEmpId?.emp_id}, synced: ${directCheckByEmpId?.synced}, name: ${directCheckByEmpId?.name}`);
+      }
+      
+      if (updatedEmployee.synced !== 0 && updatedEmployee.synced !== '0') {
+        console.log(`[DEBUG] WARNING: synced is not 0! It is: ${updatedEmployee.synced} (type: ${typeof updatedEmployee.synced})`);
+      } else {
+        console.log(`[DEBUG] SUCCESS: synced = 0 confirmed!`);
+      }
+    } else {
+      console.log(`[DEBUG] ERROR: Employee ${employeeId} not found after update!`);
+    }
+    console.log(`[DEBUG] ========== EMPLOYEE UPDATE END ==========`);
     
     if (!updatedEmployee || updatedEmployee.deleted_at) {
       res.status(404).json({ error: 'Employee not found' });
@@ -234,6 +292,15 @@ router.delete('/:id', async (req, res): Promise<void> => {
 
     // Use soft delete - set deleted_at timestamp
     await dbHelper.delete('employees', employeeId);
+
+    // Cascade soft delete: Also soft delete all attendance records for this employee
+    const attendanceCount = await dbHelper.run(
+      `UPDATE attendance 
+       SET deleted_at = CURRENT_TIMESTAMP, synced = 0 
+       WHERE employee_id = ? AND deleted_at IS NULL`,
+      [employeeId]
+    );
+    console.log(`Soft deleted ${attendanceCount.changes || 0} attendance records for employee ${employeeId}`);
 
     console.log(`Successfully soft deleted employee ${employeeId}`);
     res.json({ message: 'Employee deleted successfully' });

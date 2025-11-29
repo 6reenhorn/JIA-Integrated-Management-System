@@ -41,7 +41,7 @@ interface Category {
 // GET /api/inventory/categories - Fetch all categories
 router.get('/categories', async (req: Request, res: Response): Promise<void> => {
   try {
-    const rows = await dbHelper.query('SELECT * FROM categories ORDER BY category_name ASC');
+    const rows = await dbHelper.query('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY category_name ASC');
     const categories: Category[] = rows.map((row: any): Category => ({
       id: row.id,
       name: row.category_name,
@@ -94,20 +94,29 @@ router.delete('/categories/:categoryName', async (req: Request, res: Response): 
   const decodedCategoryName = decodeURIComponent(categoryName);
   
   try {
-    // 1. Check if category exists
+    // 1. Check if category exists and is not already deleted
     const categoryCheck = await dbHelper.queryOne(
-      'SELECT * FROM categories WHERE category_name = ?',
+      'SELECT * FROM categories WHERE category_name = ? AND deleted_at IS NULL',
       [decodedCategoryName]
     );
     
     if (!categoryCheck) {
+      // Check if it exists but is deleted
+      const deletedCheck = await dbHelper.queryOne(
+        'SELECT * FROM categories WHERE category_name = ?',
+        [decodedCategoryName]
+      );
+      if (deletedCheck) {
+        res.status(404).json({ error: 'Category already deleted' });
+        return;
+      }
       res.status(404).json({ error: 'Category not found' });
       return;
     }
 
     // 2. Check if there are products using this category
     const productsCheck = await dbHelper.queryOne(
-      'SELECT COUNT(*) as count FROM inventory_items WHERE category = ?',
+      'SELECT COUNT(*) as count FROM inventory_items WHERE category = ? AND deleted_at IS NULL',
       [decodedCategoryName]
     );
     
@@ -121,8 +130,8 @@ router.delete('/categories/:categoryName', async (req: Request, res: Response): 
       return;
     }
 
-    // 3. Delete the category
-    await dbHelper.run('DELETE FROM categories WHERE category_name = ?', [decodedCategoryName]);
+    // 3. Soft delete the category - use dbHelper.delete with the category id
+    await dbHelper.delete('categories', categoryCheck.id);
     
     res.json({ 
       message: 'Category deleted successfully',
@@ -149,9 +158,9 @@ router.put('/categories/:categoryName', async (req: Request, res: Response): Pro
   }
   
   try {
-    // 1. Check if category exists
+    // 1. Check if category exists and is not deleted
     const categoryCheck = await dbHelper.queryOne(
-      'SELECT * FROM categories WHERE category_name = ?',
+      'SELECT * FROM categories WHERE category_name = ? AND deleted_at IS NULL',
       [decodedCategoryName]
     );
     
@@ -175,20 +184,23 @@ router.put('/categories/:categoryName', async (req: Request, res: Response): Pro
       }
     }
 
-    // 3. Update the category
-    await dbHelper.run(
-      'UPDATE categories SET category_name = ?, color = ? WHERE category_name = ?',
-      [name, color || '#6B7280', decodedCategoryName]
-    );
+    // 3. Update the category - use updateWhere since we're updating by category_name, not id
+    // First get the category id
+    const categoryId = categoryCheck.id;
+    await dbHelper.update('categories', categoryId, {
+      category_name: name,
+      color: color || '#6B7280'
+    });
     const updatedCategory = await dbHelper.queryOne(
       'SELECT * FROM categories WHERE category_name = ?',
       [name]
     );
 
     // 4. Update all inventory items that use this category (if name changed)
+    // Mark them as unsynced so they get pushed to PostgreSQL
     if (name !== decodedCategoryName) {
       await dbHelper.run(
-        'UPDATE inventory_items SET category = ? WHERE category = ?',
+        'UPDATE inventory_items SET category = ?, synced = 0 WHERE category = ?',
         [name, decodedCategoryName]
       );
     }
@@ -215,13 +227,43 @@ router.put('/categories/:categoryName', async (req: Request, res: Response): Pro
 // SALES ROUTES
 // ============================================
 
+// Helper function to format date as ISO string for frontend date formatter
+const formatDateForResponse = (dateValue: any): string => {
+  if (!dateValue) return '';
+  try {
+    // If it's already an ISO string, return it
+    if (typeof dateValue === 'string' && dateValue.includes('T')) {
+      return dateValue;
+    }
+    // If it's a date string (YYYY-MM-DD), convert to ISO
+    if (typeof dateValue === 'string') {
+      const date = new Date(dateValue + 'T00:00:00');
+      if (!isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+    }
+    // If it's a Date object, convert to ISO
+    if (dateValue instanceof Date) {
+      return dateValue.toISOString();
+    }
+    // Try to parse as date
+    const date = new Date(dateValue);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+    return '';
+  } catch {
+    return '';
+  }
+};
+
 // GET /api/inventory/sales - Fetch all sales records
 router.get('/sales', async (req: Request, res: Response): Promise<void> => {
   try {
     const rows = await dbHelper.query('SELECT * FROM sales_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
     const salesRecords: SalesRecord[] = rows.map((row: any): SalesRecord => ({
       id: row.id,
-      date: row.date ? (typeof row.date === 'string' ? row.date : new Date(row.date).toISOString().split('T')[0]) : '',
+      date: formatDateForResponse(row.date),
       productName: row.product_name,
       quantity: row.quantity,
       price: parseFloat(row.price || 0),
@@ -280,7 +322,7 @@ router.post('/sales', async (req: Request, res: Response): Promise<void> => {
 
     const salesRecord: SalesRecord = {
       id: newSale.id,
-      date: newSale.date ? (typeof newSale.date === 'string' ? newSale.date : new Date(newSale.date).toISOString().split('T')[0]) : '',
+      date: formatDateForResponse(newSale.date),
       productName: newSale.product_name,
       quantity: newSale.quantity,
       price: parseFloat(newSale.price || 0),
@@ -330,15 +372,15 @@ router.put('/sales/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const total = quantity * price;
 
-    const query = `
-      UPDATE sales_records
-      SET date = ?, product_name = ?, quantity = ?, price = ?, total = ?, 
-          payment_method = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `;
-    const values = [date, productName, quantity, price, total, paymentMethod, id];
-
-    await dbHelper.run(query, values);
+    // Use dbHelper.update which automatically marks records as synced = 0
+    await dbHelper.update('sales_records', id, {
+      date,
+      product_name: productName,
+      quantity,
+      price,
+      total,
+      payment_method: paymentMethod
+    });
     const updatedSale = await dbHelper.getById('sales_records', id);
     
     if (!updatedSale) {
@@ -348,7 +390,7 @@ router.put('/sales/:id', async (req: Request, res: Response): Promise<void> => {
 
     const salesRecord: SalesRecord = {
       id: updatedSale.id,
-      date: updatedSale.date ? (typeof updatedSale.date === 'string' ? updatedSale.date : new Date(updatedSale.date).toISOString().split('T')[0]) : '',
+      date: formatDateForResponse(updatedSale.date),
       productName: updatedSale.product_name,
       quantity: updatedSale.quantity,
       price: parseFloat(updatedSale.price || 0),
@@ -369,13 +411,20 @@ router.delete('/sales/:id', async (req: Request, res: Response): Promise<void> =
   const { id } = req.params;
 
   try {
-    const record = await dbHelper.getById('sales_records', id);
-    if (!record) {
+    const idNum = parseInt(id, 10);
+    if (isNaN(idNum)) {
+      res.status(400).json({ error: 'Invalid sales record ID' });
+      return;
+    }
+
+    const record = await dbHelper.getById('sales_records', idNum);
+    if (!record || record.deleted_at) {
       res.status(404).json({ error: 'Sales record not found' });
       return;
     }
 
-    await dbHelper.hardDelete('sales_records', id);
+    // Use soft delete - set deleted_at timestamp and synced = 0
+    await dbHelper.delete('sales_records', idNum);
 
     res.json({ message: 'Sales record deleted successfully' });
   } catch (err) {
@@ -487,15 +536,15 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     const totalAmount = stock * productPrice;
     const status = stock === 0 ? 'Out Of Stock' : stock <= 10 ? 'Low Stock' : 'In Stock';
 
-    const query = `
-      UPDATE inventory_items
-      SET product_name = ?, category = ?, stock = ?, status = ?, 
-          product_price = ?, total_amount = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `;
-    const values = [productName, category, stock, status, productPrice, totalAmount, id];
-
-    await dbHelper.run(query, values);
+    // Use dbHelper.update which automatically marks records as synced = 0
+    await dbHelper.update('inventory_items', id, {
+      product_name: productName,
+      category,
+      stock,
+      status,
+      product_price: productPrice,
+      total_amount: totalAmount
+    });
     const updatedItem = await dbHelper.getById('inventory_items', id);
     
     if (!updatedItem) {
@@ -527,13 +576,20 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   try {
-    const record = await dbHelper.getById('inventory_items', id);
-    if (!record) {
+    const idNum = parseInt(id, 10);
+    if (isNaN(idNum)) {
+      res.status(400).json({ error: 'Invalid inventory item ID' });
+      return;
+    }
+
+    const record = await dbHelper.getById('inventory_items', idNum);
+    if (!record || record.deleted_at) {
       res.status(404).json({ error: 'Inventory item not found' });
       return;
     }
 
-    await dbHelper.hardDelete('inventory_items', id);
+    // Use soft delete - set deleted_at timestamp and synced = 0
+    await dbHelper.delete('inventory_items', idNum);
 
     res.json({ message: 'Inventory item deleted successfully' });
   } catch (err) {

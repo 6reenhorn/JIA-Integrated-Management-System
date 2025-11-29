@@ -85,6 +85,16 @@ class DBHelper {
     });
   }
 
+  // Helper method to mark records as unsynced (for use with raw SQL queries)
+  async markUnsynced(table, whereClause, whereParams = []) {
+    if (this.dbType === 'sqlite') {
+      const sql = `UPDATE ${table} SET synced = 0 WHERE ${whereClause}`;
+      return this.run(sql, whereParams);
+    }
+    // For PostgreSQL, no need to mark as unsynced
+    return Promise.resolve({ changes: 0 });
+  }
+
   // Helper methods for common operations
   async getAll(table, orderBy = 'id') {
     const sql = `SELECT * FROM ${table} ORDER BY ${orderBy}`;
@@ -103,12 +113,15 @@ class DBHelper {
     const values = columns.map(col => data[col]);
     
     if (this.dbType === 'sqlite') {
-      const placeholders = columns.map(() => '?').join(', ');
+      // Add synced = 0 for new records (they need to be pushed to PostgreSQL)
+      const columnsWithSynced = [...columns, 'synced'];
+      const valuesWithSynced = [...values, 0];
+      const placeholders = columnsWithSynced.map(() => '?').join(', ');
       const sql = `
-        INSERT INTO ${table} (${columns.join(', ')})
+        INSERT INTO ${table} (${columnsWithSynced.join(', ')})
         VALUES (${placeholders})
       `;
-      const result = await this.run(sql, values);
+      const result = await this.run(sql, valuesWithSynced);
       return { id: result.lastID, ...data };
     } else {
       const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
@@ -127,10 +140,11 @@ class DBHelper {
     const values = columns.map(col => data[col]);
     
     if (this.dbType === 'sqlite') {
+      // Mark as unsynced when updated locally (synced = 0)
       const setClause = columns.map(col => `${col} = ?`).join(', ');
       const sql = `
         UPDATE ${table}
-        SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+        SET ${setClause}, updated_at = CURRENT_TIMESTAMP, synced = 0
         WHERE id = ?
       `;
       await this.run(sql, [...values, id]);
@@ -180,9 +194,10 @@ class DBHelper {
 
   async delete(table, id) {
     if (this.dbType === 'sqlite') {
+      // Mark as unsynced when deleted locally (synced = 0)
       const sql = `
         UPDATE ${table}
-        SET deleted_at = CURRENT_TIMESTAMP
+        SET deleted_at = CURRENT_TIMESTAMP, synced = 0
         WHERE id = ?
       `;
       return this.run(sql, [id]);
@@ -199,6 +214,7 @@ class DBHelper {
   }
 
   // Hard delete (permanent)
+  // Note: Hard deletes are not synced - they're local only
   async hardDelete(table, id) {
     if (this.dbType === 'sqlite') {
       const sql = `DELETE FROM ${table} WHERE id = ?`;

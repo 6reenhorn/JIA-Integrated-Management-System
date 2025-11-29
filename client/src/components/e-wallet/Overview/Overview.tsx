@@ -32,22 +32,32 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
   const [tempSummaryEndDate, setTempSummaryEndDate] = useState<Date | null>(null);
   const [dateRangeWarning, setDateRangeWarning] = useState<string>('');
   const [summaryDateRangeWarning, setSummaryDateRangeWarning] = useState<string>('');
+  const [isClosingDateFilter, setIsClosingDateFilter] = useState(false);
+  const [isClosingSummaryFilter, setIsClosingSummaryFilter] = useState(false);
 
   const dateFilterRef = React.useRef<HTMLDivElement>(null);
   const summaryDateFilterRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dateFilterRef.current && !dateFilterRef.current.contains(event.target as Node)) {
-        setShowDateFilter(false);
-      }
-      if (summaryDateFilterRef.current && !summaryDateFilterRef.current.contains(event.target as Node)) {
-        setShowSummaryDateFilter(false);
-      }
-    };
+      const handleClickOutside = (event: MouseEvent) => {
+        if (dateFilterRef.current && !dateFilterRef.current.contains(event.target as Node)) {
+          setIsClosingDateFilter(true);
+          setTimeout(() => {
+            setShowDateFilter(false);
+            setIsClosingDateFilter(false);
+          }, 200);
+        }
+        if (summaryDateFilterRef.current && !summaryDateFilterRef.current.contains(event.target as Node)) {
+          setIsClosingSummaryFilter(true);
+          setTimeout(() => {
+            setShowSummaryDateFilter(false);
+            setIsClosingSummaryFilter(false);
+          }, 200);
+        }
+      };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
   // Calculate overall statistics with date range filter
   const overallStats = useMemo(() => {
@@ -209,7 +219,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
     setDateRangeWarning('');
     setStartDate(tempStartDate);
     setEndDate(tempEndDate);
-    setShowDateFilter(false);
+    closeDateFilter();
   };
 
   const handleClearAndClose = () => {
@@ -217,7 +227,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
     setTempEndDate(null);
     setStartDate(null);
     setEndDate(null);
-    setShowDateFilter(false);
+    closeDateFilter();
   };
 
   const handleApplySummaryFilter = () => {
@@ -244,6 +254,15 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
     setSummaryEndDate(new Date());
     setShowSummaryDateFilter(false);
   };
+
+  const closeDateFilter = () => {
+    setIsClosingDateFilter(true);
+    setTimeout(() => {
+      setShowDateFilter(false);
+      setIsClosingDateFilter(false);
+    }, 200);
+  };
+
 
   const SummaryCard: React.FC<SummaryCardProps> = ({ title, data }) => {
     const isFiltered = summaryStartDate && summaryEndDate && 
@@ -511,7 +530,13 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
       <div className="flex h-10.5 items-center justify-between">
         <div className="flex items-center gap-3 relative" ref={dateFilterRef}>
           <button
-            onClick={() => setShowDateFilter(!showDateFilter)}
+              onClick={() => {
+                if (showDateFilter) {
+                  closeDateFilter();
+                } else {
+                  setShowDateFilter(true);
+                }
+              }}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
           >
             <Calendar className="w-4 h-6" />
@@ -539,7 +564,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
           )}
 
           {showDateFilter && (
-            <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-[320px]">
+            <div className={`absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-[320px] ${isClosingDateFilter ? 'animate-dropdown-out' : 'animate-dropdown-in'}`}>
               <div className="space-y-3">
                 {dateRangeWarning && (
                   <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-3">
@@ -584,7 +609,17 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
         <div className="flex items-center gap-3 relative" ref={summaryDateFilterRef}>
           <span className="text-sm text-gray-600">Summary cards filter</span>
           <button
-            onClick={() => setShowSummaryDateFilter(!showSummaryDateFilter)}
+            onClick={() => {
+              if (showSummaryDateFilter) {
+                setIsClosingSummaryFilter(true);
+                setTimeout(() => {
+                  setShowSummaryDateFilter(false);
+                  setIsClosingSummaryFilter(false);
+                }, 200);
+              } else {
+                setShowSummaryDateFilter(true);
+              }
+            }}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
           >
             <Calendar className="w-4 h-6" />
@@ -612,7 +647,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
           )}
 
           {showSummaryDateFilter && (
-            <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-[320px]">
+            <div className={`absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 min-w-[320px] ${isClosingSummaryFilter ? 'animate-dropdown-out' : 'animate-dropdown-in'}`}>
               <div className="space-y-3">
                 {summaryDateRangeWarning && (
                   <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-3">

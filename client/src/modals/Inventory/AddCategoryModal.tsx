@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Portal from '../../components/common/Portal';
 
 interface AddCategoryModalProps {
@@ -15,6 +15,55 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   const [categoryName, setCategoryName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#10B981');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isClosing, setIsClosing] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const handleClose = useCallback(() => {
+    setCategoryName('');
+    setSelectedColor('#10B981');
+    setErrors({});
+    onClose();
+  }, [onClose]);
+
+  const handleCancel = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      handleClose();
+      setIsClosing(false);
+    }, 300);
+  }, [handleClose]);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleCancel();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, handleCancel]);
+
+  // Close modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        handleCancel();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [handleCancel]);
 
   // Color palette matching the design
   const colors = [
@@ -53,16 +102,21 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     e.preventDefault();
     
     if (validateForm()) {
+      // Start closing animation
+      setIsClosing(true);
+      
+      // Call onAddCategory immediately but close after animation
       onAddCategory(categoryName.trim(), selectedColor);
-      handleClose();
+      
+      // Wait for animation to complete before actually closing
+      setTimeout(() => {
+        setCategoryName('');
+        setSelectedColor('#10B981');
+        setErrors({});
+        setIsClosing(false);
+        onClose();
+      }, 300);
     }
-  };
-
-  const handleClose = () => {
-    setCategoryName('');
-    setSelectedColor('#10B981');
-    setErrors({});
-    onClose();
   };
 
   const handleInputChange = (value: string) => {
@@ -77,12 +131,27 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
   return (
     <Portal>
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px]">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+          className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
+            isClosing ? 'opacity-0' : 'opacity-100'
+          }`}
+          style={{
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)'
+          }}
+        />
+
+        <div 
+          ref={modalRef}
+          className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] relative z-10 ${
+            isClosing ? 'animate-modal-out' : 'animate-modal-in'
+          }`}
+        >
           <div>
             <h3 className="text-[20px] font-bold">Add Category</h3>
             <p className="text-[12px]">Create a new category with a custom name and color.</p>
@@ -160,15 +229,15 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
           <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
             <button
               type="button"
-              onClick={handleClose}
-              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
+              onClick={handleCancel}
+              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 transition-colors duration-200"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSubmit}
-              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300"
+              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 transition-colors duration-200"
             >
               Add Category
             </button>

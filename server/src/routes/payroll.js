@@ -151,32 +151,30 @@ router.put('/:id', async (req, res) => {
             basicSalary,
             deductions,
             netSalary,
-            status
+            status,
+            paymentDate
         } = req.body;
         
-        const record = await dbHelper.getById('payroll_records', req.params.id);
+        const idNum = parseInt(req.params.id, 10);
+        if (isNaN(idNum)) {
+            return res.status(400).json({ error: 'Invalid payroll record id' });
+        }
+        
+        const record = await dbHelper.getById('payroll_records', idNum);
         if (!record || record.deleted_at) {
             return res.status(404).json({ error: 'Payroll record not found' });
         }
         
-        await dbHelper.run(
-            `UPDATE payroll_records 
-             SET basic_salary = ?,
-                 deductions = ?,
-                 net_salary = ?,
-                 status = ?,
-                 updated_at = CURRENT_TIMESTAMP
-             WHERE id = ?`,
-            [
-                basicSalary,
-                deductions,
-                netSalary,
-                status,
-                req.params.id
-            ]
-        );
+        // Use dbHelper.update which automatically marks records as synced = 0
+        await dbHelper.update('payroll_records', idNum, {
+            basic_salary: basicSalary,
+            deductions: deductions,
+            net_salary: netSalary,
+            status: status,
+            payment_date: paymentDate || null
+        });
 
-        const updatedRecord = await dbHelper.getById('payroll_records', req.params.id);
+        const updatedRecord = await dbHelper.getById('payroll_records', idNum);
         const payrollRecord = {
             id: updatedRecord.id,
             employeeName: updatedRecord.employee_name,
@@ -209,7 +207,8 @@ router.delete('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Payroll record not found' });
         }
 
-        await dbHelper.hardDelete('payroll_records', req.params.id);
+        // Use soft delete which automatically marks as synced = 0 for sync
+        await dbHelper.delete('payroll_records', req.params.id);
         res.json({ message: 'Payroll record deleted successfully' });
     } catch (err) {
         console.error('Error deleting payroll record:', err);

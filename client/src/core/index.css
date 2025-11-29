@@ -90,6 +90,133 @@
   margin-left: 0 !important;
 }
 
+/* checkin modal animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes checkin-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes checkin-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.modal-backdrop {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-backdrop-out {
+  animation: fadeOut 0.3s ease-out;
+}
+
+.modal-content {
+  animation: checkin-in 0.3s ease-out;
+}
+
+.modal-content-out {
+  animation: checkin-out 0.3s ease-out;
+}
+
+.animate-checkin-in {
+  animation: checkin-in 0.3s ease-out forwards;
+}
+
+.animate-checkin-out {
+  animation: checkin-out 0.3s ease-in forwards;
+}
+
+/* Modal animations */
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Dropdown animations */
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdownSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Utility classes for animations */
+.animate-modal-in {
+  animation: modal-in 0.2s ease-out forwards;
+}
+
+.animate-modal-out {
+  animation: modal-out 0.2s ease-in forwards;
+}
+
+.animate-dropdown-in {
+  animation: dropdownSlideIn 0.2s ease-out;
+}
+
+.animate-dropdown-out {
+  animation: dropdownSlideOut 0.2s ease-out;
+}
 
 /* Gradient animation */
 @keyframes gradient {
@@ -108,4 +235,14 @@
   50% {
     background-position: 100% 50%;
   }
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(34,197,94,0.4); }
+  50% { transform: scale(1.03); box-shadow: 0 0 20px rgba(34,197,94,0.6); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(34,197,94,0.4); }
+}
+
+.animate-success-pulse {
+  animation: successPulse 0.5s ease-out;
 }

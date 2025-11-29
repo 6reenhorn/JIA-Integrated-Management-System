@@ -59,25 +59,21 @@ router.post('/', async (req, res) => {
   } = req.body;
 
   try {
-    const query = `
-      INSERT INTO payroll_records (employee_name, emp_id, role, month, year, basic_salary, deductions, net_salary, status, payment_date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    const values = [
-      employeeName,
-      empId,
-      role,
-      month,
-      year,
-      basicSalary,
-      deductions,
-      netSalary,
-      status,
-      paymentDate || null
-    ];
+    // Use dbHelper.insert to automatically set synced = 0 for new records
+    const result = await dbHelper.insert('payroll_records', {
+      employee_name: employeeName,
+      emp_id: empId,
+      role: role,
+      month: month,
+      year: year,
+      basic_salary: basicSalary,
+      deductions: deductions,
+      net_salary: netSalary,
+      status: status,
+      payment_date: paymentDate || null
+    });
 
-    const result = await dbHelper.run(query, values);
-    const newRecord = await dbHelper.getById('payroll_records', result.lastID);
+    const newRecord = await dbHelper.getById('payroll_records', result.id);
 
     const payrollRecord = {
       id: newRecord.id,
@@ -100,6 +96,59 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PUT /api/payroll/:id - Update a payroll record
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const idNum = parseInt(id, 10);
+  if (Number.isNaN(idNum)) {
+    return res.status(400).json({ error: 'Invalid payroll record id' });
+  }
+
+  const {
+    basicSalary,
+    deductions,
+    netSalary,
+    status,
+    paymentDate
+  } = req.body;
+
+  try {
+    const record = await dbHelper.getById('payroll_records', idNum);
+    if (!record || record.deleted_at) {
+      return res.status(404).json({ error: 'Payroll record not found' });
+    }
+
+    // Use dbHelper.update which automatically marks records as synced = 0
+    await dbHelper.update('payroll_records', idNum, {
+      basic_salary: basicSalary,
+      deductions: deductions,
+      net_salary: netSalary,
+      status: status,
+      payment_date: paymentDate || null
+    });
+
+    const updatedRecord = await dbHelper.getById('payroll_records', idNum);
+    const payrollRecord = {
+      id: updatedRecord.id,
+      employeeName: updatedRecord.employee_name,
+      empId: updatedRecord.emp_id,
+      role: updatedRecord.role,
+      month: updatedRecord.month,
+      year: updatedRecord.year,
+      basicSalary: updatedRecord.basic_salary,
+      deductions: updatedRecord.deductions,
+      netSalary: updatedRecord.net_salary,
+      status: updatedRecord.status,
+      paymentDate: formatPaymentDate(updatedRecord.payment_date)
+    };
+
+    res.json(payrollRecord);
+  } catch (err) {
+    console.error('Error updating payroll record:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // DELETE /api/payroll/:id - Delete a payroll record by ID
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
@@ -114,7 +163,8 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Payroll record not found' });
     }
 
-    await dbHelper.hardDelete('payroll_records', idNum);
+    // Use soft delete which automatically marks as synced = 0 for sync
+    await dbHelper.delete('payroll_records', idNum);
 
     res.json({ message: 'Payroll record deleted successfully' });
   } catch (err) {

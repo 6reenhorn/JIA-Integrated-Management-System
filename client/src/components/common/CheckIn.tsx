@@ -17,11 +17,11 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-    const [countdown, setCountdown] = useState<number>(0);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const employeeDropdownRef = useRef<HTMLDivElement>(null);
     const passwordInputRef = useRef<HTMLInputElement>(null);
+    const checkInButtonRef = useRef<HTMLButtonElement>(null);
 
     const selectedEmployeeText = selectedEmployee ? `${selectedEmployee.name} (${selectedEmployee.empId})` : 'Select Employee';
 
@@ -31,17 +31,15 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
-    // Handle countdown and auto-close
+    // Auto-close on success (after a short delay to show the message)
     useEffect(() => {
-        if (countdown > 0) {
+        if (message?.type === 'success') {
             const timer = setTimeout(() => {
-                setCountdown(countdown - 1);
-            }, 1000);
+                onClose();
+            }, 1500); // 1.5 seconds to show success message
             return () => clearTimeout(timer);
-        } else if (countdown === 0 && message?.type === 'success') {
-            onClose();
         }
-    }, [countdown, message, onClose]);
+    }, [message, onClose]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -82,7 +80,6 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const handleCheckIn = async () => {
         if (isProcessing) return;
         setMessage(null);
-        setCountdown(0);
         
         if (!selectedEmployee) {
             setMessage({ type: 'error', text: 'Please select an employee.' });
@@ -94,12 +91,24 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
         }
         
         setIsProcessing(true);
+        const startTime = Date.now();
         
         try {
             const response = await axios.post('http://localhost:3001/api/attendance/checkin', {
                 employeeId: selectedEmployee.id,
                 password: password
             });
+
+            // Calculate elapsed time
+            const elapsedTime = Date.now() - startTime;
+            // Ensure minimum 0.5 seconds delay
+            const minDelay = 500;
+            const remainingTime = Math.max(0, minDelay - elapsedTime);
+
+            // Wait for remaining time if needed
+            if (remainingTime > 0) {
+                await new Promise(resolve => setTimeout(resolve, remainingTime));
+            }
 
             // Handle successful check-in
             setMessage({ 
@@ -116,25 +125,41 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                 isAdmin: response.data.user.role.toLowerCase() === 'admin'
             });
 
-            // Set countdown for auto-close
-            setCountdown(3);
-
             // Reset form
             setSelectedEmployee(null);
             setPassword('');
 
         } catch (error: any) {
             console.error('Error during check-in:', error);
+            
+            // Calculate elapsed time for error case too
+            const elapsedTime = Date.now() - startTime;
+            const minDelay = 500;
+            const remainingTime = Math.max(0, minDelay - elapsedTime);
+
+            // Wait for remaining time if needed
+            if (remainingTime > 0) {
+                await new Promise(resolve => setTimeout(resolve, remainingTime));
+            }
+
             const errorMessage = error.response?.data?.error || 'An error occurred during check-in.';
             setMessage({ type: 'error', text: errorMessage });
             
             // If it's an admin login error, try with emp_id
             if (errorMessage.includes('Employee not found') && selectedEmployee.empId === 'ADMIN001') {
                 try {
+                    const adminStartTime = Date.now();
                     const adminResponse = await axios.post('http://localhost:3001/api/attendance/checkin', {
                         employeeId: 'ADMIN001', // Try with emp_id instead of id
                         password: password
                     });
+                    
+                    // Ensure minimum delay for admin check-in too
+                    const adminElapsedTime = Date.now() - adminStartTime;
+                    const adminRemainingTime = Math.max(0, minDelay - adminElapsedTime);
+                    if (adminRemainingTime > 0) {
+                        await new Promise(resolve => setTimeout(resolve, adminRemainingTime));
+                    }
                     
                     checkIn({
                         id: adminResponse.data.user.id,
@@ -148,7 +173,8 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                         type: 'success', 
                         text: 'Admin access granted' 
                     });
-                    setCountdown(3);
+                    setSelectedEmployee(null);
+                    setPassword('');
                     return;
                 } catch (adminError) {
                     console.error('Admin login error:', adminError);
@@ -160,7 +186,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     };
 
     return (
-        <div className="relative w-[55vw] h-[60vh] px-8 py-16 bg-gradient-to-b from-[#02367B] to-[#016CA5] rounded-2xl rounded-tl-[14px] rounded-bl-[14px]">
+        <div className="relative w-[55vw] h-[60vh] px-8 py-16 bg-gradient-to-b from-[#02367B] to-[#016CA5] rounded-2xl rounded-tl-[14px] rounded-bl-[14px] modal-content">
             {/* Left Side */}
             <div className="w-[50%] h-full flex flex-col justify-between text-center ml-6">
                 <div>
@@ -254,9 +280,9 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                             placeholder="Enter Password"
                             className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 h-[40px]"
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    // Trigger check-in on Enter key
-                                    document.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
+                                if (e.key === 'Enter' && !isProcessing && message?.type !== 'success') {
+                                    e.preventDefault();
+                                    handleCheckIn();
                                 }
                             }}
                         />
@@ -268,9 +294,6 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                     message.type === 'success' ? 'text-green-600' : 'text-red-600'
                                 }`}>
                                     {message.text}
-                                    {message.type === 'success' && countdown > 0 && (
-                                        <span className="ml-2">closing in {countdown}...</span>
-                                    )}
                                 </div>
                             )}
                         </div>
@@ -278,14 +301,21 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                     </div>
                     <div className='w-full'>
                         <button
+                            ref={checkInButtonRef}
                             type="button"
-                            disabled={isProcessing}
+                            disabled={isProcessing || message?.type === 'success'}
                             className={`w-full py-2 rounded-3xl text-white transition-colors ${
                                 isProcessing 
                                     ? 'bg-gray-400 cursor-not-allowed' 
                                     : 'bg-[#02367B] hover:bg-[#1C4A9E]'
                             }`}
                             onClick={handleCheckIn}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !isProcessing && message?.type !== 'success') {
+                                    e.preventDefault();
+                                    handleCheckIn();
+                                }
+                            }}
                         >
                             {isProcessing ? (
                                 <span className="flex items-center justify-center gap-2">
@@ -293,7 +323,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Processing...
+                                    Checking In
                                 </span>
                             ) : (
                                 'Check In'

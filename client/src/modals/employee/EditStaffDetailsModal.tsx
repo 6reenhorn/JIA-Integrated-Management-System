@@ -26,6 +26,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
   const [focusedRoleOption, setFocusedRoleOption] = useState(0);
   const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
@@ -93,6 +94,18 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
     setIsRelationshipDropdownOpen(false);
   };
 
+  const handleClose = () => {
+    if (!isClosing) {
+      setIsClosing(true);
+    }
+  };
+
+  const handleAnimationEnd = () => {
+    if (isClosing) {
+      onClose();
+    }
+  };
+  
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -113,40 +126,48 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
     };
   }, []);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isSaving) return;
     setIsSaving(true);
-    const updatedEmployee: Employee & {
-      email: string;
-      phone: string;
-      address: string;
-      salary: string;
-      contactName: string;
-      contactNumber: string;
-      relationship: string;
-      firstName?: string;
-      lastName?: string;
-    } = {
-      ...employee,
-      name: `${firstName} ${lastName}`.trim(),
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      contact: `${email}\n${phone}\n${address}`,
-      status: selectedStatusText as "Active" | "Inactive",
-      role: selectedRoleText,
-      email,
-      phone,
-      address,
-      salary,
-      contactName,
-      contactNumber,
-      relationship: selectedRelationshipText,
-    };
-    onSave(updatedEmployee);
+
+    try {
+      const updatedEmployee = {
+        ...employee,
+        name: `${firstName} ${lastName}`,
+        contact: `${email}\n${phone}\n${address}`,
+        status: selectedStatusText as "Active" | "Inactive",
+        role: selectedRoleText,
+        email,
+        phone,
+        address,
+        salary,
+        contactName,
+        contactNumber,
+        relationship: selectedRelationshipText,
+      };
+
+      await onSave(updatedEmployee);
+
+      setIsClosing(true);
+
+    } catch (err) {
+      console.error('Failed to save employee:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={handleAnimationEnd}
+      >
       <div>
         <h3 className="text-[20px] font-bold">Edit Employee</h3>
         <p className="text-[12px]">Update the employee's information and role details.</p>
@@ -559,16 +580,18 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
           </div>
         </form>
         <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
-          <button
-            onClick={onClose}
-            className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1">
-            Cancel
-          </button>
+        <button
+          onClick={handleClose}
+          className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
+        >
+          Cancel
+        </button>
           <button type="submit" form="edit-employee-form" className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} disabled={isSaving}>
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 };

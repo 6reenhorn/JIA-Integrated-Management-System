@@ -49,6 +49,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isFilterClosing, setIsFilterClosing] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -167,7 +168,15 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   };
 
   const toggleFilters = () => {
-    setIsFiltersOpen(!isFiltersOpen);
+    if (isFiltersOpen) {
+      setIsFilterClosing(true);
+      setTimeout(() => {
+        setIsFiltersOpen(false);
+        setIsFilterClosing(false);
+      }, 100);
+    } else {
+      setIsFiltersOpen(true);
+    }
   };
 
   useEffect(() => {
@@ -176,15 +185,23 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
         filterRef.current &&
         !filterRef.current.contains(event.target as Node) &&
         buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
+        !buttonRef.current.contains(event.target as Node) &&
+        !isFilterClosing
       ) {
-        setIsFiltersOpen(false);
+        setIsFilterClosing(true);
+        setTimeout(() => {
+          setIsFiltersOpen(false);
+          setIsFilterClosing(false);
+        }, 100);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (isFiltersOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isFiltersOpen, isFilterClosing]);
 
   const handleAddPayroll = async (newPayroll: Omit<PayrollRecord, 'id'>) => {
     setTableHeadColor('green');
@@ -369,6 +386,7 @@ const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecor
                     onCustomEndChange={setCustomEnd}
                     onApply={setDateRange}
                     onReset={handleResetFilters}
+                    isClosing={isFilterClosing}
                   />
                 </div>
               )}
