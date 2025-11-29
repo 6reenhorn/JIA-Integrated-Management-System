@@ -21,11 +21,8 @@ const App: React.FC = () => {
 
         let progress = 0;
         const interval = setInterval(() => {
-          progress += 5;
-          if (progress >= 100) {
-            progress = 100;
-            clearInterval(interval);
-          }
+          progress += 6;
+          if (progress > 100) progress = 100;
           setLoadingPercentage(progress);
         }, 75);
 
@@ -33,6 +30,7 @@ const App: React.FC = () => {
 
         clearInterval(interval);
         setLoadingPercentage(100);
+
         setIsLoading(false);
       } catch (error) {
         console.error('Error initializing app:', error);

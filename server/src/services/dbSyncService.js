@@ -597,6 +597,41 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
               }
             }
           }
+          
+          // Special handling for categories: check if category with same name exists (including soft-deleted)
+          if (tableName === 'categories' && row.category_name) {
+            const existingCategory = await sqliteAll(
+              `SELECT id, deleted_at, synced FROM categories WHERE category_name = ?`,
+              [row.category_name]
+            );
+            
+            if (existingCategory.length > 0) {
+              const existing = existingCategory[0];
+              // If category exists (even if soft-deleted), update it with PostgreSQL data
+              const updateFields = fields
+                .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
+                .map(f => `${f} = ?`)
+                .join(', ');
+              
+              const updateValues = fields
+                .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
+                .map(f => row[f] === undefined ? null : row[f]);
+              
+              // Restore soft-deleted category by clearing deleted_at
+              const deletedAtClause = existing.deleted_at ? ', deleted_at = NULL' : '';
+              const updateSql = `
+                UPDATE categories 
+                SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1${deletedAtClause}
+                WHERE id = ?
+              `;
+              
+              await sqliteRun(updateSql, [...updateValues, existing.id]);
+              console.log(`Updated/restored category "${row.category_name}" (id: ${existing.id}) from PostgreSQL`);
+              actuallySyncedIds.push(row[idField]);
+              continue; // Skip the insert below
+            }
+          }
+          
           // Insert new record
           try {
             // Use INSERT OR IGNORE to handle duplicate key errors gracefully
@@ -698,12 +733,50 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
               actuallySyncedIds.push(row[idField]);
             }
           } catch (insertError) {
-            if (insertError.code === 'SQLITE_CONSTRAINT' && insertError.message.includes('FOREIGN KEY')) {
-              console.warn(`Skipping ${tableName} record due to missing foreign key:`, {
-                id: row[idField],
-                error: insertError.message
-              });
-              continue;
+            if (insertError.code === 'SQLITE_CONSTRAINT') {
+              if (insertError.message.includes('FOREIGN KEY')) {
+                console.warn(`Skipping ${tableName} record due to missing foreign key:`, {
+                  id: row[idField],
+                  error: insertError.message
+                });
+                continue;
+              } else if (insertError.message.includes('UNIQUE constraint') && tableName === 'categories') {
+                // For categories, if UNIQUE constraint fails, try to update existing category by name
+                console.log(`UNIQUE constraint failed for category "${row.category_name}", attempting to update existing record...`);
+                try {
+                  const existingCategory = await sqliteAll(
+                    `SELECT id, deleted_at FROM categories WHERE category_name = ?`,
+                    [row.category_name]
+                  );
+                  
+                  if (existingCategory.length > 0) {
+                    const existing = existingCategory[0];
+                    const updateFields = fields
+                      .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
+                      .map(f => `${f} = ?`)
+                      .join(', ');
+                    
+                    const updateValues = fields
+                      .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
+                      .map(f => row[f] === undefined ? null : row[f]);
+                    
+                    const deletedAtClause = existing.deleted_at ? ', deleted_at = NULL' : '';
+                    const updateSql = `
+                      UPDATE categories 
+                      SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1${deletedAtClause}
+                      WHERE id = ?
+                    `;
+                    
+                    await sqliteRun(updateSql, [...updateValues, existing.id]);
+                    console.log(`Updated/restored category "${row.category_name}" (id: ${existing.id}) from PostgreSQL after UNIQUE constraint error`);
+                    actuallySyncedIds.push(row[idField]);
+                    continue;
+                  }
+                } catch (updateError) {
+                  console.error(`Error updating category after UNIQUE constraint:`, updateError);
+                  throw insertError; // Re-throw original error
+                }
+              }
             }
             throw insertError;
           }

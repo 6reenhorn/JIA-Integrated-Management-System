@@ -70,12 +70,15 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
     if (existing) {
       if (existing.deleted_at) {
         // Category exists but is soft-deleted - restore it
-        await dbHelper.update('categories', existing.id, {
-          category_name: name,
-          color: color || '#6B7280',
-          deleted_at: null
-        });
+        // Use raw SQL to explicitly set deleted_at = NULL
+        await dbHelper.run(
+          'UPDATE categories SET category_name = ?, color = ?, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP, synced = 0 WHERE id = ?',
+          [name, color || '#6B7280', existing.id]
+        );
         const restoredCat = await dbHelper.getById('categories', existing.id);
+        if (!restoredCat) {
+          throw new Error('Failed to retrieve restored category');
+        }
         const category: Category = {
           id: restoredCat.id,
           name: restoredCat.category_name,
