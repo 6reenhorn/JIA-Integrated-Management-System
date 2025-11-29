@@ -270,9 +270,9 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
         summaryEndDate.toDateString() === new Date().toDateString());
     
     return (
-      <LayoutCard className="min-h-[200px]">
-        <div className="flex justify-between items-start mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <LayoutCard className="min-h-[310px]">
+        <div className="flex justify-between items-start mb-7 mt-1">
+          <h3 className="text-lg font-semibold text-gray-900 underline">{title}</h3>
           {isFiltered && (
             <div className="text-right text-xs text-gray-600">
               {summaryStartDate && summaryEndDate && (
@@ -321,6 +321,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
     );
   };
 
+  //Total Cards Component
   const RecordCard: React.FC<RecordCardProps> = ({ title, count }) => (
     <LayoutCard className="text-center min-h-[120px]">
       <h3 className="text-gray-500 font-medium mb-2">{title}</h3>
@@ -384,7 +385,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
   // Skeleton Loading Component
   if (isLoading) {
     return (
-      <div className="space-y-6 mt-5 h-[700px]">
+      <div className="space-y-6 mt-5 h-[723px]">
         {/* Main Stats Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
@@ -448,7 +449,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
   }
 
   return (
-    <div className="space-y-6 mt-5 h-[700px]"> {/* Overall Border Height */}
+    <div className="space-y-6 mt-5 h-[723px]"> {/* Overall Border Height */}
 
       {/* Main Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

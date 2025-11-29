@@ -399,7 +399,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       {/* Delete Category Modal */}
       <DeleteCategoryModal
         isOpen={deleteModalOpen}
-        onClose={handleCloseDeleteModal}  // Use the new handler
+        onClose={handleCloseDeleteModal}
         onConfirmDelete={handleConfirmDelete}
         category={categoryToDelete}
         isDeleting={isDeleting}
