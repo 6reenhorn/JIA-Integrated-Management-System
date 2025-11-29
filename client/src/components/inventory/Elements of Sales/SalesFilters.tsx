@@ -46,10 +46,6 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
         {/* Left side: Title and Search */}
         <div className="flex items-center gap-4">
           {/* Title */}
-          <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
-            Sales Record
-          </h2>
-
           {/* Search and Refresh - Left side */}
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -59,7 +55,7 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
                 placeholder="Search Sales"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[286px]"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
               />
             </div>
             <RefreshBtn onClick={onRefresh} isSpinning={isRefreshing} />

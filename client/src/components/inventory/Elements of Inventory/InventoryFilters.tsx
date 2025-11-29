@@ -83,7 +83,6 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
         return {
           addButtonText: 'Add Product',
           searchPlaceholder: 'Search Items',
-          title: `Inventory`,
           showCategoryFilter: true,
         };
       case 'sales':
@@ -140,32 +139,22 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
       )}
 
       <div className="flex items-center justify-between mt-6 w-full">
+        {/* Left side: Search and Refresh */}
         <div className="flex items-center gap-4">
-          {activeSection === 'inventory' ? (
-            <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
-              {config.title}
-            </h2>
-          ) : showTabsAndTitle ? (
-            <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
-              {config.title}
-            </h2>
-          ) : null}
-
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder={config.searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[310px]"
-              />
-            </div>
-            {onRefresh && <RefreshBtn onClick={onRefresh} isSpinning={isRefreshing} />}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder={config.searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
+            />
           </div>
+          {onRefresh && <RefreshBtn onClick={onRefresh} isSpinning={isRefreshing} />}
         </div>
 
+        {/* Right side: Category Filter and Add Button */}
         <div className="flex items-center gap-3 ml-auto">
           {config.showCategoryFilter && (
             <div className="relative" ref={dropdownRef}>
