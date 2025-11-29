@@ -107,7 +107,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-hidden">
+          <div className="h-[373px] overflow-hidden">
             <table className="table-fixed w-full">
               <tbody className="divide-y divide-gray-200">
                 {Array.from({ length: skeletonCount }).map((_, index) => (
@@ -175,7 +175,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
           </table>
           
           {/* Empty State Content with Fixed Height */}
-          <div className="h-[335px] flex items-center justify-center">
+          <div className="h-[373px] flex items-center justify-center">
             <p className="text-gray-500">
               No inventory items found. Add your first product to get started.
             </p>
@@ -213,7 +213,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
+          <div className="h-[373px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <table className="table-fixed w-full h-full">
               <tbody className="divide-y divide-gray-200">
                 {paginatedItems.map((item) => (

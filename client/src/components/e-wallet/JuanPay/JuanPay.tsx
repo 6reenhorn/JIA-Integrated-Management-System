@@ -192,9 +192,9 @@ const JuanPay: React.FC<JuanPayProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           {/* Left side: Title + Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">JuanPay Records</h3>
-            </div>
+            </div> */}
 
             {/* Search */}
             <div className="flex items-center gap-4">
@@ -205,7 +205,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
                   placeholder="Search Records"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[265px]"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
                 />
               </div>
               <RefreshBtn onClick={handleRefresh} isSpinning={isRefreshing} />

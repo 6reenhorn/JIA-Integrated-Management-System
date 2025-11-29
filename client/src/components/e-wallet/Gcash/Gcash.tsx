@@ -181,10 +181,10 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           {/* Left side: Title + Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">GCash Records</h3>
-              {/* <span className="text-sm text-gray-500">({filteredRecords.length} entries)</span> */}
-            </div>
+              <span className="text-sm text-gray-500">({filteredRecords.length} entries)</span>
+            </div> */}
 
             {/* Search */}
             <div className="flex items-center gap-4">
@@ -195,7 +195,7 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
                   placeholder="Search Records"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[280px]"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
                 />
               </div>
               <RefreshBtn onClick={handleRefresh} isSpinning={isRefreshing} />
