@@ -204,7 +204,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
           </table>
           
           {/* Empty State Content with Fixed Height */}
-          <div className="h-[335px] flex items-center justify-center">
+          <div className="h-[373px] flex items-center justify-center">
             <p className="text-gray-500">
               No sales records found. Add your first sales to get started.
             </p>

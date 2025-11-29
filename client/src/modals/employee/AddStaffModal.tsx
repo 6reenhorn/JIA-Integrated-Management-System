@@ -140,7 +140,7 @@ const AddStaffModal = ({
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={handleClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] relative z-10 ${
           isClosing ? 'animate-modal-out' : 'animate-modal-in'
