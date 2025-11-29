@@ -48,6 +48,29 @@ router.post('/categories', async (req, res) => {
   if (!name) return res.status(400).json({ error: 'Category name is required' });
 
   try {
+    // Check for duplicate category name (including soft-deleted ones)
+    const existing = await dbHelper.queryOne('SELECT * FROM categories WHERE category_name = ?', [name]);
+    if (existing) {
+      if (existing.deleted_at) {
+        // Category exists but is soft-deleted - restore it
+        await dbHelper.update('categories', existing.id, {
+          category_name: name,
+          color: color || '#6B7280',
+          deleted_at: null
+        });
+        const restoredCat = await dbHelper.getById('categories', existing.id);
+        return res.status(200).json({
+          id: restoredCat.id,
+          name: restoredCat.category_name,
+          color: restoredCat.color,
+          createdAt: restoredCat.created_at
+        });
+      } else {
+        // Category already exists and is not deleted
+        return res.status(400).json({ error: `Category "${name}" already exists` });
+      }
+    }
+
     const result = await dbHelper.insert('categories', {
       category_name: name,
       color: color || '#6B7280'
@@ -75,7 +98,12 @@ router.post('/categories', async (req, res) => {
     });
   } catch (err) {
     console.error('Error adding category:', err);
-    res.status(500).json({ error: 'Failed to add category' });
+    // If it's a UNIQUE constraint error, provide a more user-friendly message
+    if (err.code === 'SQLITE_CONSTRAINT' || err.code === '23505') {
+      res.status(400).json({ error: `Category "${name}" already exists` });
+    } else {
+      res.status(500).json({ error: 'Failed to add category' });
+    }
   }
 });
 
