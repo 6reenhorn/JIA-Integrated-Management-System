@@ -288,7 +288,7 @@ useEffect(() => {
                       style={{
                         display: isSelectOpen && !isUpdating ? 'block' : 'none',
                         position: 'absolute',
-                        top: '-330%',
+                        top: '-380%',
                         left: 0,
                         right: 0,
                         backgroundColor: 'white',
@@ -298,11 +298,11 @@ useEffect(() => {
                         width: '100%',
                         maxWidth: '100%',
                         boxSizing: 'border-box',
-                        maxHeight: '170px',
-                        overflowY: 'auto'
+                        maxHeight: '190px',
+                        overflowY: 'scroll'
                       }}
                     >
-                      {categories.map((category) => (
+                      {[...categories].reverse().map((category) => (
                         <div
                           key={category}
                           className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
