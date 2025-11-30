@@ -164,7 +164,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
                   style={{
                     display: isStatusDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
-                    top: '40%',
+                    top: '100%',
                     left: 0,
                     right: 0,
                     backgroundColor: 'white',

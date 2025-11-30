@@ -1,16 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 
-declare global {
-    interface Window {
-        electronAPI?: {
-            onOnline: () => void;
-            onOffline: () => void;
-            manualSync: () => Promise<{ success: boolean; message: string }>;
-            isOnline: () => boolean;
-        };
-    }
-}
-
 /**
  * Custom hook to monitor network status and provide sync functionality
  * @returns {Object} Network status and sync functions

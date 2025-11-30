@@ -246,3 +246,15 @@
 .animate-success-pulse {
   animation: successPulse 0.5s ease-out;
 }
+
+
+/* Hidden scroll bar */
+.custom-scroll-bar {
+  position: absolute;
+  overflow: auto;   /* still scrollable */
+  scrollbar-width: none; /* Firefox */
+}
+
+.custom-scroll-bar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
