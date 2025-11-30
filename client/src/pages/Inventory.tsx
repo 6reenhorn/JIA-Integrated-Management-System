@@ -108,27 +108,37 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [categoriesData, setCategoriesData] = useState<Category[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setIsLoadingCategories(true);
-      try {
-        const response = await axios.get('http://localhost:3001/api/inventory/categories');
-        setCategoriesData(response.data);
-      } catch (err: unknown) {
-        console.error('Error fetching categories:', err);
-        if (axios.isAxiosError(err)) {
-          console.error('Error details:', err.response?.data);
-        } else if (err instanceof Error) {
-          console.error('Error message:', err.message);
-        } else {
-          console.error('Error details:', String(err));
-        }
-      } finally {
-        setIsLoadingCategories(false);
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory/categories');
+      console.log('Fetched categories:', response.data.length, 'categories');
+      setCategoriesData(response.data);
+    } catch (err: unknown) {
+      console.error('Error fetching categories:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
       }
-    };
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
+  useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Refetch categories when the inventory section becomes active
+  // This ensures we get categories that were synced from remote
+  useEffect(() => {
+    if (activeSection === 'inventory' || activeSection === 'category') {
+      fetchCategories();
+    }
+  }, [activeSection]);
 
   const fetchInventoryItems = async () => {
     setIsLoadingInventory(true);
@@ -454,8 +464,27 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         color: color,
       });
       
-      console.log('Category added:', response.data);
-      setCategoriesData(prev => [...prev, response.data]);
+      console.log('Category added/restored:', response.data);
+      
+      // Update state: check if category already exists (by id or name) to handle restored categories
+      setCategoriesData(prev => {
+        const existingIndex = prev.findIndex(cat => 
+          cat.id === response.data.id || cat.name === response.data.name
+        );
+        
+        if (existingIndex >= 0) {
+          // Update existing category (restored category)
+          const updated = [...prev];
+          updated[existingIndex] = response.data;
+          console.log('Updated existing category in state:', response.data.name);
+          return updated;
+        } else {
+          // Add new category
+          console.log('Added new category to state:', response.data.name);
+          return [...prev, response.data];
+        }
+      });
+      
       setCategoryCurrentPage(1);
       setIsAddCategoryModalOpen(false);
     } catch (err: unknown) {

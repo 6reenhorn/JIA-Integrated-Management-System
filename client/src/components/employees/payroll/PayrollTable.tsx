@@ -264,20 +264,22 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
                 </div>
               </td>
               <td className="py-4 px-6 w-[80px]">
-                <button
-                  onClick={() => { setEditTargetId(record.id); setIsEditModalOpen(true); }}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title="Edit"
-                >
-                  <Edit className="w-4 h-4 text-gray-600" />
-                </button>
-                <button
-                  onClick={() => { setDeleteTargetId(record.id); setIsDeleteModalOpen(true); }}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title="Delete record"
-                >
-                  <Trash2 className="w-4 h-4 text-gray-600" />
-                </button>
+                <div className='flex items-center gap-2 '>
+                  <button
+                    onClick={() => { setEditTargetId(record.id); setIsEditModalOpen(true); }}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="Edit"
+                  >
+                    <Edit className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => { setDeleteTargetId(record.id); setIsDeleteModalOpen(true); }}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="Delete record"
+                  >
+                    <Trash2 className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
