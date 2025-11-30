@@ -261,7 +261,7 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
                   style={{
                     display: isEmployeeDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -344,7 +344,7 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
                   style={{
                     display: isMonthDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -420,7 +420,7 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
                   style={{
                     display: isYearDropdownOpen ? 'block' : 'none',
                     position: 'absolute',

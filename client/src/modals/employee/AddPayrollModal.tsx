@@ -214,7 +214,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
                   style={{
                     display: isEmployeeDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -297,7 +297,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
                   style={{
                     display: isMonthDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -373,7 +373,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
                   style={{
                     display: isYearDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -387,8 +387,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                     width: '100%',
                     maxWidth: '100%',
                     boxSizing: 'border-box',
-                    maxHeight: '200px',
-                    overflowY: 'auto'
+                    maxHeight: '200px'
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'ArrowDown') {
