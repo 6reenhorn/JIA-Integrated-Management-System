@@ -24,10 +24,13 @@ export const calculateAttendanceStats = (attendanceRecords: AttendanceRecord[], 
     String(today.getMonth() + 1).padStart(2, '0') + '-' +
     String(today.getDate()).padStart(2, '0');
 
-  // Check yesterday's UTC date (for existing records stored in UTC)
+  // Get today's date in UTC (YYYY-MM-DD format)
+  const todayUtcString = today.toISOString().split('T')[0];
+
+  // Check yesterday's UTC date (for records created yesterday that might be stored in UTC)
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayUtcString = yesterday.toISOString().split('T')[0]; // This gives yesterday's date in UTC
+  const yesterdayUtcString = yesterday.toISOString().split('T')[0];
 
   // Exclude admin employees from total count if employees array is provided
   let nonAdminEmployeeCount = totalEmployees;
@@ -37,7 +40,7 @@ export const calculateAttendanceStats = (attendanceRecords: AttendanceRecord[], 
     ).length;
   }
 
-  console.log('Debug:', { todayString, yesterdayUtcString, totalEmployees, nonAdminEmployeeCount, totalRecords: attendanceRecords.length });
+  console.log('Debug:', { todayString, todayUtcString, yesterdayUtcString, totalEmployees, nonAdminEmployeeCount, totalRecords: attendanceRecords.length });
   console.log('All record dates:', attendanceRecords.map(r => r.date.split('T')[0]));
 
   // Filter records for today (handle both local and UTC date formats)
@@ -45,8 +48,9 @@ export const calculateAttendanceStats = (attendanceRecords: AttendanceRecord[], 
   const todayRecords = attendanceRecords.filter(record => {
     // Extract date part from ISO datetime string
     const recordDate = record.date.split('T')[0];
-    // Check if record matches today's local date OR yesterday's UTC date (which represents today in UTC)
-    const matches = recordDate === todayString || recordDate === yesterdayUtcString;
+    // Check if record matches today's local date, today's UTC date, or yesterday's UTC date
+    // (yesterday's UTC might represent today in some timezones)
+    const matches = recordDate === todayString || recordDate === todayUtcString || recordDate === yesterdayUtcString;
     // Also exclude admin records
     const isNotAdmin = !record.role || record.role.toLowerCase() !== 'admin';
     if (matches && isNotAdmin) console.log('Found today record:', record);
@@ -54,9 +58,15 @@ export const calculateAttendanceStats = (attendanceRecords: AttendanceRecord[], 
   });
 
   console.log('Today records found:', todayRecords.length);
+  console.log('Today records statuses:', todayRecords.map(r => ({ name: r.name, status: r.status, timeIn: r.timeIn })));
 
-  // Count present: employees who checked in today (excluding admins)
-  const present = todayRecords.filter(record => record.timeIn && record.timeIn.trim() !== '').length;
+  // Count present: employees with status 'Present' or who have checked in today (excluding admins)
+  // Check status first, then fall back to timeIn if status is not set
+  const present = todayRecords.filter(record => {
+    if (record.status === 'Present') return true;
+    // Fallback: if status is not set but timeIn exists, count as present
+    return record.timeIn && typeof record.timeIn === 'string' && record.timeIn.trim() !== '';
+  }).length;
 
   // Count on leave: employees marked as on leave today (excluding admins)
   const onLeave = todayRecords.filter(record => record.status === 'On Leave').length;
