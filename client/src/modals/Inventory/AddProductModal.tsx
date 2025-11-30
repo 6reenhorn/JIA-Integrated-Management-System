@@ -325,7 +325,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   style={{
                     display: isSelectOpen ? 'block' : 'none',
                     position: 'absolute',
-                    top: '-30%',
+                    top: '-358%',
                     left: 0,
                     right: 0,
                     backgroundColor: 'white',
@@ -335,11 +335,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     width: '100%',
                     maxWidth: '100%',
                     boxSizing: 'border-box',
-                    maxHeight: categories.length <= 5 ? 'fit-content' : '200px', // Dynamic maxHeight!
+                    maxHeight: categories.length <= 5 ? 'fit-content' : '190px', // Dynamic maxHeight!
                     overflowY: categories.length <= 5 ? 'visible' : 'auto' // Only scroll if needed
                   }}
                 >
-                  {categories.map((category) => (
+                  {[...categories].reverse().map((category) => (
                     <div
                       key={category}
                       className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
