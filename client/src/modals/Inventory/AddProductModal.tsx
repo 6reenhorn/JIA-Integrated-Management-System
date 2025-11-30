@@ -283,83 +283,87 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-2">
-              <div className="dropdown relative" ref={categoryDropdownRef}>
-                <p className="text-[12px] font-bold">Category</p>
-                <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[32px]"
-                  onClick={toggleCategoryDropdown}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      toggleCategoryDropdown();
-                      e.preventDefault();
-                    }
-                  }}
-                  tabIndex={0}
-                >
-                  <div className="flex items-center min-h-0">
-                    {formData.category ? (
-                      <>
-                        <div 
-                          className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
-                          style={{ backgroundColor: categoryColors[formData.category] || '#6B7280' }}
-                        ></div>
-                        <span className="truncate">{formData.category}</span>
-                      </>
-                    ) : (
-                      <span className="text-gray-500">Select Category</span>
-                    )}
-                  </div>
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    className={`transition-transform flex-shrink-0 ${isSelectOpen ? 'rotate-180' : ''}`}
-                  >
-                    <polygon points="4,6 12,6 8,12" fill="currentColor" />
-                  </svg>
-                </div>
-                
-                <div
-                  className="dropdown-options mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-                  style={{
-                    display: isSelectOpen ? 'block' : 'none',
-                    position: 'absolute',
-                    top: '-358%',
-                    left: 0,
-                    right: 0,
-                    backgroundColor: 'white',
-                    border: '1px solid #ccc',
-                    zIndex: 10,
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                    width: '100%',
-                    maxWidth: '100%',
-                    boxSizing: 'border-box',
-                    maxHeight: categories.length <= 5 ? 'fit-content' : '190px', // Dynamic maxHeight!
-                    overflowY: categories.length <= 5 ? 'visible' : 'auto' // Only scroll if needed
-                  }}
-                >
-                  {[...categories].reverse().map((category) => (
+                <div className="dropdown relative" ref={categoryDropdownRef}>
+                  <p className="text-[12px] font-bold">Category</p>
+                  <div className="relative">
                     <div
-                      key={category}
-                      className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                      onClick={() => handleCategorySelect(category)}
+                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[32px]"
+                      onClick={toggleCategoryDropdown}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleCategorySelect(category);
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          toggleCategoryDropdown();
+                          e.preventDefault();
                         }
                       }}
                       tabIndex={0}
                     >
-                      <div 
-                        className="w-3 h-3 rounded-full mr-3 flex-shrink-0"
-                        style={{ backgroundColor: categoryColors[category] || '#6B7280' }}
-                      ></div>
-                      <span className="truncate">{category}</span>
+                      <div className="flex items-center min-h-0">
+                        {formData.category ? (
+                          <>
+                            <div 
+                              className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
+                              style={{ backgroundColor: categoryColors[formData.category] || '#6B7280' }}
+                            ></div>
+                            <span className="truncate">{formData.category}</span>
+                          </>
+                        ) : (
+                          <span className="text-gray-500">Select Category</span>
+                        )}
+                      </div>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className={`transition-transform flex-shrink-0 ${isSelectOpen ? 'rotate-180' : ''}`}
+                      >
+                        <polygon points="4,6 12,6 8,12" fill="currentColor" />
+                      </svg>
                     </div>
-                  ))}
+                    
+                    <div
+                      className="dropdown-options rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                      style={{
+                        display: isSelectOpen ? 'block' : 'none',
+                        position: 'absolute',
+                        top: 'auto',
+                        bottom: 'calc(100% + 4px)',
+                        left: 0,
+                        right: 0,
+                        transform: 'translateY(0)',
+                        backgroundColor: 'white',
+                        border: '1px solid #ccc',
+                        zIndex: 10,
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                        maxHeight: categories.length <= 5 ? 'fit-content' : '190px',
+                        overflowY: categories.length <= 5 ? 'visible' : 'auto'
+                      }}
+                    >
+                    {[...categories].reverse().map((category) => (
+                      <div
+                        key={category}
+                        className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                        onClick={() => handleCategorySelect(category)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleCategorySelect(category);
+                          }
+                        }}
+                        tabIndex={0}
+                      >
+                        <div 
+                          className="w-3 h-3 rounded-full mr-3 flex-shrink-0"
+                          style={{ backgroundColor: categoryColors[category] || '#6B7280' }}
+                        ></div>
+                        <span className="truncate">{category}</span>
+                      </div>
+                    ))}
+                  </div>
+                  </div>
                 </div>
-              </div>
 
                 <div>
                   <label className="text-[12px] font-bold">
