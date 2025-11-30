@@ -24,11 +24,10 @@ interface JuanPayDBRecord {
 
 interface JuanPayRequestBody {
   date: string;
-  beginnings?: number[];
+  beginnings?: Array<{ amount: number }> | number[] | number | string;
   ending?: number;
   sales?: number;
 }
-
 // Helper function to format date
 const formatDate = (dateValue: string | Date | null | undefined): string => {
   if (!dateValue) return '';
@@ -82,43 +81,18 @@ const formatDate = (dateValue: string | Date | null | undefined): string => {
 
 // Helper function to transform DB record to API response
 const transformRecord = (row: any): JuanPayRecord => {
-  let beginnings: Array<{ amount: number }> = [];
+  let beginnings: Array<{ amount: number }> = []; 
   try {
-    if (row.beginnings !== null && row.beginnings !== undefined) {
-      let parsedBeginnings: number[] = [];
+    if (row.beginnings) {
+      const amounts = row.beginnings
+        .split('|')
+        .map((val: string) => parseFloat(val.trim()))
+        .filter((val: number) => !isNaN(val));
       
-      // Handle different data types
-      if (typeof row.beginnings === 'string') {
-        // Check for "[object Object]" string (sync error)
-        if (row.beginnings.includes('[object Object]')) {
-          console.warn('JuanPay record has "[object Object]" string for beginnings, using empty array');
-          parsedBeginnings = [];
-        } else {
-          // Try to parse as JSON
-          try {
-            const parsed = JSON.parse(row.beginnings);
-            parsedBeginnings = Array.isArray(parsed) ? parsed : [parsed];
-          } catch {
-            // If not valid JSON, treat as single number string
-            const num = parseFloat(row.beginnings);
-            if (!isNaN(num)) {
-              parsedBeginnings = [num];
-            }
-          }
-        }
-      } else if (Array.isArray(row.beginnings)) {
-        // Already an array
-        parsedBeginnings = row.beginnings;
-      } else if (typeof row.beginnings === 'number') {
-        // Single number - convert to array with one element
-        parsedBeginnings = [row.beginnings];
-      }
-      
-      // Convert array of numbers to array of objects with amount property
-      beginnings = parsedBeginnings.map((amount: number) => ({ amount }));
+      beginnings = amounts.map((amount: number) => ({ amount }));
     }
   } catch (err) {
-    console.error('Error transforming beginnings in juanpay record:', err, row);
+    console.error('Error transforming beginnings:', err, row);
     beginnings = [];
   }
   
@@ -152,24 +126,24 @@ router.post('/', async (req: Request<{}, {}, JuanPayRequestBody>, res: Response)
   const { date, beginnings, ending, sales } = req.body;
 
   try {
-    // Convert beginnings array to JSON string for storage
-    // If beginnings is an array of objects with amount property, extract just the amounts
-    let beginningsArray: number[] = [];
+    // Convert beginnings array to pipe-separated string
+    let beginningsStr = '';
     if (Array.isArray(beginnings)) {
-      beginningsArray = beginnings.map((b: any) => {
-        if (typeof b === 'object' && b !== null && 'amount' in b) {
-          return b.amount;
-        }
-        return typeof b === 'number' ? b : 0;
-      });
+      beginningsStr = beginnings
+        .map((b: any) => {
+          if (typeof b === 'object' && b !== null && 'amount' in b) {
+            return b.amount;
+          }
+          return typeof b === 'number' ? b : 0;
+        })
+        .join('|');
     } else if (typeof beginnings === 'number') {
-      beginningsArray = [beginnings];
+      beginningsStr = beginnings.toString();
     }
 
-    // Use DBHelper.insert to automatically set synced = 0 for new records
     const result = await DBHelper.insert('juanpay_records', {
       date,
-      beginnings: JSON.stringify(beginningsArray),
+      beginnings: beginningsStr,
       ending: ending || 0,
       sales: sales || 0
     });
@@ -202,27 +176,28 @@ router.put('/:id', async (req: Request<{ id: string }, {}, JuanPayRequestBody>, 
       return;
     }
 
-    // Convert beginnings array to JSON string for storage
-    // If beginnings is an array of objects with amount property, extract just the amounts
-    let beginningsArray: number[] = [];
+    // Convert beginnings array to pipe-separated string
+    let beginningsStr = '';
     if (Array.isArray(beginnings)) {
-      beginningsArray = beginnings.map((b: any) => {
-        if (typeof b === 'object' && b !== null && 'amount' in b) {
-          return b.amount;
-        }
-        return typeof b === 'number' ? b : 0;
-      });
+      beginningsStr = beginnings
+        .map((b: any) => {
+          if (typeof b === 'object' && b !== null && 'amount' in b) {
+            return b.amount;
+          }
+          return typeof b === 'number' ? b : 0;
+        })
+        .join('|');
     } else if (typeof beginnings === 'number') {
-      beginningsArray = [beginnings];
+      beginningsStr = beginnings.toString();
     }
 
-    // Use DBHelper.update which automatically marks records as synced = 0
     await DBHelper.update('juanpay_records', id, {
       date,
-      beginnings: JSON.stringify(beginningsArray),
+      beginnings: beginningsStr,
       ending: ending || 0,
       sales: sales || 0
     });
+    
     const updatedRecord = await DBHelper.getById('juanpay_records', id) as JuanPayDBRecord | undefined;
     const result = transformRecord(updatedRecord);
 

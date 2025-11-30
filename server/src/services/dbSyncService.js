@@ -566,39 +566,17 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
             .map(f => {
               const value = rowToUse[f];
-              // Handle beginnings field - convert from pipe-separated or JSON
+              // Handle beginnings field - pipe-separated string only
               if (f === 'beginnings') {
                 if (value === null || value === undefined) return '';
-                // If it's a string starting with '[', it's legacy JSON format
-                if (typeof value === 'string' && value.trim().startsWith('[')) {
-                  try {
-                    const arr = JSON.parse(value);
-                    if (Array.isArray(arr)) {
-                      return arr.map(item => {
-                        if (typeof item === 'object' && item.amount) return item.amount;
-                        return item;
-                      }).join('|');
-                    }
-                  } catch (e) {
-                    console.warn('[SYNC] Error parsing JSON beginnings, using as-is:', value);
-                    return value;
-                  }
-                }
-                // If it's already pipe-separated string, return it
+                // Already pipe-separated string
                 if (typeof value === 'string') return value;
-                // If it's an object/array (from PostgreSQL JSONB), convert to pipe-separated
-                if (typeof value === 'object') {
-                  try {
-                    if (Array.isArray(value)) {
-                      return value.map(item => {
-                        if (typeof item === 'object' && item.amount) return item.amount;
-                        return item;
-                      }).join('|');
-                    }
-                  } catch (e) {
-                    console.error('[SYNC] Error converting beginnings:', e);
-                    return '';
-                  }
+                // Should not happen, but handle array
+                if (Array.isArray(value)) {
+                  return value.map(item => {
+                    if (typeof item === 'object' && item.amount) return item.amount;
+                    return item;
+                  }).join('|');
                 }
                 return '';
               }

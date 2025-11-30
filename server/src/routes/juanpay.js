@@ -22,20 +22,6 @@ const parseBeginnings = (value) => {
     }
     // If it's already a string, return it
     if (typeof value === 'string') {
-      // Handle legacy JSON format - convert to pipe-separated
-      if (value.trim().startsWith('[')) {
-        try {
-          const arr = JSON.parse(value);
-          if (Array.isArray(arr)) {
-            return arr.map(item => {
-              if (typeof item === 'object' && item.amount) return item.amount;
-              return item;
-            }).join('|');
-          }
-        } catch {
-          return '';
-        }
-      }
       return value;
     }
     // If it's an array (shouldn't happen but handle it)
