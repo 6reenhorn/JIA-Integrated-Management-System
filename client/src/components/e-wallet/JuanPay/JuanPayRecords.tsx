@@ -223,7 +223,21 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                         {records.map((record) => {
-                            const totalBeginning = record.beginnings.reduce((sum, b) => sum + b.amount, 0);
+                            // Handle cases where beginnings might be missing or not an array
+                            if (!record.beginnings) {
+                                console.warn('JuanPay record missing beginnings:', record);
+                                return null;
+                            }
+                            if (!Array.isArray(record.beginnings)) {
+                                console.warn('JuanPay record has non-array beginnings:', record);
+                                return null;
+                            }
+                            const totalBeginning = record.beginnings.length > 0 
+                                ? record.beginnings.reduce((sum, b) => {
+                                    const amount = typeof b === 'object' && b !== null && 'amount' in b ? b.amount : (typeof b === 'number' ? b : 0);
+                                    return sum + amount;
+                                  }, 0)
+                                : 0;
                             const hasMultipleBeginnings = record.beginnings.length > 1;
                             
                             return (
@@ -236,11 +250,14 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                                     <td className="py-4 px-6 w-[200px]">
                                         {hasMultipleBeginnings ? (
                                             <div className="space-y-1">
-                                                {record.beginnings.map((beginning, idx) => (
-                                                    <div key={idx} className="text-sm text-gray-700">
-                                                        {formatCurrency(beginning.amount)}
-                                                    </div>
-                                                ))}
+                                                {record.beginnings.map((beginning, idx) => {
+                                                    const amount = typeof beginning === 'object' && beginning !== null && 'amount' in beginning ? beginning.amount : (typeof beginning === 'number' ? beginning : 0);
+                                                    return (
+                                                        <div key={idx} className="text-sm text-gray-700">
+                                                            {formatCurrency(amount)}
+                                                        </div>
+                                                    );
+                                                })}
                                                 <div className="text-sm font-semibold text-gray-900 pt-1 border-t border-gray-200 w-3/5">
                                                     Total: {formatCurrency(totalBeginning)}
                                                 </div>

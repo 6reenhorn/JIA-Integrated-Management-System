@@ -330,12 +330,14 @@ const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecor
     } catch (err) {
       console.error('Error refreshing payroll records:', err);
     } finally {
-      setIsSpinning(false);
-      if (onSetPayrollLoading) {
-        onSetPayrollLoading(false);
-      } else {
-        setIsLoading(false);
-      }
+      setTimeout(() => {
+        setIsSpinning(false);
+        if (onSetPayrollLoading) {
+          onSetPayrollLoading(false);
+        } else {
+          setIsLoading(false);
+        }
+      }, 500);
     }
   };
 

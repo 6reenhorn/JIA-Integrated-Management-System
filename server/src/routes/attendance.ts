@@ -5,11 +5,12 @@ import { checkIn, getAttendanceRecords } from '../controllers/attendanceControll
 const router = express.Router();
 
 // POST /api/attendance/checkin - Check in an employee
-router.post('/checkin', async (req: Request, res: Response) => {
+router.post('/checkin', async (req: Request, res: Response): Promise<void> => {
   try {
     const { employeeId, password } = req.body;
     if (!employeeId || !password) {
-      return res.status(400).json({ error: 'Employee ID and password are required' });
+      res.status(400).json({ error: 'Employee ID and password are required' });
+      return;
     }
     const result = await checkIn(employeeId, password);
     if (result.success) {
@@ -24,7 +25,7 @@ router.post('/checkin', async (req: Request, res: Response) => {
 });
 
 // GET /api/attendance - Get all attendance records
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const records = await getAttendanceRecords();
     res.json(records);

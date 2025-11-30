@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { dbHelper } from '../db/dbHelper';
+import { DBHelper } from '../db/dbHelper';
 
 const router = Router();
 
@@ -22,7 +22,7 @@ const formatPaymentDate = (dateStr: string | null): string | null => {
 // GET /api/payroll - Fetch all payroll records
 router.get('/', async (req, res) => {
   try {
-    const rows = await dbHelper.query('SELECT * FROM payroll_records WHERE deleted_at IS NULL ORDER BY id DESC');
+    const rows = await DBHelper.query('SELECT * FROM payroll_records WHERE deleted_at IS NULL ORDER BY id DESC');
     const payrollRecords = rows.map((row: any) => ({
       id: row.id,
       employeeName: row.employee_name,
@@ -59,8 +59,8 @@ router.post('/', async (req, res) => {
   } = req.body;
 
   try {
-    // Use dbHelper.insert to automatically set synced = 0 for new records
-    const result = await dbHelper.insert('payroll_records', {
+    // Use DBHelper.insert to automatically set synced = 0 for new records
+    const result = await DBHelper.insert('payroll_records', {
       employee_name: employeeName,
       emp_id: empId,
       role: role,
@@ -73,7 +73,8 @@ router.post('/', async (req, res) => {
       payment_date: paymentDate || null
     });
 
-    const newRecord = await dbHelper.getById('payroll_records', result.id);
+    const lastId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
+    const newRecord = await DBHelper.getById('payroll_records', lastId) as any;
 
     const payrollRecord = {
       id: newRecord.id,
@@ -97,11 +98,12 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/payroll/:id - Update a payroll record
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res): Promise<void> => {
   const { id } = req.params;
   const idNum = parseInt(id, 10);
   if (Number.isNaN(idNum)) {
-    return res.status(400).json({ error: 'Invalid payroll record id' });
+      res.status(400).json({ error: 'Invalid payroll record id' });
+      return;
   }
 
   const {
@@ -113,13 +115,14 @@ router.put('/:id', async (req, res) => {
   } = req.body;
 
   try {
-    const record = await dbHelper.getById('payroll_records', idNum);
+    const record = await DBHelper.getById('payroll_records', idNum) as any;
     if (!record || record.deleted_at) {
-      return res.status(404).json({ error: 'Payroll record not found' });
+      res.status(404).json({ error: 'Payroll record not found' });
+      return;
     }
 
-    // Use dbHelper.update which automatically marks records as synced = 0
-    await dbHelper.update('payroll_records', idNum, {
+    // Use DBHelper.update which automatically marks records as synced = 0
+    await DBHelper.update('payroll_records', idNum, {
       basic_salary: basicSalary,
       deductions: deductions,
       net_salary: netSalary,
@@ -127,7 +130,7 @@ router.put('/:id', async (req, res) => {
       payment_date: paymentDate || null
     });
 
-    const updatedRecord = await dbHelper.getById('payroll_records', idNum);
+    const updatedRecord = await DBHelper.getById('payroll_records', idNum) as any;
     const payrollRecord = {
       id: updatedRecord.id,
       employeeName: updatedRecord.employee_name,
@@ -150,21 +153,23 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/payroll/:id - Delete a payroll record by ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res): Promise<void> => {
   const { id } = req.params;
   const idNum = parseInt(id as unknown as string, 10);
   if (Number.isNaN(idNum)) {
-    return res.status(400).json({ error: 'Invalid payroll record id' });
+      res.status(400).json({ error: 'Invalid payroll record id' });
+      return;
   }
 
   try {
-    const record = await dbHelper.getById('payroll_records', idNum);
+    const record = await DBHelper.getById('payroll_records', idNum) as any;
     if (!record || record.deleted_at) {
-      return res.status(404).json({ error: 'Payroll record not found' });
+      res.status(404).json({ error: 'Payroll record not found' });
+      return;
     }
 
     // Use soft delete which automatically marks as synced = 0 for sync
-    await dbHelper.delete('payroll_records', idNum);
+    await DBHelper.softDelete('payroll_records', idNum);
 
     res.json({ message: 'Payroll record deleted successfully' });
   } catch (err) {

@@ -117,6 +117,8 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     const fetchJuanPayRecords = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/juanpay');
+        console.log('JuanPay records fetched:', response.data);
+        console.log('First record sample:', response.data[0]);
         setJuanpayRecords(response.data);
       } catch (err) {
         console.error('Error fetching JuanPay records:', err);
@@ -152,7 +154,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     } catch (err) {
       console.error('Error fetching GCash records:', err);
     } finally {
-      setIsInitialLoading(false);
+      setTimeout(() => {
+        setIsInitialLoading(false);
+      }, 500);
     }
   };
 
@@ -164,7 +168,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     } catch (err) {
       console.error('Error fetching PayMaya records:', err);
     } finally {
-      setIsInitialLoadingPayMaya(false);
+      setTimeout(() => {
+        setIsInitialLoadingPayMaya(false);
+      }, 500);
     }
   };
 
@@ -176,7 +182,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     } catch (err) {
       console.error('Error fetching JuanPay records:', err);
     } finally {
-      setIsInitialLoadingJuanPay(false);
+      setTimeout(() => {
+        setIsInitialLoadingJuanPay(false);
+      }, 500);
     }
   };
 
