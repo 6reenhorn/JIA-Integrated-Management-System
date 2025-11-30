@@ -288,9 +288,11 @@ useEffect(() => {
                       style={{
                         display: isSelectOpen && !isUpdating ? 'block' : 'none',
                         position: 'absolute',
-                        top: '-380%',
+                        top: 'auto',
+                        bottom: 'calc(60% + 5px)',
                         left: 0,
                         right: 0,
+                        transform: 'translateY(0)',
                         backgroundColor: 'white',
                         border: '1px solid #ccc',
                         zIndex: 10,
