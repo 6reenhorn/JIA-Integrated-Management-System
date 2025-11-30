@@ -479,6 +479,7 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
         
         // Check if the record exists and is not deleted
         // Also check if it was soft-deleted locally - if so, don't restore it
+        // EXCEPTION: For categories, if they exist in PostgreSQL (not deleted), restore them even if soft-deleted locally
         // Also check if it's unsynced (synced = 0) - if so, don't overwrite local changes
         const deletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
         const existing = await sqliteAll(
@@ -487,9 +488,18 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
         );
 
         // If record exists and is soft-deleted locally, skip restoring it from PostgreSQL
-        if (existing.length > 0 && hasDeletedAt && existing[0].deleted_at) {
+        // EXCEPTION: For categories, always restore if they exist in PostgreSQL (not deleted)
+        // The special category handling below will take care of restoring them
+        if (existing.length > 0 && hasDeletedAt && existing[0].deleted_at && tableName !== 'categories') {
           console.log(`Skipping ${tableName} record ${row[idField]} - was soft-deleted locally, not restoring from PostgreSQL`);
           continue;
+        }
+        
+        // For categories that were soft-deleted locally but exist in PostgreSQL (not deleted), 
+        // the special handling below will restore them, so we continue processing
+        if (existing.length > 0 && hasDeletedAt && existing[0].deleted_at && tableName === 'categories') {
+          console.log(`Category ${row[idField]} (${row.category_name}) was soft-deleted locally but exists in PostgreSQL - will restore via special handling`);
+          // Continue to special category handling below
         }
 
         // If record exists and is unsynced (synced = 0), skip overwriting it - it will be pushed later
@@ -598,15 +608,24 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             }
           }
           
-          // Special handling for categories: check if category with same name exists (including soft-deleted)
+          // Special handling for categories: check if category with same ID or name exists (including soft-deleted)
           if (tableName === 'categories' && row.category_name) {
-            const existingCategory = await sqliteAll(
-              `SELECT id, deleted_at, synced FROM categories WHERE category_name = ?`,
+            // First check by ID (in case it was soft-deleted with the same ID)
+            const existingById = await sqliteAll(
+              `SELECT id, deleted_at, synced, category_name FROM categories WHERE id = ?`,
+              [row.id]
+            );
+            
+            // Also check by name (in case ID changed or there's a duplicate)
+            const existingByName = await sqliteAll(
+              `SELECT id, deleted_at, synced, category_name FROM categories WHERE category_name = ?`,
               [row.category_name]
             );
             
-            if (existingCategory.length > 0) {
-              const existing = existingCategory[0];
+            // Prefer matching by ID, but if not found, use name match
+            const existing = existingById.length > 0 ? existingById[0] : (existingByName.length > 0 ? existingByName[0] : null);
+            
+            if (existing) {
               // If category exists (even if soft-deleted), update it with PostgreSQL data
               const updateFields = fields
                 .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
@@ -626,9 +645,16 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
               `;
               
               await sqliteRun(updateSql, [...updateValues, existing.id]);
-              console.log(`Updated/restored category "${row.category_name}" (id: ${existing.id}) from PostgreSQL`);
+              if (existing.deleted_at) {
+                console.log(`Restored category "${row.category_name}" (id: ${existing.id}) from PostgreSQL - was soft-deleted locally`);
+              } else {
+                console.log(`Updated category "${row.category_name}" (id: ${existing.id}) from PostgreSQL`);
+              }
               actuallySyncedIds.push(row[idField]);
               continue; // Skip the insert below
+            } else {
+              // Category doesn't exist in SQLite - will be inserted below
+              console.log(`Category "${row.category_name}" (id: ${row.id}) not found in SQLite, will insert as new`);
             }
           }
           
