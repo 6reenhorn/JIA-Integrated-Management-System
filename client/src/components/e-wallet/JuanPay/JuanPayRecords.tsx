@@ -222,79 +222,69 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                        {records.map((record) => {
-                            // Handle cases where beginnings might be missing or not an array
-                            if (!record.beginnings) {
-                                console.warn('JuanPay record missing beginnings:', record);
-                                return null;
-                            }
-                            if (!Array.isArray(record.beginnings)) {
-                                console.warn('JuanPay record has non-array beginnings:', record);
-                                return null;
-                            }
-                            const totalBeginning = record.beginnings.length > 0 
-                                ? record.beginnings.reduce((sum, b) => {
-                                    const amount = typeof b === 'object' && b !== null && 'amount' in b ? b.amount : (typeof b === 'number' ? b : 0);
-                                    return sum + amount;
-                                  }, 0)
-                                : 0;
-                            const hasMultipleBeginnings = record.beginnings.length > 1;
-                            
-                            return (
-                                <tr key={record.id} className="hover:bg-gray-50">
-                                    <td className="py-4 px-6 w-[120px]">
-                                        <div className="text-sm text-gray-900">
-                                            {formatDate(record.date)}
-                                        </div>
-                                    </td>
-                                    <td className="py-4 px-6 w-[200px]">
-                                        {hasMultipleBeginnings ? (
-                                            <div className="space-y-1">
-                                                {record.beginnings.map((beginning, idx) => {
-                                                    const amount = typeof beginning === 'object' && beginning !== null && 'amount' in beginning ? beginning.amount : (typeof beginning === 'number' ? beginning : 0);
-                                                    return (
-                                                        <div key={idx} className="text-sm text-gray-700">
-                                                            {formatCurrency(amount)}
-                                                        </div>
-                                                    );
-                                                })}
-                                                <div className="text-sm font-semibold text-gray-900 pt-1 border-t border-gray-200 w-3/5">
-                                                    Total: {formatCurrency(totalBeginning)}
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="text-sm font-medium text-gray-900">
-                                                {formatCurrency(totalBeginning)}
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[140px]">
-                                        {formatCurrency(record.ending)}
-                                    </td>
-                                    <td className="py-4 px-6 text-sm font-medium text-red-500 w-[120px]">
-                                        {formatCurrency(record.sales)}
-                                    </td>
-                                    <td className="py-4 px-5 w-[100px]">
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => onEdit && onEdit(record)}
-                                                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                                title="Edit"
-                                            >
-                                                <Edit className="w-4 h-4 text-gray-600" />
-                                            </button>
-                                            <button
-                                                onClick={() => onDelete && onDelete(record)}
-                                                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                                title="Delete"
-                                            >
-                                                <Trash2 className="w-4 h-4 text-gray-600" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            );
-                        })}
+                    {records.map((record) => {
+                        // Parse pipe-separated beginnings
+                        const beginningsArray = record.beginnings
+                        ? record.beginnings.split('|')
+                            .map(val => parseFloat(val.trim()))
+                            .filter(val => !isNaN(val))
+                        : [];
+                        
+                        const totalBeginning = beginningsArray.reduce((sum, amount) => sum + amount, 0);
+                        const hasMultipleBeginnings = beginningsArray.length > 1;
+                        
+                        return (
+                        <tr key={record.id} className="hover:bg-gray-50">
+                            <td className="py-4 px-6 w-[120px]">
+                            <div className="text-sm text-gray-900">
+                                {formatDate(record.date)}
+                            </div>
+                            </td>
+                            <td className="py-4 px-6 w-[200px]">
+                            {hasMultipleBeginnings ? (
+                                <div className="space-y-1">
+                                {beginningsArray.map((amount, idx) => (
+                                    <div key={idx} className="text-sm text-gray-700">
+                                    {formatCurrency(amount)}
+                                    </div>
+                                ))}
+                                <div className="text-sm font-semibold text-gray-900 pt-1 border-t border-gray-200 w-3/5">
+                                    Total: {formatCurrency(totalBeginning)}
+                                </div>
+                                </div>
+                            ) : (
+                                <div className="text-sm font-medium text-gray-900">
+                                {formatCurrency(totalBeginning)}
+                                </div>
+                            )}
+                            </td>
+                            <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[140px]">
+                            {formatCurrency(record.ending)}
+                            </td>
+                            <td className="py-4 px-6 text-sm font-medium text-red-500 w-[120px]">
+                            {formatCurrency(record.sales)}
+                            </td>
+                            <td className="py-4 px-5 w-[100px]">
+                            <div className="flex items-center gap-2">
+                                <button
+                                onClick={() => onEdit && onEdit(record)}
+                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                title="Edit"
+                                >
+                                <Edit className="w-4 h-4 text-gray-600" />
+                                </button>
+                                <button
+                                onClick={() => onDelete && onDelete(record)}
+                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                title="Delete"
+                                >
+                                <Trash2 className="w-4 h-4 text-gray-600" />
+                                </button>
+                            </div>
+                            </td>
+                        </tr>
+                        );
+                    })}
                     </tbody>
                 </table>
             </div>

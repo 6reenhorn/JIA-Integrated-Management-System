@@ -109,7 +109,7 @@ const createJuanPayRecordsTable = async () => {
     CREATE TABLE IF NOT EXISTS juanpay_records (
       id SERIAL PRIMARY KEY,
       date DATE NOT NULL,
-      beginnings JSONB NOT NULL DEFAULT '[]',
+      beginnings TEXT NOT NULL DEFAULT '',
       ending NUMERIC NOT NULL DEFAULT 0,
       sales NUMERIC NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

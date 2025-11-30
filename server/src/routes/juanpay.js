@@ -13,58 +13,28 @@ const formatDatePH = (date) => {
   return `${year}-${month}-${day}`;
 };
 
-// Helper function to safely parse JSON
-const safeJsonParse = (value, defaultValue = []) => {
+// Helper function to parse pipe-separated beginnings
+const parseBeginnings = (value) => {
   try {
-    // If it's already an array, return it
-    if (Array.isArray(value)) {
+    // If it's null or undefined, return empty string
+    if (value === null || value === undefined) {
+      return '';
+    }
+    // If it's already a string, return it
+    if (typeof value === 'string') {
       return value;
     }
-    // If it's null or undefined, return default
-    if (value === null || value === undefined) {
-      return defaultValue;
+    // If it's an array (shouldn't happen but handle it)
+    if (Array.isArray(value)) {
+      return value.map(item => {
+        if (typeof item === 'object' && item.amount) return item.amount;
+        return item;
+      }).join('|');
     }
-    // If it's already an object (but not an array), it might be a parsed JSON object
-    // Check if it looks like it should be an array
-    if (typeof value === 'object') {
-      // If it has a length property and numeric keys, it might be an array-like object
-      if (value.length !== undefined && typeof value.length === 'number') {
-        try {
-          return Array.from(value);
-        } catch {
-          // If conversion fails, try to stringify and parse
-          return JSON.parse(JSON.stringify(value));
-        }
-      }
-      // If it's a plain object, try to stringify and parse to ensure it's valid
-      // This handles cases where SQLite returns objects differently
-      const stringified = JSON.stringify(value);
-      if (stringified === '{}') {
-        return defaultValue;
-      }
-      return JSON.parse(stringified);
-    }
-    // If it's a string, try to parse it
-    if (typeof value === 'string') {
-      // If it's an empty string, return default
-      if (value.trim() === '' || value.trim() === 'null') {
-        return defaultValue;
-      }
-      // If the string is "[object Object]", it means an object was stringified incorrectly
-      if (value === '[object Object]') {
-        console.warn('Received "[object Object]" string, returning default');
-        return defaultValue;
-      }
-      return JSON.parse(value);
-    }
-    // For any other type, return default
-    return defaultValue;
+    return '';
   } catch (e) {
-    // Don't log the error if it's just because value is already parsed
-    if (e.message && !e.message.includes('Unexpected token')) {
-      console.error('Error parsing JSON:', e.message, 'Value type:', typeof value);
-    }
-    return defaultValue;
+    console.error('Error parsing beginnings:', e.message);
+    return '';
   }
 };
 
@@ -76,14 +46,12 @@ router.get('/', async (req, res) => {
     );
 
     const records = rows.map(row => {
-      // Safely parse the 'beginnings' field
-      // The safeJsonParse function now handles all cases
-      const beginnings = safeJsonParse(row.beginnings, []);
+      const beginnings = parseBeginnings(row.beginnings);
       
       return {
         id: row.id.toString(),
         date: formatDatePH(row.date),
-        beginnings,
+        beginnings: beginnings,
         ending: parseFloat(row.ending) || 0,
         sales: parseFloat(row.sales) || 0
       };
@@ -100,16 +68,23 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { date, beginnings, ending, sales } = req.body;
+    let beginningsStr = '';
+    if (Array.isArray(beginnings)) {
+      beginningsStr = beginnings
+        .map(b => typeof b === 'object' && b.amount ? b.amount : b)
+        .filter(val => val !== null && val !== undefined && val !== '')
+        .join('|');
+    } else if (typeof beginnings === 'string') {
+      beginningsStr = beginnings;
+    }
 
     const result = await dbHelper.insert('juanpay_records', {
       date: date || new Date().toISOString(),
-      beginnings: JSON.stringify(beginnings || []),
+      beginnings: beginningsStr,
       ending: ending || 0,
       sales: sales || 0
     });
 
-    // For SQLite, insert returns { id: ..., ...data }
-    // For PostgreSQL, insert returns the full row
     const recordId = result.id || result.lastID || result.insertId;
     if (!recordId) {
       throw new Error('Failed to get JuanPay record ID after insert');
@@ -120,12 +95,10 @@ router.post('/', async (req, res) => {
       throw new Error('Failed to retrieve newly created JuanPay record');
     }
 
-    const beginningsArray = safeJsonParse(newRecordData.beginnings, []);
-
     const newRecord = {
       id: newRecordData.id.toString(),
       date: formatDatePH(newRecordData.date),
-      beginnings: Array.isArray(beginningsArray) ? beginningsArray : [],
+      beginnings: parseBeginnings(newRecordData.beginnings),
       ending: parseFloat(newRecordData.ending || 0),
       sales: parseFloat(newRecordData.sales || 0)
     };
@@ -145,9 +118,20 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { date, beginnings, ending, sales } = req.body;
 
+    // Convert array to pipe-separated string or use string directly
+    let beginningsStr = '';
+    if (Array.isArray(beginnings)) {
+      beginningsStr = beginnings
+        .map(b => typeof b === 'object' && b.amount ? b.amount : b)
+        .filter(val => val !== null && val !== undefined && val !== '')
+        .join('|');
+    } else if (typeof beginnings === 'string') {
+      beginningsStr = beginnings;
+    }
+
     await dbHelper.update('juanpay_records', id, {
       date: date || new Date().toISOString(),
-      beginnings: JSON.stringify(beginnings || []),
+      beginnings: beginningsStr,
       ending: ending || 0,
       sales: sales || 0,
       updated_at: new Date().toISOString()
@@ -162,7 +146,7 @@ router.put('/:id', async (req, res) => {
     const updatedRecord = {
       id: updated.id.toString(),
       date: formatDatePH(updated.date),
-      beginnings: updated.beginnings ? JSON.parse(updated.beginnings) : [],
+      beginnings: parseBeginnings(updated.beginnings),
       ending: parseFloat(updated.ending || 0),
       sales: parseFloat(updated.sales || 0)
     };

@@ -61,16 +61,20 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
 
     // Initialize form with record data
     useEffect(() => {
-        if (record) {
-            setFormData({
-                date: record.date,
-                beginnings: record.beginnings.map(b => ({ 
-                    amount: formatNumberWithCommas(b.amount.toString()) 
-                })),
-                ending: formatNumberWithCommas(record.ending.toString()),
-                sales: record.sales.toString(),
-            });
-        }
+    if (record) {
+        const beginningsArray = record.beginnings
+        ? record.beginnings.split('|')
+            .map(val => ({ amount: formatNumberWithCommas(val.trim()) }))
+            .filter(b => b.amount !== '')
+        : [{ amount: '' }];
+
+        setFormData({
+        date: record.date,
+        beginnings: beginningsArray,
+        ending: formatNumberWithCommas(record.ending.toString()),
+        sales: record.sales.toString(),
+        });
+    }
     }, [record]);
 
     // Validate form
@@ -165,13 +169,14 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
             return;
         }
 
-        const beginnings = formData.beginnings
+        const beginningsStr = formData.beginnings
             .filter(b => b.amount.trim() !== '')
-            .map(b => ({ amount: parseFormattedNumber(b.amount) }));
+            .map(b => parseFormattedNumber(b.amount))
+            .join('|');
 
         const updatedRecord: Omit<JuanPayRecord, 'id'> = {
             date: formData.date,
-            beginnings: beginnings,
+            beginnings: beginningsStr,
             ending: parseFormattedNumber(formData.ending) || 0,
             sales: parseFloat(formData.sales) || 0,
         };
@@ -187,11 +192,15 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
         setIsClosing(true);
         setTimeout(() => {
             if (record) {
+                const beginningsArray = record.beginnings
+                    ? record.beginnings.split('|')
+                        .map(val => ({ amount: formatNumberWithCommas(val.trim()) }))
+                        .filter(b => b.amount !== '')
+                    : [{ amount: '' }];
+
                 setFormData({
                     date: record.date,
-                    beginnings: record.beginnings.map(b => ({ 
-                        amount: formatNumberWithCommas(b.amount.toString()) 
-                    })),
+                    beginnings: beginningsArray,
                     ending: formatNumberWithCommas(record.ending.toString()),
                     sales: record.sales.toString(),
                 });

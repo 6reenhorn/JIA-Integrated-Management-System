@@ -566,43 +566,19 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
             .map(f => {
               const value = rowToUse[f];
-              // Handle JSON fields (like beginnings in juanpay_records) when pulling from PostgreSQL
+              // Handle beginnings field - pipe-separated string only
               if (f === 'beginnings') {
-                if (value === null || value === undefined) return '[]';
-                // If it's already a string (JSON), return it
-                if (typeof value === 'string') {
-                  // Check if it's a valid JSON string, if not, try to fix it
-                  try {
-                    JSON.parse(value);
-                    return value;
-                  } catch {
-                    // If not valid JSON, check if it's "[object Object]" or similar
-                    if (value.includes('[object Object]')) {
-                      console.warn(`[SYNC] Found "[object Object]" string for beginnings in update, using empty array`);
-                      return '[]';
-                    }
-                    // Try to parse as number
-                    const num = parseFloat(value);
-                    if (!isNaN(num)) {
-                      return JSON.stringify([num]);
-                    }
-                    return '[]';
-                  }
+                if (value === null || value === undefined) return '';
+                // Already pipe-separated string
+                if (typeof value === 'string') return value;
+                // Should not happen, but handle array
+                if (Array.isArray(value)) {
+                  return value.map(item => {
+                    if (typeof item === 'object' && item.amount) return item.amount;
+                    return item;
+                  }).join('|');
                 }
-                // If it's an object or array, stringify it
-                if (typeof value === 'object') {
-                  try {
-                    return JSON.stringify(value);
-                  } catch (e) {
-                    console.error(`[SYNC] Error stringifying beginnings in update:`, e, value);
-                    return '[]';
-                  }
-                }
-                // If it's a number, convert to array
-                if (typeof value === 'number') {
-                  return JSON.stringify([value]);
-                }
-                return '[]';
+                return '';
               }
               // Format timestamp fields (time_in, time_out) when syncing from PostgreSQL to SQLite
               if (f === 'time_in' || f === 'time_out' || f === 'created_at' || f === 'updated_at') {
@@ -1416,9 +1392,34 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
             .filter(f => f !== idField && f !== 'synced' && f !== 'updated_at')
             .map(f => {
               const value = recordToUse[f];
-              // Handle JSON fields (like beginnings in juanpay_records)
-              if (f === 'beginnings' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                return JSON.stringify(value);
+              // Handle beginnings field - ensure it's stored correctly in PostgreSQL
+              if (f === 'beginnings') {
+                if (value === null || value === undefined) return '';
+                // If it's already a pipe-separated string, keep it
+                if (typeof value === 'string') {
+                  // If it's legacy JSON, convert it
+                  if (value.trim().startsWith('[')) {
+                    try {
+                      const arr = JSON.parse(value);
+                      if (Array.isArray(arr)) {
+                        return arr.map(item => {
+                          if (typeof item === 'object' && item.amount) return item.amount;
+                          return item;
+                        }).join('|');
+                      }
+                    } catch {
+                      return value;
+                    }
+                  }
+                  return value;
+                }
+                if (typeof value === 'object' && Array.isArray(value)) {
+                  return value.map(item => {
+                    if (typeof item === 'object' && item.amount) return item.amount;
+                    return item;
+                  }).join('|');
+                }
+                return '';
               }
               // Convert month name to number for payroll_records
               if (f === 'month' && tableName === 'payroll_records') {
