@@ -58,7 +58,7 @@ const createAdminUser = async () => {
       name: adminName,
       first_name: firstName,
       last_name: lastName,
-      role: 'admin',
+      role: 'Admin',
       department: 'Administrative',
       contact: 'admin@example.com\n+1 (555) 000-0000\n123 Admin St, Admin City',
       email: 'admin@example.com',
@@ -67,7 +67,7 @@ const createAdminUser = async () => {
       last_login: null,
       avatar: null,
       address: '123 Admin St, Admin City',
-      salary: '50000', // Set appropriate salary
+      salary: '0', // Set appropriate salary
       contact_name: 'Emergency Contact',
       contact_number: '09123456789',
       relationship: 'Self',
