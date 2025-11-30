@@ -117,6 +117,8 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     const fetchJuanPayRecords = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/juanpay');
+        console.log('JuanPay records fetched:', response.data);
+        console.log('First record sample:', response.data[0]);
         setJuanpayRecords(response.data);
       } catch (err) {
         console.error('Error fetching JuanPay records:', err);

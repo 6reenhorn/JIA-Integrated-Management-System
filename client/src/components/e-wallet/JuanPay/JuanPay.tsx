@@ -52,7 +52,16 @@ const JuanPay: React.FC<JuanPayProps> = ({
     const todayRecords = records.filter(record => record.date === targetDateStr);
 
     const totalBeginning = todayRecords.reduce((sum, r) => {
-      const beginningSum = r.beginnings.reduce((s, b) => s + b.amount, 0);
+      if (!r.beginnings) return sum;
+      if (!Array.isArray(r.beginnings)) {
+        console.warn('JuanPay record has non-array beginnings:', r);
+        return sum;
+      }
+      if (r.beginnings.length === 0) return sum;
+      const beginningSum = r.beginnings.reduce((s, b) => {
+        const amount = typeof b === 'object' && b !== null && 'amount' in b ? b.amount : (typeof b === 'number' ? b : 0);
+        return s + amount;
+      }, 0);
       return sum + beginningSum;
     }, 0);
 
@@ -74,7 +83,10 @@ const JuanPay: React.FC<JuanPayProps> = ({
     const term = searchTerm.trim().toLowerCase();
     const matchesSearch = !term || (
       record.date.toLowerCase().includes(term) ||
-      record.beginnings.some(b => b.amount.toString().includes(term)) ||
+      (Array.isArray(record.beginnings) && record.beginnings.some(b => {
+        const amount = typeof b === 'object' && b !== null && 'amount' in b ? b.amount : (typeof b === 'number' ? b : 0);
+        return amount.toString().includes(term);
+      })) ||
       record.ending.toString().includes(term) ||
       record.sales.toString().includes(term)
     );

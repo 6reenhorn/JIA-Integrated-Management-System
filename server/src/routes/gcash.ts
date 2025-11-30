@@ -1,5 +1,5 @@
 import express, { Request, Response, Router } from 'express';
-import { dbHelper } from '../db/dbHelper';
+import { DBHelper } from '../db/dbHelper';
 
 const router: Router = express.Router();
 
@@ -95,7 +95,7 @@ const formatDate = (dateValue: string | Date | null | undefined): string => {
 // GET /api/gcash - Fetch all GCash records
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const rows = await dbHelper.query('SELECT * FROM gcash_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
+    const rows = await DBHelper.query('SELECT * FROM gcash_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
     const records = rows.map((row: any) => {
       const formattedDate = formatDate(row.date);
       // Debug: log the date value to see what format it's in
@@ -145,8 +145,9 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       date
     ];
 
-    const result = await dbHelper.run(query, values);
-    const newRecord = await dbHelper.getById('gcash_records', result.lastID);
+    const result = await DBHelper.execute(query, values);
+    const lastId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
+    const newRecord = await DBHelper.getById('gcash_records', lastId) as any;
 
     const record = {
       id: newRecord.id.toString(),
@@ -170,13 +171,13 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   try {
-    const record = await dbHelper.getById('gcash_records', id);
+    const record = await DBHelper.getById('gcash_records', id) as any;
     if (!record || record.deleted_at) {
       res.status(404).json({ error: 'GCash record not found or already deleted' });
       return;
     }
 
-    await dbHelper.run('UPDATE gcash_records SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?', [id]);
+    await DBHelper.execute('UPDATE gcash_records SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?', [id]);
 
     res.json({ message: 'GCash record deleted successfully', id: parseInt(id) });
   } catch (err) {
@@ -198,14 +199,14 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
   } = req.body;
 
   try {
-    const record = await dbHelper.getById('gcash_records', id);
+    const record = await DBHelper.getById('gcash_records', id) as any;
     if (!record || record.deleted_at) {
       res.status(404).json({ error: 'GCash record not found or already deleted' });
       return;
     }
 
-    // Use dbHelper.update which automatically marks records as synced = 0
-    await dbHelper.update('gcash_records', id, {
+    // Use DBHelper.update which automatically marks records as synced = 0
+    await DBHelper.update('gcash_records', id, {
       amount,
       service_charge: serviceCharge || 0,
       transaction_type: transactionType,
@@ -213,7 +214,7 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
       reference_number: referenceNumber || null,
       date
     });
-    const updatedRecord = await dbHelper.getById('gcash_records', id);
+    const updatedRecord = await DBHelper.getById('gcash_records', id) as any;
     
     const result = {
       id: updatedRecord.id.toString(),

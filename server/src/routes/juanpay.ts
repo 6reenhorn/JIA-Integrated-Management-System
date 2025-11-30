@@ -1,12 +1,12 @@
 import express, { Request, Response, Router } from 'express';
-import { dbHelper } from '../db/dbHelper';
+import { DBHelper } from '../db/dbHelper';
 
 const router: Router = express.Router();
 
 interface JuanPayRecord {
   id: string;
   date: string;
-  beginnings: number[];
+  beginnings: Array<{ amount: number }>;
   ending: number;
   sales: number;
 }
@@ -82,16 +82,37 @@ const formatDate = (dateValue: string | Date | null | undefined): string => {
 
 // Helper function to transform DB record to API response
 const transformRecord = (row: any): JuanPayRecord => {
-  let beginnings: number[] = [];
+  let beginnings: Array<{ amount: number }> = [];
   try {
-    if (row.beginnings) {
+    if (row.beginnings !== null && row.beginnings !== undefined) {
+      let parsedBeginnings: number[] = [];
+      
+      // Handle different data types
       if (typeof row.beginnings === 'string') {
-        beginnings = JSON.parse(row.beginnings);
+        // Try to parse as JSON
+        try {
+          const parsed = JSON.parse(row.beginnings);
+          parsedBeginnings = Array.isArray(parsed) ? parsed : [parsed];
+        } catch {
+          // If not valid JSON, treat as single number string
+          const num = parseFloat(row.beginnings);
+          if (!isNaN(num)) {
+            parsedBeginnings = [num];
+          }
+        }
       } else if (Array.isArray(row.beginnings)) {
-        beginnings = row.beginnings;
+        // Already an array
+        parsedBeginnings = row.beginnings;
+      } else if (typeof row.beginnings === 'number') {
+        // Single number - convert to array with one element
+        parsedBeginnings = [row.beginnings];
       }
+      
+      // Convert array of numbers to array of objects with amount property
+      beginnings = parsedBeginnings.map((amount: number) => ({ amount }));
     }
-  } catch {
+  } catch (err) {
+    console.error('Error transforming beginnings in juanpay record:', err, row);
     beginnings = [];
   }
   
@@ -107,8 +128,12 @@ const transformRecord = (row: any): JuanPayRecord => {
 // GET /api/juanpay - Fetch all JuanPay records
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const rows = await dbHelper.query('SELECT * FROM juanpay_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
+    const rows = await DBHelper.query('SELECT * FROM juanpay_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC') as any[];
     const records = rows.map((row: any) => transformRecord(row));
+    console.log('JuanPay GET - Raw rows count:', rows.length);
+    console.log('JuanPay GET - First raw row:', rows[0]);
+    console.log('JuanPay GET - Transformed records count:', records.length);
+    console.log('JuanPay GET - First transformed record:', records[0]);
     res.json(records);
   } catch (err) {
     console.error('Error fetching JuanPay records:', err);
@@ -121,21 +146,37 @@ router.post('/', async (req: Request<{}, {}, JuanPayRequestBody>, res: Response)
   const { date, beginnings, ending, sales } = req.body;
 
   try {
-    const query = `
-      INSERT INTO juanpay_records (date, beginnings, ending, sales)
-      VALUES (?, ?, ?, ?)
-    `;
-    const values = [
+    // Convert beginnings array to JSON string for storage
+    // If beginnings is an array of objects with amount property, extract just the amounts
+    let beginningsArray: number[] = [];
+    if (Array.isArray(beginnings)) {
+      beginningsArray = beginnings.map((b: any) => {
+        if (typeof b === 'object' && b !== null && 'amount' in b) {
+          return b.amount;
+        }
+        return typeof b === 'number' ? b : 0;
+      });
+    } else if (typeof beginnings === 'number') {
+      beginningsArray = [beginnings];
+    }
+
+    // Use DBHelper.insert to automatically set synced = 0 for new records
+    const result = await DBHelper.insert('juanpay_records', {
       date,
-      JSON.stringify(beginnings || []),
-      ending || 0,
-      sales || 0
-    ];
+      beginnings: JSON.stringify(beginningsArray),
+      ending: ending || 0,
+      sales: sales || 0
+    });
 
-    const result = await dbHelper.run(query, values);
-    const newRecord = await dbHelper.getById('juanpay_records', result.lastID);
+    const lastId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
+    const newRecord = await DBHelper.getById('juanpay_records', lastId) as JuanPayDBRecord | undefined;
+    
+    if (!newRecord) {
+      res.status(500).json({ error: 'Failed to retrieve created record' });
+      return;
+    }
+
     const record = transformRecord(newRecord);
-
     res.status(201).json(record);
   } catch (err) {
     console.error('Error adding JuanPay record:', err);
@@ -149,21 +190,34 @@ router.put('/:id', async (req: Request<{ id: string }, {}, JuanPayRequestBody>, 
   const { date, beginnings, ending, sales } = req.body;
 
   try {
-    const record = await dbHelper.getById('juanpay_records', id);
+    const record = await DBHelper.getById('juanpay_records', id) as JuanPayDBRecord | undefined;
     if (!record || record.deleted_at) {
       res.status(404).json({ error: 'JuanPay record not found or already deleted' });
       return;
     }
 
-    // Use dbHelper.update which automatically marks records as synced = 0
-    const beginningsJson = Array.isArray(beginnings) ? JSON.stringify(beginnings) : beginnings;
-    await dbHelper.update('juanpay_records', id, {
+    // Convert beginnings array to JSON string for storage
+    // If beginnings is an array of objects with amount property, extract just the amounts
+    let beginningsArray: number[] = [];
+    if (Array.isArray(beginnings)) {
+      beginningsArray = beginnings.map((b: any) => {
+        if (typeof b === 'object' && b !== null && 'amount' in b) {
+          return b.amount;
+        }
+        return typeof b === 'number' ? b : 0;
+      });
+    } else if (typeof beginnings === 'number') {
+      beginningsArray = [beginnings];
+    }
+
+    // Use DBHelper.update which automatically marks records as synced = 0
+    await DBHelper.update('juanpay_records', id, {
       date,
-      beginnings: beginningsJson,
+      beginnings: JSON.stringify(beginningsArray),
       ending: ending || 0,
       sales: sales || 0
     });
-    const updatedRecord = await dbHelper.getById('juanpay_records', id);
+    const updatedRecord = await DBHelper.getById('juanpay_records', id) as JuanPayDBRecord | undefined;
     const result = transformRecord(updatedRecord);
 
     res.json(result);
@@ -178,13 +232,14 @@ router.delete('/:id', async (req: Request<{ id: string }>, res: Response): Promi
   const { id } = req.params;
 
   try {
-    const record = await dbHelper.getById('juanpay_records', id);
+    const record = await DBHelper.getById('juanpay_records', id) as JuanPayDBRecord | undefined;
     if (!record || record.deleted_at) {
       res.status(404).json({ error: 'JuanPay record not found or already deleted' });
       return;
     }
 
-    await dbHelper.run('UPDATE juanpay_records SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?', [id]);
+    // Use DBHelper.softDelete which automatically marks records as synced = 0
+    await DBHelper.softDelete('juanpay_records', id);
 
     res.json({ message: 'JuanPay record deleted successfully', id: parseInt(id) });
   } catch (err) {

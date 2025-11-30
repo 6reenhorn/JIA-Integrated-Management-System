@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { dbHelper } from '../db/dbHelper';
+import { DBHelper } from '../db/dbHelper';
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ router.post('/login', async (req, res): Promise<void> => {
 
   try {
     // Example query - adjust based on your user table
-    const user = await dbHelper.queryOne('SELECT * FROM users WHERE username = ?', [username]);
+    const user = await DBHelper.queryOne('SELECT * FROM users WHERE username = ?', [username]) as any;
 
     if (!user) {
       res.status(401).json({ error: 'Invalid credentials' });
