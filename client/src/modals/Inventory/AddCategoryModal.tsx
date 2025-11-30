@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import Portal from '../../components/common/Portal';
 
 interface AddCategoryModalProps {
@@ -15,6 +16,8 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   const [categoryName, setCategoryName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#10B981');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showValidationAlert, setShowValidationAlert] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
   const [isClosing, setIsClosing] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -22,6 +25,8 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     setCategoryName('');
     setSelectedColor('#10B981');
     setErrors({});
+    setShowValidationAlert(false);
+    setMissingFields([]);
     onClose();
   }, [onClose]);
 
@@ -32,6 +37,13 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
       setIsClosing(false);
     }, 300);
   }, [handleClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShowValidationAlert(false);
+      setMissingFields([]);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -89,12 +101,25 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+    const missing: string[] = [];
 
     if (!categoryName.trim()) {
       newErrors.categoryName = 'Category name is required';
+      missing.push('Category Name');
     }
 
     setErrors(newErrors);
+    
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      setShowValidationAlert(true);
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        setShowValidationAlert(false);
+      }, 5000);
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
@@ -113,6 +138,8 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         setCategoryName('');
         setSelectedColor('#10B981');
         setErrors({});
+        setShowValidationAlert(false);
+        setMissingFields([]);
         setIsClosing(false);
         onClose();
       }, 300);
@@ -121,6 +148,11 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
 
   const handleInputChange = (value: string) => {
     setCategoryName(value);
+    
+    // Hide validation alert when user starts typing
+    if (showValidationAlert) {
+      setShowValidationAlert(false);
+    }
     
     // Clear error when user starts typing
     if (errors.categoryName) {
@@ -156,6 +188,31 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
             <h3 className="text-[20px] font-bold">Add Category</h3>
             <p className="text-[12px]">Create a new category with a custom name and color.</p>
           </div>
+
+          {/* Validation Alert */}
+          {showValidationAlert && (
+            <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 animate-modal-in">
+              <div className="flex gap-2">
+                <AlertTriangle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-red-800 mb-1">
+                    Please fill in all required fields
+                  </p>
+                  <p className="text-xs text-red-700">
+                    Missing: {missingFields.join(', ')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowValidationAlert(false)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
           
           <div className="overflow-y-auto max-h-[550px] mt-4 text-[12px]">
             <div className="flex flex-col gap-3">
@@ -165,14 +222,16 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                 
                 {/* Category Name Field */}
                 <div className="mt-2">
-                  <label className="text-[12px] font-bold">Category Name</label>
+                  <label className="text-[12px] font-bold">
+                    Category Name
+                  </label>
                   <input
                     type="text"
                     value={categoryName}
                     onChange={(e) => handleInputChange(e.target.value)}
                     placeholder="Enter category name"
                     className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
-                      errors.categoryName ? 'border-red-300' : 'border-gray-300'
+                      showValidationAlert && errors.categoryName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -180,9 +239,6 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                       }
                     }}
                   />
-                  {errors.categoryName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.categoryName}</p>
-                  )}
                 </div>
 
                 {/* Color Picker */}
