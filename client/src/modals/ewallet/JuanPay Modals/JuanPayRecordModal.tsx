@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { JuanPayRecord, JuanPayBeginning } from '../../../types/ewallet_types';
+import type { JuanPayRecord } from '../../../types/ewallet_types';
 import CustomDatePicker from '../../../components/common/CustomDatePicker';
 import { Plus, X } from 'lucide-react';
 
@@ -153,38 +153,39 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    e.preventDefault;
+    
+    if (!isFormValid) {
+        return;
+    }
+
+    const beginningsStr = formData.beginnings
+        .filter(b => b.amount.trim() !== '')
+        .map(b => parseFormattedNumber(b.amount))
+        .join('|');
+
+    const newRecord: Omit<JuanPayRecord, 'id'> = {
+        date: formData.date,
+        beginnings: beginningsStr,
+        ending: parseFormattedNumber(formData.ending) || 0,
+        sales: parseFloat(formData.sales) || 0,
+    };
+
+    setIsClosing(true);
+    setTimeout(() => {
+        onAddRecord(newRecord);
         
-        if (!isFormValid) {
-            return;
-        }
-
-        const beginnings: JuanPayBeginning[] = formData.beginnings
-            .filter(b => b.amount.trim() !== '')
-            .map(b => ({ amount: parseFormattedNumber(b.amount) }));
-
-        const newRecord: Omit<JuanPayRecord, 'id'> = {
-            date: formData.date,
-            beginnings: beginnings,
-            ending: parseFormattedNumber(formData.ending) || 0,
-            sales: parseFloat(formData.sales) || 0,
-        };
-
-        setIsClosing(true);
-        setTimeout(() => {
-            onAddRecord(newRecord);
-            
-            // Reset form
-            setFormData({
-                date: getLocalISODate(new Date()),
-                beginnings: [{ amount: '' }],
-                ending: '',
-                sales: '',
-            });
-            
-            onClose();
-            setIsClosing(false);
-        }, 300);
+        // Reset form
+        setFormData({
+        date: getLocalISODate(new Date()),
+        beginnings: [{ amount: '' }],
+        ending: '',
+        sales: '',
+        });
+        
+        onClose();
+        setIsClosing(false);
+    }, 300);
     };
 
     const handleCancel = () => {
