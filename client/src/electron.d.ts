@@ -1,6 +1,6 @@
 declare global {
   interface Window {
-    electronAPI: {
+    electronAPI?: {
       minimize: () => void;
       maximize: () => void;
       close: () => void;

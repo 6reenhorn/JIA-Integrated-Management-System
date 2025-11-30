@@ -169,7 +169,8 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
 
     // Calculate JuanPay stats for selected date
     const juanpayBeginning = juanpayForDate.reduce((sum, r) => {
-      const beginningSum = r.beginnings.reduce((s, b) => s + b.amount, 0);
+      const beginnings = Array.isArray(r.beginnings) ? r.beginnings : [];
+      const beginningSum = beginnings.reduce((s, b) => s + (b?.amount || 0), 0);
       return sum + beginningSum;
     }, 0);
 

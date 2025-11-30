@@ -514,6 +514,36 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           }
         }
 
+        // Special handling for attendance: map employee_id from PostgreSQL to SQLite
+        let mappedRow = { ...row };
+        if (tableName === 'attendance' && row.employee_id) {
+          // Get the employee's emp_id from PostgreSQL
+          const pgEmployee = await pool.query(
+            'SELECT emp_id FROM employees WHERE id = $1 AND deleted_at IS NULL',
+            [row.employee_id]
+          );
+          
+          if (pgEmployee.rows.length > 0) {
+            const empId = pgEmployee.rows[0].emp_id;
+            // Find the employee's SQLite id by emp_id
+            const sqliteEmployee = await sqliteAll(
+              'SELECT id FROM employees WHERE emp_id = ? AND deleted_at IS NULL',
+              [empId]
+            );
+            
+            if (sqliteEmployee.length > 0) {
+              mappedRow.employee_id = sqliteEmployee[0].id;
+              console.log(`[ATTENDANCE SYNC] Mapped employee_id: PostgreSQL ${row.employee_id} (emp_id: ${empId}) -> SQLite ${mappedRow.employee_id}`);
+            } else {
+              console.warn(`[ATTENDANCE SYNC] Employee with emp_id ${empId} not found in SQLite, skipping attendance record ${row.id}`);
+              continue;
+            }
+          } else {
+            console.warn(`[ATTENDANCE SYNC] Employee with id ${row.employee_id} not found in PostgreSQL, skipping attendance record ${row.id}`);
+            continue;
+          }
+        }
+
         if (existing.length > 0 && (!hasDeletedAt || !existing[0].deleted_at)) {
           // Update existing record (only if not deleted)
           // IMPORTANT: If the record has synced = 0, we should NOT overwrite it
@@ -525,6 +555,8 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           
           // Update existing record (only if not deleted)
           // Exclude idField, updated_at, and synced (we preserve synced, set updated_at separately)
+          // Use mappedRow for attendance to get the correct employee_id
+          const rowToUse = tableName === 'attendance' ? mappedRow : row;
           const updateFields = fields
             .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
             .map(f => `${f} = ?`)
@@ -533,7 +565,7 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           const updateValues = fields
             .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
             .map(f => {
-              const value = row[f];
+              const value = rowToUse[f];
               // Format date fields when syncing from PostgreSQL to SQLite
               if (f === 'date' || f === 'payment_date') {
                 if (value === null || value === undefined) return null;
@@ -662,10 +694,12 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           try {
             // Use INSERT OR IGNORE to handle duplicate key errors gracefully
             // Include synced column with value 1 (pulled from PostgreSQL, so already synced)
+            // For attendance, use mappedRow to get the correct employee_id
+            const rowToUseForInsert = tableName === 'attendance' ? mappedRow : row;
             const insertFields = [...fields, 'synced'].join(', ');
             const placeholders = fields.map(() => '?').concat('?').join(', ');
             const insertValues = fields.map(f => {
-              const value = row[f];
+              const value = rowToUseForInsert[f];
               // Format date fields when syncing from PostgreSQL to SQLite
               if (f === 'date' || f === 'payment_date') {
                 if (value === null || value === undefined) return null;
@@ -709,6 +743,8 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
               actuallySyncedIds.push(row[idField]);
             } else {
               // Record already exists, update it instead
+              // For attendance, use mappedRow to get the correct employee_id
+              const rowToUseForUpdate = tableName === 'attendance' ? mappedRow : row;
               const updateFields = fields
                 .filter(f => f !== idField)
                 .map(f => `${f} = ?`)
@@ -716,7 +752,7 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
               const updateValues = fields
                 .filter(f => f !== idField)
                 .map(f => {
-                  const value = row[f];
+                  const value = rowToUseForUpdate[f];
                   // Format date fields when syncing from PostgreSQL to SQLite
                   if (f === 'date' || f === 'payment_date') {
                     if (value === null || value === undefined) return null;
