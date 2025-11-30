@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import CustomDatePicker from '../../components/common/CustomDatePicker';
 import axios from 'axios';
 import Portal from '../../components/common/Portal';
@@ -61,6 +62,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showValidationAlert, setShowValidationAlert] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
   const [isPaymentMethodOpen, setIsPaymentMethodOpen] = useState(false);
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
   const [inventoryProducts, setInventoryProducts] = useState<InventoryProduct[]>([]);
@@ -89,6 +92,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
       setErrors({});
       setSelectedProduct(null);
       setProductSearchTerm('');
+      setShowValidationAlert(false);
+      setMissingFields([]);
       onClose();
       setIsClosing(false);
     }, 300);
@@ -98,6 +103,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetchInventoryProducts();
+      setShowValidationAlert(false);
+      setMissingFields([]);
     }
   }, [isOpen]);
 
@@ -182,6 +189,11 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
         productName: ''
       }));
     }
+    
+    // Hide validation alert when user makes changes
+    if (showValidationAlert) {
+      setShowValidationAlert(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -197,6 +209,11 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
       }));
     }
     
+    // Hide validation alert when user starts typing
+    if (showValidationAlert) {
+      setShowValidationAlert(false);
+    }
+    
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
@@ -208,31 +225,46 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+    const missing: string[] = [];
 
     if (!formData.productName.trim()) {
       newErrors.productName = 'Product name is required';
+      missing.push('Product Name');
     }
 
     const quantity = Number(formData.quantity);
     if (!formData.quantity || quantity <= 0) {
       newErrors.quantity = 'Quantity must be greater than 0';
-    }
-
-    // Check if quantity exceeds available stock
-    if (selectedProduct && quantity > selectedProduct.stock) {
+      missing.push('Quantity');
+    } else if (selectedProduct && quantity > selectedProduct.stock) {
+      // This is a special case - not a missing field but an invalid value
       newErrors.quantity = `Only ${selectedProduct.stock} items available in stock`;
+      missing.push(`Quantity (Max: ${selectedProduct.stock})`);
     }
 
     const price = Number(formData.price);
     if (!formData.price || price <= 0) {
       newErrors.price = 'Price must be greater than 0';
+      missing.push('Price');
     }
 
     if (!formData.date) {
       newErrors.date = 'Sale date is required';
+      missing.push('Sale Date');
     }
 
     setErrors(newErrors);
+    
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      setShowValidationAlert(true);
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        setShowValidationAlert(false);
+      }, 5000);
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
@@ -268,7 +300,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
             // Update the form with current stock info
             setFormData(prev => ({
               ...prev,
-              price: updatedProduct.productPrice
+              price: updatedProduct.productPrice.toString()
             }));
           }
         }
@@ -303,6 +335,31 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
             <h3 className="text-[20px] font-bold">Add Sales</h3>
             <p className="text-[12px]">Record a new product sales with quantity and price.</p>
           </div>
+
+          {/* Validation Alert */}
+          {showValidationAlert && (
+            <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 animate-modal-in">
+              <div className="flex gap-2">
+                <AlertTriangle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-red-800 mb-1">
+                    Please fill in all required fields
+                  </p>
+                  <p className="text-xs text-red-700">
+                    Missing: {missingFields.join(', ')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowValidationAlert(false)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
           
           <div className="overflow-y-auto max-h-[550px] mt-4 text-[12px]">
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -312,7 +369,9 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                 
                 {/* Product Name Dropdown */}
                 <div className="mt-2">
-                  <label className="text-[12px] font-bold">Product Name</label>
+                  <label className="text-[12px] font-bold">
+                    Product Name
+                  </label>
                   <div className="relative" ref={productDropdownRef}>
                     <input
                       type="text"
@@ -324,7 +383,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                       onFocus={() => setIsProductDropdownOpen(true)}
                       placeholder="Search and select product"
                       className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
-                        errors.productName ? 'border-red-300' : 'border-gray-300'
+                        showValidationAlert && errors.productName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
                     
@@ -351,10 +410,8 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowDown') {
                             e.preventDefault();
-                            // Add keyboard navigation logic if needed
                           } else if (e.key === 'ArrowUp') {
                             e.preventDefault();
-                            // Add keyboard navigation logic if needed
                           } else if (e.key === 'Escape') {
                             e.preventDefault();
                             setIsProductDropdownOpen(false);
@@ -399,9 +456,6 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                       </div>
                     )}
                   </div>
-                  {errors.productName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.productName}</p>
-                  )}
                   {selectedProduct && (
                     <p className="text-green-600 text-xs mt-1">
                       Available stock: {selectedProduct.stock} units
@@ -412,7 +466,9 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                 {/* Quantity and Price Row */}
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div>
-                    <label className="text-[12px] font-bold">Quantity</label>
+                    <label className="text-[12px] font-bold">
+                      Quantity 
+                    </label>
                     <input
                       type="text"
                       min="1"
@@ -424,16 +480,15 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                       }}
                       placeholder="0"
                       className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
-                        errors.quantity ? 'border-red-300' : 'border-gray-300'
+                        showValidationAlert && errors.quantity ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
-                    {errors.quantity && (
-                      <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>
-                    )}
                   </div>
 
                   <div>
-                    <label className="text-[12px] font-bold">Price per Item (₱)</label>
+                    <label className="text-[12px] font-bold">
+                      Price per Item (₱)
+                    </label>
                     <input
                       type="text"
                       min="0"
@@ -443,12 +498,9 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                       readOnly={true}
                       placeholder="0.00"
                       className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none cursor-not-allowed ${
-                        errors.price ? 'border-red-300' : 'border-gray-300'
+                        showValidationAlert && errors.price ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
-                    {errors.price && (
-                      <p className="text-red-500 text-xs mt-1">{errors.price}</p>
-                    )}
                   </div>
                 </div>
 
@@ -559,9 +611,6 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                     onChange={(date: Date | null) => handleInputChange('date', date ? formatDateToMMDDYYYY(date) : '')}
                     className={errors.date ? 'border-red-300' : ''}
                   />
-                  {errors.date && (
-                    <p className="text-red-500 text-xs mt-1">{errors.date}</p>
-                  )}
                 </div>
               </div>
             </form>
