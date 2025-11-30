@@ -566,6 +566,44 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
             .map(f => {
               const value = rowToUse[f];
+              // Handle JSON fields (like beginnings in juanpay_records) when pulling from PostgreSQL
+              if (f === 'beginnings') {
+                if (value === null || value === undefined) return '[]';
+                // If it's already a string (JSON), return it
+                if (typeof value === 'string') {
+                  // Check if it's a valid JSON string, if not, try to fix it
+                  try {
+                    JSON.parse(value);
+                    return value;
+                  } catch {
+                    // If not valid JSON, check if it's "[object Object]" or similar
+                    if (value.includes('[object Object]')) {
+                      console.warn(`[SYNC] Found "[object Object]" string for beginnings in update, using empty array`);
+                      return '[]';
+                    }
+                    // Try to parse as number
+                    const num = parseFloat(value);
+                    if (!isNaN(num)) {
+                      return JSON.stringify([num]);
+                    }
+                    return '[]';
+                  }
+                }
+                // If it's an object or array, stringify it
+                if (typeof value === 'object') {
+                  try {
+                    return JSON.stringify(value);
+                  } catch (e) {
+                    console.error(`[SYNC] Error stringifying beginnings in update:`, e, value);
+                    return '[]';
+                  }
+                }
+                // If it's a number, convert to array
+                if (typeof value === 'number') {
+                  return JSON.stringify([value]);
+                }
+                return '[]';
+              }
               // Format date fields when syncing from PostgreSQL to SQLite
               if (f === 'date' || f === 'payment_date') {
                 if (value === null || value === undefined) return null;
@@ -700,6 +738,44 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             const placeholders = fields.map(() => '?').concat('?').join(', ');
             const insertValues = fields.map(f => {
               const value = rowToUseForInsert[f];
+              // Handle JSON fields (like beginnings in juanpay_records) when pulling from PostgreSQL
+              if (f === 'beginnings') {
+                if (value === null || value === undefined) return '[]';
+                // If it's already a string (JSON), return it
+                if (typeof value === 'string') {
+                  // Check if it's a valid JSON string, if not, try to fix it
+                  try {
+                    JSON.parse(value);
+                    return value;
+                  } catch {
+                    // If not valid JSON, check if it's "[object Object]" or similar
+                    if (value.includes('[object Object]')) {
+                      console.warn(`[SYNC] Found "[object Object]" string for beginnings, using empty array`);
+                      return '[]';
+                    }
+                    // Try to parse as number
+                    const num = parseFloat(value);
+                    if (!isNaN(num)) {
+                      return JSON.stringify([num]);
+                    }
+                    return '[]';
+                  }
+                }
+                // If it's an object or array, stringify it
+                if (typeof value === 'object') {
+                  try {
+                    return JSON.stringify(value);
+                  } catch (e) {
+                    console.error(`[SYNC] Error stringifying beginnings:`, e, value);
+                    return '[]';
+                  }
+                }
+                // If it's a number, convert to array
+                if (typeof value === 'number') {
+                  return JSON.stringify([value]);
+                }
+                return '[]';
+              }
               // Format date fields when syncing from PostgreSQL to SQLite
               if (f === 'date' || f === 'payment_date') {
                 if (value === null || value === undefined) return null;
@@ -753,6 +829,44 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
                 .filter(f => f !== idField)
                 .map(f => {
                   const value = rowToUseForUpdate[f];
+                  // Handle JSON fields (like beginnings in juanpay_records) when pulling from PostgreSQL
+                  if (f === 'beginnings') {
+                    if (value === null || value === undefined) return '[]';
+                    // If it's already a string (JSON), return it
+                    if (typeof value === 'string') {
+                      // Check if it's a valid JSON string, if not, try to fix it
+                      try {
+                        JSON.parse(value);
+                        return value;
+                      } catch {
+                        // If not valid JSON, check if it's "[object Object]" or similar
+                        if (value.includes('[object Object]')) {
+                          console.warn(`[SYNC] Found "[object Object]" string for beginnings in update (attendance), using empty array`);
+                          return '[]';
+                        }
+                        // Try to parse as number
+                        const num = parseFloat(value);
+                        if (!isNaN(num)) {
+                          return JSON.stringify([num]);
+                        }
+                        return '[]';
+                      }
+                    }
+                    // If it's an object or array, stringify it
+                    if (typeof value === 'object') {
+                      try {
+                        return JSON.stringify(value);
+                      } catch (e) {
+                        console.error(`[SYNC] Error stringifying beginnings in update (attendance):`, e, value);
+                        return '[]';
+                      }
+                    }
+                    // If it's a number, convert to array
+                    if (typeof value === 'number') {
+                      return JSON.stringify([value]);
+                    }
+                    return '[]';
+                  }
                   // Format date fields when syncing from PostgreSQL to SQLite
                   if (f === 'date' || f === 'payment_date') {
                     if (value === null || value === undefined) return null;

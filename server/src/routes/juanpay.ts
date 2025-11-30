@@ -89,15 +89,21 @@ const transformRecord = (row: any): JuanPayRecord => {
       
       // Handle different data types
       if (typeof row.beginnings === 'string') {
-        // Try to parse as JSON
-        try {
-          const parsed = JSON.parse(row.beginnings);
-          parsedBeginnings = Array.isArray(parsed) ? parsed : [parsed];
-        } catch {
-          // If not valid JSON, treat as single number string
-          const num = parseFloat(row.beginnings);
-          if (!isNaN(num)) {
-            parsedBeginnings = [num];
+        // Check for "[object Object]" string (sync error)
+        if (row.beginnings.includes('[object Object]')) {
+          console.warn('JuanPay record has "[object Object]" string for beginnings, using empty array');
+          parsedBeginnings = [];
+        } else {
+          // Try to parse as JSON
+          try {
+            const parsed = JSON.parse(row.beginnings);
+            parsedBeginnings = Array.isArray(parsed) ? parsed : [parsed];
+          } catch {
+            // If not valid JSON, treat as single number string
+            const num = parseFloat(row.beginnings);
+            if (!isNaN(num)) {
+              parsedBeginnings = [num];
+            }
           }
         }
       } else if (Array.isArray(row.beginnings)) {
