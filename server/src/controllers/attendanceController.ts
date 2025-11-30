@@ -11,10 +11,26 @@ export interface AttendanceRecord {
 }
 
 // Helper function to format time in HH:MM AM/PM format
-const formatTime = (timeStr: string | null): string | null => {
-  if (!timeStr) return null;
+const formatTime = (timeValue: string | number | null): string | null => {
+  if (!timeValue && timeValue !== 0) return null;
   try {
-    const date = new Date(timeStr);
+    // Handle both string and number (Unix timestamp) inputs
+    let date: Date;
+    if (typeof timeValue === 'number') {
+      // If it's a number, treat it as milliseconds since epoch
+      date = new Date(timeValue);
+    } else if (typeof timeValue === 'string') {
+      // If it's a string, try to parse it
+      date = new Date(timeValue);
+    } else {
+      return null;
+    }
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    
     const hours = date.getHours();
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -22,7 +38,7 @@ const formatTime = (timeStr: string | null): string | null => {
     const displayMinutes = String(minutes).padStart(2, '0');
     return `${displayHours}:${displayMinutes} ${ampm}`;
   } catch {
-    return timeStr;
+    return null;
   }
 };
 

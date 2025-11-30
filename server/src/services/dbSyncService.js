@@ -604,6 +604,42 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
                 }
                 return '[]';
               }
+              // Format timestamp fields (time_in, time_out) when syncing from PostgreSQL to SQLite
+              if (f === 'time_in' || f === 'time_out' || f === 'created_at' || f === 'updated_at') {
+                if (value === null || value === undefined) return null;
+                // If it's a Date object, convert to ISO string
+                if (value instanceof Date) {
+                  if (isNaN(value.getTime())) return null;
+                  return value.toISOString();
+                }
+                // If it's already a string, try to ensure it's in ISO format
+                if (typeof value === 'string') {
+                  // If it contains a space (SQL format), convert to ISO
+                  if (value.includes(' ') && !value.includes('T')) {
+                    return value.replace(' ', 'T');
+                  }
+                  // If it's already ISO format or valid, return it
+                  try {
+                    const date = new Date(value);
+                    if (!isNaN(date.getTime())) {
+                      return date.toISOString();
+                    }
+                  } catch (e) {
+                    // If parsing fails, return original value
+                  }
+                  return value;
+                }
+                // Try to parse as date
+                try {
+                  const date = new Date(value);
+                  if (!isNaN(date.getTime())) {
+                    return date.toISOString();
+                  }
+                } catch (e) {
+                  // If parsing fails, return null
+                }
+                return null;
+              }
               // Format date fields when syncing from PostgreSQL to SQLite
               if (f === 'date' || f === 'payment_date') {
                 if (value === null || value === undefined) return null;
@@ -634,6 +670,43 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
               }
               return value === undefined ? null : value;
             });
+          
+          // Special handling for attendance: preserve time_in and time_out if PostgreSQL has null but SQLite has values
+          if (tableName === 'attendance') {
+            const existingRecord = await sqliteAll(
+              `SELECT time_in, time_out FROM ${tableName} WHERE ${idField} = ?`,
+              [row[idField]]
+            );
+            
+            if (existingRecord.length > 0) {
+              const existing = existingRecord[0];
+              // Find time_in and time_out indices in updateFields
+              const timeInIndex = fields.findIndex(f => f === 'time_in' && f !== idField && f !== 'updated_at' && f !== 'synced');
+              const timeOutIndex = fields.findIndex(f => f === 'time_out' && f !== idField && f !== 'updated_at' && f !== 'synced');
+              
+              // Preserve existing time_in if PostgreSQL has null
+              if (timeInIndex >= 0) {
+                const pgTimeInIndex = fields.filter(f => f !== idField && f !== 'updated_at' && f !== 'synced').indexOf('time_in');
+                if (pgTimeInIndex >= 0 && (updateValues[pgTimeInIndex] === null || updateValues[pgTimeInIndex] === undefined)) {
+                  if (existing.time_in) {
+                    updateValues[pgTimeInIndex] = existing.time_in;
+                    console.log(`[ATTENDANCE SYNC] Preserved existing time_in for record ${row[idField]}: ${existing.time_in}`);
+                  }
+                }
+              }
+              
+              // Preserve existing time_out if PostgreSQL has null
+              if (timeOutIndex >= 0) {
+                const pgTimeOutIndex = fields.filter(f => f !== idField && f !== 'updated_at' && f !== 'synced').indexOf('time_out');
+                if (pgTimeOutIndex >= 0 && (updateValues[pgTimeOutIndex] === null || updateValues[pgTimeOutIndex] === undefined)) {
+                  if (existing.time_out) {
+                    updateValues[pgTimeOutIndex] = existing.time_out;
+                    console.log(`[ATTENDANCE SYNC] Preserved existing time_out for record ${row[idField]}: ${existing.time_out}`);
+                  }
+                }
+              }
+            }
+          }
           
           const updateDeletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
           const updateSql = `
@@ -776,6 +849,42 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
                 }
                 return '[]';
               }
+              // Format timestamp fields (time_in, time_out) when syncing from PostgreSQL to SQLite
+              if (f === 'time_in' || f === 'time_out' || f === 'created_at' || f === 'updated_at') {
+                if (value === null || value === undefined) return null;
+                // If it's a Date object, convert to ISO string
+                if (value instanceof Date) {
+                  if (isNaN(value.getTime())) return null;
+                  return value.toISOString();
+                }
+                // If it's already a string, try to ensure it's in ISO format
+                if (typeof value === 'string') {
+                  // If it contains a space (SQL format), convert to ISO
+                  if (value.includes(' ') && !value.includes('T')) {
+                    return value.replace(' ', 'T');
+                  }
+                  // If it's already ISO format or valid, return it
+                  try {
+                    const date = new Date(value);
+                    if (!isNaN(date.getTime())) {
+                      return date.toISOString();
+                    }
+                  } catch (e) {
+                    // If parsing fails, return original value
+                  }
+                  return value;
+                }
+                // Try to parse as date
+                try {
+                  const date = new Date(value);
+                  if (!isNaN(date.getTime())) {
+                    return date.toISOString();
+                  }
+                } catch (e) {
+                  // If parsing fails, return null
+                }
+                return null;
+              }
               // Format date fields when syncing from PostgreSQL to SQLite
               if (f === 'date' || f === 'payment_date') {
                 if (value === null || value === undefined) return null;
@@ -866,6 +975,42 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
                       return JSON.stringify([value]);
                     }
                     return '[]';
+                  }
+                  // Format timestamp fields (time_in, time_out) when syncing from PostgreSQL to SQLite
+                  if (f === 'time_in' || f === 'time_out' || f === 'created_at' || f === 'updated_at') {
+                    if (value === null || value === undefined) return null;
+                    // If it's a Date object, convert to ISO string
+                    if (value instanceof Date) {
+                      if (isNaN(value.getTime())) return null;
+                      return value.toISOString();
+                    }
+                    // If it's already a string, try to ensure it's in ISO format
+                    if (typeof value === 'string') {
+                      // If it contains a space (SQL format), convert to ISO
+                      if (value.includes(' ') && !value.includes('T')) {
+                        return value.replace(' ', 'T');
+                      }
+                      // If it's already ISO format or valid, return it
+                      try {
+                        const date = new Date(value);
+                        if (!isNaN(date.getTime())) {
+                          return date.toISOString();
+                        }
+                      } catch (e) {
+                        // If parsing fails, return original value
+                      }
+                      return value;
+                    }
+                    // Try to parse as date
+                    try {
+                      const date = new Date(value);
+                      if (!isNaN(date.getTime())) {
+                        return date.toISOString();
+                      }
+                    } catch (e) {
+                      // If parsing fails, return null
+                    }
+                    return null;
                   }
                   // Format date fields when syncing from PostgreSQL to SQLite
                   if (f === 'date' || f === 'payment_date') {

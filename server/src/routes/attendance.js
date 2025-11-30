@@ -112,6 +112,44 @@ router.post('/checkin', async (req, res) => {
   }
 });
 
+// Helper function to format time in 12-hour format (HH:MM AM/PM)
+const formatTime = (timeValue) => {
+  if (!timeValue && timeValue !== 0) return null;
+  try {
+    // Handle both string and number (Unix timestamp) inputs
+    let date;
+    if (typeof timeValue === 'number') {
+      // If it's a number, treat it as milliseconds since epoch
+      date = new Date(timeValue);
+    } else if (typeof timeValue === 'string') {
+      // Handle SQL datetime format: "2025-11-30 06:49:27.565"
+      // Convert to ISO format by replacing space with 'T'
+      let timeStr = timeValue.trim();
+      if (timeStr.includes(' ') && !timeStr.includes('T')) {
+        // Replace space with 'T' to make it ISO-like: "2025-11-30T06:49:27.565"
+        timeStr = timeStr.replace(' ', 'T');
+      }
+      date = new Date(timeStr);
+    } else {
+      return null;
+    }
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    const displayMinutes = String(minutes).padStart(2, '0');
+    return `${displayHours}:${displayMinutes} ${ampm}`;
+  } catch {
+    return null;
+  }
+};
+
 router.get('/', async (req, res) => {
   try {
     const rows = await dbHelper.query(`
@@ -144,8 +182,8 @@ router.get('/', async (req, res) => {
         empId: row.emp_id,
         role: row.role,
         date: dateStr || row.date,
-        timeIn: row.time_in,
-        timeOut: row.time_out,
+        timeIn: formatTime(row.time_in),
+        timeOut: formatTime(row.time_out),
         status: row.status
       };
     });
