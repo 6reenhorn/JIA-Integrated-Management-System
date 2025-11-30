@@ -152,7 +152,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     } catch (err) {
       console.error('Error fetching GCash records:', err);
     } finally {
-      setIsInitialLoading(false);
+      setTimeout(() => {
+        setIsInitialLoading(false);
+      }, 500);
     }
   };
 
@@ -164,7 +166,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     } catch (err) {
       console.error('Error fetching PayMaya records:', err);
     } finally {
-      setIsInitialLoadingPayMaya(false);
+      setTimeout(() => {
+        setIsInitialLoadingPayMaya(false);
+      }, 500);
     }
   };
 
@@ -176,7 +180,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     } catch (err) {
       console.error('Error fetching JuanPay records:', err);
     } finally {
-      setIsInitialLoadingJuanPay(false);
+      setTimeout(() => {
+        setIsInitialLoadingJuanPay(false);
+      }, 500);
     }
   };
 

@@ -108,6 +108,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
   // Fetch payroll records function
   const fetchPayrollRecords = async () => {
+    setPayrollLoading(true);
     try {
       const response = await axios.get('http://localhost:3001/api/payroll');
       const data = Array.isArray(response.data) ? response.data : [];
@@ -118,7 +119,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       console.error('Error fetching payroll records:', err);
       setPayrollRecords([]);
     } finally {
-      setPayrollLoading(false);
+      setTimeout(() => {
+        setPayrollLoading(false);
+      }, 500);
     }
   };
 
@@ -354,10 +357,12 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     } catch (err) {
       console.error('Error refreshing data:', err);
     } finally {
-      setIsSpinning(false);
-      setIsLoading(false);
-      setAttendanceLoading(false);
-      setPayrollLoading(false);
+      setTimeout(() => {
+        setIsSpinning(false);
+        setIsLoading(false);
+        setAttendanceLoading(false);
+        setPayrollLoading(false);
+      }, 500);
     }
   };
 
