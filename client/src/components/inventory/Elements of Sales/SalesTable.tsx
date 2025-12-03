@@ -244,7 +244,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                       </div>
                     </td>
                     <td className="py-4 px-6 w-[140px]">
-                      <div className="text-sm font-medium text-gray-900 truncate">
+                      <div className="text-sm font-sm text-gray-900 truncate">
                         {record.productName}
                       </div>
                     </td>
@@ -254,7 +254,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                     <td className="py-4 px-6 text-sm text-gray-900 w-[120px]">
                       ₱{record.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
+                    <td className="py-4 px-6 text-sm font-sm text-gray-900 w-[130px]">
                       ₱{record.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">

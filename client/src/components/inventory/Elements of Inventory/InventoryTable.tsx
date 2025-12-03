@@ -219,7 +219,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                 {paginatedItems.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
-                      <div className="text-sm font-medium text-gray-900 truncate">
+                      <div className="text-sm font-sm text-gray-900 truncate">
                         {item.productName}
                       </div>
                     </td>
@@ -244,7 +244,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                     <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
                       ₱{item.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
+                    <td className="py-4 px-6 text-sm font-sm text-gray-900 w-[130px]">
                       ₱{item.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-left text-sm w-[100px]">
