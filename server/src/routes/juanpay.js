@@ -118,26 +118,42 @@ const safeJsonParse = (value, defaultValue = []) => {
         console.warn('Received "[object Object]" string, returning default');
         return defaultValue;
       }
-      const parsed = JSON.parse(value);
-      // Ensure parsed result is an array
-      if (Array.isArray(parsed)) {
-        return parsed.map(item => {
-          if (typeof item === 'object' && item !== null && 'amount' in item) {
-            return item;
-          }
-          if (typeof item === 'number') {
-            return { amount: item };
-          }
-          return { amount: 0 };
-        });
+      // Check if it's pipe-separated format first (preferred format)
+      if (value.includes('|')) {
+        return value.split('|')
+          .map(val => parseFloat(val.trim()))
+          .filter(val => !isNaN(val))
+          .map(amount => ({ amount }));
       }
-      // If parsed is an object with amount, convert to array
-      if (typeof parsed === 'object' && parsed !== null && 'amount' in parsed) {
-        return [{ amount: typeof parsed.amount === 'number' ? parsed.amount : parseFloat(parsed.amount) || 0 }];
-      }
-      // If parsed is a number, convert to array
-      if (typeof parsed === 'number') {
-        return [{ amount: parsed }];
+      // Try parsing as JSON (for backward compatibility with old data)
+      try {
+        const parsed = JSON.parse(value);
+        // Ensure parsed result is an array
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => {
+            if (typeof item === 'object' && item !== null && 'amount' in item) {
+              return item;
+            }
+            if (typeof item === 'number') {
+              return { amount: item };
+            }
+            return { amount: 0 };
+          });
+        }
+        // If parsed is an object with amount, convert to array
+        if (typeof parsed === 'object' && parsed !== null && 'amount' in parsed) {
+          return [{ amount: typeof parsed.amount === 'number' ? parsed.amount : parseFloat(parsed.amount) || 0 }];
+        }
+        // If parsed is a number, convert to array
+        if (typeof parsed === 'number') {
+          return [{ amount: parsed }];
+        }
+      } catch (e) {
+        // If JSON parsing fails, try to parse as a single number
+        const num = parseFloat(value);
+        if (!isNaN(num)) {
+          return [{ amount: num }];
+        }
       }
       return defaultValue;
     }
@@ -217,7 +233,7 @@ router.post('/', async (req, res) => {
 
     const result = await dbHelper.insert('juanpay_records', {
       date: date || getPHLocalDate(),
-      beginnings: JSON.stringify(beginningsArray),
+      beginnings: beginningsArray.join('|'),
       ending: ending || 0,
       sales: sales || 0
     });
@@ -290,7 +306,7 @@ router.put('/:id', async (req, res) => {
 
     await dbHelper.update('juanpay_records', id, {
       date: date || getPHLocalDate(),
-      beginnings: JSON.stringify(beginningsArray),
+      beginnings: beginningsArray.join('|'),
       ending: ending || 0,
       sales: sales || 0,
       updated_at: getPHLocalTimeISO()
