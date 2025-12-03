@@ -634,18 +634,22 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
         }
 
         // If record exists and is soft-deleted locally, skip restoring it from PostgreSQL
-        // EXCEPTION: For categories, always restore if they exist in PostgreSQL (not deleted)
-        // The special category handling below will take care of restoring them
-        if (existing.length > 0 && hasDeletedAt && existing[0].deleted_at && tableName !== 'categories') {
+        // EXCEPTION: For categories and employees, always restore if they exist in PostgreSQL (not deleted)
+        // The special handling below will take care of restoring them
+        if (existing.length > 0 && hasDeletedAt && existing[0].deleted_at && tableName !== 'categories' && tableName !== 'employees') {
           console.log(`Skipping ${tableName} record ${row[idField]} - was soft-deleted locally, not restoring from PostgreSQL`);
           continue;
         }
         
-        // For categories that were soft-deleted locally but exist in PostgreSQL (not deleted), 
+        // For categories and employees that were soft-deleted locally but exist in PostgreSQL (not deleted), 
         // the special handling below will restore them, so we continue processing
-        if (existing.length > 0 && hasDeletedAt && existing[0].deleted_at && tableName === 'categories') {
-          console.log(`Category ${row[idField]} (${row.category_name}) was soft-deleted locally but exists in PostgreSQL - will restore via special handling`);
-          // Continue to special category handling below
+        if (existing.length > 0 && hasDeletedAt && existing[0].deleted_at && (tableName === 'categories' || tableName === 'employees')) {
+          if (tableName === 'categories') {
+            console.log(`Category ${row[idField]} (${row.category_name}) was soft-deleted locally but exists in PostgreSQL - will restore via special handling`);
+          } else if (tableName === 'employees') {
+            console.log(`Employee ${row[idField]} (${row.emp_id}) was soft-deleted locally but exists in PostgreSQL - will restore via special handling`);
+          }
+          // Continue to special handling below
         }
 
         // If record exists and is unsynced (synced = 0), skip overwriting it - it will be pushed later
@@ -940,6 +944,48 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             } else {
               // Category doesn't exist in SQLite - will be inserted below
               console.log(`Category "${row.category_name}" (id: ${row.id}) not found in SQLite, will insert as new`);
+            }
+          }
+          
+          // Special handling for employees: check if employee with same emp_id exists (including soft-deleted)
+          if (tableName === 'employees' && row.emp_id) {
+            // Check by emp_id (in case it was soft-deleted with the same emp_id)
+            const existingByEmpId = await sqliteAll(
+              `SELECT id, deleted_at, synced, emp_id, name FROM employees WHERE emp_id = ?`,
+              [row.emp_id]
+            );
+            
+            if (existingByEmpId.length > 0) {
+              const existing = existingByEmpId[0];
+              // If employee exists (even if soft-deleted), update it with PostgreSQL data
+              const updateFields = fields
+                .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
+                .map(f => `${f} = ?`)
+                .join(', ');
+              
+              const updateValues = fields
+                .filter(f => f !== idField && f !== 'updated_at' && f !== 'synced')
+                .map(f => row[f] === undefined ? null : row[f]);
+              
+              // Restore soft-deleted employee by clearing deleted_at
+              const deletedAtClause = existing.deleted_at ? ', deleted_at = NULL' : '';
+              const updateSql = `
+                UPDATE employees 
+                SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1${deletedAtClause}
+                WHERE emp_id = ?
+              `;
+              
+              await sqliteRun(updateSql, [...updateValues, row.emp_id]);
+              if (existing.deleted_at) {
+                console.log(`Restored employee "${row.name || row.emp_id}" (emp_id: ${row.emp_id}, id: ${existing.id}) from PostgreSQL - was soft-deleted locally`);
+              } else {
+                console.log(`Updated employee "${row.name || row.emp_id}" (emp_id: ${row.emp_id}, id: ${existing.id}) from PostgreSQL`);
+              }
+              actuallySyncedIds.push(row[idField]);
+              continue; // Skip the insert below
+            } else {
+              // Employee doesn't exist in SQLite - will be inserted below
+              console.log(`Employee "${row.name || row.emp_id}" (emp_id: ${row.emp_id}, id: ${row.id}) not found in SQLite, will insert as new`);
             }
           }
           
