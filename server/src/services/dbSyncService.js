@@ -622,9 +622,26 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
         const deletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
         let existing;
         if (tableName === 'payroll_records') {
+          // Convert PostgreSQL month (integer) to both month name and number for SQLite query
+          // SQLite may have either format, so check for both
+          let monthForQuery = row.month;
+          let monthForQueryAlt = null;
+          if (typeof monthForQuery === 'number') {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            if (monthForQuery >= 1 && monthForQuery <= 12) {
+              monthForQueryAlt = monthNames[monthForQuery - 1]; // Month name
+              monthForQuery = String(monthForQuery); // Also check for '12' format
+            }
+          }
+          // Ensure year is a number for comparison
+          const yearForQuery = typeof row.year === 'string' ? parseInt(row.year, 10) : row.year;
+          // Check for both month formats: 'December' or '12'
           existing = await sqliteAll(
-            `SELECT id, deleted_at, synced FROM ${tableName} WHERE emp_id = ? AND month = ? AND year = ?`,
-            [row.emp_id, row.month, row.year]
+            `SELECT id, deleted_at, synced FROM ${tableName} 
+             WHERE emp_id = ? AND year = ? 
+             AND (month = ? OR month = ?)`,
+            [row.emp_id, yearForQuery, monthForQuery, monthForQueryAlt || monthForQuery]
           );
         } else {
           existing = await sqliteAll(
@@ -842,14 +859,15 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           let updateParams;
           let recordIdToTrack;
           
-          // For payroll_records, use emp_id, month, year in WHERE clause
+          // For payroll_records, use the record ID in WHERE clause (we already found it)
           if (tableName === 'payroll_records' && existing.length > 0) {
+            // Use the existing record's ID to update it directly
             updateSql = `
               UPDATE ${tableName} 
               SET ${updateFields}, updated_at = CURRENT_TIMESTAMP
-              WHERE emp_id = ? AND month = ? AND year = ? ${updateDeletedAtFilter}
+              WHERE id = ? ${updateDeletedAtFilter}
             `;
-            updateParams = [...updateValues, row.emp_id, row.month, row.year];
+            updateParams = [...updateValues, existing[0].id];
             recordIdToTrack = existing[0].id; // Use the SQLite ID
           } else {
             updateSql = `
@@ -1105,6 +1123,24 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
                   // If parsing fails, return the original value
                 }
               }
+              // For payroll_records, convert month from integer (PostgreSQL) to month name (SQLite)
+              if (tableName === 'payroll_records' && f === 'month') {
+                if (typeof value === 'number' && value >= 1 && value <= 12) {
+                  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                     'July', 'August', 'September', 'October', 'November', 'December'];
+                  return monthNames[value - 1];
+                }
+                // If it's already a string, return it as-is
+                return value;
+              }
+              // For payroll_records, ensure year is a number (SQLite can handle both)
+              if (tableName === 'payroll_records' && f === 'year') {
+                if (typeof value === 'string') {
+                  const numValue = parseInt(value, 10);
+                  return isNaN(numValue) ? value : numValue;
+                }
+                return value;
+              }
               return value === undefined ? null : value;
             }).concat(1);
             
@@ -1119,13 +1155,26 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
               // For other tables, use the PostgreSQL ID
               let recordIdToTrack;
               if (tableName === 'payroll_records') {
+                // After insert, the month will be in the format we inserted (month name like 'December')
+                // Use the inserted month format to find the record
+                let monthForQuery = row.month;
+                if (typeof monthForQuery === 'number') {
+                  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                     'July', 'August', 'September', 'October', 'November', 'December'];
+                  if (monthForQuery >= 1 && monthForQuery <= 12) {
+                    monthForQuery = monthNames[monthForQuery - 1];
+                  }
+                }
+                // Ensure year is a number for comparison
+                const yearForQuery = typeof row.year === 'string' ? parseInt(row.year, 10) : row.year;
                 // Get the ID of the record we just inserted by emp_id, month, year
+                // Check for both month formats in case there's a mismatch
                 const insertedRecord = await sqliteAll(
-                  `SELECT id FROM ${tableName} WHERE emp_id = ? AND month = ? AND year = ?`,
-                  [row.emp_id, row.month, row.year]
+                  `SELECT id FROM ${tableName} WHERE emp_id = ? AND year = ? AND (month = ? OR month = ?)`,
+                  [row.emp_id, yearForQuery, monthForQuery, typeof row.month === 'number' ? String(row.month) : row.month]
                 );
                 recordIdToTrack = insertedRecord.length > 0 ? insertedRecord[0].id : insertResult.lastID;
-                console.log(`Inserted new ${tableName} record with emp_id: ${row.emp_id}, month: ${row.month}, year: ${row.year}, SQLite ID: ${recordIdToTrack}`);
+                console.log(`Inserted new ${tableName} record with emp_id: ${row.emp_id}, month: ${monthForQuery}, year: ${yearForQuery}, SQLite ID: ${recordIdToTrack}`);
               } else {
                 recordIdToTrack = row[idField];
                 console.log(`Inserted new ${tableName} record with ${idField}:`, row[idField]);
@@ -1249,6 +1298,24 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
                     } catch (e) {
                       // If parsing fails, return the original value
                     }
+                  }
+                  // For payroll_records, convert month from integer (PostgreSQL) to month name (SQLite)
+                  if (tableName === 'payroll_records' && f === 'month') {
+                    if (typeof value === 'number' && value >= 1 && value <= 12) {
+                      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                         'July', 'August', 'September', 'October', 'November', 'December'];
+                      return monthNames[value - 1];
+                    }
+                    // If it's already a string, return it as-is
+                    return value;
+                  }
+                  // For payroll_records, ensure year is a number (SQLite can handle both)
+                  if (tableName === 'payroll_records' && f === 'year') {
+                    if (typeof value === 'string') {
+                      const numValue = parseInt(value, 10);
+                      return isNaN(numValue) ? value : numValue;
+                    }
+                    return value;
                   }
                   return value === undefined ? null : value;
                 });
@@ -2083,14 +2150,37 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
         // Mark as synced in SQLite
         // For payroll_records, use emp_id, month, year instead of id
         if (tableName === 'payroll_records') {
-          // Ensure month and year are numbers for the query
-          const monthValue = typeof record.month === 'string' ? parseInt(record.month, 10) : record.month;
+          // Convert month to both formats for the query (SQLite may have either 'December' or '12')
+          let monthForQuery = record.month;
+          let monthForQueryAlt = null;
+          if (typeof monthForQuery === 'string') {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthForQuery.toLowerCase());
+            if (monthIndex !== -1) {
+              monthForQueryAlt = String(monthIndex + 1); // Also check for '12' format
+            } else {
+              // Try parsing as number
+              const numValue = parseInt(monthForQuery, 10);
+              if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                monthForQueryAlt = monthNames[numValue - 1]; // Also check for 'December' format
+              }
+            }
+          } else if (typeof monthForQuery === 'number') {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            if (monthForQuery >= 1 && monthForQuery <= 12) {
+              monthForQueryAlt = monthNames[monthForQuery - 1]; // Check for 'December' format
+              monthForQuery = String(monthForQuery); // Check for '12' format
+            }
+          }
           const yearValue = typeof record.year === 'string' ? parseInt(record.year, 10) : record.year;
+          // Update records matching either month format
           await sqliteRun(
-            `UPDATE ${tableName} SET synced = 1 WHERE emp_id = ? AND month = ? AND year = ?`,
-            [record.emp_id, monthValue, yearValue]
+            `UPDATE ${tableName} SET synced = 1 WHERE emp_id = ? AND year = ? AND (month = ? OR month = ?)`,
+            [record.emp_id, yearValue, monthForQuery, monthForQueryAlt || monthForQuery]
           );
-          console.log(`[PAYROLL PUSH] Successfully pushed and marked as synced: emp_id=${record.emp_id}, month=${monthValue}, year=${yearValue}`);
+          console.log(`[PAYROLL PUSH] Successfully pushed and marked as synced: emp_id=${record.emp_id}, month=${monthForQuery}/${monthForQueryAlt}, year=${yearValue}`);
         } else {
           await sqliteRun(
             `UPDATE ${tableName} SET synced = 1 WHERE ${idField} = ?`,
