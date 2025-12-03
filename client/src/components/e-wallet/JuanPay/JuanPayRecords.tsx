@@ -223,12 +223,23 @@ const JuanPayRecordsTable: React.FC<JuanPayRecordsTableProps> = ({
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                     {records.map((record) => {
-                        // Parse pipe-separated beginnings
-                        const beginningsArray = record.beginnings
-                        ? record.beginnings.split('|')
-                            .map(val => parseFloat(val.trim()))
-                            .filter(val => !isNaN(val))
-                        : [];
+                        // Handle beginnings as array of objects with amount property
+                        let beginningsArray: number[] = [];
+                        if (Array.isArray(record.beginnings)) {
+                            beginningsArray = record.beginnings.map(b => {
+                                if (typeof b === 'object' && b !== null && 'amount' in b) {
+                                    return typeof b.amount === 'number' ? b.amount : parseFloat(b.amount) || 0;
+                                }
+                                return typeof b === 'number' ? b : parseFloat(b) || 0;
+                            });
+                        } else if (record.beginnings) {
+                            // Fallback for old string format (pipe-separated)
+                            if (typeof record.beginnings === 'string') {
+                                beginningsArray = record.beginnings.split('|')
+                                    .map(val => parseFloat(val.trim()))
+                                    .filter(val => !isNaN(val));
+                            }
+                        }
                         
                         const totalBeginning = beginningsArray.reduce((sum, amount) => sum + amount, 0);
                         const hasMultipleBeginnings = beginningsArray.length > 1;

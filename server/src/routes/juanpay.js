@@ -145,7 +145,8 @@ const safeJsonParse = (value, defaultValue = []) => {
     if (typeof value === 'number') {
       return [{ amount: value }];
     }
-    return '';
+    // For any other type, return default (empty array)
+    return defaultValue;
   } catch (e) {
     console.error('Error parsing JSON in safeJsonParse:', e.message, 'Value type:', typeof value, 'Value:', value);
     return defaultValue;
@@ -160,12 +161,12 @@ router.get('/', async (req, res) => {
     );
 
     const records = rows.map(row => {
-      const beginnings = parseBeginnings(row.beginnings);
+      const beginnings = safeJsonParse(row.beginnings, []);
       
       return {
         id: row.id.toString(),
         date: formatDatePH(row.date),
-        beginnings: beginnings,
+        beginnings: Array.isArray(beginnings) ? beginnings : [],
         ending: parseFloat(row.ending) || 0,
         sales: parseFloat(row.sales) || 0
       };

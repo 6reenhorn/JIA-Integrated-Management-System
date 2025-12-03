@@ -68,11 +68,20 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
     });
   };
 
-  const beginningsArray = record.beginnings
-    ? record.beginnings.split('|')
-        .map(val => parseFloat(val.trim()))
-        .filter(val => !isNaN(val))
-    : [];
+  let beginningsArray: number[] = [];
+  if (Array.isArray(record.beginnings)) {
+    beginningsArray = record.beginnings.map(b => {
+      if (typeof b === 'object' && b !== null && 'amount' in b) {
+        return typeof b.amount === 'number' ? b.amount : parseFloat(b.amount) || 0;
+      }
+      return typeof b === 'number' ? b : parseFloat(b) || 0;
+    });
+  } else if (record.beginnings && typeof record.beginnings === 'string') {
+    // Fallback for old string format (pipe-separated)
+    beginningsArray = record.beginnings.split('|')
+      .map(val => parseFloat(val.trim()))
+      .filter(val => !isNaN(val));
+  }
 
   const totalBeginning = beginningsArray.reduce((sum, amount) => sum + amount, 0);
 
