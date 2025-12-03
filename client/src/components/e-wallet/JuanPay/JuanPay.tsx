@@ -53,9 +53,13 @@ const JuanPay: React.FC<JuanPayProps> = ({
 
     const totalBeginning = todayRecords.reduce((sum, r) => {
       if (!r.beginnings) return sum;
-      const amounts = r.beginnings.split('|')
-        .map(val => parseFloat(val.trim()))
-        .filter(val => !isNaN(val));
+      if (!Array.isArray(r.beginnings)) return sum;
+      const amounts = r.beginnings.map(b => {
+        if (typeof b === 'object' && b !== null && 'amount' in b) {
+          return typeof b.amount === 'number' ? b.amount : parseFloat(b.amount) || 0;
+        }
+        return typeof b === 'number' ? b : parseFloat(b) || 0;
+      });
       return sum + amounts.reduce((a, b) => a + b, 0);
     }, 0);
 
@@ -77,7 +81,9 @@ const JuanPay: React.FC<JuanPayProps> = ({
     const term = searchTerm.trim().toLowerCase();
     const matchesSearch = !term || (
       record.date.toLowerCase().includes(term) ||
-      record.beginnings.toLowerCase().includes(term) ||
+      (Array.isArray(record.beginnings) 
+        ? record.beginnings.map(b => typeof b === 'object' && b !== null && 'amount' in b ? b.amount.toString() : String(b)).join(' ').toLowerCase().includes(term)
+        : String(record.beginnings || '').toLowerCase().includes(term)) ||
       record.ending.toString().includes(term) ||
       record.sales.toString().includes(term)
     );

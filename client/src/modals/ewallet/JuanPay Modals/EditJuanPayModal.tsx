@@ -62,11 +62,23 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
     // Initialize form with record data
     useEffect(() => {
     if (record) {
-        const beginningsArray = record.beginnings
-        ? record.beginnings.split('|')
-            .map(val => ({ amount: formatNumberWithCommas(val.trim()) }))
-            .filter(b => b.amount !== '')
-        : [{ amount: '' }];
+        let beginningsArray: Array<{ amount: string }> = [{ amount: '' }];
+        if (Array.isArray(record.beginnings)) {
+            beginningsArray = record.beginnings.map(b => {
+                const amount = typeof b === 'object' && b !== null && 'amount' in b 
+                    ? (typeof b.amount === 'number' ? b.amount : parseFloat(b.amount) || 0)
+                    : (typeof b === 'number' ? b : parseFloat(b) || 0);
+                return { amount: formatNumberWithCommas(amount.toString()) };
+            }).filter(b => b.amount !== '');
+        } else if (record.beginnings && typeof record.beginnings === 'string') {
+            // Fallback for old string format (pipe-separated)
+            beginningsArray = record.beginnings.split('|')
+                .map(val => ({ amount: formatNumberWithCommas(val.trim()) }))
+                .filter(b => b.amount !== '');
+        }
+        if (beginningsArray.length === 0) {
+            beginningsArray = [{ amount: '' }];
+        }
 
         setFormData({
         date: record.date,
@@ -192,11 +204,23 @@ const EditJuanPayRecordModal: React.FC<EditJuanPayRecordModalProps> = ({
         setIsClosing(true);
         setTimeout(() => {
             if (record) {
-                const beginningsArray = record.beginnings
-                    ? record.beginnings.split('|')
+                let beginningsArray: Array<{ amount: string }> = [{ amount: '' }];
+                if (Array.isArray(record.beginnings)) {
+                    beginningsArray = record.beginnings.map(b => {
+                        const amount = typeof b === 'object' && b !== null && 'amount' in b 
+                            ? (typeof b.amount === 'number' ? b.amount : parseFloat(b.amount) || 0)
+                            : (typeof b === 'number' ? b : parseFloat(b) || 0);
+                        return { amount: formatNumberWithCommas(amount.toString()) };
+                    }).filter(b => b.amount !== '');
+                } else if (record.beginnings && typeof record.beginnings === 'string') {
+                    // Fallback for old string format (pipe-separated)
+                    beginningsArray = record.beginnings.split('|')
                         .map(val => ({ amount: formatNumberWithCommas(val.trim()) }))
-                        .filter(b => b.amount !== '')
-                    : [{ amount: '' }];
+                        .filter(b => b.amount !== '');
+                }
+                if (beginningsArray.length === 0) {
+                    beginningsArray = [{ amount: '' }];
+                }
 
                 setFormData({
                     date: record.date,
