@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import Sidebar from '../sidebar/Sidebar';
 import Overview from '../components/dashboard/Overview';
 import Inventory from './Inventory';
@@ -35,7 +36,7 @@ const Dashboard: React.FC = () => {
   const [isClosingModal, setIsClosingModal] = useState<boolean>(false);
 
   // Get auth context
-  const { isCheckedIn, checkOut } = useAuth();
+  const { isCheckedIn, checkOut, currentUser } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -358,8 +359,26 @@ const Dashboard: React.FC = () => {
     setShowCheckInModal(true);
   };
 
-  const handleCheckOut = () => {
-    checkOut();
+  const handleCheckOut = async () => {
+    if (!currentUser) {
+      console.error('No user logged in');
+      checkOut(); // Still logout even if no user
+      return;
+    }
+
+    try {
+      // Call checkout API to update attendance record
+      await axios.post('http://localhost:3001/api/attendance/checkout', {
+        employeeId: currentUser.id
+      });
+      
+      // After successful checkout, clear the session
+      checkOut();
+    } catch (error: any) {
+      console.error('Error during check-out:', error);
+      // Even if API call fails, still logout the user
+      checkOut();
+    }
   };
 
   const handleCloseModal = () => {

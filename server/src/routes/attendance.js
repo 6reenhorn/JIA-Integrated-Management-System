@@ -119,6 +119,60 @@ router.post('/checkin', async (req, res) => {
   }
 });
 
+router.post('/checkout', async (req, res) => {
+  const { employeeId } = req.body;
+
+  if (!employeeId) {
+    return res.status(400).json({ error: 'Employee ID is required' });
+  }
+
+  try {
+    const employee = await dbHelper.queryOne(
+      'SELECT * FROM employees WHERE (id = ? OR emp_id = ?) AND deleted_at IS NULL', 
+      [employeeId, employeeId]
+    );
+
+    if (!employee) {
+      return res.status(400).json({ error: 'Employee not found' });
+    }
+
+    // For admin, just return success without recording attendance
+    if (employee.role.toLowerCase() === 'admin') {
+      return res.json({
+        success: true,
+        message: 'Admin checkout successful'
+      });
+    }
+
+    // Find the most recent attendance record for this employee
+    // Unlike checkin which creates a new record, checkout always updates the most recent one
+    const attendanceRecord = await dbHelper.queryOne(
+      'SELECT id FROM attendance WHERE employee_id = ? AND deleted_at IS NULL ORDER BY date DESC, time_in DESC LIMIT 1',
+      [employee.id]
+    );
+
+    if (!attendanceRecord) {
+      return res.status(400).json({ error: 'No attendance record found to checkout' });
+    }
+
+    // Update the attendance record with time_out (using PH local time)
+    const now = getPHLocalTimeISO();
+    await dbHelper.update('attendance', attendanceRecord.id, {
+      time_out: now,
+      updated_at: now
+    });
+
+    res.json({
+      success: true,
+      message: 'Check-out successful'
+    });
+
+  } catch (err) {
+    console.error('Error during check-out:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Helper function to format time in 12-hour format (HH:MM AM/PM)
 const formatTime = (timeValue) => {
   if (!timeValue && timeValue !== 0) return null;
