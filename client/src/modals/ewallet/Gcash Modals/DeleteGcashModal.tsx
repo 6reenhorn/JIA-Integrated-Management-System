@@ -19,6 +19,7 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
 }) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const [isClosing, setIsClosing] = useState(false);
+    const [isConfirming, setIsConfirming] = useState(false);
 
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
@@ -38,8 +39,15 @@ const DeleteGCashRecordModal: React.FC<DeleteGCashRecordModalProps> = ({
         };
     }, [isOpen, onClose, isDeleting]);
 
+    useEffect(() => {
+        if (!isOpen) {
+            setIsConfirming(false);
+        }
+    }, [isOpen]);
+
     const handleConfirm = () => {
-        if (record && !isDeleting) {
+        if (record && !isDeleting && !isConfirming) {
+            setIsConfirming(true);
             setIsClosing(true);
             setTimeout(() => {
                 onConfirmDelete(record.id);

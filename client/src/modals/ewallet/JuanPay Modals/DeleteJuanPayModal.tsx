@@ -18,6 +18,7 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
   isDeleting
 }) => {
   const [isClosing, setIsClosing] = React.useState(false);
+  const [isConfirming, setIsConfirming] = React.useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,6 +38,12 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, isDeleting, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsConfirming(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen || !record) return null;
 
@@ -86,7 +93,8 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
   const totalBeginning = beginningsArray.reduce((sum, amount) => sum + amount, 0);
 
   const handleConfirm = () => {
-      if (record && !isDeleting) {
+      if (record && !isDeleting && !isConfirming) {
+          setIsConfirming(true);
           setIsClosing(true);
           setTimeout(() => {
               onConfirmDelete(record.id);

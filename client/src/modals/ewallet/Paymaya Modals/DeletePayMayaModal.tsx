@@ -18,6 +18,7 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
     isDeleting = false
 }) => {
     const [isClosing, setIsClosing] = React.useState(false);
+    const [isConfirming, setIsConfirming] = React.useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -38,8 +39,15 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
         };
     }, [isOpen, onClose, isDeleting]);
 
+    useEffect(() => {
+        if (!isOpen) {
+            setIsConfirming(false);
+        }
+    }, [isOpen]);
+
     const handleConfirm = () => {
-        if (record && !isDeleting) {
+        if (record && !isDeleting && !isConfirming) {
+            setIsConfirming(true);
             setIsClosing(true);
             setTimeout(() => {
                 onConfirmDelete(record.id);

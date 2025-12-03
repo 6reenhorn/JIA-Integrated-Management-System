@@ -59,6 +59,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     });
 
     const [isFormValid, setIsFormValid] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const transactionTypeRef = useRef<HTMLDivElement>(null);
     const chargeMOPRef = useRef<HTMLDivElement>(null);
@@ -232,10 +233,12 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        if (!isFormValid) {
+
+        if (!isFormValid || isSubmitting) {
             return;
         }
+
+        setIsSubmitting(true);
 
         const newRecord: PayMayaRecord = {
             id: Date.now().toString(),
@@ -250,7 +253,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
         setIsClosing(true);
         setTimeout(() => {
             onAddRecord(newRecord);
-            
+
             // Reset form
             setFormData({
                 amount: '',
@@ -260,9 +263,10 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                 referenceNumber: '',
                 date: getLocalISODate(new Date()),
             });
-            
+
             onClose();
             setIsClosing(false);
+            setIsSubmitting(false);
         }, 300);
     };
 

@@ -55,6 +55,7 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
     });
 
     const [isFormValid, setIsFormValid] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
     // Pre-fill beginning balance with last ending balance
@@ -153,11 +154,13 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault;
-    
-    if (!isFormValid) {
+    e.preventDefault();
+
+    if (!isFormValid || isSubmitting) {
         return;
     }
+
+    setIsSubmitting(true);
 
     // Convert beginnings to array of objects with amount property
     const beginningsArray = formData.beginnings
@@ -176,7 +179,7 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
     setIsClosing(true);
     setTimeout(() => {
         onAddRecord(newRecord);
-        
+
         // Reset form
         setFormData({
         date: getLocalISODate(new Date()),
@@ -184,9 +187,10 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
         ending: '',
         sales: '',
         });
-        
+
         onClose();
         setIsClosing(false);
+        setIsSubmitting(false);
     }, 300);
     };
 
@@ -330,17 +334,17 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
                     >
                         Cancel
                     </button>
-                    <button 
+                    <button
                         type="submit"
                         className={`px-4 py-2 rounded-md transition-colors duration-200 font-medium text-sm shadow-sm ${
-                            isFormValid 
-                                ? 'bg-[#02367B] hover:bg-[#01285a] text-white' 
+                            isFormValid && !isSubmitting
+                                ? 'bg-[#02367B] hover:bg-[#01285a] text-white'
                                 : 'bg-gray-400 text-white cursor-not-allowed'
                         }`}
                         onClick={handleSubmit}
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || isSubmitting}
                     >
-                        Add Record
+                        {isSubmitting ? 'Adding...' : 'Add Record'}
                     </button>
                 </div>
             </div>

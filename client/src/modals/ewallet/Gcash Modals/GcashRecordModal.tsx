@@ -60,6 +60,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
     });
 
     const [isFormValid, setIsFormValid] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const transactionTypeRef = useRef<HTMLDivElement>(null);
     const chargeMOPRef = useRef<HTMLDivElement>(null);
@@ -247,10 +248,12 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        if (!isFormValid) {
+
+        if (!isFormValid || isSubmitting) {
             return;
         }
+
+        setIsSubmitting(true);
 
         const newRecord: Omit<GCashRecord, 'id'> = {
             amount: parseFormattedNumber(formData.amount),
@@ -264,7 +267,7 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
         setIsClosing(true);
         setTimeout(() => {
             onAddRecord(newRecord);
-            
+
             // Reset form
             setFormData({
                 amount: '',
@@ -274,9 +277,10 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                 referenceNumber: '',
                 date: getLocalISODate(new Date()),
             });
-            
+
             onClose();
             setIsClosing(false);
+            setIsSubmitting(false);
         }, 300);
     };
 
@@ -562,17 +566,17 @@ const AddGCashRecordModal: React.FC<AddGCashRecordModalProps> = ({
                     >
                         Cancel
                     </button>
-                    <button 
+                    <button
                         type="submit"
                         className={`px-4 py-2 rounded-md transition-colors duration-200 font-medium text-sm shadow-sm ${
-                            isFormValid 
-                                ? 'bg-[#02367B] hover:bg-[#01285a] text-white' 
+                            isFormValid && !isSubmitting
+                                ? 'bg-[#02367B] hover:bg-[#01285a] text-white'
                                 : 'bg-gray-400 text-white cursor-not-allowed'
                         }`}
                         onClick={handleSubmit}
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || isSubmitting}
                     >
-                        Add Record
+                        {isSubmitting ? 'Adding...' : 'Add Record'}
                     </button>
                 </div>
             </div>
