@@ -27,6 +27,8 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
   const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [contactNameError, setContactNameError] = useState('');
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
@@ -39,10 +41,16 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             setFirstName((employee as any).firstName);
             setLastName((employee as any).lastName);
           } else {
-            // Fallback: split name on first space (first word = firstName, rest = lastName)
-            const nameParts = employee.name.split(' ');
-            setFirstName(nameParts[0] || '');
-            setLastName(nameParts.slice(1).join(' ') || '');
+            // Fallback: split name on last space (first part = firstName, last word = lastName)
+            const nameParts = employee.name.trim().split(/\s+/);
+            if (nameParts.length === 1) {
+              setFirstName(nameParts[0] || '');
+              setLastName('');
+            } else {
+              // First part is firstName, last word is lastName
+              setFirstName(nameParts.slice(0, -1).join(' ') || '');
+              setLastName(nameParts[nameParts.length - 1] || '');
+            }
           }
 
           // Parse contact string (email\nphone\naddress)
@@ -126,8 +134,30 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
     };
   }, []);
 
+  // Validate name fields - no numbers allowed
+  const validateName = (name: string): boolean => {
+    return /^[a-zA-Z\s'-]+$/.test(name.trim());
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // Validate names
+    if (!validateName(firstName)) {
+      setNameError('First name cannot contain numbers');
+      return;
+    }
+    if (!validateName(lastName)) {
+      setNameError('Last name cannot contain numbers');
+      return;
+    }
+    if (contactName.trim() !== '' && !validateName(contactName)) {
+      setContactNameError('Contact name cannot contain numbers');
+      return;
+    }
+
+    setNameError('');
+    setContactNameError('');
 
     if (isSaving) return;
     setIsSaving(true);
@@ -179,11 +209,18 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div>
                 <label htmlFor="edited_first_name" className="text-[12px] font-bold">First Name</label>
-                <input type="text" name="edited_first_name" id="edited_first_name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" />
+                <input type="text" name="edited_first_name" id="edited_first_name" value={firstName} onChange={(e) => {
+                  setFirstName(e.target.value);
+                  setNameError('');
+                }} className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'}`} />
+                {nameError && <p className="text-red-500 text-[10px] mt-1">{nameError}</p>}
               </div>
               <div>
                 <label htmlFor="edited_last_name" className="text-[12px] font-bold">Last Name</label>
-                <input type="text" name="edited_last_name" id="edited_last_name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" />
+                <input type="text" name="edited_last_name" id="edited_last_name" value={lastName} onChange={(e) => {
+                  setLastName(e.target.value);
+                  setNameError('');
+                }} className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'}`} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-2">
@@ -436,7 +473,11 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div className="flex flex-col justify-center">
                 <label htmlFor="employee_contact_name" className="text-[12px] font-bold">Contact Name</label>
-                <input type="text" id="employee_contact_name" name="employee_contact_name" value={contactName} onChange={(e) => setContactName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                <input type="text" id="employee_contact_name" name="employee_contact_name" value={contactName} onChange={(e) => {
+                  setContactName(e.target.value);
+                  setContactNameError('');
+                }} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${contactNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'}`} />
+                {contactNameError && <p className="text-red-500 text-[10px] mt-1">{contactNameError}</p>}
               </div>
               <div>
                 <label htmlFor="employee_contact_number" className="text-[12px] font-bold">Phone Number</label>
@@ -582,11 +623,28 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
         <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button
           onClick={handleClose}
+          type="button"
           className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
         >
           Cancel
         </button>
-          <button type="submit" form="edit-employee-form" className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} disabled={isSaving}>
+          <button 
+            type="button"
+            className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} 
+            disabled={isSaving}
+            onClick={(e) => {
+              // Ensure form submission works on mobile devices
+              e.preventDefault();
+              if (!isSaving) {
+                const form = document.getElementById('edit-employee-form') as HTMLFormElement;
+                if (form) {
+                  // Trigger form submission
+                  const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                  form.dispatchEvent(submitEvent);
+                }
+              }
+            }}
+          >
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>

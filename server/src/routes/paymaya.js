@@ -52,7 +52,7 @@ router.post('/', async (req, res) => {
       transaction_type: transactionType,
       charge_mop: chargeMOP,
       reference_number: referenceNumber || null,
-      date: date || new Date().toISOString()
+      date: date || getPHLocalDate()
     });
 
     // For SQLite, insert returns { id: ..., ...data }
@@ -99,7 +99,7 @@ router.put('/:id', async (req, res) => {
       charge_mop: chargeMOP,
       reference_number: referenceNumber || null,
       date,
-      updated_at: new Date().toISOString()
+      updated_at: getPHLocalTimeISO()
     });
 
     const updated = await dbHelper.queryOne('SELECT * FROM paymaya_records WHERE id = ?', [id]);
@@ -132,7 +132,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const info = await dbHelper.update('paymaya_records', id, {
-      deleted_at: new Date().toISOString()
+      deleted_at: getPHLocalTimeISO()
     });
 
     if (info.changes === 0) {

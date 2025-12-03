@@ -1,4 +1,5 @@
 import { dbHelper } from '../db/dbHelper';
+import { getPHLocalTimeISO, getPHLocalDate } from '../utils/timeUtils';
 const bcrypt = require('bcryptjs');
 
 export interface AttendanceRecord {
@@ -66,17 +67,22 @@ export const checkIn = async (employeeId: number, password: string): Promise<{ s
     }
   }
 
-  // Check if already checked in today
-  const today = new Date().toISOString().split('T')[0];
+  // Check if already checked in today (using PH local date)
+  const today = getPHLocalDate();
   const checkResult = await dbHelper.query('SELECT id FROM attendance WHERE employee_id = ? AND date = ?', [employeeId, today]);
   if (checkResult.length > 0) {
     return { success: false, message: 'Already checked in today' };
   }
 
-  // Insert check-in record
-  const now = new Date().toISOString();
+  // Insert check-in record (using PH local time)
+  const now = getPHLocalTimeISO();
   await dbHelper.run('INSERT INTO attendance (employee_id, date, time_in, status) VALUES (?, ?, ?, ?)', 
     [employeeId, today, now, 'Present']);
+
+  // Update last_login in employees table (using PH local time)
+  await dbHelper.update('employees', employeeId, {
+    last_login: now
+  });
 
   return { success: true, message: 'Check-in successful' };
 };

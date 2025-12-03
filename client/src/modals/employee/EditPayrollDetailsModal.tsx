@@ -488,7 +488,7 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
               </div>
               <div className='mt-2'>
                 <label htmlFor="net_salary" className="text-[12px] font-bold">Net Salary (Auto-calculated)</label>
-                <input type="number" id="net_salary" name="net_salary" placeholder='Net salary' value={netSalary.toFixed(2)} readOnly className="border border-gray-300 rounded-md w-full px-2 py-1 bg-gray-100 focus:outline-none" />
+                <input type="number" id="net_salary" name="net_salary" placeholder='Net salary' value={netSalary.toFixed(2)} readOnly className={`border rounded-md w-full px-2 py-1 bg-gray-100 focus:outline-none ${netSalary < 0 ? 'border-red-500 text-red-600' : 'border-gray-300'}`} />
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { dbHelper } = require('../db/dbHelper');
+const { getPHLocalTimeISO, getPHLocalDate } = require('../utils/timeUtils');
 const bcrypt = require('bcryptjs');
 
 router.post('/checkin', async (req, res) => {
@@ -62,8 +63,8 @@ router.post('/checkin', async (req, res) => {
       });
     }
 
-    // For regular employees, record attendance
-    const today = new Date().toISOString().split('T')[0];
+    // For regular employees, record attendance (using PH local time)
+    const today = getPHLocalDate();
     const existing = await dbHelper.queryOne(
       'SELECT id FROM attendance WHERE employee_id = ? AND date = ?',
       [employee.id, today]
@@ -84,13 +85,19 @@ router.post('/checkin', async (req, res) => {
       });
     }
 
+    const now = getPHLocalTimeISO();
     await dbHelper.insert('attendance', {
       employee_id: employee.id,
       date: today,
-      time_in: new Date().toISOString(),
+      time_in: now,
       status: 'Present',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: now,
+      updated_at: now
+    });
+
+    // Update last_login in employees table (using PH local time)
+    await dbHelper.update('employees', employee.id, {
+      last_login: now
     });
 
     res.json({

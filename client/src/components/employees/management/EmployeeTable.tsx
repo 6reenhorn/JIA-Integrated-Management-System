@@ -189,15 +189,22 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                 </span>
               </td>
               <td className="py-4 px-6 w-[150px] text-sm text-gray-600">
-                {employee.lastLogin !== 'Never' ? (() => {
-                  const date = new Date(employee.lastLogin);
-                  const formattedDate = formatDate(date);
-                  const hours = date.getHours();
-                  const minutes = String(date.getMinutes()).padStart(2, '0');
-                  const ampm = hours >= 12 ? 'PM' : 'AM';
-                  const displayHours = hours % 12 || 12;
-                  return `${formattedDate} ${displayHours}:${minutes}${ampm}`;
-                })() : 'Never'}
+                {employee.lastLogin && employee.lastLogin !== 'Never' && employee.lastLogin !== 'N/A' ? (() => {
+                  try {
+                    const date = new Date(employee.lastLogin);
+                    if (isNaN(date.getTime())) {
+                      return 'N/A';
+                    }
+                    const formattedDate = formatDate(date);
+                    const hours = date.getHours();
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const displayHours = hours % 12 || 12;
+                    return `${formattedDate} ${displayHours}:${minutes}${ampm}`;
+                  } catch {
+                    return 'N/A';
+                  }
+                })() : 'N/A'}
               </td>
               <td className="py-4 px-6 w-[120px]">
                 <div className="flex items-center gap-2">

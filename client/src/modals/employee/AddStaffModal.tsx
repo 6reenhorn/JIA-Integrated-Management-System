@@ -66,6 +66,8 @@ const AddStaffModal = ({
   const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [contactNameError, setContactNameError] = useState('');
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
@@ -132,11 +134,38 @@ const AddStaffModal = ({
     };
   }, []);
 
+  // Validate name fields - no numbers allowed
+  const validateName = (name: string): boolean => {
+    return /^[a-zA-Z\s'-]+$/.test(name.trim());
+  };
+
   // Validate form
   useEffect(() => {
-    const valid = firstName.trim() !== '' && lastName.trim() !== '' && email.trim() !== '' && phone.trim() !== '' && address.trim() !== '' && salary.trim() !== '' && selectedRoleText !== 'Select Role' && selectedStatusText !== 'Select Status';
+    // Check for name validation errors
+    const firstNameValid = firstName.trim() !== '' && validateName(firstName);
+    const lastNameValid = lastName.trim() !== '' && validateName(lastName);
+    const contactNameValid = contactName.trim() === '' || validateName(contactName);
+    
+    if (firstName.trim() !== '' && !validateName(firstName)) {
+      setNameError('First name cannot contain numbers');
+    } else if (lastName.trim() !== '' && !validateName(lastName)) {
+      setNameError('Last name cannot contain numbers');
+    } else {
+      setNameError('');
+    }
+
+    if (contactName.trim() !== '' && !validateName(contactName)) {
+      setContactNameError('Contact name cannot contain numbers');
+    } else {
+      setContactNameError('');
+    }
+
+    const valid = firstNameValid && lastNameValid && contactNameValid && 
+                  email.trim() !== '' && phone.trim() !== '' && 
+                  address.trim() !== '' && salary.trim() !== '' && 
+                  selectedRoleText !== 'Select Role' && selectedStatusText !== 'Select Status';
     setIsFormValid(valid);
-  }, [firstName, lastName, email, phone, address, salary, selectedRoleText, selectedStatusText]);
+  }, [firstName, lastName, contactName, email, phone, address, salary, selectedRoleText, selectedStatusText]);
 
 
   return (
@@ -159,11 +188,12 @@ const AddStaffModal = ({
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_first_name" className="text-[12px] font-bold">First Name</label>
-                  <input type="text" id="employee_first_name" name="employee_first_name" placeholder='Enter first name' value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" />
+                  <input type="text" id="employee_first_name" name="employee_first_name" placeholder='Enter first name' value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'}`} />
+                  {nameError && <p className="text-red-500 text-[10px] mt-1">{nameError}</p>}
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_last_name" className="text-[12px] font-bold">Last Name</label>
-                  <input type="text" id="employee_last_name" name="employee_last_name" placeholder='Enter last name' value={lastName} onChange={(e) => setLastName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <input type="text" id="employee_last_name" name="employee_last_name" placeholder='Enter last name' value={lastName} onChange={(e) => setLastName(e.target.value)} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'}`} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-2">
@@ -419,7 +449,8 @@ const AddStaffModal = ({
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div className="flex flex-col justify-center">
                     <label htmlFor="employee_contact_name" className="text-[12px] font-bold">Contact Name</label>
-                    <input type="text" id="employee_contact_name" name="employee_contact_name" placeholder="Enter contact name" value={contactName} onChange={(e) => setContactName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                    <input type="text" id="employee_contact_name" name="employee_contact_name" placeholder="Enter contact name" value={contactName} onChange={(e) => setContactName(e.target.value)} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${contactNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'}`} />
+                    {contactNameError && <p className="text-red-500 text-[10px] mt-1">{contactNameError}</p>}
                   </div>
                   <div>
                     <label htmlFor="employee_contact_number" className="text-[12px] font-bold">Phone Number</label>
