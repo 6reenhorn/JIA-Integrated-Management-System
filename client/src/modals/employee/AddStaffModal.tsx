@@ -618,6 +618,8 @@ const AddStaffModal = ({
                 }
                 onAddEmployee({
                   name: `${firstName} ${lastName}`,
+                  firstName: firstName,
+                  lastName: lastName,
                   role: selectedRoleText,
                   contact: `${email}\n${phone}\n${address}`,
                   status: selectedStatus,

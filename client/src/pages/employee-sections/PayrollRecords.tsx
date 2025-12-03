@@ -290,24 +290,28 @@ const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecor
         throw new Error('Failed to delete payroll record.');
       }
 
-      // Update parent state if callback provided
+      // Update parent state if callback provided (optimistic update - no refetch needed)
       if (onUpdatePayrollRecords) {
         onUpdatePayrollRecords((prev: PayrollRecord[]) => prev.filter(record => record.id !== id));
       } else {
-        // Update local state
+        // Update local state (optimistic update - no refetch needed)
         setLocalPayrollRecords(prev => prev.filter(record => record.id !== id));
       }
 
-      // Always refetch if a refetch callback is provided (keeps parent/DB in sync)
+      // Removed refetch - we already updated the state optimistically above
+      // This makes the UI more responsive and reduces unnecessary network requests
+    } catch (error) {
+      console.error('Error deleting payroll record:', error);
+      // If deletion failed, we could refetch here to restore the correct state
+      // But for now, just show the error
+      alert(error instanceof Error ? error.message : 'Failed to delete payroll record. Please try again.');
+      
+      // Optionally refetch on error to ensure state is correct
       if (onRefetchPayrollRecords) {
         await onRefetchPayrollRecords();
       } else if (!propPayrollRecords) {
-        // If operating locally without props, refetch locally
         await fetchPayrollRecords();
       }
-    } catch (error) {
-      console.error('Error deleting payroll record:', error);
-      alert(error instanceof Error ? error.message : 'Failed to delete payroll record. Please try again.');
     } finally {
       setTableHeadColor('normal');
     }

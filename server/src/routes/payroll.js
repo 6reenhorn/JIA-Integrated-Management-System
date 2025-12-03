@@ -59,28 +59,62 @@ router.post('/', async (req, res) => {
             paymentDate
         } = req.body;
 
-        const query = `
-            INSERT INTO payroll_records (employee_name, emp_id, role, month, year, basic_salary, deductions, net_salary, status, payment_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const values = [
-            employeeName,
-            empId,
-            role,
-            month,
-            year,
-            basicSalary,
-            deductions,
-            netSalary,
-            status,
-            paymentDate || null
-        ];
-
-        const result = await dbHelper.run(query, values);
-        const recordId = result.lastID;
+        // Use dbHelper.insert to automatically set synced = 0 for new records
+        const result = await dbHelper.insert('payroll_records', {
+            employee_name: employeeName,
+            emp_id: empId,
+            role: role,
+            month: month,
+            year: year,
+            basic_salary: basicSalary,
+            deductions: deductions,
+            net_salary: netSalary,
+            status: status,
+            payment_date: paymentDate || null
+        });
+        
+        // dbHelper.insert returns { id: result.lastID, ...data } for SQLite
+        const recordId = result.id;
         if (!recordId) {
           throw new Error('Failed to get payroll record ID after insert');
         }
+        
+        // Immediately verify the record was created with synced = 0
+        const verifyRecord = await dbHelper.queryOne(
+            'SELECT id, emp_id, month, year, synced FROM payroll_records WHERE id = ?',
+            [recordId]
+        );
+        
+        if (verifyRecord) {
+            console.log(`[PAYROLL DEBUG] New payroll record created - ID: ${verifyRecord.id}, emp_id: ${verifyRecord.emp_id}, month: ${verifyRecord.month}, year: ${verifyRecord.year}, synced: ${verifyRecord.synced} (type: ${typeof verifyRecord.synced})`);
+            if (verifyRecord.synced !== 0 && verifyRecord.synced !== '0') {
+                console.error(`[PAYROLL ERROR] New payroll record should have synced=0 but has synced=${verifyRecord.synced} (type: ${typeof verifyRecord.synced})`);
+                // Force set it to 0
+                await dbHelper.run(
+                    'UPDATE payroll_records SET synced = 0 WHERE id = ?',
+                    [recordId]
+                );
+                console.log(`[PAYROLL FIX] Forced synced to 0 for record ${recordId}`);
+            } else {
+                console.log(`[PAYROLL SUCCESS] Record created with synced=0 - ready to be pushed to PostgreSQL`);
+                
+                // Try to push immediately (don't wait for scheduled sync)
+                try {
+                    const { pushTableToPostgres } = require('../services/dbSyncService');
+                    console.log(`[PAYROLL PUSH] Attempting immediate push to PostgreSQL...`);
+                    await pushTableToPostgres('payroll_records', 'id', [
+                        'id', 'employee_name', 'emp_id', 'role', 'month', 'year', 
+                        'basic_salary', 'deductions', 'net_salary', 'status', 'payment_date',
+                        'created_at', 'updated_at', 'deleted_at'
+                    ]);
+                    console.log(`[PAYROLL PUSH] Immediate push completed`);
+                } catch (pushError) {
+                    console.error(`[PAYROLL PUSH] Immediate push failed (will retry on next scheduled sync):`, pushError.message);
+                    // Don't fail the request - the scheduled sync will handle it
+                }
+            }
+        }
+        
         const newRecord = await dbHelper.getById('payroll_records', recordId);
         if (!newRecord) {
           throw new Error('Failed to retrieve newly created payroll record');

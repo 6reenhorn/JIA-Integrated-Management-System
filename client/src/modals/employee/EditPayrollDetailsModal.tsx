@@ -215,7 +215,8 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
 
   // Validate form
   useEffect(() => {
-    const valid = selectedEmployee !== null && selectedMonth !== '' && selectedYear !== '' && basicSalary.trim() !== '' && selectedStatusText !== 'Select Status';
+    const basicSalaryStr = typeof basicSalary === 'string' ? basicSalary.trim() : String(basicSalary || '');
+    const valid = selectedEmployee !== null && selectedMonth !== '' && selectedYear !== '' && basicSalaryStr !== '' && selectedStatusText !== 'Select Status';
     setIsFormValid(valid);
   }, [selectedEmployee, selectedMonth, selectedYear, basicSalary, selectedStatusText]);
 

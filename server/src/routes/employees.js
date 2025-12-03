@@ -52,14 +52,33 @@ router.post('/', async (req, res) => {
     const maxId = parseInt(maxIdRow.max_id) + 1;
     const empId = `EMP${maxId.toString().padStart(3, '0')}`;
 
-    // Use provided name or construct from firstName/lastName
-    const fullName = name || (firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || '');
+    // Parse names: if lastName contains multiple words, split them
+    // Last word becomes lastName, rest (plus original firstName) becomes firstName
+    let parsedFirstName = firstName || '';
+    let parsedLastName = lastName || '';
+    
+    console.log(`[EMPLOYEE CREATE] Original firstName: "${firstName}", lastName: "${lastName}"`);
+    
+    if (parsedLastName && parsedLastName.trim()) {
+      const lastNameWords = parsedLastName.trim().split(/\s+/);
+      if (lastNameWords.length > 1) {
+        // Last word becomes lastName
+        parsedLastName = lastNameWords[lastNameWords.length - 1];
+        // Everything before last word (plus original firstName) becomes firstName
+        const middleNames = lastNameWords.slice(0, -1).join(' ');
+        parsedFirstName = parsedFirstName ? `${parsedFirstName} ${middleNames}`.trim() : middleNames;
+        console.log(`[EMPLOYEE CREATE] Parsed - firstName: "${parsedFirstName}", lastName: "${parsedLastName}"`);
+      }
+    }
+
+    // Use provided name or construct from parsed firstName/lastName
+    const fullName = name || (parsedFirstName && parsedLastName ? `${parsedFirstName} ${parsedLastName}` : parsedFirstName || parsedLastName || '');
 
     const employeeData = {
       emp_id: empId,
       name: fullName,
-      first_name: firstName || null,
-      last_name: lastName || null,
+      first_name: parsedFirstName || null,
+      last_name: parsedLastName || null,
       role,
       department,
       contact,
@@ -143,14 +162,30 @@ router.put('/:id', async (req, res) => {
       password
     } = req.body;
 
-    // Use provided name or construct from firstName/lastName, or keep existing if not provided
+    // Parse names: if lastName contains multiple words, split them
+    // Last word becomes lastName, rest (plus original firstName) becomes firstName
+    let parsedFirstName = firstName;
+    let parsedLastName = lastName;
+    
+    if (parsedLastName && parsedLastName.trim()) {
+      const lastNameWords = parsedLastName.trim().split(/\s+/);
+      if (lastNameWords.length > 1) {
+        // Last word becomes lastName
+        parsedLastName = lastNameWords[lastNameWords.length - 1];
+        // Everything before last word (plus original firstName) becomes firstName
+        const middleNames = lastNameWords.slice(0, -1).join(' ');
+        parsedFirstName = parsedFirstName ? `${parsedFirstName} ${middleNames}`.trim() : middleNames;
+      }
+    }
+
+    // Use provided name or construct from parsed firstName/lastName, or keep existing if not provided
     let fullName = name;
-    if (!fullName && firstName && lastName) {
-      fullName = `${firstName} ${lastName}`;
-    } else if (!fullName && firstName) {
-      fullName = firstName;
-    } else if (!fullName && lastName) {
-      fullName = lastName;
+    if (!fullName && parsedFirstName && parsedLastName) {
+      fullName = `${parsedFirstName} ${parsedLastName}`;
+    } else if (!fullName && parsedFirstName) {
+      fullName = parsedFirstName;
+    } else if (!fullName && parsedLastName) {
+      fullName = parsedLastName;
     }
 
     // Check current state before update
@@ -165,8 +200,8 @@ router.put('/:id', async (req, res) => {
     console.log(`[DEBUG] ========== EMPLOYEE UPDATE START ==========`);
     await dbHelper.update('employees', employeeId, {
       name: fullName || null,
-      first_name: firstName || null,
-      last_name: lastName || null,
+      first_name: parsedFirstName || null,
+      last_name: parsedLastName || null,
       role: role,
       department: department || null,
       contact: contact,
