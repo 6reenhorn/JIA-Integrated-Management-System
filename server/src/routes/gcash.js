@@ -1,6 +1,7 @@
 'use strict';
 const express = require('express');
 const { dbHelper } = require('../db/dbHelper');
+const { getPHLocalTimeISO, getPHLocalDate } = require('../utils/timeUtils');
 
 const router = express.Router();
 
@@ -59,7 +60,7 @@ router.post('/', async (req, res) => {
       transaction_type: transactionType,
       charge_mop: chargeMOP,
       reference_number: referenceNumber || null,
-      date: date || new Date().toISOString()
+      date: date || getPHLocalDate()
     });
 
     // For SQLite, insert returns { id: ..., ...data }
@@ -121,7 +122,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const info = await dbHelper.update('gcash_records', id, {
-      deleted_at: new Date().toISOString()
+      deleted_at: getPHLocalTimeISO()
     });
 
     if (info.changes === 0) {

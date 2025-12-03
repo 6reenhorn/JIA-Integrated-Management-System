@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
       department: row.department || null,
       contact: row.contact,
       status: row.status,
-      lastLogin: row.last_login ? new Date(row.last_login).toISOString().slice(0, 16).replace('T', ' ') : 'Never',
+      lastLogin: row.last_login && row.last_login !== null && row.last_login !== '' ? new Date(row.last_login).toISOString().slice(0, 16).replace('T', ' ') : 'Never',
       avatar: row.avatar || null,
       address: row.address || null,
       salary: row.salary,
@@ -70,6 +70,18 @@ router.post('/', async (req, res) => {
     // Use provided name or construct from firstName/lastName
     const fullName = name || (firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || '');
 
+    // Generate password if not provided
+    let finalPassword = password;
+    if (!finalPassword) {
+      // Generate random password 8-10 characters
+      const length = Math.floor(Math.random() * 3) + 8;
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+      finalPassword = '';
+      for (let i = 0; i < length; i++) {
+        finalPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+    }
+
     // Use DBHelper.insert to automatically set synced = 0 for new records
     const result = await DBHelper.insert('employees', {
       emp_id: empId,
@@ -85,7 +97,8 @@ router.post('/', async (req, res) => {
       contact_name: contactName || null,
       contact_number: contactNumber || null,
       relationship: relationship || null,
-      password: password
+      password: finalPassword,
+      last_login: null  // Set last_login to null for new employees
     });
 
     const lastId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
@@ -101,7 +114,7 @@ router.post('/', async (req, res) => {
       department: newEmployee.department || null,
       contact: newEmployee.contact,
       status: newEmployee.status,
-      lastLogin: 'Never',
+      lastLogin: 'N/A',
       avatar: newEmployee.avatar || null,
       address: newEmployee.address || null,
       salary: newEmployee.salary,
@@ -242,7 +255,7 @@ router.put('/:id', async (req, res): Promise<void> => {
       department: updatedEmployee.department || null,
       contact: updatedEmployee.contact,
       status: updatedEmployee.status,
-      lastLogin: updatedEmployee.last_login ? new Date(updatedEmployee.last_login).toISOString().slice(0, 16).replace('T', ' ') : 'Never',
+      lastLogin: updatedEmployee.last_login && updatedEmployee.last_login !== null && updatedEmployee.last_login !== '' ? new Date(updatedEmployee.last_login).toISOString().slice(0, 16).replace('T', ' ') : 'Never',
       avatar: updatedEmployee.avatar || null,
       address: updatedEmployee.address || null,
       salary: updatedEmployee.salary,

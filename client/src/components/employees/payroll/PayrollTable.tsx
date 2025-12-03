@@ -249,8 +249,8 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
-                <div>
-                  ₱{(record.netSalary ?? 0).toLocaleString()}
+                <div className={record.netSalary < 0 ? 'text-red-600' : ''}>
+                  ₱{record.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </td>
               <td className="py-4 px-6 w-[100px]">
