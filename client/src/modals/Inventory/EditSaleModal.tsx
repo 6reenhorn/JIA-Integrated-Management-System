@@ -309,16 +309,23 @@ useEffect(() => {
       missing.push('Valid Product');
     }
 
-    const quantity = Number(formData.quantity);
-    if (!formData.quantity || quantity <= 0) {
+    const newQuantity = Number(formData.quantity.toString().replace(/,/g, ''));
+    const oldQuantity = sale?.quantity || 0;
+    
+    if (!formData.quantity || newQuantity <= 0) {
       newErrors.quantity = 'Quantity must be greater than 0';
       missing.push('Quantity');
-    } else if (selectedProduct && quantity > selectedProduct.stock) {
-      newErrors.quantity = `Only ${selectedProduct.stock} items available`;
-      missing.push(`Quantity (Max: ${selectedProduct.stock})`);
+    } else if (selectedProduct) {
+      // Calculate available stock: current stock + original quantity sold
+      const availableStock = selectedProduct.stock + oldQuantity;
+      
+      if (newQuantity > availableStock) {
+        newErrors.quantity = `Only ${availableStock} items available (including ${oldQuantity} from this sale)`;
+        missing.push(`Quantity (Max: ${availableStock})`);
+      }
     }
 
-    const price = Number(formData.price);
+    const price = Number(formData.price.toString().replace(/,/g, ''));
     if (!formData.price || price <= 0) {
       newErrors.price = 'Price must be greater than 0';
       missing.push('Price');
@@ -354,9 +361,9 @@ useEffect(() => {
     const updatedSale: SalesRecord = {
       ...sale,
       ...formData,
-      quantity: Number(formData.quantity) || 0,
-      price: Number(formData.price) || 0,
-      total: (Number(formData.quantity) || 0) * (Number(formData.price) || 0)
+      quantity: Number(formData.quantity.toString().replace(/,/g, '')) || 0,
+      price: Number(formData.price.toString().replace(/,/g, '')) || 0,
+      total: (Number(formData.quantity.toString().replace(/,/g, '')) || 0) * (Number(formData.price.toString().replace(/,/g, '')) || 0)
     };
     onSave(updatedSale);
   };
@@ -370,7 +377,7 @@ useEffect(() => {
     }, 300);
   };
 
-  const totalAmount = (Number(formData.quantity) || 0) * (Number(formData.price) || 0);
+  const totalAmount = (Number(formData.quantity.toString().replace(/,/g, '')) || 0) * (Number(formData.price.toString().replace(/,/g, '')) || 0);
 
   if (!isOpen && !isClosing) return null;
 
@@ -588,7 +595,7 @@ useEffect(() => {
                       <div>
                         <p className="text-[12px] font-bold text-gray-700">Total Amount:</p>
                         <p className="text-[10px] text-gray-500">
-                        {formData.quantity || 0} x ₱{(Number(formData.price) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {formData.quantity || 0} x ₱{(Number(formData.price.toString().replace(/,/g, '')) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                       </div>
                     <div className="text-[16px] font-bold text-green-600">
