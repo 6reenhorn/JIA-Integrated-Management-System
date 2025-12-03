@@ -59,10 +59,11 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
       setIsDeleting(true);
       try {
         await onDeleteItem(itemToDelete.id);
-        setDeleteModalOpen(false);
-        setItemToDelete(null);
       } catch (error) {
         console.error('Error deleting item:', error);
+        // On error, close immediately
+        setDeleteModalOpen(false);
+        setItemToDelete(null);
       } finally {
         setIsDeleting(false);
       }
@@ -73,6 +74,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     if (!isDeleting) {
       setDeleteModalOpen(false);
       setItemToDelete(null);
+      setIsDeleting(false);
     }
   };
 
@@ -105,31 +107,31 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-hidden">
+          <div className="h-[373px] overflow-hidden">
             <table className="table-fixed w-full">
               <tbody className="divide-y divide-gray-200">
                 {Array.from({ length: skeletonCount }).map((_, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-44" />
                     </td>
                     <td className="py-4 px-6 w-[140px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-36" />
                     </td>
                     <td className="py-4 px-6 w-[100px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-20" />
                     </td>
                     <td className="py-4 px-6 w-[120px]">
-                      <Skeleton className="h-6 rounded-full w-20" />
+                      <Skeleton className="h-5 rounded-full w-20" />
                     </td>
                     <td className="py-4 px-6 w-[130px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-20" />
                     </td>
                     <td className="py-4 px-6 w-[130px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-28" />
                     </td>
                     <td className="py-4 px-6 w-[100px]">
-                      <div className="flex justify-start space-x-2">
+                      <div className="flex justify-start space-x-3">
                         <Skeleton className="w-6 h-6" />
                         <Skeleton className="w-6 h-6" />
                       </div>
@@ -173,7 +175,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
           </table>
           
           {/* Empty State Content with Fixed Height */}
-          <div className="h-[335px] flex items-center justify-center">
+          <div className="h-[373px] flex items-center justify-center">
             <p className="text-gray-500">
               No inventory items found. Add your first product to get started.
             </p>
@@ -211,13 +213,13 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
+          <div className="h-[373px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <table className="table-fixed w-full h-full">
               <tbody className="divide-y divide-gray-200">
                 {paginatedItems.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
-                      <div className="text-sm font-medium text-gray-900 truncate">
+                      <div className="text-sm font-sm text-gray-900 truncate">
                         {item.productName}
                       </div>
                     </td>
@@ -240,10 +242,10 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                       </span>
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
-                      ₱{item.productPrice.toFixed(2)}
+                      ₱{item.productPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
-                      ₱{item.totalAmount.toFixed(2)}
+                    <td className="py-4 px-6 text-sm font-sm text-gray-900 w-[130px]">
+                      ₱{item.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-left text-sm w-[100px]">
                       <div className="flex justify-start space-x-2">

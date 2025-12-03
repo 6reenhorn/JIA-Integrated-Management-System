@@ -56,13 +56,36 @@ const SalesTable: React.FC<SalesTableProps> = ({
   }, [salesRecords]);
 
   // Local date formatter to avoid timezone issues
-  const formatLocalDate = (dateString: string): string => {
+  const formatLocalDate = (dateString: string | number | null): string => {
+    if (!dateString) return '-';
     try {
-      const date = new Date(dateString + 'T00:00:00');
+      let date: Date;
+      
+      // Handle timestamp numbers (e.g., 1764000000000.0)
+      if (typeof dateString === 'number' || (!isNaN(Number(dateString)) && String(dateString).includes('.'))) {
+        const timestamp = typeof dateString === 'number' ? dateString : parseFloat(String(dateString));
+        date = new Date(timestamp);
+      } else if (typeof dateString === 'string') {
+        // If it's already an ISO string, use it directly
+        if (dateString.includes('T')) {
+          date = new Date(dateString);
+        } else {
+          // If it's just a date string (YYYY-MM-DD), add time
+          date = new Date(dateString + 'T00:00:00');
+        }
+      } else {
+        date = new Date(dateString);
+      }
+      
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return String(dateString);
+      }
+      
       return formatDate(date);
     } catch (error) {
-      console.error('Error formatting date:', error);
-      return dateString;
+      console.error('Error formatting date:', error, dateString);
+      return String(dateString);
     }
   };
 
@@ -72,28 +95,30 @@ const SalesTable: React.FC<SalesTableProps> = ({
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (recordToDelete) {
-      setIsDeleting(true);
-      try {
-        await onDeleteSale(recordToDelete.id);
-        setDeleteModalOpen(false);
-        setRecordToDelete(null);
-      } catch (error) {
-        console.error('Error deleting sales record:', error);
-      } finally {
-        setIsDeleting(false);
+    const handleConfirmDelete = async () => {
+      if (recordToDelete) {
+        setIsDeleting(true);
+        try {
+          await onDeleteSale(recordToDelete.id);
+          // Delete successful - modal will close automatically after animation
+          // Don't close modal here, let the animation handle it
+        } catch (error) {
+          console.error('Error deleting sales record:', error);
+          // On error, close immediately
+          setDeleteModalOpen(false);
+          setRecordToDelete(null);
+        } finally {
+          setIsDeleting(false);
+        }
       }
-    }
-  };
+    };
 
-  const handleCloseModal = () => {
-    if (!isDeleting) {
+    const handleCloseModal = () => {
       setDeleteModalOpen(false);
       setRecordToDelete(null);
-    }
-  };
-
+      setIsDeleting(false);
+    };
+    
   // Paginate sorted items - get only items for current page
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -120,31 +145,31 @@ const SalesTable: React.FC<SalesTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-hidden">
+          <div className="h-[373px] overflow-hidden">
             <table className="table-fixed w-full">
               <tbody className="divide-y divide-gray-200">
                 {Array.from({ length: skeletonCount }).map((_, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="py-4 px-6 w-[180px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-24" />
                     </td>
                     <td className="py-4 px-5 w-[140px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-28" />
                     </td>
                     <td className="py-4 px-4 w-[100px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-14" />
                     </td>
                     <td className="py-4 px-6 w-[120px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-16" />
                     </td>
                     <td className="py-4 px-4 w-[130px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-16" />
                     </td>
                     <td className="py-4 px-3.5 w-[130px]">
-                      <Skeleton className="h-4" />
+                      <Skeleton className="h-4 w-20" />
                     </td>
                     <td className="py-4 px-4 w-[100px]">
-                      <div className="flex justify-start space-x-2">
+                      <div className="flex justify-start space-x-3">
                         <Skeleton className="w-6 h-6" />
                         <Skeleton className="w-6 h-6" />
                       </div>
@@ -179,7 +204,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
           </table>
           
           {/* Empty State Content with Fixed Height */}
-          <div className="h-[335px] flex items-center justify-center">
+          <div className="h-[373px] flex items-center justify-center">
             <p className="text-gray-500">
               No sales records found. Add your first sales to get started.
             </p>
@@ -208,7 +233,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
             </thead>
           </table>
           
-          <div className="h-[335px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
+          <div className="h-[373px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <table className="table-fixed w-full h-full">
               <tbody className="divide-y divide-gray-200">
                 {paginatedItems.map((record) => (
@@ -219,7 +244,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                       </div>
                     </td>
                     <td className="py-4 px-6 w-[140px]">
-                      <div className="text-sm font-medium text-gray-900 truncate">
+                      <div className="text-sm font-sm text-gray-900 truncate">
                         {record.productName}
                       </div>
                     </td>
@@ -227,10 +252,10 @@ const SalesTable: React.FC<SalesTableProps> = ({
                       {record.quantity}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[120px]">
-                      ₱{record.price.toFixed(2)}
+                      ₱{record.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className="py-4 px-6 text-sm font-medium text-gray-900 w-[130px]">
-                      ₱{record.total.toFixed(2)}
+                    <td className="py-4 px-6 text-sm font-sm text-gray-900 w-[130px]">
+                      ₱{record.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900 w-[130px]">
                       <div className="truncate">

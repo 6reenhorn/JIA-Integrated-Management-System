@@ -71,11 +71,11 @@ const SalesStats: React.FC<SalesStatsProps> = ({
   const totalPages = Math.max(1, Math.ceil(salesRecords.length / 10));
 
   // Skeleton Card Component
-  const SkeletonCard = () => (
+  const SkeletonCard = ({ isRevenue = false }: { isRevenue?: boolean }) => (
     <LayoutCard>
-      <Skeleton className="h-4 w-3/4 mb-3" />
-      <Skeleton className="h-9 w-1/2 mb-2" />
-      <Skeleton className="h-3 w-2/3" />
+      <Skeleton className="h-4 w-28 mb-3" />
+      <Skeleton className={`h-9 w-32 mb-2 ${isRevenue ? 'bg-red-200' : ''}`} />
+      <Skeleton className="h-3 w-20" />
     </LayoutCard>
   );
 
@@ -88,7 +88,7 @@ const SalesStats: React.FC<SalesStatsProps> = ({
           <>
             <SkeletonCard />
             <SkeletonCard />
-            <SkeletonCard />
+            <SkeletonCard isRevenue={true} />
             <SkeletonCard />
           </>
         ) : (
@@ -96,7 +96,7 @@ const SalesStats: React.FC<SalesStatsProps> = ({
             {/* Total Transactions */}
             <LayoutCard>
               <h3 className="text-sm font-medium text-gray-600 mb-2">Total Transactions</h3>
-              <p className="text-3xl font-bold text-gray-900">{totalSales}</p>
+              <p className="text-3xl font-bold text-gray-900">{totalSales.toLocaleString()}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {selectedDate ? 'Selected Date' : 'All Time'}
               </p>
@@ -105,7 +105,7 @@ const SalesStats: React.FC<SalesStatsProps> = ({
             {/* Items Sold */}
             <LayoutCard>
               <h3 className="text-sm font-medium text-gray-600 mb-2">Items Sold</h3>
-              <p className="text-3xl font-bold text-gray-900">{totalItemsSold}</p>
+              <p className="text-3xl font-bold text-gray-900">{totalItemsSold.toLocaleString()}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {selectedDate ? 'Selected Date' : 'Total Quantity'}
               </p>
@@ -114,7 +114,7 @@ const SalesStats: React.FC<SalesStatsProps> = ({
             {/* Total Revenue */}
             <LayoutCard>
               <h3 className="text-sm font-medium text-gray-600 mb-2">Total Revenue</h3>
-              <p className="text-3xl font-bold text-gray-900">₱{totalAmount.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-red-500">₱{totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {selectedDate ? 'Selected Date' : 'All Time'}
               </p>
@@ -123,7 +123,7 @@ const SalesStats: React.FC<SalesStatsProps> = ({
             {/* Average Sale */}
             <LayoutCard>
               <h3 className="text-sm font-medium text-gray-600 mb-2">Average Sale</h3>
-              <p className="text-3xl font-bold text-gray-900">₱{averageSale.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-gray-900">₱{averageSale.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               <p className="text-xs text-gray-500 mt-1">Per Transaction</p>
             </LayoutCard>
           </>
@@ -136,7 +136,7 @@ const SalesStats: React.FC<SalesStatsProps> = ({
         activeSection={activeSection} 
         onSectionChange={onSectionChange}
       >
-        <div className="space-y-6">
+        <div className="space-y-5">
           <SalesFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}

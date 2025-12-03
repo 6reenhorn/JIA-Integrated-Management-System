@@ -1,12 +1,12 @@
 import express, { Request, Response, Router } from 'express';
-import pool from '../db/postgres';
+import { DBHelper } from '../db/dbHelper';
 
 const router: Router = express.Router();
 
 interface JuanPayRecord {
   id: string;
   date: string;
-  beginnings: number[];
+  beginnings: Array<{ amount: number }>;
   ending: number;
   sales: number;
 }
@@ -24,35 +24,96 @@ interface JuanPayDBRecord {
 
 interface JuanPayRequestBody {
   date: string;
-  beginnings?: number[];
+  beginnings?: Array<{ amount: number }> | number[] | number | string;
   ending?: number;
   sales?: number;
 }
-
 // Helper function to format date
-const formatDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+const formatDate = (dateValue: string | Date | null | undefined): string => {
+  if (!dateValue) return '';
+  
+  try {
+    // If it's already a Date object
+    if (dateValue instanceof Date) {
+      if (isNaN(dateValue.getTime())) return '';
+      const year = dateValue.getFullYear();
+      const month = dateValue.getMonth() + 1;
+      const day = dateValue.getDate();
+      
+      // Validate that we got valid numbers BEFORE creating the string
+      if (isNaN(year) || isNaN(month) || isNaN(day) || year < 1970 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return '';
+      
+      // Now safely create the formatted string
+      const monthStr = String(month).padStart(2, '0');
+      const dayStr = String(day).padStart(2, '0');
+      return `${year}-${monthStr}-${dayStr}`;
+    }
+    
+    // If it's a string
+    const dateStr = String(dateValue).trim();
+    if (!dateStr || dateStr === 'null' || dateStr === 'undefined' || dateStr === 'NaN' || dateStr.includes('NaN')) return '';
+    
+    // If it's already in YYYY-MM-DD format, return it (remove time part if present)
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+      return dateStr.split('T')[0].split(' ')[0]; // Remove time part if present
+    }
+    
+    // Try parsing as a date
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    // Validate that we got valid numbers BEFORE creating the string
+    if (isNaN(year) || isNaN(month) || isNaN(day) || year < 1970 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return '';
+    
+    // Now safely create the formatted string
+    const monthStr = String(month).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    return `${year}-${monthStr}-${dayStr}`;
+  } catch (error) {
+    console.error('Error formatting date in juanpay route:', error, dateValue);
+    return '';
+  }
 };
 
 // Helper function to transform DB record to API response
-const transformRecord = (row: JuanPayDBRecord): JuanPayRecord => ({
-  id: row.id.toString(),
-  date: formatDate(row.date),
-  beginnings: row.beginnings || [],
-  ending: parseFloat(row.ending),
-  sales: parseFloat(row.sales)
-});
+const transformRecord = (row: any): JuanPayRecord => {
+  let beginnings: Array<{ amount: number }> = []; 
+  try {
+    if (row.beginnings) {
+      const amounts = row.beginnings
+        .split('|')
+        .map((val: string) => parseFloat(val.trim()))
+        .filter((val: number) => !isNaN(val));
+      
+      beginnings = amounts.map((amount: number) => ({ amount }));
+    }
+  } catch (err) {
+    console.error('Error transforming beginnings:', err, row);
+    beginnings = [];
+  }
+  
+  return {
+    id: row.id.toString(),
+    date: formatDate(row.date),
+    beginnings: beginnings,
+    ending: parseFloat(row.ending || 0),
+    sales: parseFloat(row.sales || 0)
+  };
+};
 
 // GET /api/juanpay - Fetch all JuanPay records
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query<JuanPayDBRecord>(
-      'SELECT * FROM juanpay_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC'
-    );
-    const records = result.rows.map(transformRecord);
+    const rows = await DBHelper.query('SELECT * FROM juanpay_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC') as any[];
+    const records = rows.map((row: any) => transformRecord(row));
+    console.log('JuanPay GET - Raw rows count:', rows.length);
+    console.log('JuanPay GET - First raw row:', rows[0]);
+    console.log('JuanPay GET - Transformed records count:', records.length);
+    console.log('JuanPay GET - First transformed record:', records[0]);
     res.json(records);
   } catch (err) {
     console.error('Error fetching JuanPay records:', err);
@@ -65,22 +126,37 @@ router.post('/', async (req: Request<{}, {}, JuanPayRequestBody>, res: Response)
   const { date, beginnings, ending, sales } = req.body;
 
   try {
-    const query = `
-      INSERT INTO juanpay_records (date, beginnings, ending, sales)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *
-    `;
-    const values = [
+    // Convert beginnings array to pipe-separated string
+    let beginningsStr = '';
+    if (Array.isArray(beginnings)) {
+      beginningsStr = beginnings
+        .map((b: any) => {
+          if (typeof b === 'object' && b !== null && 'amount' in b) {
+            return b.amount;
+          }
+          return typeof b === 'number' ? b : 0;
+        })
+        .join('|');
+    } else if (typeof beginnings === 'number') {
+      beginningsStr = beginnings.toString();
+    }
+
+    const result = await DBHelper.insert('juanpay_records', {
       date,
-      JSON.stringify(beginnings || []),
-      ending || 0,
-      sales || 0
-    ];
+      beginnings: beginningsStr,
+      ending: ending || 0,
+      sales: sales || 0
+    });
 
-    const result = await pool.query<JuanPayDBRecord>(query, values);
-    const newRecord = result.rows[0];
+    const lastId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
+    const newRecord = await DBHelper.getById('juanpay_records', lastId) as JuanPayDBRecord | undefined;
+    
+    if (!newRecord) {
+      res.status(500).json({ error: 'Failed to retrieve created record' });
+      return;
+    }
+
     const record = transformRecord(newRecord);
-
     res.status(201).json(record);
   } catch (err) {
     console.error('Error adding JuanPay record:', err);
@@ -94,31 +170,38 @@ router.put('/:id', async (req: Request<{ id: string }, {}, JuanPayRequestBody>, 
   const { date, beginnings, ending, sales } = req.body;
 
   try {
-    const query = `
-      UPDATE juanpay_records
-      SET date = $1, beginnings = $2, ending = $3, sales = $4, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $5 AND deleted_at IS NULL
-      RETURNING *
-    `;
-    const values = [
-      date,
-      JSON.stringify(beginnings || []),
-      ending || 0,
-      sales || 0,
-      id
-    ];
-
-    const result = await pool.query<JuanPayDBRecord>(query, values);
-    
-    if (result.rows.length === 0) {
+    const record = await DBHelper.getById('juanpay_records', id) as JuanPayDBRecord | undefined;
+    if (!record || record.deleted_at) {
       res.status(404).json({ error: 'JuanPay record not found or already deleted' });
       return;
     }
 
-    const updatedRecord = result.rows[0];
-    const record = transformRecord(updatedRecord);
+    // Convert beginnings array to pipe-separated string
+    let beginningsStr = '';
+    if (Array.isArray(beginnings)) {
+      beginningsStr = beginnings
+        .map((b: any) => {
+          if (typeof b === 'object' && b !== null && 'amount' in b) {
+            return b.amount;
+          }
+          return typeof b === 'number' ? b : 0;
+        })
+        .join('|');
+    } else if (typeof beginnings === 'number') {
+      beginningsStr = beginnings.toString();
+    }
 
-    res.json(record);
+    await DBHelper.update('juanpay_records', id, {
+      date,
+      beginnings: beginningsStr,
+      ending: ending || 0,
+      sales: sales || 0
+    });
+    
+    const updatedRecord = await DBHelper.getById('juanpay_records', id) as JuanPayDBRecord | undefined;
+    const result = transformRecord(updatedRecord);
+
+    res.json(result);
   } catch (err) {
     console.error('Error updating JuanPay record:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -130,21 +213,16 @@ router.delete('/:id', async (req: Request<{ id: string }>, res: Response): Promi
   const { id } = req.params;
 
   try {
-    const query = `
-      UPDATE juanpay_records
-      SET deleted_at = CURRENT_TIMESTAMP
-      WHERE id = $1 AND deleted_at IS NULL
-      RETURNING *
-    `;
-    
-    const result = await pool.query<JuanPayDBRecord>(query, [id]);
-    
-    if (result.rows.length === 0) {
+    const record = await DBHelper.getById('juanpay_records', id) as JuanPayDBRecord | undefined;
+    if (!record || record.deleted_at) {
       res.status(404).json({ error: 'JuanPay record not found or already deleted' });
       return;
     }
 
-    res.json({ message: 'JuanPay record deleted successfully', id: result.rows[0].id });
+    // Use DBHelper.softDelete which automatically marks records as synced = 0
+    await DBHelper.softDelete('juanpay_records', id);
+
+    res.json({ message: 'JuanPay record deleted successfully', id: parseInt(id) });
   } catch (err) {
     console.error('Error deleting JuanPay record:', err);
     res.status(500).json({ error: 'Internal server error' });

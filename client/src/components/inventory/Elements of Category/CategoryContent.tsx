@@ -174,12 +174,12 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       setIsDeleting(true);
       try {
         await onDeleteCategory(categoryName);
-        setDeleteModalOpen(false);
-        setCategoryToDelete(null);
+        // Delete successful - modal will close automatically after animation
+        // The modal's useEffect will handle the closing animation when isDeleting becomes false
       } catch (error: unknown) {
         console.error('Error deleting category:', error);
         
-        // Close delete modal
+        // On error, close delete modal immediately (no animation needed for errors)
         setDeleteModalOpen(false);
         setCategoryToDelete(null);
         
@@ -200,15 +200,24 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
     }
   };
 
+  const handleCloseDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setCategoryToDelete(null);
+    setIsDeleting(false);
+  };
+
   const handleConfirmEdit = async (oldName: string, newName: string, color: string) => {
     if (onEditCategory) {
       setIsEditing(true);
       try {
         await onEditCategory(oldName, newName, color);
-        setEditModalOpen(false);
-        setCategoryToEdit(null);
+        // Edit successful - modal will close automatically after animation
       } catch (error: unknown) {
         console.error('Error editing category:', error);
+        
+        // On error, close modal immediately
+        setEditModalOpen(false);
+        setCategoryToEdit(null);
         
         // Show error message
         let errorMsg = 'Failed to update category. Please try again.';
@@ -231,12 +240,15 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
     <LayoutCard>
       {/* Category Header Skeleton */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3 flex-1">
-          <Skeleton className="w-3 h-3 rounded-full" />
-          <Skeleton className="h-5 w-32" />
+          <div className="flex items-center gap-3 flex-1">
+            <Skeleton className="w-3 h-3 rounded-full" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-6 h-6" />
+            <Skeleton className="w-6 h-6" />
+          </div>
         </div>
-        <Skeleton className="w-6 h-6" />
-      </div>
       
       {/* Stats Grid Skeleton */}
       <div className="grid grid-cols-2 gap-6 mb-6">
@@ -252,7 +264,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       </div>
       
       {/* Category Value Skeleton */}
-      <div className="pt-4">
+      <div className="pt-8">
         <div className="flex justify-between items-center mb-4">
           <Skeleton className="h-4 w-28" />
           <Skeleton className="h-6 w-24" />
@@ -264,11 +276,11 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
   );
 
   // Skeleton Card Component for header stats
-  const SkeletonStatCard = () => (
+  const SkeletonStatCard = ({ isRedCard = false, showBottomSkeleton = false }) => (
     <LayoutCard>
-      <Skeleton className="h-4 w-3/4 mb-3" />
-      <Skeleton className="h-9 w-1/2 mb-2" />
-      <Skeleton className="h-3 w-2/3" />
+      <Skeleton className="h-4 w-24 mb-2" />
+      <Skeleton className={`h-9 w-20 mb-2 ${isRedCard ? 'bg-red-200' : ''}`} />
+      {showBottomSkeleton && <Skeleton className="h-3 w-28" />}
     </LayoutCard>
   );
 
@@ -288,7 +300,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
         />
         
         {isLoading || isRefreshing ? (
-          <div className="h-[392px] overflow-hidden p-6 mt-1 mb-8 border-t border-b border-gray-200">
+          <div className="h-[421px] overflow-hidden p-6 mb-8 border-t border-b border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {Array.from({ length: 8 }).map((_, index) => (
                 <SkeletonCategoryCard key={`skeleton-${index}`} />
@@ -296,7 +308,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             </div>
           </div>
         ) : paginatedCategories.length === 0 ? (
-          <div className="h-[392px] flex items-center justify-center border-t border-b border-gray-200 mt-1 mb-8">
+          <div className="h-[421px] flex items-center justify-center border-t border-b border-gray-200 mb-8">
             <p className="text-gray-500">
               {categories.length === 0 
                 ? "No categories found. Add your first category to get started."
@@ -304,7 +316,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             </p>
           </div>
         ) : (
-          <div className="h-[392px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
+          <div className="h-[421px] overflow-y-auto p-6 mt-1 mb-8 border-t border-b border-gray-200 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {paginatedCategories.map((category, index) => {
                 const actualIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
@@ -387,10 +399,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
       {/* Delete Category Modal */}
       <DeleteCategoryModal
         isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setCategoryToDelete(null);
-        }}
+        onClose={handleCloseDeleteModal}
         onConfirmDelete={handleConfirmDelete}
         category={categoryToDelete}
         isDeleting={isDeleting}
@@ -425,9 +434,9 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
             // Show skeleton loading for all 4 stat cards
             <>
               <SkeletonStatCard />
+              <SkeletonStatCard showBottomSkeleton={true} />
               <SkeletonStatCard />
-              <SkeletonStatCard />
-              <SkeletonStatCard />
+              <SkeletonStatCard isRedCard={true} />
             </>
           ) : (
             <>
@@ -449,7 +458,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
 
               <LayoutCard>
                 <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value</h3>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-red-500">
                   ₱{categoryStats.totalValue.toLocaleString()}
                 </p>
               </LayoutCard>

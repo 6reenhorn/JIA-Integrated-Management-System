@@ -17,6 +17,7 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
   record,
   isDeleting
 }) => {
+  const [isClosing, setIsClosing] = React.useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,28 +68,47 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
     });
   };
 
-  const totalBeginning = record.beginnings.reduce((sum, b) => sum + b.amount, 0);
+  let beginningsArray: number[] = [];
+  if (Array.isArray(record.beginnings)) {
+    beginningsArray = record.beginnings.map(b => {
+      if (typeof b === 'object' && b !== null && 'amount' in b) {
+        return typeof b.amount === 'number' ? b.amount : parseFloat(b.amount) || 0;
+      }
+      return typeof b === 'number' ? b : parseFloat(b) || 0;
+    });
+  } else if (record.beginnings && typeof record.beginnings === 'string') {
+    // Fallback for old string format (pipe-separated)
+    beginningsArray = record.beginnings.split('|')
+      .map(val => parseFloat(val.trim()))
+      .filter(val => !isNaN(val));
+  }
+
+  const totalBeginning = beginningsArray.reduce((sum, amount) => sum + amount, 0);
 
   const handleConfirm = () => {
-    if (record && !isDeleting) {
-      onConfirmDelete(record.id);
-    }
+      if (record && !isDeleting) {
+          setIsClosing(true);
+          setTimeout(() => {
+              onConfirmDelete(record.id);
+          }, 300);
+      }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={!isDeleting ? onClose : undefined}
-        style={{
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)'
-        }}
+          className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+          style={{
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)'
+          }}
       />
 
       <div 
         ref={modalRef}
-        className="bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+        className={`bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -102,11 +122,16 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
-            disabled={isDeleting}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => {
+                  if (!isDeleting) {
+                      setIsClosing(true);
+                      setTimeout(onClose, 300);
+                  }
+              }}
+              disabled={isDeleting}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <X size={20} className="text-gray-500" />
+              <X size={20} className="text-gray-500" />
           </button>
         </div>
 
@@ -129,13 +154,13 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
                   <span className="text-gray-600 font-medium">Beginning Balance:</span>
                   <span className="text-gray-900 font-semibold">{formatCurrency(totalBeginning)}</span>
                 </div>
-                {record.beginnings.length > 1 && (
+                {beginningsArray.length > 1 && (
                   <div className="mt-2 pl-3 space-y-1 bg-gray-50 rounded py-2 px-2 border border-gray-100">
                     <div className="text-[10px] text-gray-500 font-medium mb-1">Breakdown:</div>
-                    {record.beginnings.map((b, idx) => (
+                    {beginningsArray.map((amount, idx) => (
                       <div key={idx} className="flex justify-between text-[10px] text-gray-600">
                         <span>Entry #{idx + 1}</span>
-                        <span className="font-medium">{formatCurrency(b.amount)}</span>
+                        <span className="font-medium">{formatCurrency(amount)}</span>
                       </div>
                     ))}
                   </div>
@@ -168,7 +193,10 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
           <button 
             type="button"
             className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={onClose}
+            onClick={() => {
+              setIsClosing(true);
+              setTimeout(() => onClose(), 300);
+            }}
             disabled={isDeleting}
           >
             Cancel

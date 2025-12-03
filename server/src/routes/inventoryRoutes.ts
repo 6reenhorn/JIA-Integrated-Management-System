@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import pool from '../db/postgres';
+import { DBHelper } from '../db/dbHelper';
 
 const router = Router();
 
@@ -41,8 +41,8 @@ interface Category {
 // GET /api/inventory/categories - Fetch all categories
 router.get('/categories', async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query('SELECT * FROM categories ORDER BY category_name ASC');
-    const categories: Category[] = result.rows.map((row): Category => ({
+    const rows = await DBHelper.query('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY category_name ASC');
+    const categories: Category[] = rows.map((row: any): Category => ({
       id: row.id,
       name: row.category_name,
       color: row.color,
@@ -65,15 +65,53 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
   }
 
   try {
-    const query = `
-      INSERT INTO categories (category_name, color)
-      VALUES ($1, $2)
-      RETURNING *
-    `;
-    const values = [name, color || '#6B7280'];
+    // Check for duplicate category name (including soft-deleted ones)
+    const existing = await DBHelper.queryOne('SELECT * FROM categories WHERE category_name = ?', [name]) as any;
+    if (existing) {
+      if (existing.deleted_at) {
+        // Category exists but is soft-deleted - restore it
+        // Use raw SQL to explicitly set deleted_at = NULL
+        await DBHelper.execute(
+          'UPDATE categories SET category_name = ?, color = ?, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP, synced = 0 WHERE id = ?',
+          [name, color || '#6B7280', existing.id]
+        );
+        const restoredCat = await DBHelper.getById('categories', existing.id) as any;
+        if (!restoredCat) {
+          throw new Error('Failed to retrieve restored category');
+        }
+        const category: Category = {
+          id: restoredCat.id,
+          name: restoredCat.category_name,
+          color: restoredCat.color,
+          createdAt: restoredCat.created_at
+        };
+        res.status(200).json(category);
+        return;
+      } else {
+        // Category already exists and is not deleted
+        res.status(400).json({ error: `Category "${name}" already exists` });
+        return;
+      }
+    }
 
-    const result = await pool.query(query, values);
-    const newCategory = result.rows[0];
+    // Use DBHelper.insert to ensure synced = 0 is set
+    const result = await DBHelper.insert('categories', {
+      category_name: name,
+      color: color || '#6B7280'
+    });
+
+    // For SQLite, insert returns { lastInsertRowid: ... }
+    const categoryId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
+    
+    if (!categoryId) {
+      throw new Error('Failed to get category ID after insert');
+    }
+
+    const newCategory = await DBHelper.getById('categories', categoryId) as any;
+    
+    if (!newCategory) {
+      throw new Error('Failed to retrieve newly created category');
+    }
 
     const category: Category = {
       id: newCategory.id,
@@ -83,9 +121,14 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
     };
 
     res.status(201).json(category);
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error adding category:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    // If it's a UNIQUE constraint error, provide a more user-friendly message
+    if (err.code === 'SQLITE_CONSTRAINT' || err.code === '23505') {
+      res.status(400).json({ error: `Category "${name}" already exists` });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 
@@ -93,34 +136,37 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
 router.delete('/categories/:categoryName', async (req: Request, res: Response): Promise<void> => {
   const { categoryName } = req.params;
   const decodedCategoryName = decodeURIComponent(categoryName);
-
-  const client = await pool.connect();
   
   try {
-    await client.query('BEGIN');
-
-    // 1. Check if category exists
-    const categoryCheck = await client.query(
-      'SELECT * FROM categories WHERE category_name = $1',
+    // 1. Check if category exists and is not already deleted
+    const categoryCheck = await DBHelper.queryOne(
+      'SELECT * FROM categories WHERE category_name = ? AND deleted_at IS NULL',
       [decodedCategoryName]
-    );
+    ) as any;
     
-    if (categoryCheck.rows.length === 0) {
-      await client.query('ROLLBACK');
+    if (!categoryCheck) {
+      // Check if it exists but is deleted
+      const deletedCheck = await DBHelper.queryOne(
+        'SELECT * FROM categories WHERE category_name = ?',
+        [decodedCategoryName]
+      ) as any;
+      if (deletedCheck) {
+        res.status(404).json({ error: 'Category already deleted' });
+        return;
+      }
       res.status(404).json({ error: 'Category not found' });
       return;
     }
 
     // 2. Check if there are products using this category
-    const productsCheck = await client.query(
-      'SELECT COUNT(*) FROM inventory_items WHERE category = $1',
+    const productsCheck = await DBHelper.queryOne(
+      'SELECT COUNT(*) as count FROM inventory_items WHERE category = ? AND deleted_at IS NULL',
       [decodedCategoryName]
-    );
+    ) as any;
     
-    const productCount = parseInt(productsCheck.rows[0].count);
+    const productCount = parseInt(productsCheck?.count || '0');
     
     if (productCount > 0) {
-      await client.query('ROLLBACK');
       res.status(400).json({ 
         error: `Cannot delete category "${decodedCategoryName}". ${productCount} product(s) are using this category.`,
         productCount 
@@ -128,10 +174,8 @@ router.delete('/categories/:categoryName', async (req: Request, res: Response): 
       return;
     }
 
-    // 3. Delete the category
-    await client.query('DELETE FROM categories WHERE category_name = $1', [decodedCategoryName]);
-
-    await client.query('COMMIT');
+    // 3. Soft delete the category - use DBHelper.softDelete with the category id
+    await DBHelper.softDelete('categories', categoryCheck.id);
     
     res.json({ 
       message: 'Category deleted successfully',
@@ -139,13 +183,10 @@ router.delete('/categories/:categoryName', async (req: Request, res: Response): 
     });
     
   } catch (err) {
-    await client.query('ROLLBACK');
     console.error('Error deleting category:', err);
     res.status(500).json({ 
       error: 'Internal server error'
     });
-  } finally {
-    client.release();
   }
 });
 
@@ -159,33 +200,27 @@ router.put('/categories/:categoryName', async (req: Request, res: Response): Pro
     res.status(400).json({ error: 'Category name is required' });
     return;
   }
-
-  const client = await pool.connect();
   
   try {
-    await client.query('BEGIN');
-
-    // 1. Check if category exists
-    const categoryCheck = await client.query(
-      'SELECT * FROM categories WHERE category_name = $1',
+    // 1. Check if category exists and is not deleted
+    const categoryCheck = await DBHelper.queryOne(
+      'SELECT * FROM categories WHERE category_name = ? AND deleted_at IS NULL',
       [decodedCategoryName]
-    );
+    ) as any;
     
-    if (categoryCheck.rows.length === 0) {
-      await client.query('ROLLBACK');
+    if (!categoryCheck) {
       res.status(404).json({ error: 'Category not found' });
       return;
     }
 
     // 2. If name is being changed, check if new name already exists
     if (name !== decodedCategoryName) {
-      const duplicateCheck = await client.query(
-        'SELECT * FROM categories WHERE category_name = $1',
+      const duplicateCheck = await DBHelper.queryOne(
+        'SELECT * FROM categories WHERE category_name = ?',
         [name]
-      );
+      ) as any;
       
-      if (duplicateCheck.rows.length > 0) {
-        await client.query('ROLLBACK');
+      if (duplicateCheck) {
         res.status(400).json({ 
           error: `Category name "${name}" already exists. Please choose a different name.`
         });
@@ -193,25 +228,26 @@ router.put('/categories/:categoryName', async (req: Request, res: Response): Pro
       }
     }
 
-    // 3. Update the category
-    const updateQuery = `
-      UPDATE categories 
-      SET category_name = $1, color = $2, updated_at = CURRENT_TIMESTAMP
-      WHERE category_name = $3
-      RETURNING *
-    `;
-    const updateResult = await client.query(updateQuery, [name, color || '#6B7280', decodedCategoryName]);
-    const updatedCategory = updateResult.rows[0];
+    // 3. Update the category - use updateWhere since we're updating by category_name, not id
+    // First get the category id
+    const categoryId = categoryCheck.id;
+    await DBHelper.update('categories', categoryId, {
+      category_name: name,
+      color: color || '#6B7280'
+    });
+    const updatedCategory = await DBHelper.queryOne(
+      'SELECT * FROM categories WHERE category_name = ?',
+      [name]
+    ) as any;
 
     // 4. Update all inventory items that use this category (if name changed)
+    // Mark them as unsynced so they get pushed to PostgreSQL
     if (name !== decodedCategoryName) {
-      await client.query(
-        'UPDATE inventory_items SET category = $1, updated_at = CURRENT_TIMESTAMP WHERE category = $2',
+      await DBHelper.execute(
+        'UPDATE inventory_items SET category = ?, synced = 0 WHERE category = ?',
         [name, decodedCategoryName]
       );
     }
-
-    await client.query('COMMIT');
     
     const category: Category = {
       id: updatedCategory.id,
@@ -223,13 +259,10 @@ router.put('/categories/:categoryName', async (req: Request, res: Response): Pro
     res.json(category);
     
   } catch (err) {
-    await client.query('ROLLBACK');
     console.error('Error updating category:', err);
     res.status(500).json({ 
       error: 'Internal server error'
     });
-  } finally {
-    client.release();
   }
 });
 
@@ -238,17 +271,47 @@ router.put('/categories/:categoryName', async (req: Request, res: Response): Pro
 // SALES ROUTES
 // ============================================
 
+// Helper function to format date as ISO string for frontend date formatter
+const formatDateForResponse = (dateValue: any): string => {
+  if (!dateValue) return '';
+  try {
+    // If it's already an ISO string, return it
+    if (typeof dateValue === 'string' && dateValue.includes('T')) {
+      return dateValue;
+    }
+    // If it's a date string (YYYY-MM-DD), convert to ISO
+    if (typeof dateValue === 'string') {
+      const date = new Date(dateValue + 'T00:00:00');
+      if (!isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+    }
+    // If it's a Date object, convert to ISO
+    if (dateValue instanceof Date) {
+      return dateValue.toISOString();
+    }
+    // Try to parse as date
+    const date = new Date(dateValue);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+    return '';
+  } catch {
+    return '';
+  }
+};
+
 // GET /api/inventory/sales - Fetch all sales records
 router.get('/sales', async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query('SELECT * FROM sales_records ORDER BY date DESC, id DESC');
-    const salesRecords: SalesRecord[] = result.rows.map((row): SalesRecord => ({
+    const rows = await DBHelper.query('SELECT * FROM sales_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
+    const salesRecords: SalesRecord[] = rows.map((row: any): SalesRecord => ({
       id: row.id,
-      date: row.date.toISOString().split('T')[0],
+      date: formatDateForResponse(row.date),
       productName: row.product_name,
       quantity: row.quantity,
-      price: parseFloat(row.price),
-      total: parseFloat(row.total),
+      price: parseFloat(row.price || 0),
+      total: parseFloat(row.total || 0),
       paymentMethod: row.payment_method,
       createdAt: row.created_at
     }));
@@ -294,21 +357,21 @@ router.post('/sales', async (req: Request, res: Response): Promise<void> => {
 
     const query = `
       INSERT INTO sales_records (date, product_name, quantity, price, total, payment_method)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
     const values = [date, productName, quantity, price, total, paymentMethod];
 
-    const result = await pool.query(query, values);
-    const newSale = result.rows[0];
+    const result = await DBHelper.execute(query, values);
+    const lastId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
+    const newSale = await DBHelper.getById('sales_records', lastId) as any;
 
     const salesRecord: SalesRecord = {
       id: newSale.id,
-      date: newSale.date.toISOString().split('T')[0],
+      date: formatDateForResponse(newSale.date),
       productName: newSale.product_name,
       quantity: newSale.quantity,
-      price: parseFloat(newSale.price),
-      total: parseFloat(newSale.total),
+      price: parseFloat(newSale.price || 0),
+      total: parseFloat(newSale.total || 0),
       paymentMethod: newSale.payment_method,
       createdAt: newSale.created_at
     };
@@ -354,30 +417,29 @@ router.put('/sales/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const total = quantity * price;
 
-    const query = `
-      UPDATE sales_records
-      SET date = $1, product_name = $2, quantity = $3, price = $4, total = $5, 
-          payment_method = $6, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7
-      RETURNING *
-    `;
-    const values = [date, productName, quantity, price, total, paymentMethod, id];
-
-    const result = await pool.query(query, values);
+    // Use DBHelper.update which automatically marks records as synced = 0
+    await DBHelper.update('sales_records', id, {
+      date,
+      product_name: productName,
+      quantity,
+      price,
+      total,
+      payment_method: paymentMethod
+    });
+    const updatedSale = await DBHelper.getById('sales_records', id) as any;
     
-    if (result.rows.length === 0) {
+    if (!updatedSale) {
       res.status(404).json({ error: 'Sales record not found' });
       return;
     }
 
-    const updatedSale = result.rows[0];
     const salesRecord: SalesRecord = {
       id: updatedSale.id,
-      date: updatedSale.date.toISOString().split('T')[0],
+      date: formatDateForResponse(updatedSale.date),
       productName: updatedSale.product_name,
       quantity: updatedSale.quantity,
-      price: parseFloat(updatedSale.price),
-      total: parseFloat(updatedSale.total),
+      price: parseFloat(updatedSale.price || 0),
+      total: parseFloat(updatedSale.total || 0),
       paymentMethod: updatedSale.payment_method,
       createdAt: updatedSale.created_at
     };
@@ -394,12 +456,20 @@ router.delete('/sales/:id', async (req: Request, res: Response): Promise<void> =
   const { id } = req.params;
 
   try {
-    const result = await pool.query('DELETE FROM sales_records WHERE id = $1 RETURNING *', [id]);
-    
-    if (result.rows.length === 0) {
+    const idNum = parseInt(id, 10);
+    if (isNaN(idNum)) {
+      res.status(400).json({ error: 'Invalid sales record ID' });
+      return;
+    }
+
+    const record = await DBHelper.getById('sales_records', idNum) as any;
+    if (!record || record.deleted_at) {
       res.status(404).json({ error: 'Sales record not found' });
       return;
     }
+
+    // Use soft delete - set deleted_at timestamp and synced = 0
+    await DBHelper.softDelete('sales_records', idNum);
 
     res.json({ message: 'Sales record deleted successfully' });
   } catch (err) {
@@ -415,15 +485,15 @@ router.delete('/sales/:id', async (req: Request, res: Response): Promise<void> =
 // GET /api/inventory - Fetch all inventory items
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query('SELECT * FROM inventory_items ORDER BY id ASC');
-    const inventoryItems: InventoryItem[] = result.rows.map((row): InventoryItem => ({
+    const rows = await DBHelper.query('SELECT * FROM inventory_items WHERE deleted_at IS NULL ORDER BY id ASC');
+    const inventoryItems: InventoryItem[] = rows.map((row: any): InventoryItem => ({
       id: row.id,
       productName: row.product_name,
       category: row.category,
       stock: row.stock,
       status: row.status,
-      productPrice: parseFloat(row.product_price),
-      totalAmount: parseFloat(row.total_amount),
+      productPrice: parseFloat(row.product_price || 0),
+      totalAmount: parseFloat(row.total_amount || 0),
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));
@@ -460,13 +530,13 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 
     const query = `
       INSERT INTO inventory_items (product_name, category, stock, status, product_price, total_amount)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
     const values = [productName, category, stock, status, productPrice, totalAmount];
 
-    const result = await pool.query(query, values);
-    const newItem = result.rows[0];
+    const result = await DBHelper.execute(query, values);
+    const lastId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
+    const newItem = await DBHelper.getById('inventory_items', lastId) as any;
 
     const inventoryItem: InventoryItem = {
       id: newItem.id,
@@ -474,8 +544,8 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       category: newItem.category,
       stock: newItem.stock,
       status: newItem.status,
-      productPrice: parseFloat(newItem.product_price),
-      totalAmount: parseFloat(newItem.total_amount),
+      productPrice: parseFloat(newItem.product_price || 0),
+      totalAmount: parseFloat(newItem.total_amount || 0),
       createdAt: newItem.created_at,
       updatedAt: newItem.updated_at
     };
@@ -512,31 +582,30 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     const totalAmount = stock * productPrice;
     const status = stock === 0 ? 'Out Of Stock' : stock <= 10 ? 'Low Stock' : 'In Stock';
 
-    const query = `
-      UPDATE inventory_items
-      SET product_name = $1, category = $2, stock = $3, status = $4, 
-          product_price = $5, total_amount = $6, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7
-      RETURNING *
-    `;
-    const values = [productName, category, stock, status, productPrice, totalAmount, id];
-
-    const result = await pool.query(query, values);
+    // Use DBHelper.update which automatically marks records as synced = 0
+    await DBHelper.update('inventory_items', id, {
+      product_name: productName,
+      category,
+      stock,
+      status,
+      product_price: productPrice,
+      total_amount: totalAmount
+    });
+    const updatedItem = await DBHelper.getById('inventory_items', id) as any;
     
-    if (result.rows.length === 0) {
+    if (!updatedItem) {
       res.status(404).json({ error: 'Inventory item not found' });
       return;
     }
 
-    const updatedItem = result.rows[0];
     const inventoryItem: InventoryItem = {
       id: updatedItem.id,
       productName: updatedItem.product_name,
       category: updatedItem.category,
       stock: updatedItem.stock,
       status: updatedItem.status,
-      productPrice: parseFloat(updatedItem.product_price),
-      totalAmount: parseFloat(updatedItem.total_amount),
+      productPrice: parseFloat(updatedItem.product_price || 0),
+      totalAmount: parseFloat(updatedItem.total_amount || 0),
       createdAt: updatedItem.created_at,
       updatedAt: updatedItem.updated_at
     };
@@ -553,12 +622,20 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query('DELETE FROM inventory_items WHERE id = $1 RETURNING *', [id]);
-    
-    if (result.rows.length === 0) {
+    const idNum = parseInt(id, 10);
+    if (isNaN(idNum)) {
+      res.status(400).json({ error: 'Invalid inventory item ID' });
+      return;
+    }
+
+    const record = await DBHelper.getById('inventory_items', idNum) as any;
+    if (!record || record.deleted_at) {
       res.status(404).json({ error: 'Inventory item not found' });
       return;
     }
+
+    // Use soft delete - set deleted_at timestamp and synced = 0
+    await DBHelper.softDelete('inventory_items', idNum);
 
     res.json({ message: 'Inventory item deleted successfully' });
   } catch (err) {

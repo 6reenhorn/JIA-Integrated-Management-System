@@ -1,341 +1,297 @@
 "use strict";
 const express = require('express');
-const pool = require('../db/postgres');
+const { dbHelper } = require('../db/dbHelper');
 
 const router = express.Router();
+
+// Helper to format date as ISO string - frontend will format it using date formatter
+const formatDateForResponse = (dateStr) => {
+  if (!dateStr) return null;
+  try {
+    // If it's already an ISO string, return it
+    if (dateStr.includes('T')) {
+      return dateStr;
+    }
+    // If it's just a date string (YYYY-MM-DD), convert to ISO
+    const date = new Date(dateStr + 'T00:00:00');
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toISOString();
+  } catch {
+    return dateStr;
+  }
+};
 
 // ============================================
 // CATEGORY ROUTES
 // ============================================
 
-// GET /api/inventory/categories - Fetch all categories
+// GET categories
 router.get('/categories', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM categories ORDER BY category_name ASC');
-    const categories = result.rows.map(row => ({
-      id: row.id,
-      name: row.category_name,
-      color: row.color,
-      createdAt: row.created_at
+    const rows = await dbHelper.query('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY category_name ASC');
+    const categories = rows.map(r => ({
+      id: r.id,
+      name: r.category_name,
+      color: r.color,
+      createdAt: r.created_at
     }));
     res.json(categories);
   } catch (err) {
     console.error('Error fetching categories:', err);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// POST /api/inventory/categories - Add a new category
+// POST category
 router.post('/categories', async (req, res) => {
   const { name, color } = req.body;
-
-  if (!name) {
-    return res.status(400).json({ error: 'Category name is required' });
-  }
+  if (!name) return res.status(400).json({ error: 'Category name is required' });
 
   try {
-    const query = `
-      INSERT INTO categories (category_name, color)
-      VALUES ($1, $2)
-      RETURNING *
-    `;
-    const values = [name, color || '#6B7280'];
+    // Check for duplicate category name (including soft-deleted ones)
+    const existing = await dbHelper.queryOne('SELECT * FROM categories WHERE category_name = ?', [name]);
+    if (existing) {
+      if (existing.deleted_at) {
+        // Category exists but is soft-deleted - restore it
+        // Use raw SQL to explicitly set deleted_at = NULL
+        await dbHelper.run(
+          'UPDATE categories SET category_name = ?, color = ?, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP, synced = 0 WHERE id = ?',
+          [name, color || '#6B7280', existing.id]
+        );
+        const restoredCat = await dbHelper.getById('categories', existing.id);
+        if (!restoredCat) {
+          throw new Error('Failed to retrieve restored category');
+        }
+        return res.status(200).json({
+          id: restoredCat.id,
+          name: restoredCat.category_name,
+          color: restoredCat.color,
+          createdAt: restoredCat.created_at
+        });
+      } else {
+        // Category already exists and is not deleted
+        return res.status(400).json({ error: `Category "${name}" already exists` });
+      }
+    }
 
-    const result = await pool.query(query, values);
-    const newCategory = result.rows[0];
+    const result = await dbHelper.insert('categories', {
+      category_name: name,
+      color: color || '#6B7280'
+    });
 
-    const category = {
-      id: newCategory.id,
-      name: newCategory.category_name,
-      color: newCategory.color,
-      createdAt: newCategory.created_at
-    };
+    // For SQLite, insert returns { id: ..., ...data }
+    // For PostgreSQL, insert returns the full row
+    const categoryId = result.id || result.lastID;
+    
+    if (!categoryId) {
+      throw new Error('Failed to get category ID after insert');
+    }
 
-    res.status(201).json(category);
+    const newCat = await dbHelper.getById('categories', categoryId);
+    
+    if (!newCat) {
+      throw new Error('Failed to retrieve newly created category');
+    }
+
+    res.status(201).json({
+      id: newCat.id,
+      name: newCat.category_name,
+      color: newCat.color,
+      createdAt: newCat.created_at
+    });
   } catch (err) {
     console.error('Error adding category:', err);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
+    // If it's a UNIQUE constraint error, provide a more user-friendly message
+    if (err.code === 'SQLITE_CONSTRAINT' || err.code === '23505') {
+      res.status(400).json({ error: `Category "${name}" already exists` });
+    } else {
+      res.status(500).json({ error: 'Failed to add category' });
+    }
   }
 });
 
+// DELETE category (if no products use it)
 router.delete('/categories/:categoryName', async (req, res) => {
-  const { categoryName } = req.params;
-  const decodedCategoryName = decodeURIComponent(categoryName);
+  const decodedCategoryName = decodeURIComponent(req.params.categoryName);
 
-  const client = await pool.connect();
-  
   try {
-    await client.query('BEGIN');
-
-    // 1. Check if category exists
-    const categoryCheck = await client.query(
-      'SELECT * FROM categories WHERE category_name = $1',
-      [decodedCategoryName]
-    );
-    
-    if (categoryCheck.rows.length === 0) {
-      await client.query('ROLLBACK');
+    // Check if category exists and is not already deleted
+    const cat = await dbHelper.queryOne('SELECT * FROM categories WHERE category_name = ? AND deleted_at IS NULL', [decodedCategoryName]);
+    if (!cat) {
+      // Check if it exists but is deleted
+      const deletedCheck = await dbHelper.queryOne('SELECT * FROM categories WHERE category_name = ?', [decodedCategoryName]);
+      if (deletedCheck) {
+        return res.status(404).json({ error: 'Category already deleted' });
+      }
       return res.status(404).json({ error: 'Category not found' });
     }
 
-    // 2. Check if there are products using this category
-    const productsCheck = await client.query(
-      'SELECT COUNT(*) FROM inventory_items WHERE category = $1',
-      [decodedCategoryName]
-    );
-    
-    const productCount = parseInt(productsCheck.rows[0].count);
-    
+    const countResult = await dbHelper.queryOne('SELECT COUNT(*) AS count FROM inventory_items WHERE category = ? AND deleted_at IS NULL', [decodedCategoryName]);
+    const productCount = parseInt(countResult?.count || countResult?.c || 0, 10);
+
     if (productCount > 0) {
-      await client.query('ROLLBACK');
       return res.status(400).json({ 
-        error: `Cannot delete category "${decodedCategoryName}". ${productCount} product(s) are using this category.`,
+        error: `Cannot delete category. ${productCount} product(s) use it.`,
         productCount 
       });
     }
 
-    // 3. Delete the category
-    await client.query('DELETE FROM categories WHERE category_name = $1', [decodedCategoryName]);
-
-    await client.query('COMMIT');
-    
-    res.json({ 
-      message: 'Category deleted successfully',
-      categoryName: decodedCategoryName
-    });
-    
+    // Soft delete the category - use dbHelper.delete with the category id
+    await dbHelper.delete('categories', cat.id);
+    res.json({ message: 'Category deleted successfully', categoryName: decodedCategoryName });
   } catch (err) {
-    await client.query('ROLLBACK');
     console.error('Error deleting category:', err);
-    res.status(500).json({ 
-      error: 'Internal server error', 
-      details: err.message 
-    });
-  } finally {
-    client.release();
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-// PUT /api/inventory/categories/:categoryName - Update a category
+// PUT category
 router.put('/categories/:categoryName', async (req, res) => {
-  const { categoryName } = req.params;
-  const decodedCategoryName = decodeURIComponent(categoryName);
+  const decodedCategoryName = decodeURIComponent(req.params.categoryName);
   const { name, color } = req.body;
+  if (!name) return res.status(400).json({ error: 'Category name is required' });
 
-  if (!name) {
-    return res.status(400).json({ error: 'Category name is required' });
-  }
-
-  const client = await pool.connect();
-  
   try {
-    await client.query('BEGIN');
+    const cat = await dbHelper.queryOne('SELECT * FROM categories WHERE category_name = ? AND deleted_at IS NULL', [decodedCategoryName]);
+    if (!cat) return res.status(404).json({ error: 'Category not found' });
 
-    // 1. Check if category exists
-    const categoryCheck = await client.query(
-      'SELECT * FROM categories WHERE category_name = $1',
-      [decodedCategoryName]
-    );
-    
-    if (categoryCheck.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Category not found' });
+    // Check for duplicate name
+    if (name !== decodedCategoryName) {
+      const dup = await dbHelper.queryOne('SELECT * FROM categories WHERE category_name = ? AND deleted_at IS NULL', [name]);
+      if (dup) return res.status(400).json({ error: `Category "${name}" already exists` });
     }
 
-    // 2. If name is being changed, check if new name already exists
-    if (name !== decodedCategoryName) {
-      const duplicateCheck = await client.query(
-        'SELECT * FROM categories WHERE category_name = $1',
-        [name]
-      );
-      
-      if (duplicateCheck.rows.length > 0) {
-        await client.query('ROLLBACK');
-        return res.status(400).json({ 
-          error: `Category name "${name}" already exists. Please choose a different name.`
-        });
-      }
-    }
+    // Use dbHelper.update which automatically marks records as synced = 0
+    await dbHelper.update('categories', cat.id, {
+      category_name: name,
+      color: color || '#6B7280'
+    });
 
-    // 3. Update the category (WITHOUT updated_at if column doesn't exist)
-    const updateQuery = `
-      UPDATE categories 
-      SET category_name = $1, color = $2
-      WHERE category_name = $3
-      RETURNING *
-    `;
-    const updateResult = await client.query(updateQuery, [name, color || '#6B7280', decodedCategoryName]);
-    const updatedCategory = updateResult.rows[0];
-
-    // 4. Update all inventory items that use this category (if name changed)
+    // Update inventory items if name changed
     if (name !== decodedCategoryName) {
-      await client.query(
-        'UPDATE inventory_items SET category = $1 WHERE category = $2',
+      await dbHelper.run(
+        'UPDATE inventory_items SET category = ?, synced = 0 WHERE category = ? AND deleted_at IS NULL',
         [name, decodedCategoryName]
       );
     }
 
-    await client.query('COMMIT');
-    
-    const category = {
-      id: updatedCategory.id,
-      name: updatedCategory.category_name,
-      color: updatedCategory.color,
-      createdAt: updatedCategory.created_at
-    };
-
-    res.json(category);
-    
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Error updating category:', err);
-    console.error('Error details:', err.message);
-    console.error('Error stack:', err.stack);
-    res.status(500).json({ 
-      error: 'Internal server error', 
-      details: err.message 
+    const updatedCat = await dbHelper.queryOne('SELECT * FROM categories WHERE category_name = ?', [name]);
+    res.json({ 
+      id: updatedCat.id, 
+      name: updatedCat.category_name, 
+      color: updatedCat.color, 
+      createdAt: updatedCat.created_at 
     });
-  } finally {
-    client.release();
+  } catch (err) {
+    console.error('Error updating category:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-// Helper function to format date in Philippines timezone (UTC+8)
-const formatDatePH = (date) => {
-  const d = new Date(date);
-  // Convert to Philippines time (UTC+8)
-  const phDate = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-  const year = phDate.getFullYear();
-  const month = String(phDate.getMonth() + 1).padStart(2, '0');
-  const day = String(phDate.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
 // ============================================
-// SALES ROUTES (WITH INVENTORY DEDUCTION)
+// SALES ROUTES
 // ============================================
 
-// GET /api/inventory/sales - Fetch all sales records
+// Helper to map sales record
+const mapSalesRecord = (r) => ({
+  id: r.id,
+  date: formatDateForResponse(r.date),
+  productName: r.product_name,
+  quantity: r.quantity,
+  price: parseFloat(r.price),
+  total: parseFloat(r.total),
+  paymentMethod: r.payment_method,
+  createdAt: r.created_at ? formatDateForResponse(r.created_at) : null
+});
+
+// GET sales
 router.get('/sales', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM sales_records ORDER BY date DESC, id DESC');
-    const salesRecords = result.rows.map(row => ({
-      id: row.id,
-      date: formatDatePH(row.date), // Use Philippines timezone
-      productName: row.product_name,
-      quantity: row.quantity,
-      price: parseFloat(row.price),
-      total: parseFloat(row.total),
-      paymentMethod: row.payment_method,
-      createdAt: row.created_at
-    }));
-    res.json(salesRecords);
+    const rows = await dbHelper.query(`
+      SELECT * FROM sales_records 
+      WHERE deleted_at IS NULL
+      ORDER BY date DESC, id DESC
+    `);
+    const sales = rows.map(mapSalesRecord);
+    res.json(sales);
   } catch (err) {
-    console.error('Error fetching sales records:', err);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
+    console.error('Error fetching sales:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// POST /api/inventory/sales - Add a new sales record AND deduct from inventory
+// POST sale (deduct inventory)
 router.post('/sales', async (req, res) => {
   const { date, productName, quantity, price, paymentMethod } = req.body;
-
   if (!date || !productName || !quantity || !price || !paymentMethod) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const validPaymentMethods = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
-  if (!validPaymentMethods.includes(paymentMethod)) {
-    return res.status(400).json({ 
-      error: 'Invalid payment method. Must be one of: Cash, Gcash, PayMaya, Juanpay' 
-    });
+  const validPayment = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
+  if (!validPayment.includes(paymentMethod)) {
+    return res.status(400).json({ error: 'Invalid payment method' });
   }
 
-  const client = await pool.connect();
-  
   try {
-    await client.query('BEGIN');
-
-    // Check if product exists in inventory
-    const inventoryCheck = await client.query(
-      'SELECT id, stock, product_price, minimum_stock FROM inventory_items WHERE product_name = $1',
-      [productName]
-    );
-
-    if (inventoryCheck.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ 
-        error: `Product "${productName}" not found in inventory. Please add it to inventory first.` 
-      });
+    // Check product availability (only non-deleted items)
+    const prod = await dbHelper.queryOne('SELECT * FROM inventory_items WHERE product_name = ? AND deleted_at IS NULL', [productName]);
+    if (!prod) {
+      return res.status(404).json({ error: `Product "${productName}" not found` });
+    }
+    if (prod.stock < quantity) {
+      return res.status(400).json({ error: `Insufficient stock. Available: ${prod.stock}` });
     }
 
-    const inventoryItem = inventoryCheck.rows[0];
-    const currentStock = inventoryItem.stock;
-    const minStock = inventoryItem.minimum_stock || 5;
+    const newStock = prod.stock - quantity;
+    const newStatus = newStock === 0 ? 'Out Of Stock' 
+                    : newStock <= (prod.minimum_stock || 5) ? 'Low Stock' 
+                    : 'In Stock';
+    const newTotalAmount = newStock * prod.product_price;
 
-    if (currentStock < quantity) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ 
-        error: `Insufficient stock for "${productName}". Available: ${currentStock}, Requested: ${quantity}` 
-      });
-    }
-
-    const newStock = currentStock - quantity;
-    const newTotalAmount = newStock * inventoryItem.product_price;
-    const newStatus = newStock === 0 ? 'Out Of Stock' : newStock <= minStock ? 'Low Stock' : 'In Stock';
-
-    await client.query(
-      `UPDATE inventory_items 
-       SET stock = $1, status = $2, total_amount = $3, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $4`,
-      [newStock, newStatus, newTotalAmount, inventoryItem.id]
+    // Update inventory
+    await dbHelper.run(
+      'UPDATE inventory_items SET stock=?, status=?, total_amount=?, synced=0 WHERE id=?',
+      [newStock, newStatus, newTotalAmount, prod.id]
     );
 
+    // Create sales record
     const total = quantity * price;
-    const salesQuery = `
-      INSERT INTO sales_records (date, product_name, quantity, price, total, payment_method)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `;
-    const salesValues = [date, productName, quantity, price, total, paymentMethod];
-    const salesResult = await client.query(salesQuery, salesValues);
-    const newSale = salesResult.rows[0];
-
-    await client.query('COMMIT');
-
-    const salesRecord = {
-      id: newSale.id,
-      date: formatDatePH(newSale.date), // Use Philippines timezone
-      productName: newSale.product_name,
-      quantity: newSale.quantity,
-      price: parseFloat(newSale.price),
-      total: parseFloat(newSale.total),
-      paymentMethod: newSale.payment_method,
-      createdAt: newSale.created_at,
-      inventoryUpdate: {
-        previousStock: currentStock,
-        newStock: newStock,
-        newStatus: newStatus
-      }
-    };
-
-    res.status(201).json(salesRecord);
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Error adding sales record:', err);
-    res.status(500).json({ 
-      error: 'Internal server error', 
-      details: err.message,
-      code: err.code
+    const info = await dbHelper.insert('sales_records', {
+      date,
+      product_name: productName,
+      quantity,
+      price,
+      total,
+      payment_method: paymentMethod
     });
-  } finally {
-    client.release();
+
+    // For SQLite, insert returns { id: ..., ...data }
+    // For PostgreSQL, insert returns the full row
+    const saleId = info.id || info.lastID || info.insertId;
+    if (!saleId) {
+      throw new Error('Failed to get sales record ID after insert');
+    }
+
+    const newSale = await dbHelper.getById('sales_records', saleId);
+    if (!newSale) {
+      throw new Error('Failed to retrieve newly created sales record');
+    }
+
+    res.status(201).json({
+      ...mapSalesRecord(newSale),
+      inventoryUpdate: {
+        previousStock: newSale.previousStock,
+        newStock: newSale.newStock,
+        newStatus: newSale.newStatus
+      }
+    });
+  } catch (err) {
+    console.error('Error adding sale:', err);
+    res.status(400).json({ error: err.message });
   }
 });
 
-// PUT /api/inventory/sales/:id - Update a sales record
+// UPDATE sales record
 router.put('/sales/:id', async (req, res) => {
   const { id } = req.params;
   const { date, productName, quantity, price, paymentMethod } = req.body;
@@ -344,156 +300,104 @@ router.put('/sales/:id', async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const validPaymentMethods = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
-  if (!validPaymentMethods.includes(paymentMethod)) {
-    return res.status(400).json({ 
-      error: 'Invalid payment method. Must be one of: Cash, Gcash, PayMaya, Juanpay' 
-    });
+  const validPayment = ['Cash', 'Gcash', 'PayMaya', 'Juanpay'];
+  if (!validPayment.includes(paymentMethod)) {
+    return res.status(400).json({ error: 'Invalid payment method' });
   }
 
-  const client = await pool.connect();
-  
   try {
-    await client.query('BEGIN');
+    const saleId = parseInt(id, 10);
+    if (isNaN(saleId)) {
+      return res.status(400).json({ error: 'Invalid sales record ID' });
+    }
 
-    const oldSaleResult = await client.query(
-      'SELECT product_name, quantity FROM sales_records WHERE id = $1',
-      [id]
-    );
-
-    if (oldSaleResult.rows.length === 0) {
-      await client.query('ROLLBACK');
+    const oldSale = await dbHelper.queryOne('SELECT * FROM sales_records WHERE id = ? AND deleted_at IS NULL', [saleId]);
+    if (!oldSale) {
       return res.status(404).json({ error: 'Sales record not found' });
     }
 
-    const oldSale = oldSaleResult.rows[0];
-    const oldProductName = oldSale.product_name;
-    const oldQuantity = oldSale.quantity;
+    // Restore previous inventory
+    await dbHelper.run(`
+      UPDATE inventory_items
+      SET stock = stock + ?, 
+          total_amount = (stock + ?) * product_price,
+          status = CASE 
+            WHEN (stock + ?) = 0 THEN 'Out Of Stock'
+            WHEN (stock + ?) <= COALESCE(minimum_stock,5) THEN 'Low Stock'
+            ELSE 'In Stock'
+          END
+      WHERE product_name = ?
+    `, [oldSale.quantity, oldSale.quantity, oldSale.quantity, oldSale.quantity, oldSale.product_name]);
 
-    await client.query(
-      `UPDATE inventory_items 
-       SET stock = stock + $1, 
-           total_amount = (stock + $1) * product_price,
-           status = CASE 
-             WHEN (stock + $1) = 0 THEN 'Out Of Stock'
-             WHEN (stock + $1) <= COALESCE(minimum_stock, 5) THEN 'Low Stock'
-             ELSE 'In Stock'
-           END,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE product_name = $2`,
-      [oldQuantity, oldProductName]
-    );
-
-    const inventoryCheck = await client.query(
-      'SELECT id, stock, product_price, minimum_stock FROM inventory_items WHERE product_name = $1',
-      [productName]
-    );
-
-    if (inventoryCheck.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ 
-        error: `Product "${productName}" not found in inventory` 
-      });
+    // Deduct new inventory (only non-deleted items)
+    const item = await dbHelper.queryOne('SELECT * FROM inventory_items WHERE product_name = ? AND deleted_at IS NULL', [productName]);
+    if (!item) {
+      return res.status(404).json({ error: `Product "${productName}" not found` });
+    }
+    if (item.stock < quantity) {
+      return res.status(400).json({ error: `Insufficient stock for "${productName}". Available: ${item.stock}` });
     }
 
-    const inventoryItem = inventoryCheck.rows[0];
-    const currentStock = inventoryItem.stock;
-    const minStock = inventoryItem.minimum_stock || 5;
+    const newStock = item.stock - quantity;
+    const newStatus = newStock === 0 ? 'Out Of Stock' 
+                    : newStock <= (item.minimum_stock || 5) ? 'Low Stock' 
+                    : 'In Stock';
+    const newTotal = newStock * item.product_price;
 
-    if (currentStock < quantity) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ 
-        error: `Insufficient stock for "${productName}". Available: ${currentStock}, Requested: ${quantity}` 
-      });
-    }
-
-    const newStock = currentStock - quantity;
-    const newTotalAmount = newStock * inventoryItem.product_price;
-    const newStatus = newStock === 0 ? 'Out Of Stock' : newStock <= minStock ? 'Low Stock' : 'In Stock';
-
-    await client.query(
-      `UPDATE inventory_items 
-       SET stock = $1, status = $2, total_amount = $3, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $4`,
-      [newStock, newStatus, newTotalAmount, inventoryItem.id]
+    await dbHelper.run(
+      'UPDATE inventory_items SET stock=?, status=?, total_amount=?, synced=0 WHERE id=?',
+      [newStock, newStatus, newTotal, item.id]
     );
 
-    const total = quantity * price;
-    const salesQuery = `
-      UPDATE sales_records
-      SET date = $1, product_name = $2, quantity = $3, price = $4, total = $5, 
-          payment_method = $6, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7
-      RETURNING *
-    `;
-    const salesValues = [date, productName, quantity, price, total, paymentMethod, id];
-    const salesResult = await client.query(salesQuery, salesValues);
-    const updatedSale = salesResult.rows[0];
+      const total = quantity * price;
+      await dbHelper.run(`
+        UPDATE sales_records
+        SET date=?, product_name=?, quantity=?, price=?, total=?, payment_method=?, synced=0
+        WHERE id=?
+      `, [date, productName, quantity, price, total, paymentMethod, saleId]);
 
-    await client.query('COMMIT');
+    const updatedSale = await dbHelper.getById('sales_records', saleId);
+    if (!updatedSale) {
+      return res.status(404).json({ error: 'Failed to retrieve updated sales record' });
+    }
 
-    const salesRecord = {
-      id: updatedSale.id,
-      date: formatDatePH(updatedSale.date), // Use Philippines timezone
-      productName: updatedSale.product_name,
-      quantity: updatedSale.quantity,
-      price: parseFloat(updatedSale.price),
-      total: parseFloat(updatedSale.total),
-      paymentMethod: updatedSale.payment_method,
-      createdAt: updatedSale.created_at
-    };
-
-    res.json(salesRecord);
+    res.json(mapSalesRecord(updatedSale));
   } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Error updating sales record:', err);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
-  } finally {
-    client.release();
+    console.error('Error updating sale:', err);
+    res.status(400).json({ error: err.message });
   }
 });
 
-// DELETE /api/inventory/sales/:id - Delete a sales record (restore inventory)
+// DELETE sales record
 router.delete('/sales/:id', async (req, res) => {
   const { id } = req.params;
 
-  const client = await pool.connect();
-  
   try {
-    await client.query('BEGIN');
+    const saleId = parseInt(id, 10);
+    if (isNaN(saleId)) {
+      return res.status(400).json({ error: 'Invalid sales record ID' });
+    }
 
-    // 1. Get the sales record to restore inventory
-    const salesResult = await client.query(
-      'SELECT product_name, quantity FROM sales_records WHERE id = $1',
-      [id]
-    );
-    
-    if (salesResult.rows.length === 0) {
-      await client.query('ROLLBACK');
+    const sale = await dbHelper.queryOne('SELECT * FROM sales_records WHERE id = ? AND deleted_at IS NULL', [saleId]);
+    if (!sale) {
       return res.status(404).json({ error: 'Sales record not found' });
     }
 
-    const sale = salesResult.rows[0];
+    await dbHelper.run(`
+      UPDATE inventory_items
+      SET stock = stock + ?, 
+          total_amount = (stock + ?) * product_price,
+          status = CASE 
+            WHEN (stock + ?) = 0 THEN 'Out Of Stock'
+            WHEN (stock + ?) <= COALESCE(minimum_stock,5) THEN 'Low Stock'
+            ELSE 'In Stock'
+          END,
+          synced = 0
+      WHERE product_name = ? AND deleted_at IS NULL
+    `, [sale.quantity, sale.quantity, sale.quantity, sale.quantity, sale.product_name]);
 
-    // 2. Restore inventory
-    await client.query(
-      `UPDATE inventory_items 
-       SET stock = stock + $1, 
-           total_amount = (stock + $1) * product_price,
-           status = CASE 
-             WHEN (stock + $1) = 0 THEN 'Out Of Stock'
-             WHEN (stock + $1) <= COALESCE(minimum_stock, 5) THEN 'Low Stock'
-             ELSE 'In Stock'
-           END,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE product_name = $2`,
-      [sale.quantity, sale.product_name]
-    );
-
-    // 3. Delete sales record
-    await client.query('DELETE FROM sales_records WHERE id = $1', [id]);
-
-    await client.query('COMMIT');
+    // Use soft delete - set deleted_at timestamp and synced = 0
+    await dbHelper.delete('sales_records', saleId);
 
     res.json({ 
       message: 'Sales record deleted and inventory restored successfully',
@@ -501,11 +405,8 @@ router.delete('/sales/:id', async (req, res) => {
       productName: sale.product_name
     });
   } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Error deleting sales record:', err);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
-  } finally {
-    client.release();
+    console.error('Error deleting sale:', err);
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -513,79 +414,89 @@ router.delete('/sales/:id', async (req, res) => {
 // INVENTORY ITEM ROUTES
 // ============================================
 
-// GET /api/inventory - Fetch all inventory items
+// Helper to map inventory item
+const mapInventoryItem = (r) => ({
+  id: r.id,
+  productName: r.product_name,
+  category: r.category,
+  stock: r.stock,
+  status: r.status,
+  productPrice: parseFloat(r.product_price),
+  totalAmount: parseFloat(r.total_amount),
+  description: r.description || '',
+  minimumStock: r.minimum_stock || 5,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at
+});
+
+// GET inventory items
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM inventory_items ORDER BY id ASC');
-    const inventoryItems = result.rows.map(row => ({
-      id: row.id,
-      productName: row.product_name,
-      category: row.category,
-      stock: row.stock,
-      status: row.status,
-      productPrice: parseFloat(row.product_price),
-      totalAmount: parseFloat(row.total_amount),
-      description: row.description || '',
-      minimumStock: row.minimum_stock || 5,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
-    }));
-    res.json(inventoryItems);
+    const rows = await dbHelper.query('SELECT * FROM inventory_items WHERE deleted_at IS NULL ORDER BY id ASC');
+    const items = rows.map(mapInventoryItem);
+    res.json(items);
   } catch (err) {
     console.error('Error fetching inventory items:', err);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// POST /api/inventory - Add a new inventory item
+// POST inventory item
 router.post('/', async (req, res) => {
   const { productName, category, stock, productPrice, description, minimumStock } = req.body;
-
   if (!productName || !category || stock === undefined || !productPrice) {
-    return res.status(400).json({ error: 'Missing required fields' });
+    return res.status(400).json({ error: 'Missing fields' });
   }
 
   try {
     const totalAmount = stock * productPrice;
     const minStock = minimumStock || 5;
-    const status = stock === 0 ? 'Out Of Stock' : stock <= minStock ? 'Low Stock' : 'In Stock';
+    const status = stock === 0 ? 'Out Of Stock' 
+                 : stock <= minStock ? 'Low Stock' 
+                 : 'In Stock';
 
-    const query = `
-      INSERT INTO inventory_items (product_name, category, stock, status, product_price, total_amount, description, minimum_stock)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
-    `;
-    const values = [productName, category, stock, status, productPrice, totalAmount, description || '', minStock];
+    const result = await dbHelper.insert('inventory_items', {
+      product_name: productName,
+      category,
+      stock,
+      status,
+      product_price: productPrice,
+      total_amount: totalAmount,
+      description: description || '',
+      minimum_stock: minStock
+    });
 
-    const result = await pool.query(query, values);
-    const newItem = result.rows[0];
+    // For SQLite, insert returns { id: ..., ...data }
+    // For PostgreSQL, insert returns the full row
+    const itemId = result.id || result.lastID || result.insertId;
+    
+    if (!itemId) {
+      throw new Error('Failed to get inventory item ID after insert');
+    }
 
-    const inventoryItem = {
-      id: newItem.id,
-      productName: newItem.product_name,
-      category: newItem.category,
-      stock: newItem.stock,
-      status: newItem.status,
-      productPrice: parseFloat(newItem.product_price),
-      totalAmount: parseFloat(newItem.total_amount),
-      description: newItem.description || '',
-      minimumStock: newItem.minimum_stock || 5,
-      createdAt: newItem.created_at,
-      updatedAt: newItem.updated_at
-    };
+    // Debug: Verify the record was created with synced = 0
+    const verifyRecord = await dbHelper.queryOne('SELECT id, product_name, synced FROM inventory_items WHERE id = ?', [itemId]);
+    if (verifyRecord) {
+      console.log(`[SYNC DEBUG] New inventory item created - ID: ${verifyRecord.id}, product_name: ${verifyRecord.product_name}, synced: ${verifyRecord.synced}`);
+      if (verifyRecord.synced !== 0) {
+        console.warn(`[SYNC WARNING] New inventory item should have synced=0 but has synced=${verifyRecord.synced}`);
+      }
+    }
 
-    res.status(201).json(inventoryItem);
+    const newItem = await dbHelper.getById('inventory_items', itemId);
+    
+    if (!newItem) {
+      throw new Error('Failed to retrieve newly created inventory item');
+    }
+
+    res.status(201).json(mapInventoryItem(newItem));
   } catch (err) {
     console.error('Error adding inventory item:', err);
-    res.status(500).json({ 
-      error: 'Internal server error', 
-      details: err.message,
-      code: err.code
-    });
+    res.status(500).json({ error: 'Failed to add inventory item' });
   }
 });
 
-// PUT /api/inventory/:id - Update an inventory item
+// UPDATE inventory item
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { productName, category, stock, productPrice, description, minimumStock } = req.body;
@@ -595,63 +506,62 @@ router.put('/:id', async (req, res) => {
   }
 
   try {
+    const itemId = parseInt(id, 10);
+    if (isNaN(itemId)) {
+      return res.status(400).json({ error: 'Invalid inventory item ID' });
+    }
+
     const totalAmount = stock * productPrice;
     const minStock = minimumStock || 5;
-    const status = stock === 0 ? 'Out Of Stock' : stock <= minStock ? 'Low Stock' : 'In Stock';
+    const status = stock === 0 ? 'Out Of Stock' 
+                 : stock <= minStock ? 'Low Stock' 
+                 : 'In Stock';
 
-    const query = `
-      UPDATE inventory_items
-      SET product_name = $1, category = $2, stock = $3, status = $4, 
-          product_price = $5, total_amount = $6, description = $7, 
-          minimum_stock = $8, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $9
-      RETURNING *
-    `;
-    const values = [productName, category, stock, status, productPrice, totalAmount, description || '', minStock, id];
+    const updated = await dbHelper.update('inventory_items', itemId, {
+      product_name: productName,
+      category,
+      stock,
+      status,
+      product_price: productPrice,
+      total_amount: totalAmount,
+      description: description || '',
+      minimum_stock: minStock
+    });
 
-    const result = await pool.query(query, values);
-    
-    if (result.rows.length === 0) {
+    if (!updated) {
       return res.status(404).json({ error: 'Inventory item not found' });
     }
 
-    const updatedItem = result.rows[0];
-    const inventoryItem = {
-      id: updatedItem.id,
-      productName: updatedItem.product_name,
-      category: updatedItem.category,
-      stock: updatedItem.stock,
-      status: updatedItem.status,
-      productPrice: parseFloat(updatedItem.product_price),
-      totalAmount: parseFloat(updatedItem.total_amount),
-      description: updatedItem.description || '',
-      minimumStock: updatedItem.minimum_stock || 5,
-      createdAt: updatedItem.created_at,
-      updatedAt: updatedItem.updated_at
-    };
-
-    res.json(inventoryItem);
+    const updatedItem = await dbHelper.getById('inventory_items', itemId);
+    res.json(mapInventoryItem(updatedItem));
   } catch (err) {
     console.error('Error updating inventory item:', err);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// DELETE /api/inventory/:id - Delete an inventory item
+// DELETE inventory item
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query('DELETE FROM inventory_items WHERE id = $1 RETURNING *', [id]);
-    
-    if (result.rows.length === 0) {
+    const itemId = parseInt(id, 10);
+    if (isNaN(itemId)) {
+      return res.status(400).json({ error: 'Invalid inventory item ID' });
+    }
+
+    const item = await dbHelper.getById('inventory_items', itemId);
+    if (!item || item.deleted_at) {
       return res.status(404).json({ error: 'Inventory item not found' });
     }
+
+    // Use soft delete - set deleted_at timestamp and synced = 0
+    await dbHelper.delete('inventory_items', itemId);
 
     res.json({ message: 'Inventory item deleted successfully' });
   } catch (err) {
     console.error('Error deleting inventory item:', err);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

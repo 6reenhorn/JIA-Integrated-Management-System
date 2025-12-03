@@ -3,9 +3,10 @@ import authRoutes from './auth';
 import employeeRoutes from './employees';
 import gcashRoutes from './gcash';
 import paymayaRoutes from './paymaya';
+import juanpayRoutes from './juanpay';
 import inventoryRoutes from './inventoryRoutes';
 import payrollRoutes from './payroll';
-import attendanceRoutes from '../routes/';
+import attendanceRoutes from './attendance';
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ router.use('/auth', authRoutes);
 router.use('/employees', employeeRoutes);
 router.use('/gcash', gcashRoutes);
 router.use('/paymaya', paymayaRoutes);
+router.use('/juanpay', juanpayRoutes);
 router.use('/inventory', inventoryRoutes);
 router.use('/payroll', payrollRoutes);
 router.use('/attendance', attendanceRoutes);

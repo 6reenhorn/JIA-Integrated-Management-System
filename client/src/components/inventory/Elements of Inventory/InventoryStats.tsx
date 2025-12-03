@@ -47,14 +47,20 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
   isLoading = false // Add default value
 }) => {
   // Skeleton Card Component
-  const SkeletonCard = () => (
+  const SkeletonCard = ({ isRed = false }: { isRed?: boolean }) => (
     <LayoutCard>
-      <Skeleton className="h-4 w-3/4 mb-3" />
-      <Skeleton className="h-9 w-1/2 mb-2" />
-      <Skeleton className="h-3 w-2/3" />
+      <Skeleton className="h-4 w-36 mb-3" />
+      <Skeleton className={`h-9 w-28 mb-2 ${isRed ? 'bg-red-200' : ''}`} />
+      {isRed ? (
+        <div className="h-6 flex items-end">
+          <Skeleton className="h-5.5 w-32 rounded-full bg-red-200" />
+        </div>
+      ) : (
+        <Skeleton className="h-3 w-24" />
+      )}
     </LayoutCard>
   );
-
+  
   return (
     <>
       {/* Stats Cards */}
@@ -64,8 +70,8 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
           <>
             <SkeletonCard />
             <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
+            <SkeletonCard isRed={true} />
+            <SkeletonCard isRed={true} />
           </>
         ) : (
           <>
@@ -76,12 +82,12 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
               <p className="text-xs text-gray-500">All inventory items</p>
             </LayoutCard>
 
-            {/* Inventory Value */}
-            <LayoutCard>
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Inventory Value</h3>
-              <p className="text-3xl font-bold text-gray-900 mb-1">₱{(stats.inventoryValue || 0).toFixed(2)}</p>
-              <p className="text-xs text-gray-500">Across all items</p>
-            </LayoutCard>
+          {/* Inventory Value */}
+          <LayoutCard>
+            <h3 className="text-sm font-medium text-gray-600 mb-2">Inventory Value</h3>
+            <p className="text-3xl font-bold text-gray-900 mb-1">₱{(stats.inventoryValue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p className="text-xs text-gray-500">Across all items</p>
+          </LayoutCard>
 
             {/* Low Stock Items */}
             <LayoutCard>
@@ -114,7 +120,7 @@ const InventoryStats: React.FC<InventoryStatsProps> = ({
         activeSection={activeSection} 
         onSectionChange={setActiveSection}
       >
-        <div className="space-y-6">
+        <div className="space-y-5 ">
           <InventoryFilters 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}

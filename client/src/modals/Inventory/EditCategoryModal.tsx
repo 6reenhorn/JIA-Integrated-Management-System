@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Portal from '../../components/common/Portal';
 
 interface Category {
@@ -25,20 +25,88 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
   isUpdating = false
 }) => {
   const [categoryName, setCategoryName] = useState('');
-  const [categoryColor, setCategoryColor] = useState('#3B82F6');
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const colorPickerRef = useRef<HTMLDivElement>(null);
+  const [selectedColor, setSelectedColor] = useState('#10B981');
+  const [isClosing, setIsClosing] = useState(false);
+  const [wasUpdating, setWasUpdating] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  const defaultColors = [
-    '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6',
-    '#06B6D4', '#F97316', '#14B8A6', '#A855F7', '#84CC16', '#F43F5E'
+  // Color palette matching AddCategoryModal exactly
+  const colors = [
+    '#10B981', // green
+    '#EF4444', // red
+    '#F59E0B', // orange/yellow
+    '#EC4899', // pink/magenta
+    '#3B82F6', // blue
+    '#B91C1C', // dark red
+    '#F97316', // orange
+    '#F472B6', // light pink
+    '#22C55E', // bright green
+    '#06D6A0', // teal/cyan
+    '#8B5CF6', // purple
+    '#84CC16', // lime
+    '#0EA5E9', // sky blue
+    '#1E40AF', // dark blue
+    '#312E81', // very dark blue
+    '#0F766E', // dark teal
+    '#6B7280', // gray
+    '#047857', // dark green
   ];
 
-  // Close color picker when clicking outside
+  const handleCancel = useCallback(() => {
+    if (isUpdating) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 300);
+  }, [isUpdating, onClose]);
+
+  // Watch for update completion
+  useEffect(() => {
+    if (wasUpdating && !isUpdating && isOpen) {
+      // Update just completed successfully, start closing animation
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+        setIsClosing(false);
+        setWasUpdating(false);
+      }, 300);
+    }
+  }, [isUpdating, wasUpdating, isOpen, onClose]);
+
+  // Track when update starts
+  useEffect(() => {
+    if (isUpdating) {
+      setWasUpdating(true);
+    }
+  }, [isUpdating]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isUpdating) {
+        handleCancel();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, isUpdating, handleCancel]);
+
+  // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (colorPickerRef.current && !colorPickerRef.current.contains(event.target as Node)) {
-        setShowColorPicker(false);
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        if (!isUpdating) {
+          handleCancel();
+        }
       }
     };
 
@@ -46,33 +114,12 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
-
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !isUpdating) {
-        if (showColorPicker) {
-          setShowColorPicker(false);
-        } else {
-          onClose();
-        }
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose, isUpdating, showColorPicker]);
+  }, [isUpdating, handleCancel]);
 
   useEffect(() => {
     if (initialData && isOpen) {
       setCategoryName(initialData.name);
-      setCategoryColor(initialData.color || '#3B82F6');
+      setSelectedColor(initialData.color || '#10B981');
     }
   }, [initialData, isOpen]);
 
@@ -80,29 +127,30 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
     if (isUpdating || !categoryName.trim()) return;
     
     if (initialData) {
-      onSave(initialData.name, categoryName.trim(), categoryColor);
+      onSave(initialData.name, categoryName.trim(), selectedColor);
     }
   };
 
-  const handleColorSelect = (color: string) => {
-    setCategoryColor(color);
-    setShowColorPicker(false);
-  };
-
-  const toggleColorPicker = () => {
-    if (!isUpdating) {
-      setShowColorPicker(!showColorPicker);
-    }
-  };
-
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
   return (
     <Portal>
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div 
-          className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px]"
-          onClick={(e) => e.stopPropagation()}
+          className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
+            isClosing ? 'opacity-0' : 'opacity-100'
+          }`}
+          style={{
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)'
+          }}
+        />
+
+        <div 
+          ref={modalRef}
+          className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] relative z-10 ${
+            isClosing ? 'animate-modal-out' : 'animate-modal-in'
+          }`}
         >
           {/* Header */}
           <div>
@@ -127,114 +175,51 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                     disabled={isUpdating}
                     placeholder="Enter category name"
                     autoFocus
-                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !isUpdating) {
+                        handleSubmit();
+                      }
+                    }}
                   />
                 </div>
 
-                {/* Category Color Picker */}
-                <div className="mt-2 relative" ref={colorPickerRef}>
+                {/* Color Picker */}
+                <div className="mt-2">
                   <label className="text-[12px] font-bold">Category Color</label>
-                  <div
-                    className={`relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 cursor-pointer h-[29px] ${
-                      isUpdating 
-                        ? 'opacity-50 cursor-not-allowed' 
-                        : 'hover:bg-gray-200'
-                    }`}
-                    onClick={toggleColorPicker}
-                    onKeyDown={(e) => {
-                      if (!isUpdating && (e.key === 'Enter' || e.key === ' ')) {
-                        toggleColorPicker();
-                        e.preventDefault();
-                      }
-                    }}
-                    tabIndex={isUpdating ? -1 : 0}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-4 h-4 rounded border border-gray-300 flex-shrink-0"
-                        style={{ backgroundColor: categoryColor }}
+                  <div className="grid grid-cols-6 gap-3 mt-2">
+                    {colors.map((color, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setSelectedColor(color)}
+                        disabled={isUpdating}
+                        className={`w-10 h-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#02367B] disabled:opacity-50 disabled:cursor-not-allowed ${
+                          selectedColor === color 
+                            ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' 
+                            : 'hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: color }}
+                        aria-label={`Select color ${color}`}
                       />
-                      <span className="text-[12px] font-mono">{categoryColor.toUpperCase()}</span>
-                    </div>
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className={`transition-transform ${showColorPicker ? 'rotate-180' : ''}`}
-                    >
-                      <polygon points="4,6 12,6 8,12" fill="currentColor" />
-                    </svg>
+                    ))}
                   </div>
+                </div>
 
-                  {/* Color Picker Dropdown */}
-                  {showColorPicker && !isUpdating && (
-                    <div
-                      className="mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-                      style={{
-                        display: 'block',
-                        position: 'absolute',
-                        top: '-215%',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: 'white',
-                        border: '1px solid #ccc',
-                        zIndex: 80,
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                        width: '100%',
-                        maxWidth: '100%',
-                        boxSizing: 'border-box',
-                        maxHeight: '300px',
-                        overflowY: 'auto'
-                      }}
-                    >
-                      <div className="p-4">
-                        <div className="mb-3">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
-                            Preset Colors
-                          </p>
-                          <div className="grid grid-cols-6 gap-2">
-                            {defaultColors.map((color) => (
-                              <button
-                                key={color}
-                                type="button"
-                                className={`w-full aspect-square rounded-md border-2 transition-all hover:scale-110 ${
-                                  categoryColor === color
-                                    ? 'border-gray-800 ring-2 ring-offset-2 ring-gray-400 shadow-md'
-                                    : 'border-gray-300 hover:border-gray-400'
-                                }`}
-                                style={{ backgroundColor: color }}
-                                onClick={() => handleColorSelect(color)}
-                                title={color}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        
-                        {/* Custom Color Input */}
-                        <div className="pt-3 border-t border-gray-200">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
-                            Custom Color
-                          </p>
-                          <div className="flex gap-2">
-                            <input
-                              type="color"
-                              value={categoryColor}
-                              onChange={(e) => setCategoryColor(e.target.value)}
-                              className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                            />
-                            <input
-                              type="text"
-                              value={categoryColor}
-                              onChange={(e) => setCategoryColor(e.target.value)}
-                              placeholder="#000000"
-                              className="flex-1 px-2 py-1 border border-gray-300 rounded-md text-[12px] font-mono focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none"
-                            />
-                          </div>
-                        </div>
-                      </div>
+                {/* Preview */}
+                <div className="mt-4 p-3 bg-white rounded-md border border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-bold text-gray-700">Preview:</span>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: selectedColor }}
+                      />
+                      <span className="text-[12px] text-gray-600">
+                        {categoryName || 'Category Name'}
+                      </span>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
 
@@ -265,9 +250,9 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
           <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleCancel}
               disabled={isUpdating}
-              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               Cancel
             </button>
@@ -275,7 +260,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
               type="button"
               onClick={handleSubmit}
               disabled={isUpdating || !categoryName.trim()}
-              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors duration-200"
             >
               {isUpdating ? (
                 <>

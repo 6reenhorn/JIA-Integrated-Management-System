@@ -30,17 +30,81 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
         })}`;
     };
 
-    const formatDate = (dateString: string): string => {
-        const parts = dateString.split('-');
-        if (parts.length === 3) {
-            const year = Number(parts[0]);
-            const month = Number(parts[1]) - 1;
-            const day = Number(parts[2]);
-            const localDate = new Date(year, month, day);
-            return formatDateWithPreference(localDate);
+    const formatDate = (dateString: string | number | null | undefined): string => {
+        if (dateString === null || dateString === undefined || dateString === '') return '-';
+        
+        // Handle timestamp numbers
+        if (typeof dateString === 'number') {
+            const minTimestamp = new Date('1970-01-01').getTime();
+            const maxTimestamp = new Date('2100-01-01').getTime();
+            if (dateString >= minTimestamp && dateString <= maxTimestamp) {
+                const date = new Date(dateString);
+                if (!isNaN(date.getTime())) {
+                    const formatted = formatDateWithPreference(date);
+                    if (formatted && formatted !== '-' && !formatted.includes('NaN')) {
+                        return formatted;
+                    }
+                }
+            }
+            return '-';
         }
-        const date = new Date(dateString);
-        return formatDateWithPreference(date);
+        
+        // Handle string values
+        const strValue = String(dateString).trim();
+        if (!strValue || strValue === 'null' || strValue === 'undefined' || strValue === 'NaN' || strValue === '') {
+            return '-';
+        }
+        
+        // Handle string that might be a timestamp
+        if (!isNaN(Number(strValue)) && strValue.length > 10 && !strValue.includes('-') && !strValue.includes('/')) {
+            const timestamp = parseFloat(strValue);
+            const minTimestamp = new Date('1970-01-01').getTime();
+            const maxTimestamp = new Date('2100-01-01').getTime();
+            if (timestamp >= minTimestamp && timestamp <= maxTimestamp) {
+                const date = new Date(timestamp);
+                if (!isNaN(date.getTime())) {
+                    const formatted = formatDateWithPreference(date);
+                    if (formatted && formatted !== '-' && !formatted.includes('NaN')) {
+                        return formatted;
+                    }
+                }
+            }
+        }
+        
+        // Handle date strings (YYYY-MM-DD format)
+        try {
+            const dateMatch = strValue.match(/^(\d{4})-(\d{2})-(\d{2})(?:T|\s|$)/);
+            if (dateMatch) {
+                const year = parseInt(dateMatch[1], 10);
+                const month = parseInt(dateMatch[2], 10) - 1;
+                const day = parseInt(dateMatch[3], 10);
+
+                if (!isNaN(year) && !isNaN(month) && !isNaN(day) && 
+                    year >= 1970 && year <= 2100 && month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+                    const localDate = new Date(year, month, day);
+                    if (!isNaN(localDate.getTime())) {
+                        const formatted = formatDateWithPreference(localDate);
+                        if (formatted && formatted !== '-' && !formatted.includes('NaN') && formatted.length > 0) {
+                            return formatted;
+                        }
+                    }
+                }
+            }
+            
+            const date = new Date(strValue);
+            if (!isNaN(date.getTime())) {
+                const year = date.getFullYear();
+                if (year >= 1970 && year <= 2100) {
+                    const formatted = formatDateWithPreference(date);
+                    if (formatted && formatted !== '-' && !formatted.includes('NaN') && formatted.length > 0) {
+                        return formatted;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error formatting date:', error, dateString);
+        }
+        return '-';
     };
 
     const getTransactionTypeColor = (type: string): string => {
@@ -58,7 +122,7 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
     if (isLoading) {
         return (
             <div className="border-2 border-[#E5E7EB] rounded-lg">
-                <div className="h-[390px] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="h-[421px] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     <table className="table-fixed w-full">
                         <thead className="border-[#E5E7EB] border-b sticky top-0 z-10 bg-[#EDEDED]">
                             <tr>
@@ -124,7 +188,7 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
     if (records.length === 0) {
         return (
             <div className="border-2 border-[#E5E7EB] rounded-lg">
-                <div className="overflow-x-auto">
+                <div className="h-[86px] overflow-x-auto">
                     <table className="table-fixed w-full">
                         <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeleting ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
                             <tr>
@@ -165,7 +229,7 @@ const GCashRecordsTable: React.FC<GCashRecordsTableProps> = ({
 
     return (
         <div className="border-2 border-[#E5E7EB] rounded-lg">
-            <div className="h-[390px] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="h-[421px] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <table className="table-fixed w-full">
                     <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${isAdding ? 'bg-gradient-to-r from-green-300 via-green-500 to-green-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : isDeleting ? 'bg-gradient-to-r from-red-300 via-red-500 to-red-300 bg-[length:200%_100%] animate-[gradient_2s_ease-in-out_infinite]' : 'bg-[#EDEDED]'}`}>
                         <tr>

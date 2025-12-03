@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Dashboard from '../pages/Dashboard';
 import { Route, Routes } from 'react-router-dom';
 import LoadingScreen from '../components/common/LoadingScreen';
+import NetworkStatus from '../components/common/NetworkStatus';
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,11 +21,8 @@ const App: React.FC = () => {
 
         let progress = 0;
         const interval = setInterval(() => {
-          progress += 5;
-          if (progress >= 100) {
-            progress = 100;
-            clearInterval(interval);
-          }
+          progress += 6;
+          if (progress > 100) progress = 100;
           setLoadingPercentage(progress);
         }, 75);
 
@@ -32,6 +30,7 @@ const App: React.FC = () => {
 
         clearInterval(interval);
         setLoadingPercentage(100);
+
         setIsLoading(false);
       } catch (error) {
         console.error('Error initializing app:', error);
@@ -48,6 +47,7 @@ const App: React.FC = () => {
 
   return (
     <div className="App">
+      <NetworkStatus />
       <Routes>
         <Route path="/*" element={<Dashboard />} />
       </Routes>

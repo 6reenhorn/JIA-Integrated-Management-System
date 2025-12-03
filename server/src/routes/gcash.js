@@ -1,28 +1,40 @@
-"use strict";
+'use strict';
 const express = require('express');
-const pool = require('../db/postgres');
+const { dbHelper } = require('../db/dbHelper');
+const { getPHLocalTimeISO, getPHLocalDate } = require('../utils/timeUtils');
 
 const router = express.Router();
+
+// Helper to format date
+const formatDate = (dateStr) => {
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Helper to map DB row to response format
+const mapGCashRecord = (row) => ({
+  id: row.id.toString(),
+  amount: parseFloat(row.amount),
+  serviceCharge: parseFloat(row.service_charge),
+  transactionType: row.transaction_type,
+  chargeMOP: row.charge_mop,
+  referenceNumber: row.reference_number || '',
+  date: formatDate(row.date)
+});
 
 // GET /api/gcash - Fetch all GCash records
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM gcash_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
-    const records = result.rows.map(row => {
-      const d = row.date;
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return {
-        id: row.id.toString(),
-        amount: parseFloat(row.amount),
-        serviceCharge: parseFloat(row.service_charge),
-        transactionType: row.transaction_type,
-        chargeMOP: row.charge_mop,
-        referenceNumber: row.reference_number || '',
-        date: `${year}-${month}-${day}`
-      };
-    });
+    const rows = await dbHelper.query(`
+      SELECT * FROM gcash_records
+      WHERE deleted_at IS NULL
+      ORDER BY date DESC, id DESC
+    `);
+
+    const records = rows.map(mapGCashRecord);
     res.json(records);
   } catch (err) {
     console.error('Error fetching GCash records:', err);
@@ -32,135 +44,94 @@ router.get('/', async (req, res) => {
 
 // POST /api/gcash - Add a new GCash record
 router.post('/', async (req, res) => {
-  const {
-    amount,
-    serviceCharge,
-    transactionType,
-    chargeMOP,
-    referenceNumber,
-    date
-  } = req.body;
-
   try {
-    const query = `
-      INSERT INTO gcash_records (amount, service_charge, transaction_type, charge_mop, reference_number, date)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `;
-    const values = [
+    const {
       amount,
-      serviceCharge || 0,
+      serviceCharge,
       transactionType,
       chargeMOP,
-      referenceNumber || null,
+      referenceNumber,
       date
-    ];
+    } = req.body;
 
-    const result = await pool.query(query, values);
-    const newRecord = result.rows[0];
+    const result = await dbHelper.insert('gcash_records', {
+      amount,
+      service_charge: serviceCharge,
+      transaction_type: transactionType,
+      charge_mop: chargeMOP,
+      reference_number: referenceNumber || null,
+      date: date || getPHLocalDate()
+    });
 
-    const d = newRecord.date;
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const record = {
-      id: newRecord.id.toString(),
-      amount: parseFloat(newRecord.amount),
-      serviceCharge: parseFloat(newRecord.service_charge),
-      transactionType: newRecord.transaction_type,
-      chargeMOP: newRecord.charge_mop,
-      referenceNumber: newRecord.reference_number || '',
-      date: `${year}-${month}-${day}`
-    };
+    // For SQLite, insert returns { id: ..., ...data }
+    // For PostgreSQL, insert returns the full row
+    const recordId = result.id || result.lastID || result.insertId;
+    if (!recordId) {
+      throw new Error('Failed to get GCash record ID after insert');
+    }
 
-    res.status(201).json(record);
+    const newRecordData = await dbHelper.getById('gcash_records', recordId);
+    if (!newRecordData) {
+      throw new Error('Failed to retrieve newly created GCash record');
+    }
+
+    res.status(201).json(mapGCashRecord(newRecordData));
   } catch (err) {
     console.error('Error adding GCash record:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// DELETE /api/gcash/:id - Soft delete a GCash record
-router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
-
+// PUT /api/gcash/:id - Update a GCash record
+router.put('/:id', async (req, res) => {
   try {
-    const query = `
-      UPDATE gcash_records
-      SET deleted_at = CURRENT_TIMESTAMP
-      WHERE id = $1 AND deleted_at IS NULL
-      RETURNING *
-    `;
+    const { id } = req.params;
+    const {
+      amount,
+      serviceCharge,
+      transactionType,
+      chargeMOP,
+      referenceNumber,
+      date
+    } = req.body;
+
+    await dbHelper.update('gcash_records', id, {
+      amount,
+      service_charge: serviceCharge,
+      transaction_type: transactionType,
+      charge_mop: chargeMOP,
+      reference_number: referenceNumber || null,
+      date: date
+    });
+
+    const updated = await dbHelper.queryOne('SELECT * FROM gcash_records WHERE id = ?', [id]);
     
-    const result = await pool.query(query, [id]);
-    
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'GCash record not found or already deleted' });
-      return;
+    if (!updated) {
+      return res.status(404).json({ error: 'Record not found' });
     }
 
-    res.json({ message: 'GCash record deleted successfully', id: result.rows[0].id });
+    res.json(mapGCashRecord(updated));
   } catch (err) {
-    console.error('Error deleting GCash record:', err);
+    console.error('Error updating GCash record:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// PUT /api/gcash/:id - Update a GCash record
-router.put('/:id', async (req, res) => {
-  const { id } = req.params;
-  const {
-    amount,
-    serviceCharge,
-    transactionType,
-    chargeMOP,
-    referenceNumber,
-    date
-  } = req.body;
-
+// DELETE /api/gcash/:id - Soft delete a GCash record
+router.delete('/:id', async (req, res) => {
   try {
-    const query = `
-      UPDATE gcash_records
-      SET amount = $1, service_charge = $2, transaction_type = $3, charge_mop = $4, reference_number = $5, date = $6, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7 AND deleted_at IS NULL
-      RETURNING *
-    `;
-    const values = [
-      amount,
-      serviceCharge || 0,
-      transactionType,
-      chargeMOP,
-      referenceNumber || null,
-      date,
-      id
-    ];
+    const { id } = req.params;
+    const info = await dbHelper.update('gcash_records', id, {
+      deleted_at: getPHLocalTimeISO()
+    });
 
-    const result = await pool.query(query, values);
-    
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'GCash record not found or already deleted' });
-      return;
+    if (info.changes === 0) {
+      return res.status(404).json({ error: 'Record not found' });
     }
 
-    const updatedRecord = result.rows[0];
-    const d = updatedRecord.date;
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    
-    const record = {
-      id: updatedRecord.id.toString(),
-      amount: parseFloat(updatedRecord.amount),
-      serviceCharge: parseFloat(updatedRecord.service_charge),
-      transactionType: updatedRecord.transaction_type,
-      chargeMOP: updatedRecord.charge_mop,
-      referenceNumber: updatedRecord.reference_number || '',
-      date: `${year}-${month}-${day}`
-    };
-
-    res.json(record);
+    res.json({ message: 'Record deleted successfully' });
   } catch (err) {
-    console.error('Error updating GCash record:', err);
+    console.error('Error deleting GCash record:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

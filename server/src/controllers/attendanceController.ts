@@ -1,4 +1,6 @@
-import pool from '../db/postgres';
+import { dbHelper } from '../db/dbHelper';
+import { getPHLocalTimeISO, getPHLocalDate } from '../utils/timeUtils';
+const bcrypt = require('bcryptjs');
 
 export interface AttendanceRecord {
   id: number;
@@ -9,29 +11,78 @@ export interface AttendanceRecord {
   status: string;
 }
 
+// Helper function to format time in HH:MM AM/PM format
+const formatTime = (timeValue: string | number | null): string | null => {
+  if (!timeValue && timeValue !== 0) return null;
+  try {
+    // Handle both string and number (Unix timestamp) inputs
+    let date: Date;
+    if (typeof timeValue === 'number') {
+      // If it's a number, treat it as milliseconds since epoch
+      date = new Date(timeValue);
+    } else if (typeof timeValue === 'string') {
+      // If it's a string, try to parse it
+      date = new Date(timeValue);
+    } else {
+      return null;
+    }
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    const displayMinutes = String(minutes).padStart(2, '0');
+    return `${displayHours}:${displayMinutes} ${ampm}`;
+  } catch {
+    return null;
+  }
+};
+
 export const checkIn = async (employeeId: number, password: string): Promise<{ success: boolean; message: string }> => {
   // First, verify the password
-  const employeeQuery = 'SELECT password FROM employees WHERE id = $1';
-  const employeeResult = await pool.query(employeeQuery, [employeeId]);
-  if (employeeResult.rows.length === 0) {
+  const employee = await dbHelper.getById('employees', employeeId);
+  if (!employee || employee.deleted_at) {
     return { success: false, message: 'Employee not found' };
   }
-  const storedPassword = employeeResult.rows[0].password;
-  if (storedPassword !== password) {
-    return { success: false, message: 'Invalid password' };
+  const storedPassword = employee.password;
+  
+  // Check if password is hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
+  const isHashed = storedPassword && (storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$') || storedPassword.startsWith('$2y$'));
+  
+  if (isHashed) {
+    // Compare hashed password
+    const isMatch = await bcrypt.compare(password, storedPassword);
+    if (!isMatch) {
+      return { success: false, message: 'Invalid password' };
+    }
+  } else {
+    // Plain text comparison (for backwards compatibility)
+    if (storedPassword !== password) {
+      return { success: false, message: 'Invalid password' };
+    }
   }
 
-  // Check if already checked in today
-  const today = new Date().toISOString().split('T')[0];
-  const checkQuery = 'SELECT id FROM attendance WHERE employee_id = $1 AND date = $2';
-  const checkResult = await pool.query(checkQuery, [employeeId, today]);
-  if (checkResult.rows.length > 0) {
+  // Check if already checked in today (using PH local date)
+  const today = getPHLocalDate();
+  const checkResult = await dbHelper.query('SELECT id FROM attendance WHERE employee_id = ? AND date = ?', [employeeId, today]);
+  if (checkResult.length > 0) {
     return { success: false, message: 'Already checked in today' };
   }
 
-  // Insert check-in record
-  const insertQuery = 'INSERT INTO attendance (employee_id, date, time_in, status) VALUES ($1, $2, CURRENT_TIMESTAMP, $3)';
-  await pool.query(insertQuery, [employeeId, today, 'Present']);
+  // Insert check-in record (using PH local time)
+  const now = getPHLocalTimeISO();
+  await dbHelper.run('INSERT INTO attendance (employee_id, date, time_in, status) VALUES (?, ?, ?, ?)', 
+    [employeeId, today, now, 'Present']);
+
+  // Update last_login in employees table (using PH local time)
+  await dbHelper.update('employees', employeeId, {
+    last_login: now
+  });
 
   return { success: true, message: 'Check-in successful' };
 };
@@ -39,21 +90,30 @@ export const checkIn = async (employeeId: number, password: string): Promise<{ s
 export const getAttendanceRecords = async (): Promise<any[]> => {
   const query = `
     SELECT
-      a.id as "attendanceId",
+      a.id as attendanceId,
       e.name,
-      e.emp_id as "empId",
+      e.emp_id as empId,
       e.role,
       a.date,
-      TO_CHAR(a.time_in, 'HH12:MI AM') as "timeIn",
-      CASE
-        WHEN a.time_out IS NOT NULL THEN TO_CHAR(a.time_out, 'HH12:MI AM')
-        ELSE NULL
-      END as "timeOut",
+      a.time_in as timeIn,
+      a.time_out as timeOut,
       a.status
     FROM attendance a
     JOIN employees e ON a.employee_id = e.id
+    WHERE a.deleted_at IS NULL AND e.deleted_at IS NULL 
+      AND LOWER(e.role) != 'admin'
     ORDER BY a.date DESC, a.time_in DESC
   `;
-  const result = await pool.query(query);
-  return result.rows;
+  const rows = await dbHelper.query(query);
+  
+  return rows.map((row: any) => ({
+    attendanceId: row.attendanceId,
+    name: row.name,
+    empId: row.empId,
+    role: row.role,
+    date: row.date,
+    timeIn: formatTime(row.timeIn),
+    timeOut: formatTime(row.timeOut),
+    status: row.status
+  }));
 };

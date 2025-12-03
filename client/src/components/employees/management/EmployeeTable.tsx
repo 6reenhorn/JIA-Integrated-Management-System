@@ -161,7 +161,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         </thead>
         <tbody className="divide-y divide-gray-200">
           {employees.map((employee, index) => (
-            <tr key={employee.id} className="hover:bg-gray-50">
+            <tr key={employee.id || `employee-${index}`} className="hover:bg-gray-50">
               <td className="py-4 px-6 w-[220px]">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
@@ -189,15 +189,22 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                 </span>
               </td>
               <td className="py-4 px-6 w-[150px] text-sm text-gray-600">
-                {employee.lastLogin !== 'Never' ? (() => {
-                  const date = new Date(employee.lastLogin);
-                  const formattedDate = formatDate(date);
-                  const hours = date.getHours();
-                  const minutes = String(date.getMinutes()).padStart(2, '0');
-                  const ampm = hours >= 12 ? 'PM' : 'AM';
-                  const displayHours = hours % 12 || 12;
-                  return `${formattedDate} ${displayHours}:${minutes}${ampm}`;
-                })() : 'Never'}
+                {employee.lastLogin && employee.lastLogin !== 'Never' && employee.lastLogin !== 'N/A' ? (() => {
+                  try {
+                    const date = new Date(employee.lastLogin);
+                    if (isNaN(date.getTime())) {
+                      return 'N/A';
+                    }
+                    const formattedDate = formatDate(date);
+                    const hours = date.getHours();
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const displayHours = hours % 12 || 12;
+                    return `${formattedDate} ${displayHours}:${minutes}${ampm}`;
+                  } catch {
+                    return 'N/A';
+                  }
+                })() : 'N/A'}
               </td>
               <td className="py-4 px-6 w-[120px]">
                 <div className="flex items-center gap-2">

@@ -7,7 +7,7 @@ import EWallet from './EWallet';
 import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
-import CheckIn from '../components/support/CheckIn';
+import CheckIn from '../components/common/CheckIn';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 // Define the section information type
@@ -18,6 +18,7 @@ interface SectionInfo {
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
+  const [dashboardKey, setDashboardKey] = useState<number>(0);
   const [showCheckOutConfirm, setShowCheckOutConfirm] = useState<boolean>(false);
 
   const [currentSection, setCurrentSection] = useState<SectionInfo>({ 
@@ -31,6 +32,7 @@ const Dashboard: React.FC = () => {
   });
 
   const [showCheckInModal, setShowCheckInModal] = useState<boolean>(false);
+  const [isClosingModal, setIsClosingModal] = useState<boolean>(false);
 
   // Get auth context
   const { isCheckedIn, checkOut } = useAuth();
@@ -191,13 +193,14 @@ const Dashboard: React.FC = () => {
     // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
-        return <Overview />;
+        // Add key to force remount and refetch when dashboard is opened
+        return <Overview key={`dashboard-${dashboardKey}`} />;
       case 'settings':
         return <Settings />;
       case 'about':
         return <About activeSection="main" />;
       default:
-        return <Overview />;
+        return <Overview key={`dashboard-${dashboardKey}`} />;
     }
   };
 
@@ -360,8 +363,12 @@ const Dashboard: React.FC = () => {
   };
 
   const handleCloseModal = () => {
-    setShowCheckInModal(false);
-  };
+    setIsClosingModal(true);
+    setTimeout(() => {
+      setShowCheckInModal(false);
+      setIsClosingModal(false);
+    }, 300);
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -445,7 +452,9 @@ const Dashboard: React.FC = () => {
       </div>
       {showCheckInModal && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50"
+          className={`fixed inset-0 flex items-center justify-center z-50 ${
+            isClosingModal ? 'modal-backdrop-out' : 'modal-backdrop'
+          }`}
           onClick={handleCloseModal}
           style={{
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -453,7 +462,10 @@ const Dashboard: React.FC = () => {
             WebkitBackdropFilter: 'blur(4px)'
           }}
         >
-          <div onClick={(e) => e.stopPropagation()}>
+          <div 
+            className={isClosingModal ? 'modal-content-out' : ''}
+            onClick={(e) => e.stopPropagation()}
+          >
             <CheckIn onClose={handleCloseModal} />
           </div>
         </div>

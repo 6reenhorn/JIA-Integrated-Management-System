@@ -110,54 +110,70 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
     <div className="space-y-6 mt-5">
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <LayoutCard className="bg-blue-500 min-h-[120px]">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-gray-500 font-medium">Cash-In {filterDate ? '(Filtered)' : '(Today)'}</h3>
-          {filterDate && (
-            <div className="text-right text-xs text-gray-600">
-              {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
-            </div>
-          )}
-        </div>
-        <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashIn)}</div>
-        <div className="text-sm text-gray-500">Total Cash-In Amount</div>
-        </LayoutCard>
-        <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-gray-500 font-medium">Cash-In {filterDate ? '(Filtered)' : '(Today)'}</h3>
-            {filterDate && (
-              <div className="text-right text-xs text-gray-600">
-                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+        {isLoading ? (
+          // Skeleton Loading
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <LayoutCard key={i} className="min-h-[120px] animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-32 mb-5"></div>
+                <div className={`h-9 rounded w-40 mb-2 ${i === 2 || i === 4 ? 'bg-red-200' : 'bg-gray-200'}`}></div>
+                <div className="h-3 bg-gray-200 rounded w-16"></div>
+              </LayoutCard>
+            ))}
+          </>
+        ) : (
+          // Actual Cards
+          <>
+            <LayoutCard className="bg-blue-500 min-h-[120px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-gray-500 font-medium">Cash-In {filterDate ? '(Filtered)' : '(Today)'}</h3>
+                {filterDate && (
+                  <div className="text-right text-xs text-gray-600">
+                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
-          <div className="text-sm text-gray-500">Service Fees (Cash-In)</div>
-        </LayoutCard>
-        <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-gray-500 font-medium">Cash-Out {filterDate ? '(Filtered)' : '(Today)'}</h3>
-            {filterDate && (
-              <div className="text-right text-xs text-gray-600">
-                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashIn)}</div>
+              <div className="text-sm text-gray-500">Total Cash-In Amount</div>
+            </LayoutCard>
+            <LayoutCard className="bg-blue-500 min-h-[120px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-gray-500 font-medium">Cash-In {filterDate ? '(Filtered)' : '(Today)'}</h3>
+                {filterDate && (
+                  <div className="text-right text-xs text-gray-600">
+                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOut)}</div>
-          <div className="text-sm text-gray-500">Total Cash-Out Amount</div>
-        </LayoutCard>
-        <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-gray-500 font-medium">Cash-Out {filterDate ? '(Filtered)' : '(Today)'}</h3>
-            {filterDate && (
-              <div className="text-right text-xs text-gray-600">
-                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashInCharges)}</div>
+              <div className="text-sm text-gray-500">Service Fees (Cash-In)</div>
+            </LayoutCard>
+            <LayoutCard className="bg-blue-500 min-h-[120px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-gray-500 font-medium">Cash-Out {filterDate ? '(Filtered)' : '(Today)'}</h3>
+                {filterDate && (
+                  <div className="text-right text-xs text-gray-600">
+                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
-          <div className="text-sm text-gray-500">Service Fees (Cash-Out)</div>
-        </LayoutCard>
+              <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(todayStats.cashOut)}</div>
+              <div className="text-sm text-gray-500">Total Cash-Out Amount</div>
+            </LayoutCard>
+            <LayoutCard className="bg-blue-500 min-h-[120px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-gray-500 font-medium">Cash-Out {filterDate ? '(Filtered)' : '(Today)'}</h3>
+                {filterDate && (
+                  <div className="text-right text-xs text-gray-600">
+                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                  </div>
+                )}
+              </div>
+              <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(todayStats.cashOutCharges)}</div>
+              <div className="text-sm text-gray-500">Service Fees (Cash-Out)</div>
+            </LayoutCard>
+          </>
+        )}
       </div>
 
       {/* GCash Records Section */}
@@ -165,10 +181,10 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           {/* Left side: Title + Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">GCash Records</h3>
-              {/* <span className="text-sm text-gray-500">({filteredRecords.length} entries)</span> */}
-            </div>
+              <span className="text-sm text-gray-500">({filteredRecords.length} entries)</span>
+            </div> */}
 
             {/* Search */}
             <div className="flex items-center gap-4">
@@ -179,7 +195,7 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
                   placeholder="Search Records"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[280px]"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
                 />
               </div>
               <RefreshBtn onClick={handleRefresh} isSpinning={isRefreshing} />
@@ -235,7 +251,7 @@ const GCash: React.FC<GCashProps> = ({ records, onOpenModal, isLoading, onDelete
       />
 
       {/* Pagination */}
-      <div className="flex items-center justify-between pt-2 pb-1">
+      <div className="flex items-center justify-between pt-1 pb-0">
         <div className="text-sm text-gray-500">
           Page {currentPage} of {totalPages}
         </div>

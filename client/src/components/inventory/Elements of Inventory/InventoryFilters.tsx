@@ -83,7 +83,6 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
         return {
           addButtonText: 'Add Product',
           searchPlaceholder: 'Search Items',
-          title: `Inventory`,
           showCategoryFilter: true,
         };
       case 'sales':
@@ -139,77 +138,86 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-between mt-6 w-full">
+      <div className="flex items-center justify-between mt-5 w-full">
+        {/* Left side: Search and Refresh */}
         <div className="flex items-center gap-4">
-          {activeSection === 'inventory' ? (
-            <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
-              {config.title}
-            </h2>
-          ) : showTabsAndTitle ? (
-            <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
-              {config.title}
-            </h2>
-          ) : null}
-
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder={config.searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[310px]"
-              />
-            </div>
-            {onRefresh && <RefreshBtn onClick={onRefresh} isSpinning={isRefreshing} />}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder={config.searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
+            />
           </div>
+          {onRefresh && <RefreshBtn onClick={onRefresh} isSpinning={isRefreshing} />}
         </div>
 
+        {/* Right side: Category Filter and Add Button */}
         <div className="flex items-center gap-3 ml-auto">
           {config.showCategoryFilter && (
-            <div className="relative" ref={dropdownRef}>
-              <button
+            <div className="relative text-[15px]" ref={dropdownRef}>
+              <div
                 onClick={toggleDropdown}
-                className="flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:border-transparent bg-gray-100 cursor-pointer min-w-[140px]"
+                className="relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-full min-w-[140px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <span className="truncate">{getDisplayText()}</span>
-                <svg 
-                  width="16"
+                <span className="truncate ml-5">{getDisplayText()}</span>
+                <svg
+                  width="30"
                   height="16"
                   viewBox="0 0 16 16"
                   fill="none"
-                  className={`text-gray-500 transition-transform duration-200 ease-in-out flex-shrink-0 ml-2 ${
+                  className={`transition-transform flex-shrink-0 ml-2 ${
                     isDropdownOpen ? 'rotate-180' : ''
                   }`}
                 >
                   <polygon points="4,6 12,6 8,12" fill="currentColor" />
                 </svg>
-              </button>
+              </div>
               
-              {isDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-100 border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
-                  <button
-                    onClick={() => handleCategorySelect('all')}
-                    className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors ${
-                      selectedCategory === 'all' ? 'bg-blue-50 text-blue-600' : ''
-                    }`}
-                  >
-                    All Categories
-                  </button>
-                  {categories.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => handleCategorySelect(category)}
-                      className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors ${
-                        selectedCategory === category ? 'bg-blue-50 text-blue-600' : ''
-                    }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
+              <div
+                style={{
+                  display: isDropdownOpen ? 'block' : 'none',
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'white',
+                  border: '1px solid #ccc',
+                  zIndex: 10,
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                  boxSizing: 'border-box',
+                  marginTop: '4px',
+                  borderRadius: '6px',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none',
+                }}
+                className="[&::-webkit-scrollbar]:hidden"
+              >
+                <div
+                  onClick={() => handleCategorySelect('all')}
+                  className={`px-4 py-3 hover:bg-gray-100 cursor-pointer text-[15px] ${
+                    selectedCategory === 'all' ? 'bg-gray-100 text-blue-600' : ''
+                  }`}
+                >
+                  All Categories:
                 </div>
-              )}
+                {categories.map((category) => (
+                  <div
+                    key={category}
+                    onClick={() => handleCategorySelect(category)}
+                    className={`px-4 py-3 hover:bg-gray-100 cursor-pointer text-[15px] overflow-hidden text-ellipsis ${
+                      selectedCategory === category ? 'bg-gray-100 text-blue-600' : ''
+                    }`}
+                    title={category}
+                  >
+                    {category}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

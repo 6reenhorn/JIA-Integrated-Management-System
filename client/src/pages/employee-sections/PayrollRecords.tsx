@@ -49,6 +49,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isFilterClosing, setIsFilterClosing] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -167,7 +168,15 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   };
 
   const toggleFilters = () => {
-    setIsFiltersOpen(!isFiltersOpen);
+    if (isFiltersOpen) {
+      setIsFilterClosing(true);
+      setTimeout(() => {
+        setIsFiltersOpen(false);
+        setIsFilterClosing(false);
+      }, 100);
+    } else {
+      setIsFiltersOpen(true);
+    }
   };
 
   useEffect(() => {
@@ -176,15 +185,23 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
         filterRef.current &&
         !filterRef.current.contains(event.target as Node) &&
         buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
+        !buttonRef.current.contains(event.target as Node) &&
+        !isFilterClosing
       ) {
-        setIsFiltersOpen(false);
+        setIsFilterClosing(true);
+        setTimeout(() => {
+          setIsFiltersOpen(false);
+          setIsFilterClosing(false);
+        }, 100);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (isFiltersOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isFiltersOpen, isFilterClosing]);
 
   const handleAddPayroll = async (newPayroll: Omit<PayrollRecord, 'id'>) => {
     setTableHeadColor('green');
@@ -273,24 +290,28 @@ const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecor
         throw new Error('Failed to delete payroll record.');
       }
 
-      // Update parent state if callback provided
+      // Update parent state if callback provided (optimistic update - no refetch needed)
       if (onUpdatePayrollRecords) {
         onUpdatePayrollRecords((prev: PayrollRecord[]) => prev.filter(record => record.id !== id));
       } else {
-        // Update local state
+        // Update local state (optimistic update - no refetch needed)
         setLocalPayrollRecords(prev => prev.filter(record => record.id !== id));
       }
 
-      // Always refetch if a refetch callback is provided (keeps parent/DB in sync)
+      // Removed refetch - we already updated the state optimistically above
+      // This makes the UI more responsive and reduces unnecessary network requests
+    } catch (error) {
+      console.error('Error deleting payroll record:', error);
+      // If deletion failed, we could refetch here to restore the correct state
+      // But for now, just show the error
+      alert(error instanceof Error ? error.message : 'Failed to delete payroll record. Please try again.');
+      
+      // Optionally refetch on error to ensure state is correct
       if (onRefetchPayrollRecords) {
         await onRefetchPayrollRecords();
       } else if (!propPayrollRecords) {
-        // If operating locally without props, refetch locally
         await fetchPayrollRecords();
       }
-    } catch (error) {
-      console.error('Error deleting payroll record:', error);
-      alert(error instanceof Error ? error.message : 'Failed to delete payroll record. Please try again.');
     } finally {
       setTableHeadColor('normal');
     }
@@ -313,12 +334,14 @@ const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecor
     } catch (err) {
       console.error('Error refreshing payroll records:', err);
     } finally {
-      setIsSpinning(false);
-      if (onSetPayrollLoading) {
-        onSetPayrollLoading(false);
-      } else {
-        setIsLoading(false);
-      }
+      setTimeout(() => {
+        setIsSpinning(false);
+        if (onSetPayrollLoading) {
+          onSetPayrollLoading(false);
+        } else {
+          setIsLoading(false);
+        }
+      }, 500);
     }
   };
 
@@ -369,6 +392,7 @@ const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecor
                     onCustomEndChange={setCustomEnd}
                     onApply={setDateRange}
                     onReset={handleResetFilters}
+                    isClosing={isFilterClosing}
                   />
                 </div>
               )}

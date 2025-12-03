@@ -108,6 +108,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
   // Fetch payroll records function
   const fetchPayrollRecords = async () => {
+    setPayrollLoading(true);
     try {
       const response = await axios.get('http://localhost:3001/api/payroll');
       const data = Array.isArray(response.data) ? response.data : [];
@@ -118,7 +119,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       console.error('Error fetching payroll records:', err);
       setPayrollRecords([]);
     } finally {
-      setPayrollLoading(false);
+      setTimeout(() => {
+        setPayrollLoading(false);
+      }, 500);
     }
   };
 
@@ -210,12 +213,17 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   }, [payrollRecords]);
 
   // Calculate attendance stats (only when both data sets are loaded)
+  // Exclude admin employees from attendance calculations
   const attendanceStats = useMemo(() => {
     if (employees.length === 0 || attendanceRecords.length === 0) {
       return { present: 0, absent: 0, onLeave: 0 };
     }
-    return calculateAttendanceStats(attendanceRecords, employees.length);
-  }, [attendanceRecords, employees.length]);
+    // Filter out admin employees for attendance stats
+    const nonAdminEmployees = employees.filter(emp => 
+      emp.role && emp.role.toLowerCase() !== 'admin'
+    );
+    return calculateAttendanceStats(attendanceRecords, nonAdminEmployees.length, employees);
+  }, [attendanceRecords, employees]);
 
   // Filter employees based on search and filters
   const filteredEmployees = useMemo(() =>
@@ -252,7 +260,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
           emp.id === updatedEmployee.id ? response.data : emp
         )
       );
-      setIsEditModalOpen(false);
+
     } catch (err) {
       console.error('Error updating employee:', err);
       // Handle error (could show a toast or alert)
@@ -278,7 +286,15 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setIsModalOpen(false); // Close modal immediately
     try {
       const response = await axios.post('http://localhost:3001/api/employees', newEmployee);
-      setEmployees(prevEmployees => sortEmployeesByNewest([response.data, ...prevEmployees]));
+      // Add new employee at the start of the list (newest first)
+      // Use functional update to ensure we get the latest state
+      setEmployees(prevEmployees => {
+        // Create new array with new employee first, then sort
+        const updated = [response.data, ...prevEmployees];
+        return sortEmployeesByNewest(updated);
+      });
+      // Reset to first page to show the new employee
+      setCurrentPage(1);
     } catch (err) {
       console.error('Error adding employee:', err);
       // Handle error (could show a toast or alert)
@@ -341,10 +357,12 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     } catch (err) {
       console.error('Error refreshing data:', err);
     } finally {
-      setIsSpinning(false);
-      setIsLoading(false);
-      setAttendanceLoading(false);
-      setPayrollLoading(false);
+      setTimeout(() => {
+        setIsSpinning(false);
+        setIsLoading(false);
+        setAttendanceLoading(false);
+        setPayrollLoading(false);
+      }, 500);
     }
   };
 
@@ -439,7 +457,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
         )}
       </MainLayoutCard>
 
-      {/* Employee Modal */}
+      {/* Add Employee Modal */}
       {isModalOpen && (
         <Portal>
           <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
@@ -479,6 +497,8 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
           </div>
         </Portal>
       )}
+      
+      {/* Edit Employee Modal */}
       {isEditModalOpen && selectedEmployee && (
         <Portal>
           <div className='fixed inset-0 z-[1000] flex items-center justify-center'>

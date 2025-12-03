@@ -1,28 +1,38 @@
-"use strict";
+'use strict';
 const express = require('express');
-const pool = require('../db/postgres');
-
 const router = express.Router();
+const { dbHelper } = require('../db/dbHelper');
+const { getPHLocalTimeISO, getPHLocalDate } = require('../utils/timeUtils');
 
-// GET /api/paymaya - Fetch all PayMaya records
+// Helper to format date in PH timezone
+const formatDatePH = (date) => {
+  const d = new Date(date);
+  const phDate = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+  const year = phDate.getFullYear();
+  const month = String(phDate.getMonth() + 1).padStart(2, '0');
+  const day = String(phDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// ============================================
+// GET all PayMaya records
+// ============================================
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM paymaya_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
-    const records = result.rows.map(row => {
-      const d = row.date;
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return {
-        id: row.id.toString(),
-        amount: parseFloat(row.amount),
-        serviceCharge: parseFloat(row.service_charge),
-        transactionType: row.transaction_type,
-        chargeMOP: row.charge_mop,
-        referenceNumber: row.reference_number || '',
-        date: `${year}-${month}-${day}`
-      };
-    });
+    const rows = await dbHelper.query(
+      'SELECT * FROM paymaya_records WHERE deleted_at IS NULL ORDER BY date DESC, id DESC'
+    );
+
+    const records = rows.map(row => ({
+      id: row.id.toString(),
+      amount: parseFloat(row.amount),
+      serviceCharge: parseFloat(row.service_charge),
+      transactionType: row.transaction_type,
+      chargeMOP: row.charge_mop,
+      referenceNumber: row.reference_number || '',
+      date: formatDatePH(row.date)
+    }));
+
     res.json(records);
   } catch (err) {
     console.error('Error fetching PayMaya records:', err);
@@ -30,135 +40,107 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/paymaya - Add a new PayMaya record
+// ============================================
+// POST add a new PayMaya record
+// ============================================
 router.post('/', async (req, res) => {
-  const {
-    amount,
-    serviceCharge,
-    transactionType,
-    chargeMOP,
-    referenceNumber,
-    date
-  } = req.body;
-
   try {
-    const query = `
-      INSERT INTO paymaya_records (amount, service_charge, transaction_type, charge_mop, reference_number, date)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `;
-    const values = [
+    const { amount, serviceCharge, transactionType, chargeMOP, referenceNumber, date } = req.body;
+
+    const result = await dbHelper.insert('paymaya_records', {
       amount,
-      serviceCharge || 0,
-      transactionType,
-      chargeMOP,
-      referenceNumber || null,
-      date
-    ];
+      service_charge: serviceCharge,
+      transaction_type: transactionType,
+      charge_mop: chargeMOP,
+      reference_number: referenceNumber || null,
+      date: date || getPHLocalDate()
+    });
 
-    const result = await pool.query(query, values);
-    const newRecord = result.rows[0];
+    // For SQLite, insert returns { id: ..., ...data }
+    // For PostgreSQL, insert returns the full row
+    const recordId = result.id || result.lastID || result.insertId;
+    if (!recordId) {
+      throw new Error('Failed to get PayMaya record ID after insert');
+    }
 
-    const d = newRecord.date;
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const record = {
-      id: newRecord.id.toString(),
-      amount: parseFloat(newRecord.amount),
-      serviceCharge: parseFloat(newRecord.service_charge),
-      transactionType: newRecord.transaction_type,
-      chargeMOP: newRecord.charge_mop,
-      referenceNumber: newRecord.reference_number || '',
-      date: `${year}-${month}-${day}`
+    const newRecordData = await dbHelper.getById('paymaya_records', recordId);
+    if (!newRecordData) {
+      throw new Error('Failed to retrieve newly created PayMaya record');
+    }
+
+    const newRecord = {
+      id: newRecordData.id.toString(),
+      amount: parseFloat(newRecordData.amount),
+      serviceCharge: parseFloat(newRecordData.service_charge),
+      transactionType: newRecordData.transaction_type,
+      chargeMOP: newRecordData.charge_mop,
+      referenceNumber: newRecordData.reference_number || '',
+      date: formatDatePH(newRecordData.date)
     };
 
-    res.status(201).json(record);
+    res.status(201).json(newRecord);
   } catch (err) {
     console.error('Error adding PayMaya record:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// PUT /api/paymaya/:id - Update a PayMaya record
+// ============================================
+// PUT update a PayMaya record
+// ============================================
 router.put('/:id', async (req, res) => {
-  const { id } = req.params;
-  const {
-    amount,
-    serviceCharge,
-    transactionType,
-    chargeMOP,
-    referenceNumber,
-    date
-  } = req.body;
-
   try {
-    const query = `
-      UPDATE paymaya_records
-      SET amount = $1, service_charge = $2, transaction_type = $3, charge_mop = $4, reference_number = $5, date = $6, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7 AND deleted_at IS NULL
-      RETURNING *
-    `;
-    const values = [
-      amount,
-      serviceCharge || 0,
-      transactionType,
-      chargeMOP,
-      referenceNumber || null,
-      date,
-      id
-    ];
+    const { id } = req.params;
+    const { amount, serviceCharge, transactionType, chargeMOP, referenceNumber, date } = req.body;
 
-    const result = await pool.query(query, values);
+    await dbHelper.update('paymaya_records', id, {
+      amount,
+      service_charge: serviceCharge,
+      transaction_type: transactionType,
+      charge_mop: chargeMOP,
+      reference_number: referenceNumber || null,
+      date,
+      updated_at: getPHLocalTimeISO()
+    });
+
+    const updated = await dbHelper.queryOne('SELECT * FROM paymaya_records WHERE id = ?', [id]);
     
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'PayMaya record not found or already deleted' });
-      return;
+    if (!updated) {
+      return res.status(404).json({ error: 'Record not found' });
     }
 
-    const updatedRecord = result.rows[0];
-    const d = updatedRecord.date;
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    
-    const record = {
-      id: updatedRecord.id.toString(),
-      amount: parseFloat(updatedRecord.amount),
-      serviceCharge: parseFloat(updatedRecord.service_charge),
-      transactionType: updatedRecord.transaction_type,
-      chargeMOP: updatedRecord.charge_mop,
-      referenceNumber: updatedRecord.reference_number || '',
-      date: `${year}-${month}-${day}`
+    const updatedRecord = {
+      id: updated.id.toString(),
+      amount: parseFloat(updated.amount),
+      serviceCharge: parseFloat(updated.service_charge),
+      transactionType: updated.transaction_type,
+      chargeMOP: updated.charge_mop,
+      referenceNumber: updated.reference_number || '',
+      date: formatDatePH(updated.date)
     };
 
-    res.json(record);
+    res.json(updatedRecord);
   } catch (err) {
     console.error('Error updating PayMaya record:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Soft delete a Paymaya record by ID
+// ============================================
+// DELETE a PayMaya record (soft delete)
+// ============================================
 router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const query = `
-      UPDATE paymaya_records
-      SET deleted_at = CURRENT_TIMESTAMP
-      WHERE id = $1 AND deleted_at IS NULL
-      RETURNING *
-    `;
-    
-    const result = await pool.query(query, [id]);
-    
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'PayMaya record not found or already deleted' });
-      return;
+    const { id } = req.params;
+    const info = await dbHelper.update('paymaya_records', id, {
+      deleted_at: getPHLocalTimeISO()
+    });
+
+    if (info.changes === 0) {
+      return res.status(404).json({ error: 'Record not found' });
     }
 
-    res.json({ message: 'PayMaya record deleted successfully', id: result.rows[0].id });
+    res.json({ message: 'Record deleted successfully' });
   } catch (err) {
     console.error('Error deleting PayMaya record:', err);
     res.status(500).json({ error: 'Internal server error' });

@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import type { SalesRecord } from '../../components/inventory/Elements of Sales/SalesTable';
+import Portal from '../../components/common/Portal';
 
 interface DeleteSalesRecordModalProps {
     isOpen: boolean;
@@ -17,12 +18,43 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
     record,
     isDeleting = false
 }) => {
+    const [isClosing, setIsClosing] = useState(false);
+    const [wasDeleting, setWasDeleting] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
+
+    const handleCancel = useCallback(() => {
+        if (isDeleting) return;
+        setIsClosing(true);
+        setTimeout(() => {
+            onClose();
+            setIsClosing(false);
+        }, 300);
+    }, [isDeleting, onClose]);
+
+    // Watch for deletion completion
+    useEffect(() => {
+        if (wasDeleting && !isDeleting && isOpen) {
+            // Deletion just completed successfully, start closing animation
+            setIsClosing(true);
+            setTimeout(() => {
+                onClose();
+                setIsClosing(false);
+                setWasDeleting(false);
+            }, 300);
+        }
+    }, [isDeleting, wasDeleting, isOpen, onClose]);
+
+    // Track when deletion starts
+    useEffect(() => {
+        if (isDeleting) {
+            setWasDeleting(true);
+        }
+    }, [isDeleting]);
 
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && !isDeleting) {
-                onClose();
+                handleCancel();
             }
         };
 
@@ -35,7 +67,23 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
             document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen, onClose, isDeleting]);
+    }, [isOpen, isDeleting, handleCancel]);
+
+    // Close modal when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+                if (!isDeleting) {
+                    handleCancel();
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isDeleting, handleCancel]);
 
     const handleConfirm = () => {
         if (record && !isDeleting) {
@@ -44,7 +92,7 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
     };
 
     const formatCurrency = (amount: number): string => {
-        return `₱${amount.toFixed(2)}`;
+        return `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
     const formatDate = (dateString: string): string => {
@@ -68,14 +116,17 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
         });
     };
 
-    if (!isOpen || !record) return null;
+    if (!isOpen && !isClosing) return null;
 
     return (
+        <Portal>
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             {/* Backdrop with full coverage blur */}
             <div 
-                className="fixed inset-0 bg-black/40"
-                onClick={!isDeleting ? onClose : undefined}
+                className={`fixed inset-0 bg-black/40 transition-opacity duration-300 ${
+                    isClosing ? 'opacity-0' : 'opacity-100'
+                }`}
+                onClick={!isDeleting ? handleCancel : undefined}
                 style={{
                     backdropFilter: 'blur(8px)',
                     WebkitBackdropFilter: 'blur(8px)'
@@ -84,7 +135,9 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
 
             <div 
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 ${
+                    isClosing ? 'animate-modal-out' : 'animate-modal-in'
+                }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-6">
@@ -98,7 +151,7 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
                         </div>
                     </div>
                     <button
-                        onClick={onClose}
+                        onClick={handleCancel}
                         disabled={isDeleting}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -115,27 +168,27 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
                         <div className="grid grid-cols-2 gap-3 text-xs">
                             <div className="col-span-2">
                                 <span className="text-gray-600 font-medium">Product Name:</span>
-                                <div className="text-gray-900 font-semibold truncate">{record.productName}</div>
+                                <div className="text-gray-900 font-semibold truncate">{record?.productName}</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Date:</span>
-                                <div className="text-gray-900">{formatDate(record.date)}</div>
+                                <div className="text-gray-900">{record ? formatDate(record.date) : ''}</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Quantity:</span>
-                                <div className="text-gray-900">{record.quantity}</div>
+                                <div className="text-gray-900">{record?.quantity}</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Price:</span>
-                                <div className="text-gray-900">{formatCurrency(record.price)}</div>
+                                <div className="text-gray-900">{record ? formatCurrency(record.price) : ''}</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Total:</span>
-                                <div className="text-gray-900 font-semibold">{formatCurrency(record.total)}</div>
+                                <div className="text-green-600 font-semibold">{record ? formatCurrency(record.total) : ''}</div>
                             </div>
                             <div>
                                 <span className="text-gray-600 font-medium">Payment Method:</span>
-                                <div className="text-gray-900">{record.paymentMethod}</div>
+                                <div className="text-gray-900">{record?.paymentMethod}</div>
                             </div>
                         </div>
                     </div>
@@ -152,7 +205,7 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
                     <button 
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={onClose}
+                        onClick={handleCancel}
                         disabled={isDeleting}
                     >
                         Cancel
@@ -175,6 +228,7 @@ const DeleteSalesRecordModal: React.FC<DeleteSalesRecordModalProps> = ({
                 </div>
             </div>
         </div>
+    </Portal>
     );
 };
 

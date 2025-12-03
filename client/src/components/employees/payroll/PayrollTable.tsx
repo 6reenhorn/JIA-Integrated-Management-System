@@ -184,7 +184,58 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
               </td>
               <td className="py-4 px-6 text-sm w-[120px] text-gray-600">
                 <div>
-                  {record.month} {record.year}
+                  {(() => {
+                    try {
+                      // Parse month and year - handle both string and number
+                      let month: number;
+                      let year: number;
+                      
+                      if (typeof record.month === 'string') {
+                        // If month is already a month name, find its index
+                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+                        const monthIndex = monthNames.findIndex(m => m.toLowerCase() === record.month.toLowerCase());
+                        month = monthIndex >= 0 ? monthIndex + 1 : parseInt(record.month);
+                      } else {
+                        month = record.month;
+                      }
+                      
+                      year = typeof record.year === 'string' ? parseInt(record.year) : record.year;
+                      
+                      if (month && year && month >= 1 && month <= 12) {
+                        // Create a date from month and year (use first day of month) to format consistently
+                        const date = new Date(year, month - 1, 1); // month is 0-indexed
+                        // Format using date formatter, then extract month name and year
+                        const formatted = formatDate(date);
+                        // Try to extract month name from formatted date
+                        // If formatDate returns something like "November 27, 2025", extract "November 2025"
+                        // If it returns "11/27/2025", use month names array
+                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+                        
+                        // Check if formatted date contains month name
+                        const monthName = monthNames.find(m => formatted.includes(m));
+                        if (monthName) {
+                          return `${monthName} ${year}`;
+                        }
+                        // Otherwise use month name from array
+                        return `${monthNames[month - 1]} ${year}`;
+                      }
+                    } catch (error) {
+                      console.error('Error formatting payroll period:', error);
+                    }
+                    // Fallback: if month is already a name, use it; otherwise format it
+                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+                    if (typeof record.month === 'string' && monthNames.includes(record.month)) {
+                      return `${record.month} ${record.year}`;
+                    }
+                    const monthNum = typeof record.month === 'string' ? parseInt(record.month) : record.month;
+                    if (monthNum >= 1 && monthNum <= 12) {
+                      return `${monthNames[monthNum - 1]} ${record.year}`;
+                    }
+                    return `${record.month} ${record.year}`;
+                  })()}
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
@@ -198,8 +249,8 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
-                <div>
-                  ₱{(record.netSalary ?? 0).toLocaleString()}
+                <div className={record.netSalary < 0 ? 'text-red-600' : ''}>
+                  ₱{record.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </td>
               <td className="py-4 px-6 w-[100px]">
@@ -213,20 +264,22 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
                 </div>
               </td>
               <td className="py-4 px-6 w-[80px]">
-                <button
-                  onClick={() => { setEditTargetId(record.id); setIsEditModalOpen(true); }}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title="Edit"
-                >
-                  <Edit className="w-4 h-4 text-gray-600" />
-                </button>
-                <button
-                  onClick={() => { setDeleteTargetId(record.id); setIsDeleteModalOpen(true); }}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title="Delete record"
-                >
-                  <Trash2 className="w-4 h-4 text-gray-600" />
-                </button>
+                <div className='flex items-center gap-2 '>
+                  <button
+                    onClick={() => { setEditTargetId(record.id); setIsEditModalOpen(true); }}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="Edit"
+                  >
+                    <Edit className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => { setDeleteTargetId(record.id); setIsDeleteModalOpen(true); }}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="Delete record"
+                  >
+                    <Trash2 className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -273,8 +326,6 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
                 }}
                 onUpdatePayroll={(id, updatedData) => {
                   onUpdate(id, updatedData); 
-                  setIsEditModalOpen(false);
-                  setEditTargetId(null);
                 }}
               />
             </div>
