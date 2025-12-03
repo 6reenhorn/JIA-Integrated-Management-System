@@ -389,25 +389,31 @@ useEffect(() => {
                         overflowY: 'scroll'
                       }}
                     >
-                      {[...categories].reverse().map((category) => (
-                        <div
-                          key={category}
-                          className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                          onClick={() => handleCategorySelect(category)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              handleCategorySelect(category);
-                            }
-                          }}
-                          tabIndex={isSelectOpen && !isUpdating ? 0 : -1}
-                        >
-                          <div 
-                            className="w-3 h-3 rounded-full mr-3"
-                            style={{ backgroundColor: categoryColors[category] || '#6B7280' }}
-                          ></div>
-                          {category}
+                      {categories.length === 0 ? (
+                        <div className="px-4 py-2 text-gray-500 text-center">
+                          No categories available
                         </div>
-                      ))}
+                      ) : (
+                        [...categories].reverse().map((category) => (
+                          <div
+                            key={category}
+                            className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                            onClick={() => handleCategorySelect(category)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleCategorySelect(category);
+                              }
+                            }}
+                            tabIndex={isSelectOpen && !isUpdating ? 0 : -1}
+                          >
+                            <div 
+                              className="w-3 h-3 rounded-full mr-3"
+                              style={{ backgroundColor: categoryColors[category] || '#6B7280' }}
+                            ></div>
+                            {category}
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
 
