@@ -651,11 +651,25 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
         }
 
         // If record exists and is soft-deleted locally, skip restoring it from PostgreSQL
+        // BUT: Only skip if the deletion is unsynced (synced = 0) - meaning the deletion should be pushed first
+        // If the deletion was already synced (synced = 1), we can restore it if it exists in PostgreSQL
         // EXCEPTION: For categories and employees, always restore if they exist in PostgreSQL (not deleted)
         // The special handling below will take care of restoring them
         if (existing.length > 0 && hasDeletedAt && existing[0].deleted_at && tableName !== 'categories' && tableName !== 'employees') {
-          console.log(`Skipping ${tableName} record ${row[idField]} - was soft-deleted locally, not restoring from PostgreSQL`);
-          continue;
+          // Only skip if the deletion is unsynced (hasn't been pushed to PostgreSQL yet)
+          const syncedValue = existing[0].synced;
+          if (syncedValue === 0 || syncedValue === '0') {
+            const recordIdentifier = tableName === 'payroll_records' 
+              ? `emp_id: ${row.emp_id}, month: ${row.month}, year: ${row.year}`
+              : `${idField}: ${row[idField]}`;
+            console.log(`Skipping ${tableName} record ${recordIdentifier} - was soft-deleted locally with unsynced deletion, not restoring from PostgreSQL`);
+            continue;
+          } else {
+            // Deletion was already synced, so restore the record from PostgreSQL
+            console.log(`Restoring ${tableName} record - was soft-deleted locally but deletion was already synced, restoring from PostgreSQL`);
+            // Clear deleted_at and continue to update/insert logic below
+            // We'll handle the restoration in the update/insert block
+          }
         }
         
         // For categories and employees that were soft-deleted locally but exist in PostgreSQL (not deleted), 
@@ -714,11 +728,16 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           }
         }
 
-        if (existing.length > 0 && (!hasDeletedAt || !existing[0].deleted_at)) {
-          // Update existing record (only if not deleted)
+        // Update existing record (including soft-deleted ones that should be restored)
+        // Check if we should restore a soft-deleted record
+        const shouldRestore = existing.length > 0 && hasDeletedAt && existing[0].deleted_at && 
+                              (existing[0].synced === 1 || existing[0].synced === '1');
+        
+        if (existing.length > 0 && (!hasDeletedAt || !existing[0].deleted_at || shouldRestore)) {
+          // Update existing record (only if not deleted, or if we're restoring it)
           // IMPORTANT: If the record has synced = 0, we should NOT overwrite it
           // The check above should have skipped it, but let's be extra safe
-          if (existing[0].synced === 0 || existing[0].synced === '0') {
+          if (!shouldRestore && (existing[0].synced === 0 || existing[0].synced === '0')) {
             console.log(`[WARNING] ${tableName} record ${row[idField]} has synced=0 but reached update block - this should not happen!`);
             continue;
           }
@@ -854,7 +873,9 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             }
           }
           
-          const updateDeletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
+          // If restoring a soft-deleted record, clear deleted_at
+          const deletedAtClause = shouldRestore ? ', deleted_at = NULL' : '';
+          const updateDeletedAtFilter = (hasDeletedAt && !shouldRestore) ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
           let updateSql;
           let updateParams;
           let recordIdToTrack;
@@ -864,7 +885,7 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             // Use the existing record's ID to update it directly
             updateSql = `
               UPDATE ${tableName} 
-              SET ${updateFields}, updated_at = CURRENT_TIMESTAMP
+              SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1${deletedAtClause}
               WHERE id = ? ${updateDeletedAtFilter}
             `;
             updateParams = [...updateValues, existing[0].id];
@@ -1339,19 +1360,50 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
                   continue; // Skip this record
                 }
                 
+                // Convert PostgreSQL month (integer) to both month name and number for SQLite query
+                // SQLite may have either format, so check for both
+                let monthForQuery = month;
+                let monthForQueryAlt = null;
+                if (typeof monthForQuery === 'number') {
+                  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                     'July', 'August', 'September', 'October', 'November', 'December'];
+                  if (monthForQuery >= 1 && monthForQuery <= 12) {
+                    monthForQueryAlt = monthNames[monthForQuery - 1]; // Month name
+                    monthForQuery = String(monthForQuery); // Also check for '12' format
+                  }
+                } else if (typeof monthForQuery === 'string') {
+                  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                     'July', 'August', 'September', 'October', 'November', 'December'];
+                  const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthForQuery.toLowerCase());
+                  if (monthIndex !== -1) {
+                    monthForQueryAlt = String(monthIndex + 1); // Also check for '12' format
+                  } else {
+                    const numValue = parseInt(monthForQuery, 10);
+                    if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                      monthForQueryAlt = monthNames[numValue - 1]; // Also check for 'December' format
+                    }
+                  }
+                }
+                const yearForQuery = typeof year === 'string' ? parseInt(year, 10) : year;
+                
+                // Check if we're restoring a soft-deleted record
+                const shouldRestorePayroll = existing.length > 0 && hasDeletedAt && existing[0].deleted_at && 
+                                             (existing[0].synced === 1 || existing[0].synced === '1');
+                const deletedAtClausePayroll = shouldRestorePayroll ? ', deleted_at = NULL' : '';
+                
                 updateSql = `
                   UPDATE ${tableName} 
-                  SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1
-                  WHERE emp_id = ? AND month = ? AND year = ?
+                  SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1${deletedAtClausePayroll}
+                  WHERE emp_id = ? AND year = ? AND (month = ? OR month = ?)
                 `;
-                updateParams = [...updateValues, empId, month, year];
-                // Get the SQLite ID after update
+                updateParams = [...updateValues, empId, yearForQuery, monthForQuery, monthForQueryAlt || monthForQuery];
+                // Get the SQLite ID after update - check for both month formats
                 const updatedRecord = await sqliteAll(
-                  `SELECT id FROM ${tableName} WHERE emp_id = ? AND month = ? AND year = ?`,
-                  [empId, month, year]
+                  `SELECT id FROM ${tableName} WHERE emp_id = ? AND year = ? AND (month = ? OR month = ?)`,
+                  [empId, yearForQuery, monthForQuery, monthForQueryAlt || monthForQuery]
                 );
                 recordIdToTrack = updatedRecord.length > 0 ? updatedRecord[0].id : null;
-                console.log(`Updated existing ${tableName} record with emp_id: ${empId}, month: ${month}, year: ${year}, SQLite ID: ${recordIdToTrack}`);
+                console.log(`Updated existing ${tableName} record with emp_id: ${empId}, month: ${monthForQuery}/${monthForQueryAlt}, year: ${yearForQuery}, SQLite ID: ${recordIdToTrack}`);
               } else {
                 updateSql = `
                   UPDATE ${tableName} 
