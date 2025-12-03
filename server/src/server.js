@@ -35,34 +35,7 @@ const startServer = async () => {
       }
     }
 
-    // Start the sync service if both databases are enabled
-    if (process.env.USE_SQLITE !== 'false' && process.env.USE_POSTGRES !== 'false') {
-      console.log('Starting database synchronization...');
-      try {
-        await initializeSync();
-        console.log('Initial database sync completed');
-        
-        // Start periodic sync
-        const syncInterval = setInterval(async () => {
-          try {
-            console.log('Running scheduled database sync...');
-            await initializeSync();
-          } catch (err) {
-            console.error('Error during scheduled sync:', err);
-          }
-        }, SYNC_INTERVAL_MINUTES * 60 * 1000);
-        
-        console.log(`Database sync scheduled to run every ${SYNC_INTERVAL_MINUTES} minutes`);
-        
-        // Store interval for cleanup
-        process.on('exit', () => clearInterval(syncInterval));
-      } catch (err) {
-        console.error('Failed to initialize database sync:', err);
-        process.exit(1);
-      }
-    }
-
-    // Start the server
+    // Start the server FIRST so it can accept requests immediately
     const server = app.listen(PORT, () => {
       console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode`);
       console.log(`Server listening on http://localhost:${PORT}`);
@@ -74,6 +47,36 @@ const startServer = async () => {
         process.env.USE_POSTGRES !== 'false' ? 'PostgreSQL' : ''
       }`);
     });
+
+    // Start the sync service in the background (non-blocking) if both databases are enabled
+    if (process.env.USE_SQLITE !== 'false' && process.env.USE_POSTGRES !== 'false') {
+      console.log('Starting database synchronization in background...');
+      
+      // Run initial sync in background (don't await)
+      initializeSync()
+        .then(() => {
+          console.log('Initial database sync completed');
+        })
+        .catch((err) => {
+          console.error('Failed to initialize database sync:', err);
+          // Don't exit - server is already running and can function with one DB
+        });
+      
+      // Start periodic sync
+      const syncInterval = setInterval(async () => {
+        try {
+          console.log('Running scheduled database sync...');
+          await initializeSync();
+        } catch (err) {
+          console.error('Error during scheduled sync:', err);
+        }
+      }, SYNC_INTERVAL_MINUTES * 60 * 1000);
+      
+      console.log(`Database sync scheduled to run every ${SYNC_INTERVAL_MINUTES} minutes`);
+      
+      // Store interval for cleanup
+      process.on('exit', () => clearInterval(syncInterval));
+    }
 
     // Handle graceful shutdown
     const gracefulShutdown = async () => {
