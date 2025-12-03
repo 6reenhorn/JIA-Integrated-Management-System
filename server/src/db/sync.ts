@@ -161,6 +161,20 @@ export async function syncFromPostgresToSQLite() {
         
         syncEmployees(employeesResult.rows);
         console.log(`✅ Synced ${employeesResult.rows.length} employees`);
+        
+        // Reset SQLite auto-increment counter to match the highest ID
+        // This prevents large jumps in ID when new employees are added after sync
+        const maxIdResult = sqlite.prepare('SELECT MAX(id) as max_id FROM employees').get() as { max_id: number | null };
+        if (maxIdResult.max_id !== null) {
+            // Check if sqlite_sequence entry exists, create if not
+            const seqCheck = sqlite.prepare('SELECT seq FROM sqlite_sequence WHERE name = ?').get('employees') as { seq: number } | undefined;
+            if (!seqCheck) {
+                sqlite.prepare('INSERT INTO sqlite_sequence (name, seq) VALUES (?, ?)').run('employees', maxIdResult.max_id);
+            } else {
+                sqlite.prepare('UPDATE sqlite_sequence SET seq = ? WHERE name = ?').run(maxIdResult.max_id, 'employees');
+            }
+            console.log(`✅ Reset SQLite auto-increment counter to ${maxIdResult.max_id}`);
+        }
 
         // Sync categories
         console.log('📥 Syncing categories from PostgreSQL...');
@@ -271,6 +285,73 @@ export async function syncFromPostgresToSQLite() {
         syncSales(salesResult.rows);
         console.log(`✅ Synced ${salesResult.rows.length} sales records`);
 
+        // Sync payroll records
+        console.log('📥 Syncing payroll records from PostgreSQL...');
+        const payrollResult = await pgClient.query<PayrollRecord>('SELECT * FROM payroll_records ORDER BY id DESC');
+        
+        const checkPayroll = sqlite.prepare(`
+            SELECT id, synced FROM payroll_records 
+            WHERE emp_id = ? AND month = ? AND year = ?
+        `);
+        
+        const insertPayroll = sqlite.prepare(`
+            INSERT INTO payroll_records 
+            (employee_name, emp_id, role, month, year, basic_salary, deductions, net_salary, status, payment_date, synced)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        `);
+        
+        const updatePayroll = sqlite.prepare(`
+            UPDATE payroll_records 
+            SET employee_name = ?, role = ?, basic_salary = ?, deductions = ?, net_salary = ?, status = ?, payment_date = ?, synced = 1
+            WHERE emp_id = ? AND month = ? AND year = ?
+        `);
+        
+        const syncPayroll = sqlite.transaction((records: PayrollRecord[]) => {
+            for (const record of records) {
+                // Check if record already exists by emp_id, month, year
+                const existing = checkPayroll.get(record.emp_id, record.month, record.year) as { id: number; synced: number } | undefined;
+                
+                // If record exists and is unsynced (synced = 0), skip it - don't overwrite local changes
+                if (existing && existing.synced === 0) {
+                    console.log(`Skipping payroll record emp_id: ${record.emp_id}, month: ${record.month}, year: ${record.year} - has unsynced local changes`);
+                    continue;
+                }
+                
+                if (existing) {
+                    // Update existing record
+                    updatePayroll.run(
+                        record.employee_name,
+                        record.role,
+                        record.basic_salary,
+                        record.deductions || 0,
+                        record.net_salary,
+                        record.status || null,
+                        record.payment_date || null,
+                        record.emp_id,
+                        record.month,
+                        record.year
+                    );
+                } else {
+                    // Insert new record (excluding id - let SQLite generate its own)
+                    insertPayroll.run(
+                        record.employee_name,
+                        record.emp_id,
+                        record.role,
+                        record.month,
+                        record.year,
+                        record.basic_salary,
+                        record.deductions || 0,
+                        record.net_salary,
+                        record.status || null,
+                        record.payment_date || null
+                    );
+                }
+            }
+        });
+        
+        syncPayroll(payrollResult.rows);
+        console.log(`✅ Synced ${payrollResult.rows.length} payroll records`);
+
     } catch (error) {
         console.error('❌ Error syncing from PostgreSQL:', error);
         throw error;
@@ -374,17 +455,43 @@ export async function syncFromSQLiteToPostgres() {
 
         // Sync unsynced payroll records
         console.log('📤 Pushing unsynced payroll records to PostgreSQL...');
-        const unsyncedPayroll = sqlite.prepare('SELECT * FROM payroll_records WHERE synced = 0').all() as PayrollRecord[];
+        const unsyncedPayroll = sqlite.prepare('SELECT * FROM payroll_records WHERE synced = 0 AND (deleted_at IS NULL OR deleted_at = "")').all() as PayrollRecord[];
         
         for (const record of unsyncedPayroll) {
-            await pgClient.query(
-                `INSERT INTO payroll_records (employee_name, emp_id, role, month, year, basic_salary, deductions, net_salary, status, payment_date) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-                [record.employee_name, record.emp_id, record.role, record.month, record.year, record.basic_salary, 
-                 record.deductions, record.net_salary, record.status, record.payment_date]
-            );
-            
-            sqlite.prepare('UPDATE payroll_records SET synced = 1 WHERE id = ?').run(record.id);
+            try {
+                // Check if record already exists in PostgreSQL (by matching key fields)
+                const existing = await pgClient.query(
+                    `SELECT id FROM payroll_records 
+                     WHERE emp_id = $1 AND month = $2 AND year = $3`,
+                    [record.emp_id, record.month, record.year]
+                );
+
+                if (existing.rows.length > 0) {
+                    // Update existing record
+                    await pgClient.query(
+                        `UPDATE payroll_records 
+                         SET employee_name = $1, role = $2, basic_salary = $3, deductions = $4, 
+                             net_salary = $5, status = $6, payment_date = $7
+                         WHERE id = $8`,
+                        [record.employee_name, record.role, record.basic_salary, 
+                         record.deductions || 0, record.net_salary, record.status || null, 
+                         record.payment_date || null, existing.rows[0].id]
+                    );
+                } else {
+                    // Insert new record
+                    await pgClient.query(
+                        `INSERT INTO payroll_records (employee_name, emp_id, role, month, year, basic_salary, deductions, net_salary, status, payment_date) 
+                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                        [record.employee_name, record.emp_id, record.role, record.month, record.year, record.basic_salary, 
+                         record.deductions || 0, record.net_salary, record.status || null, record.payment_date || null]
+                    );
+                }
+                
+                sqlite.prepare('UPDATE payroll_records SET synced = 1 WHERE id = ?').run(record.id);
+            } catch (err) {
+                console.error(`Error pushing payroll record ${record.id}:`, err);
+                // Continue with next record
+            }
         }
         console.log(`✅ Pushed ${unsyncedPayroll.length} payroll records`);
 

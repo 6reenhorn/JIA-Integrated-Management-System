@@ -74,6 +74,56 @@ router.post('/', async (req, res) => {
     });
 
     const lastId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
+    
+    // Immediately verify the record was created with synced = 0
+    const verifyRecord = await DBHelper.queryOne(
+      'SELECT id, emp_id, month, year, synced FROM payroll_records WHERE id = ?',
+      [lastId]
+    ) as any;
+    
+    if (verifyRecord) {
+      console.log(`[PAYROLL DEBUG] New payroll record created - ID: ${verifyRecord.id}, emp_id: ${verifyRecord.emp_id}, month: ${verifyRecord.month}, year: ${verifyRecord.year}, synced: ${verifyRecord.synced} (type: ${typeof verifyRecord.synced})`);
+      if (verifyRecord.synced !== 0 && verifyRecord.synced !== '0') {
+        console.error(`[PAYROLL ERROR] New payroll record should have synced=0 but has synced=${verifyRecord.synced} (type: ${typeof verifyRecord.synced})`);
+        // Force set it to 0
+        await DBHelper.execute(
+          'UPDATE payroll_records SET synced = 0 WHERE id = ?',
+          [lastId]
+        );
+        console.log(`[PAYROLL FIX] Forced synced to 0 for record ${lastId}`);
+      } else {
+        console.log(`[PAYROLL SUCCESS] Record created with synced=0 - ready to be pushed to PostgreSQL`);
+        
+        // Try to push immediately (don't wait for scheduled sync)
+        try {
+          const { pushTableToPostgres } = require('../services/dbSyncService');
+          console.log(`[PAYROLL PUSH] Attempting immediate push to PostgreSQL...`);
+          await pushTableToPostgres('payroll_records', 'id', [
+            'id', 'employee_name', 'emp_id', 'role', 'month', 'year', 
+            'basic_salary', 'deductions', 'net_salary', 'status', 'payment_date',
+            'created_at', 'updated_at', 'deleted_at'
+          ]);
+          console.log(`[PAYROLL PUSH] Immediate push completed`);
+        } catch (pushError) {
+          console.error(`[PAYROLL PUSH] Immediate push failed (will retry on next scheduled sync):`, pushError.message);
+          // Don't fail the request - the scheduled sync will handle it
+        }
+      }
+      
+      // Double-check after a short delay to ensure it's still there
+      setTimeout(async () => {
+        const checkAgain = await DBHelper.queryOne(
+          'SELECT id, emp_id, month, year, synced, deleted_at FROM payroll_records WHERE id = ?',
+          [lastId]
+        ) as any;
+        if (checkAgain) {
+          console.log(`[PAYROLL CHECK] Record still exists after creation - ID: ${checkAgain.id}, synced: ${checkAgain.synced}, deleted_at: ${checkAgain.deleted_at}`);
+        } else {
+          console.error(`[PAYROLL ERROR] Record ${lastId} disappeared after creation!`);
+        }
+      }, 2000);
+    }
+    
     const newRecord = await DBHelper.getById('payroll_records', lastId) as any;
 
     const payrollRecord = {

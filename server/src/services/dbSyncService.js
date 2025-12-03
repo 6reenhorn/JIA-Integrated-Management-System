@@ -336,57 +336,130 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
       []
     );
     
-    // Get all non-deleted records from PostgreSQL (for finding missing records)
-    const allPgRecords = await pool.query(
-      `SELECT ${idField} FROM ${tableName} WHERE deleted_at IS NULL`,
-      []
-    );
-    
     // Get all records that exist in SQLite (including soft-deleted ones to check)
-    const sqliteQuery = hasDeletedAt
-      ? `SELECT ${idField}, deleted_at FROM ${tableName}`
-      : `SELECT ${idField} FROM ${tableName}`;
-    const allSqliteRecords = await sqliteAll(sqliteQuery, []);
-    
-    // Only consider non-deleted records as "existing"
-    const nonDeletedSqliteIds = new Set(
-      allSqliteRecords
-        .filter(r => !hasDeletedAt || !r.deleted_at)
-        .map(r => String(r[idField]))
-    );
-    
-    // Also track soft-deleted records - we don't want to restore these from PostgreSQL
-    const softDeletedIds = new Set(
-      allSqliteRecords
-        .filter(r => hasDeletedAt && r.deleted_at)
-        .map(r => String(r[idField]))
-    );
-    
-    const missingIds = allPgRecords.rows
-      .map(r => String(r[idField]))
-      .filter(id => !nonDeletedSqliteIds.has(id) && !softDeletedIds.has(id)); // Don't restore soft-deleted records
-    
-    // If there are missing records, fetch them
+    // For payroll_records, get emp_id, month, year instead of just id
+    let allSqliteRecords;
     let missingRecords = [];
-    if (missingIds.length > 0) {
-      const placeholders = missingIds.map((_, i) => `$${i + 1}`).join(', ');
-      const missingQuery = `
-        SELECT * FROM ${tableName} 
-        WHERE ${idField} IN (${placeholders}) AND deleted_at IS NULL
-      `;
-      const missingResult = await pool.query(missingQuery, missingIds);
-      missingRecords = missingResult.rows;
+    
+    if (tableName === 'payroll_records') {
+      const sqliteQuery = hasDeletedAt
+        ? `SELECT id, emp_id, month, year, deleted_at FROM ${tableName}`
+        : `SELECT id, emp_id, month, year FROM ${tableName}`;
+      allSqliteRecords = await sqliteAll(sqliteQuery, []);
+      
+      // Create a set of existing records: "emp_id|month|year"
+      const existingRecords = new Set(
+        allSqliteRecords
+          .filter(r => !hasDeletedAt || !r.deleted_at)
+          .map(r => `${r.emp_id}|${r.month}|${r.year}`)
+      );
+      
+      // Also track soft-deleted records - we don't want to restore these from PostgreSQL
+      const softDeletedRecords = new Set(
+        allSqliteRecords
+          .filter(r => hasDeletedAt && r.deleted_at)
+          .map(r => `${r.emp_id}|${r.month}|${r.year}`)
+      );
+      
+      // Find records in PostgreSQL that don't exist in SQLite
+      // For payroll_records, we need to fetch ALL records with full data to check by emp_id, month, year
+      const allPgPayrollRecords = await pool.query(
+        `SELECT * FROM ${tableName} WHERE deleted_at IS NULL`,
+        []
+      );
+      
+      for (const pgRecord of allPgPayrollRecords.rows) {
+        const key = `${pgRecord.emp_id}|${pgRecord.month}|${pgRecord.year}`;
+        if (!existingRecords.has(key) && !softDeletedRecords.has(key)) {
+          // Debug: Log the structure of the record being added
+          if (missingRecords.length < 2) {
+            console.log(`[PAYROLL MISSING DEBUG] Adding missing record:`, {
+              id: pgRecord.id,
+              emp_id: pgRecord.emp_id,
+              month: pgRecord.month,
+              year: pgRecord.year,
+              hasAllFields: !!(pgRecord.emp_id && pgRecord.month !== undefined && pgRecord.year !== undefined)
+            });
+          }
+          missingRecords.push(pgRecord);
+        }
+      }
+      
       if (missingRecords.length > 0) {
-        console.log(`Found ${missingRecords.length} ${tableName} records in PostgreSQL that don't exist in SQLite (excluding ${softDeletedIds.size} soft-deleted local records)`);
+        console.log(`Found ${missingRecords.length} ${tableName} records in PostgreSQL that don't exist in SQLite (excluding ${softDeletedRecords.size} soft-deleted local records)`);
+      }
+    } else {
+      // Get all non-deleted records from PostgreSQL (for finding missing records)
+      const allPgRecords = await pool.query(
+        `SELECT ${idField} FROM ${tableName} WHERE deleted_at IS NULL`,
+        []
+      );
+      
+      const sqliteQuery = hasDeletedAt
+        ? `SELECT ${idField}, deleted_at FROM ${tableName}`
+        : `SELECT ${idField} FROM ${tableName}`;
+      allSqliteRecords = await sqliteAll(sqliteQuery, []);
+      
+      // Only consider non-deleted records as "existing"
+      const nonDeletedSqliteIds = new Set(
+        allSqliteRecords
+          .filter(r => !hasDeletedAt || !r.deleted_at)
+          .map(r => String(r[idField]))
+      );
+      
+      // Also track soft-deleted records - we don't want to restore these from PostgreSQL
+      const softDeletedIds = new Set(
+        allSqliteRecords
+          .filter(r => hasDeletedAt && r.deleted_at)
+          .map(r => String(r[idField]))
+      );
+      
+      const missingIds = allPgRecords.rows
+        .map(r => String(r[idField]))
+        .filter(id => !nonDeletedSqliteIds.has(id) && !softDeletedIds.has(id)); // Don't restore soft-deleted records
+      
+      // If there are missing records, fetch them
+      if (missingIds.length > 0) {
+        const placeholders = missingIds.map((_, i) => `$${i + 1}`).join(', ');
+        const missingQuery = `
+          SELECT * FROM ${tableName} 
+          WHERE ${idField} IN (${placeholders}) AND deleted_at IS NULL
+        `;
+        const missingResult = await pool.query(missingQuery, missingIds);
+        missingRecords = missingResult.rows;
+        if (missingRecords.length > 0) {
+          console.log(`Found ${missingRecords.length} ${tableName} records in PostgreSQL that don't exist in SQLite (excluding ${softDeletedIds.size} soft-deleted local records)`);
+        }
       }
     }
     
     // Combine both sets of records (avoid duplicates)
     const allRecordsToSync = [...pgResult.rows];
-    const existingIds = new Set(pgResult.rows.map(r => String(r[idField])));
-    for (const record of missingRecords) {
-      if (!existingIds.has(String(record[idField]))) {
-        allRecordsToSync.push(record);
+    // For payroll_records, use emp_id, month, year for deduplication instead of id
+    if (tableName === 'payroll_records') {
+      const existingKeys = new Set(pgResult.rows.map(r => `${r.emp_id}|${r.month}|${r.year}`));
+      for (const record of missingRecords) {
+        const key = `${record.emp_id}|${record.month}|${record.year}`;
+        if (!existingKeys.has(key)) {
+          // Debug: Log the structure of the record being added
+          if (allRecordsToSync.length < 5) {
+            console.log(`[PAYROLL SYNC DEBUG] Adding to allRecordsToSync:`, {
+              id: record.id,
+              emp_id: record.emp_id,
+              month: record.month,
+              year: record.year,
+              keys: Object.keys(record)
+            });
+          }
+          allRecordsToSync.push(record);
+        }
+      }
+    } else {
+      const existingIds = new Set(pgResult.rows.map(r => String(r[idField])));
+      for (const record of missingRecords) {
+        if (!existingIds.has(String(record[idField]))) {
+          allRecordsToSync.push(record);
+        }
       }
     }
     
@@ -395,61 +468,125 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
     // Check for records that exist in SQLite but are deleted in PostgreSQL
     // These should be soft-deleted locally
     if (hasDeletedAt) {
-      // Create a map of all PostgreSQL records: id -> deleted_at status
-      const pgRecordMap = new Map();
-      for (const pgRecord of allPgRecordsIncludingDeleted.rows) {
-        pgRecordMap.set(String(pgRecord[idField]), {
-          exists: true,
-          deleted: !!pgRecord.deleted_at
-        });
-      }
-      
       const sqliteNonDeleted = allSqliteRecords.filter(r => !r.deleted_at);
       
-      for (const sqliteRecord of sqliteNonDeleted) {
-        const sqliteId = String(sqliteRecord[idField]);
-        const pgRecord = pgRecordMap.get(sqliteId);
+      // For payroll_records, check by emp_id, month, year instead of id
+      if (tableName === 'payroll_records') {
+        // Get all payroll records from PostgreSQL with their emp_id, month, year
+        const allPgPayroll = await pool.query(
+          `SELECT emp_id, month, year, deleted_at FROM ${tableName}`
+        );
         
-        // If record exists in SQLite but is deleted in PostgreSQL, soft-delete it locally
-        if (pgRecord && pgRecord.deleted) {
-          // Check if it's unsynced - if so, don't delete it (it will be pushed)
-          const existingCheck = await sqliteAll(
-            `SELECT synced FROM ${tableName} WHERE ${idField} = ?`,
-            [sqliteRecord[idField]]
+        // Create a map: "emp_id|month|year" -> deleted_at status
+        const pgPayrollMap = new Map();
+        for (const pgRecord of allPgPayroll.rows) {
+          const key = `${pgRecord.emp_id}|${pgRecord.month}|${pgRecord.year}`;
+          pgPayrollMap.set(key, {
+            exists: true,
+            deleted: !!pgRecord.deleted_at
+          });
+        }
+        
+        for (const sqliteRecord of sqliteNonDeleted) {
+          // Get emp_id, month, year from SQLite record
+          const sqlitePayrollRecord = await sqliteAll(
+            `SELECT emp_id, month, year, synced FROM ${tableName} WHERE id = ?`,
+            [sqliteRecord.id]
           );
           
-          if (existingCheck.length > 0 && existingCheck[0].synced !== 0 && existingCheck[0].synced !== '0') {
-            // Soft-delete the record locally
-            await sqliteRun(
-              `UPDATE ${tableName} SET deleted_at = CURRENT_TIMESTAMP, synced = 1 WHERE ${idField} = ?`,
+          if (sqlitePayrollRecord.length === 0) continue;
+          
+          const empId = sqlitePayrollRecord[0].emp_id;
+          const month = sqlitePayrollRecord[0].month;
+          const year = sqlitePayrollRecord[0].year;
+          const syncedValue = sqlitePayrollRecord[0].synced;
+          const key = `${empId}|${month}|${year}`;
+          const pgRecord = pgPayrollMap.get(key);
+          
+          // If record exists in SQLite but is deleted in PostgreSQL, soft-delete it locally
+          if (pgRecord && pgRecord.deleted) {
+            // Check if it's unsynced - if so, don't delete it (it will be pushed)
+            if (syncedValue !== 0 && syncedValue !== '0') {
+              // Soft-delete the record locally
+              await sqliteRun(
+                `UPDATE ${tableName} SET deleted_at = CURRENT_TIMESTAMP, synced = 1 WHERE id = ?`,
+                [sqliteRecord.id]
+              );
+              console.log(`Soft-deleted ${tableName} record id: ${sqliteRecord.id} (emp_id: ${empId}, month: ${month}, year: ${year}) - was deleted in PostgreSQL`);
+            } else {
+              console.log(`Skipping soft-delete of ${tableName} record id: ${sqliteRecord.id} (emp_id: ${empId}, month: ${month}, year: ${year}) - has unsynced local changes`);
+            }
+          } else if (!pgRecord) {
+            // Record exists in SQLite but doesn't exist at all in PostgreSQL
+            // Check if it's unsynced - if so, it might be a new local record, don't delete it
+            if (syncedValue === 1 || syncedValue === '1') {
+              // Soft-delete the record locally
+              await sqliteRun(
+                `UPDATE ${tableName} SET deleted_at = CURRENT_TIMESTAMP, synced = 1 WHERE id = ?`,
+                [sqliteRecord.id]
+              );
+              console.log(`Soft-deleted ${tableName} record id: ${sqliteRecord.id} (emp_id: ${empId}, month: ${month}, year: ${year}) - doesn't exist in PostgreSQL (was previously synced)`);
+            } else {
+              console.log(`Keeping ${tableName} record id: ${sqliteRecord.id} (emp_id: ${empId}, month: ${month}, year: ${year}) - new local record (synced=${syncedValue}), not in PostgreSQL yet`);
+            }
+          }
+        }
+      } else {
+        // For other tables, use id-based matching
+        // Create a map of all PostgreSQL records: id -> deleted_at status
+        const pgRecordMap = new Map();
+        for (const pgRecord of allPgRecordsIncludingDeleted.rows) {
+          pgRecordMap.set(String(pgRecord[idField]), {
+            exists: true,
+            deleted: !!pgRecord.deleted_at
+          });
+        }
+        
+        for (const sqliteRecord of sqliteNonDeleted) {
+          const sqliteId = String(sqliteRecord[idField]);
+          const pgRecord = pgRecordMap.get(sqliteId);
+          
+          // If record exists in SQLite but is deleted in PostgreSQL, soft-delete it locally
+          if (pgRecord && pgRecord.deleted) {
+            // Check if it's unsynced - if so, don't delete it (it will be pushed)
+            const existingCheck = await sqliteAll(
+              `SELECT synced FROM ${tableName} WHERE ${idField} = ?`,
               [sqliteRecord[idField]]
             );
-            console.log(`Soft-deleted ${tableName} record ${sqliteRecord[idField]} - was deleted in PostgreSQL`);
-          } else {
-            console.log(`Skipping soft-delete of ${tableName} record ${sqliteRecord[idField]} - has unsynced local changes`);
-          }
-        } else if (!pgRecord) {
-          // Record exists in SQLite but doesn't exist at all in PostgreSQL
-          // This means it was deleted remotely (hard delete or never existed)
-          // Check if it's unsynced - if so, it might be a new local record, don't delete it
-          const existingCheck = await sqliteAll(
-            `SELECT synced, created_at FROM ${tableName} WHERE ${idField} = ?`,
-            [sqliteRecord[idField]]
-          );
-          
-          if (existingCheck.length > 0) {
-            const syncedValue = existingCheck[0].synced;
-            // If synced = 1, it was previously synced, so it was deleted remotely - soft-delete it
-            // If synced = 0 or NULL, it's a new local record that hasn't been pushed yet - keep it
-            if (syncedValue === 1 || syncedValue === '1') {
+            
+            if (existingCheck.length > 0 && existingCheck[0].synced !== 0 && existingCheck[0].synced !== '0') {
               // Soft-delete the record locally
               await sqliteRun(
                 `UPDATE ${tableName} SET deleted_at = CURRENT_TIMESTAMP, synced = 1 WHERE ${idField} = ?`,
                 [sqliteRecord[idField]]
               );
-              console.log(`Soft-deleted ${tableName} record ${sqliteRecord[idField]} - doesn't exist in PostgreSQL (was previously synced)`);
+              console.log(`Soft-deleted ${tableName} record ${sqliteRecord[idField]} - was deleted in PostgreSQL`);
             } else {
-              console.log(`Keeping ${tableName} record ${sqliteRecord[idField]} - new local record (synced=${syncedValue}), not in PostgreSQL yet`);
+              console.log(`Skipping soft-delete of ${tableName} record ${sqliteRecord[idField]} - has unsynced local changes`);
+            }
+          } else if (!pgRecord) {
+            // Record exists in SQLite but doesn't exist at all in PostgreSQL
+            // This means it was deleted remotely (hard delete or never existed)
+            // Check if it's unsynced - if so, it might be a new local record, don't delete it
+            const existingCheck = await sqliteAll(
+              `SELECT synced, created_at FROM ${tableName} WHERE ${idField} = ?`,
+              [sqliteRecord[idField]]
+            );
+            
+            if (existingCheck.length > 0) {
+              const syncedValue = existingCheck[0].synced;
+              // If synced = 1, it was previously synced, so it was deleted remotely - soft-delete it
+              // If synced = 0 or NULL, it's a new local record that hasn't been pushed yet - keep it
+              if (syncedValue === 1 || syncedValue === '1') {
+                // Soft-delete the record locally
+                await sqliteRun(
+                  `UPDATE ${tableName} SET deleted_at = CURRENT_TIMESTAMP, synced = 1 WHERE ${idField} = ?`,
+                  [sqliteRecord[idField]]
+                );
+                console.log(`Soft-deleted ${tableName} record ${sqliteRecord[idField]} - doesn't exist in PostgreSQL (was previously synced)`);
+              } else {
+                console.log(`Keeping ${tableName} record ${sqliteRecord[idField]} - new local record (synced=${syncedValue}), not in PostgreSQL yet`);
+              }
             }
           }
         }
@@ -481,11 +618,20 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
         // Also check if it was soft-deleted locally - if so, don't restore it
         // EXCEPTION: For categories, if they exist in PostgreSQL (not deleted), restore them even if soft-deleted locally
         // Also check if it's unsynced (synced = 0) - if so, don't overwrite local changes
+        // For payroll_records, check by emp_id, month, year instead of id
         const deletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
-        const existing = await sqliteAll(
-          `SELECT 1, deleted_at, synced FROM ${tableName} WHERE ${idField} = ?`,
-          [row[idField]]
-        );
+        let existing;
+        if (tableName === 'payroll_records') {
+          existing = await sqliteAll(
+            `SELECT id, deleted_at, synced FROM ${tableName} WHERE emp_id = ? AND month = ? AND year = ?`,
+            [row.emp_id, row.month, row.year]
+          );
+        } else {
+          existing = await sqliteAll(
+            `SELECT 1, deleted_at, synced FROM ${tableName} WHERE ${idField} = ?`,
+            [row[idField]]
+          );
+        }
 
         // If record exists and is soft-deleted locally, skip restoring it from PostgreSQL
         // EXCEPTION: For categories, always restore if they exist in PostgreSQL (not deleted)
@@ -506,10 +652,13 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
         if (existing.length > 0) {
           const syncedValue = existing[0].synced;
           const syncedType = typeof syncedValue;
-          console.log(`[DEBUG SYNC] ${tableName} record ${row[idField]}: existing=${existing.length > 0}, synced=${syncedValue} (type: ${syncedType}), deleted_at=${existing[0].deleted_at || 'null'}`);
+          const recordIdentifier = tableName === 'payroll_records' && existing.length > 0 
+            ? `emp_id: ${row.emp_id}, month: ${row.month}, year: ${row.year}` 
+            : `${idField}: ${row[idField]}`;
+          console.log(`[DEBUG SYNC] ${tableName} record ${recordIdentifier}: existing=${existing.length > 0}, synced=${syncedValue} (type: ${syncedType}), deleted_at=${existing[0].deleted_at || 'null'}`);
           
           if (syncedValue === 0 || syncedValue === '0') {
-            console.log(`Skipping ${tableName} record ${row[idField]} - has unsynced local changes (synced=${syncedValue}), not overwriting with remote data`);
+            console.log(`Skipping ${tableName} record ${recordIdentifier} - has unsynced local changes (synced=${syncedValue}), not overwriting with remote data`);
             continue;
           }
         }
@@ -685,16 +834,33 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
           }
           
           const updateDeletedAtFilter = hasDeletedAt ? 'AND (deleted_at IS NULL OR deleted_at = \'\')' : '';
-          const updateSql = `
-            UPDATE ${tableName} 
-            SET ${updateFields}, updated_at = CURRENT_TIMESTAMP
-            WHERE ${idField} = ? ${updateDeletedAtFilter}
-          `;
+          let updateSql;
+          let updateParams;
+          let recordIdToTrack;
           
-          await sqliteRun(updateSql, [...updateValues, row[idField]]);
-          console.log(`Updated ${tableName} record with ${idField}:`, row[idField]);
+          // For payroll_records, use emp_id, month, year in WHERE clause
+          if (tableName === 'payroll_records' && existing.length > 0) {
+            updateSql = `
+              UPDATE ${tableName} 
+              SET ${updateFields}, updated_at = CURRENT_TIMESTAMP
+              WHERE emp_id = ? AND month = ? AND year = ? ${updateDeletedAtFilter}
+            `;
+            updateParams = [...updateValues, row.emp_id, row.month, row.year];
+            recordIdToTrack = existing[0].id; // Use the SQLite ID
+          } else {
+            updateSql = `
+              UPDATE ${tableName} 
+              SET ${updateFields}, updated_at = CURRENT_TIMESTAMP
+              WHERE ${idField} = ? ${updateDeletedAtFilter}
+            `;
+            updateParams = [...updateValues, row[idField]];
+            recordIdToTrack = row[idField];
+          }
+          
+          await sqliteRun(updateSql, updateParams);
+          console.log(`Updated ${tableName} record with ${tableName === 'payroll_records' && existing.length > 0 ? `emp_id: ${row.emp_id}, month: ${row.month}, year: ${row.year}` : `${idField}: ${row[idField]}`}`);
           // Track that this record was actually synced
-          actuallySyncedIds.push(row[idField]);
+          actuallySyncedIds.push(recordIdToTrack);
         } else {
           // For employees table, check if this is a new database (completely empty)
           // If the database is new, we should insert all employees from PostgreSQL
@@ -782,10 +948,14 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             // Use INSERT OR IGNORE to handle duplicate key errors gracefully
             // Include synced column with value 1 (pulled from PostgreSQL, so already synced)
             // For attendance, use mappedRow to get the correct employee_id
+            // For payroll_records, exclude id field - let SQLite generate its own ID
             const rowToUseForInsert = tableName === 'attendance' ? mappedRow : row;
-            const insertFields = [...fields, 'synced'].join(', ');
-            const placeholders = fields.map(() => '?').concat('?').join(', ');
-            const insertValues = fields.map(f => {
+            const fieldsToInsert = tableName === 'payroll_records' 
+              ? fields.filter(f => f !== 'id') 
+              : fields;
+            const insertFields = [...fieldsToInsert, 'synced'].join(', ');
+            const placeholders = fieldsToInsert.map(() => '?').concat('?').join(', ');
+            const insertValues = fieldsToInsert.map(f => {
               const value = rowToUseForInsert[f];
               // Handle JSON fields (like beginnings in juanpay_records) when pulling from PostgreSQL
               if (f === 'beginnings') {
@@ -899,21 +1069,39 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
             
             const insertResult = await sqliteRun(insertSql, insertValues);
             if (insertResult.changes > 0) {
-              console.log(`Inserted new ${tableName} record with ${idField}:`, row[idField]);
+              // For payroll_records, get the SQLite-generated ID
+              // For other tables, use the PostgreSQL ID
+              let recordIdToTrack;
+              if (tableName === 'payroll_records') {
+                // Get the ID of the record we just inserted by emp_id, month, year
+                const insertedRecord = await sqliteAll(
+                  `SELECT id FROM ${tableName} WHERE emp_id = ? AND month = ? AND year = ?`,
+                  [row.emp_id, row.month, row.year]
+                );
+                recordIdToTrack = insertedRecord.length > 0 ? insertedRecord[0].id : insertResult.lastID;
+                console.log(`Inserted new ${tableName} record with emp_id: ${row.emp_id}, month: ${row.month}, year: ${row.year}, SQLite ID: ${recordIdToTrack}`);
+              } else {
+                recordIdToTrack = row[idField];
+                console.log(`Inserted new ${tableName} record with ${idField}:`, row[idField]);
+              }
               // Track that this record was actually synced
-              actuallySyncedIds.push(row[idField]);
+              actuallySyncedIds.push(recordIdToTrack);
             } else {
               // Record already exists, update it instead
               // For attendance, use mappedRow to get the correct employee_id
-              const rowToUseForUpdate = tableName === 'attendance' ? mappedRow : row;
-              const updateFields = fields
-                .filter(f => f !== idField)
+              // For payroll_records, ALWAYS use row (original PostgreSQL data) to get emp_id, month, year
+              const rowToUseForUpdate = tableName === 'attendance' ? mappedRow : (tableName === 'payroll_records' ? row : row);
+              // For payroll_records, exclude id from update fields
+              const fieldsToUpdate = tableName === 'payroll_records' 
+                ? fields.filter(f => f !== 'id') 
+                : fields.filter(f => f !== idField);
+              const updateFields = fieldsToUpdate
                 .map(f => `${f} = ?`)
                 .join(', ');
-              const updateValues = fields
-                .filter(f => f !== idField)
+              const updateValues = fieldsToUpdate
                 .map(f => {
-                  const value = rowToUseForUpdate[f];
+                  // For payroll_records, always use row (PostgreSQL data), not rowToUseForUpdate
+                  const value = (tableName === 'payroll_records') ? row[f] : rowToUseForUpdate[f];
                   // Handle JSON fields (like beginnings in juanpay_records) when pulling from PostgreSQL
                   if (f === 'beginnings') {
                     if (value === null || value === undefined) return '[]';
@@ -1019,15 +1207,53 @@ const syncTable = async (tableName, idField, fields, conflictFields) => {
                   return value === undefined ? null : value;
                 });
               
-              const updateSql = `
-                UPDATE ${tableName} 
-                SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1
-                WHERE ${idField} = ?
-              `;
-              await sqliteRun(updateSql, [...updateValues, row[idField]]);
-              console.log(`Updated existing ${tableName} record with ${idField}:`, row[idField]);
+              // For payroll_records, use emp_id, month, year in WHERE clause
+              let updateSql;
+              let updateParams;
+              let recordIdToTrack;
+              if (tableName === 'payroll_records') {
+                // Get emp_id, month, year from the original row (PostgreSQL data)
+                // These should always be present in the row from PostgreSQL
+                const empId = row.emp_id;
+                const month = row.month;
+                const year = row.year;
+                
+                if (!empId || month === undefined || year === undefined) {
+                  console.error(`[PAYROLL SYNC ERROR] Missing required fields for payroll record update: emp_id=${empId}, month=${month}, year=${year}`);
+                  console.error(`[PAYROLL SYNC ERROR] Full row object:`, JSON.stringify(row, null, 2));
+                  console.error(`[PAYROLL SYNC ERROR] Row keys:`, Object.keys(row));
+                  console.error(`[PAYROLL SYNC ERROR] Row type:`, typeof row);
+                  continue; // Skip this record
+                }
+                
+                updateSql = `
+                  UPDATE ${tableName} 
+                  SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1
+                  WHERE emp_id = ? AND month = ? AND year = ?
+                `;
+                updateParams = [...updateValues, empId, month, year];
+                // Get the SQLite ID after update
+                const updatedRecord = await sqliteAll(
+                  `SELECT id FROM ${tableName} WHERE emp_id = ? AND month = ? AND year = ?`,
+                  [empId, month, year]
+                );
+                recordIdToTrack = updatedRecord.length > 0 ? updatedRecord[0].id : null;
+                console.log(`Updated existing ${tableName} record with emp_id: ${empId}, month: ${month}, year: ${year}, SQLite ID: ${recordIdToTrack}`);
+              } else {
+                updateSql = `
+                  UPDATE ${tableName} 
+                  SET ${updateFields}, updated_at = CURRENT_TIMESTAMP, synced = 1
+                  WHERE ${idField} = ?
+                `;
+                updateParams = [...updateValues, row[idField]];
+                recordIdToTrack = row[idField];
+                console.log(`Updated existing ${tableName} record with ${idField}:`, row[idField]);
+              }
+              await sqliteRun(updateSql, updateParams);
               // Track that this record was actually synced
-              actuallySyncedIds.push(row[idField]);
+              if (recordIdToTrack) {
+                actuallySyncedIds.push(recordIdToTrack);
+              }
             }
           } catch (insertError) {
             if (insertError.code === 'SQLITE_CONSTRAINT') {
@@ -1199,26 +1425,75 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
     );
     
     if (allSqliteRecords.length > 0) {
-      const sqliteIds = allSqliteRecords.map(r => r[idField]).filter(id => id != null);
-      if (sqliteIds.length > 0) {
-        // Check which records exist in PostgreSQL
-        const placeholders = sqliteIds.map((_, i) => `$${i + 1}`).join(', ');
-        const pgCheck = await pgPool.query(
-          `SELECT ${idField} FROM ${tableName} WHERE ${idField} IN (${placeholders}) AND deleted_at IS NULL`,
-          sqliteIds
+      // For payroll_records, check by emp_id, month, year instead of id
+      if (tableName === 'payroll_records') {
+        // Get all payroll records from SQLite
+        const sqlitePayroll = await sqliteAll(
+          `SELECT id, emp_id, month, year FROM ${tableName} ${deletedAtFilter ? 'WHERE deleted_at IS NULL' : ''}`,
+          []
         );
         
-        const pgIds = new Set(pgCheck.rows.map(r => String(r[idField])));
-        const missingInPg = sqliteIds.filter(id => !pgIds.has(String(id)));
+        // Check which ones exist in PostgreSQL
+        const missingInPg = [];
+        for (const record of sqlitePayroll) {
+          // Convert month to number for the query
+          let monthValue = record.month;
+          if (typeof monthValue === 'string') {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthValue.toLowerCase());
+            if (monthIndex !== -1) {
+              monthValue = monthIndex + 1;
+            } else {
+              const numValue = parseInt(monthValue, 10);
+              if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                monthValue = numValue;
+              }
+            }
+          }
+          const yearValue = typeof record.year === 'string' ? parseInt(record.year, 10) : record.year;
+          
+          const pgCheck = await pgPool.query(
+            `SELECT id FROM ${tableName} WHERE emp_id = $1 AND month = $2 AND year = $3 AND deleted_at IS NULL`,
+            [record.emp_id, monthValue, yearValue]
+          );
+          
+          if (pgCheck.rows.length === 0) {
+            missingInPg.push(record.id);
+          }
+        }
         
         // Mark records that exist in SQLite but not in PostgreSQL as unsynced
         if (missingInPg.length > 0) {
           const updatePlaceholders = missingInPg.map(() => '?').join(', ');
           await sqliteRun(
-            `UPDATE ${tableName} SET synced = 0 WHERE ${idField} IN (${updatePlaceholders}) ${deletedAtFilter}`,
+            `UPDATE ${tableName} SET synced = 0 WHERE id IN (${updatePlaceholders}) ${deletedAtFilter}`,
             missingInPg
           );
           console.log(`Marked ${missingInPg.length} ${tableName} records as unsynced (exist in SQLite but not in PostgreSQL)`);
+        }
+      } else {
+        const sqliteIds = allSqliteRecords.map(r => r[idField]).filter(id => id != null);
+        if (sqliteIds.length > 0) {
+          // Check which records exist in PostgreSQL
+          const placeholders = sqliteIds.map((_, i) => `$${i + 1}`).join(', ');
+          const pgCheck = await pgPool.query(
+            `SELECT ${idField} FROM ${tableName} WHERE ${idField} IN (${placeholders}) AND deleted_at IS NULL`,
+            sqliteIds
+          );
+          
+          const pgIds = new Set(pgCheck.rows.map(r => String(r[idField])));
+          const missingInPg = sqliteIds.filter(id => !pgIds.has(String(id)));
+          
+          // Mark records that exist in SQLite but not in PostgreSQL as unsynced
+          if (missingInPg.length > 0) {
+            const updatePlaceholders = missingInPg.map(() => '?').join(', ');
+            await sqliteRun(
+              `UPDATE ${tableName} SET synced = 0 WHERE ${idField} IN (${updatePlaceholders}) ${deletedAtFilter}`,
+              missingInPg
+            );
+            console.log(`Marked ${missingInPg.length} ${tableName} records as unsynced (exist in SQLite but not in PostgreSQL)`);
+          }
         }
       }
     }
@@ -1239,28 +1514,132 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
       console.log(`[PUSH DEBUG] All employees synced status:`, allEmployees.map(e => ({ id: e.id, emp_id: e.emp_id, synced: e.synced, name: e.name })));
     }
     
+    // Debug: For payroll_records, show all records with their synced status
+    if (tableName === 'payroll_records') {
+      const allPayroll = await sqliteAll(`SELECT id, emp_id, month, year, synced, deleted_at FROM payroll_records WHERE deleted_at IS NULL`, []);
+      console.log(`[PUSH DEBUG] All payroll records synced status:`, allPayroll.map(p => ({ 
+        id: p.id, 
+        emp_id: p.emp_id, 
+        month: p.month, 
+        year: p.year, 
+        synced: p.synced,
+        syncedType: typeof p.synced
+      })));
+      
+      // Also check specifically for unsynced records
+      const unsyncedPayroll = await sqliteAll(
+        `SELECT id, emp_id, month, year, synced FROM payroll_records WHERE (synced = 0 OR synced IS NULL) AND deleted_at IS NULL`, 
+        []
+      );
+      console.log(`[PUSH DEBUG] Unsynced payroll records found:`, unsyncedPayroll.length);
+      if (unsyncedPayroll.length > 0) {
+        console.log(`[PUSH DEBUG] Unsynced payroll records details:`, unsyncedPayroll.map(p => ({
+          id: p.id,
+          emp_id: p.emp_id,
+          month: p.month,
+          year: p.year,
+          synced: p.synced
+        })));
+      }
+    }
+    
     console.log(`[${tableName}] Total: ${totalRecords[0]?.count || 0}, Synced: ${syncedCount[0]?.count || 0}, Unsynced: ${unsyncedCount[0]?.count || 0}`);
     console.log(`Found ${unsyncedRecords.length} unsynced ${tableName} records to push`);
     
     // Debug: Log first few unsynced records if any
     if (unsyncedRecords.length > 0) {
-      console.log(`[${tableName}] Sample unsynced records:`, unsyncedRecords.slice(0, 3).map(r => ({
-        id: r[idField],
-        synced: r.synced,
-        hasDeletedAt: r.deleted_at
-      })));
+      if (tableName === 'payroll_records') {
+        console.log(`[${tableName}] Sample unsynced records:`, unsyncedRecords.slice(0, 3).map(r => ({
+          id: r.id,
+          emp_id: r.emp_id,
+          month: r.month,
+          year: r.year,
+          synced: r.synced,
+          syncedType: typeof r.synced,
+          hasDeletedAt: r.deleted_at
+        })));
+      } else {
+        console.log(`[${tableName}] Sample unsynced records:`, unsyncedRecords.slice(0, 3).map(r => ({
+          id: r[idField],
+          synced: r.synced,
+          hasDeletedAt: r.deleted_at
+        })));
+      }
     }
     
     let pushedCount = 0;
     for (const record of unsyncedRecords) {
       try {
-        if (!record[idField]) {
+        // For payroll_records, idField is 'id' but we don't require it for the check
+        if (tableName !== 'payroll_records' && !record[idField]) {
           console.warn(`Skipping ${tableName} record with missing ${idField}`);
+          continue;
+        }
+        
+        if (tableName === 'payroll_records' && (!record.emp_id || !record.month || !record.year)) {
+          console.warn(`Skipping payroll record with missing emp_id, month, or year:`, record);
           continue;
         }
 
         // Special handling for attendance table: map employee_id from SQLite to PostgreSQL
+        // For payroll_records: convert month to number in mappedRecord
         let mappedRecord = { ...record };
+        if (tableName === 'payroll_records') {
+          console.log(`[PAYROLL PUSH] Processing record:`, { id: record.id, emp_id: record.emp_id, month: record.month, year: record.year, synced: record.synced });
+          
+          // CRITICAL: Convert month to number IMMEDIATELY
+          if (mappedRecord.month && typeof mappedRecord.month === 'string') {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthIndex = monthNames.findIndex(m => m.toLowerCase() === mappedRecord.month.toLowerCase());
+            if (monthIndex !== -1) {
+              mappedRecord.month = monthIndex + 1;
+              console.log(`[PAYROLL PUSH] Converted month "${record.month}" to ${mappedRecord.month} in mappedRecord`);
+            } else {
+              const numValue = parseInt(mappedRecord.month, 10);
+              if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                mappedRecord.month = numValue;
+                console.log(`[PAYROLL PUSH] Parsed month "${record.month}" as ${mappedRecord.month} in mappedRecord`);
+              } else {
+                console.error(`[PAYROLL PUSH ERROR] Cannot convert month: ${mappedRecord.month}`);
+                throw new Error(`Invalid month value: ${mappedRecord.month}`);
+              }
+            }
+          }
+          
+          // Convert year to number
+          if (mappedRecord.year && typeof mappedRecord.year === 'string') {
+            mappedRecord.year = parseInt(mappedRecord.year, 10);
+            console.log(`[PAYROLL PUSH] Converted year to ${mappedRecord.year} in mappedRecord`);
+          }
+          console.log(`[PAYROLL PUSH] Original record month: ${record.month} (type: ${typeof record.month})`);
+          // Convert month name to number for payroll_records
+          if (mappedRecord.month) {
+            if (typeof mappedRecord.month === 'string') {
+              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                 'July', 'August', 'September', 'October', 'November', 'December'];
+              const monthIndex = monthNames.findIndex(m => m.toLowerCase() === mappedRecord.month.toLowerCase());
+              if (monthIndex !== -1) {
+                mappedRecord.month = monthIndex + 1; // Convert to 1-12
+                console.log(`[PAYROLL PUSH] Converted mappedRecord.month from "${record.month}" to ${mappedRecord.month}`);
+              } else {
+                // Try parsing as number
+                const numValue = parseInt(mappedRecord.month, 10);
+                if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                  mappedRecord.month = numValue;
+                  console.log(`[PAYROLL PUSH] Parsed mappedRecord.month from "${record.month}" to ${mappedRecord.month}`);
+                } else {
+                  console.error(`[PAYROLL PUSH] Cannot convert month: ${mappedRecord.month}`);
+                }
+              }
+            }
+          }
+          // Ensure year is a number
+          if (mappedRecord.year && typeof mappedRecord.year === 'string') {
+            mappedRecord.year = parseInt(mappedRecord.year, 10);
+            console.log(`[PAYROLL PUSH] Converted mappedRecord.year to ${mappedRecord.year}`);
+          }
+        }
         if (tableName === 'attendance' && record.employee_id) {
           // Get the employee's emp_id from SQLite
           const sqliteEmployee = await sqliteAll(
@@ -1289,15 +1668,70 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
           }
         }
 
-        // Check if record exists in PostgreSQL
-        const pgCheck = await pgPool.query(
-          `SELECT ${idField} FROM ${tableName} WHERE ${idField} = $1`,
-          [mappedRecord[idField]]
-        );
+        // For payroll_records, check by emp_id, month, and year instead of id
+        // since IDs don't match between SQLite and PostgreSQL
+        let pgCheck;
+        if (tableName === 'payroll_records') {
+          // Ensure month is already converted in mappedRecord (should be done above)
+          // But double-check and convert if needed
+          let monthValue = mappedRecord.month;
+          if (typeof monthValue === 'string') {
+            console.log(`[PAYROLL PUSH] Month is still a string in mappedRecord: ${monthValue}, converting...`);
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthValue.toLowerCase());
+            if (monthIndex !== -1) {
+              monthValue = monthIndex + 1; // Return 1-12
+              mappedRecord.month = monthValue; // Update mappedRecord too
+              console.log(`[PAYROLL PUSH] Converted month "${record.month}" to ${monthValue} in mappedRecord`);
+            } else {
+              // Try parsing as number
+              const numValue = parseInt(monthValue, 10);
+              if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                monthValue = numValue;
+                mappedRecord.month = monthValue;
+              } else {
+                console.error(`[PAYROLL PUSH ERROR] Invalid month value: ${monthValue}`);
+                throw new Error(`Invalid month value: ${monthValue}`);
+              }
+            }
+          }
+          
+          // Convert year to number
+          let yearValue = mappedRecord.year;
+          if (typeof yearValue === 'string') {
+            yearValue = parseInt(yearValue, 10);
+            mappedRecord.year = yearValue;
+          }
+          
+          console.log(`[PAYROLL PUSH] Checking for existing record: emp_id=${mappedRecord.emp_id}, month=${monthValue} (type: ${typeof monthValue}), year=${yearValue} (type: ${typeof yearValue})`);
+          
+          // Ensure monthValue and yearValue are numbers
+          if (typeof monthValue !== 'number') {
+            console.error(`[PAYROLL PUSH ERROR] monthValue is not a number: ${monthValue} (type: ${typeof monthValue})`);
+            throw new Error(`Month must be a number, got: ${monthValue} (type: ${typeof monthValue})`);
+          }
+          if (typeof yearValue !== 'number') {
+            console.error(`[PAYROLL PUSH ERROR] yearValue is not a number: ${yearValue} (type: ${typeof yearValue})`);
+            throw new Error(`Year must be a number, got: ${yearValue} (type: ${typeof yearValue})`);
+          }
+          
+          pgCheck = await pgPool.query(
+            `SELECT ${idField} FROM ${tableName} WHERE emp_id = $1 AND month = $2 AND year = $3 AND deleted_at IS NULL`,
+            [mappedRecord.emp_id, monthValue, yearValue]
+          );
+          
+          console.log(`[PAYROLL PUSH] Found ${pgCheck.rows.length} existing record(s) in PostgreSQL`);
+        } else {
+          pgCheck = await pgPool.query(
+            `SELECT ${idField} FROM ${tableName} WHERE ${idField} = $1`,
+            [mappedRecord[idField]]
+          );
+        }
 
         // Filter out fields that don't exist in the record or are undefined
-        // Use mappedRecord for attendance, regular record for others
-        const recordToUse = tableName === 'attendance' ? mappedRecord : record;
+        // Use mappedRecord for attendance and payroll_records (month/year converted), regular record for others
+        const recordToUse = (tableName === 'attendance' || tableName === 'payroll_records') ? mappedRecord : record;
         const availableFields = fields.filter(f => f !== 'synced' && recordToUse.hasOwnProperty(f));
         const fieldNames = availableFields.join(', ');
         const placeholders = availableFields.map((_, i) => `$${i + 1}`).join(', ');
@@ -1309,26 +1743,31 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
           }
           // Convert month name to number for payroll_records
           if (f === 'month' && tableName === 'payroll_records') {
+            console.log(`[PAYROLL PUSH] Converting month value: ${value} (type: ${typeof value})`);
             if (typeof value === 'string') {
               const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                                  'July', 'August', 'September', 'October', 'November', 'December'];
               const monthIndex = monthNames.findIndex(m => m.toLowerCase() === value.toLowerCase());
               if (monthIndex !== -1) {
-                return monthIndex + 1; // Return 1-12
+                const converted = monthIndex + 1; // Return 1-12
+                console.log(`[PAYROLL PUSH] Converted month "${value}" to ${converted}`);
+                return converted;
               }
               // Try parsing as number
               const numValue = parseInt(value, 10);
               if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                console.log(`[PAYROLL PUSH] Parsed month "${value}" as number ${numValue}`);
                 return numValue;
               }
             }
             // If it's already a number, return it
             if (typeof value === 'number' && value >= 1 && value <= 12) {
+              console.log(`[PAYROLL PUSH] Month is already a number: ${value}`);
               return value;
             }
             // Default to null if can't convert
-            console.warn(`Invalid month value for payroll record: ${value}`);
-            return null;
+            console.error(`[PAYROLL PUSH] Invalid month value for payroll record: ${value} (type: ${typeof value})`);
+            throw new Error(`Invalid month value: ${value}`);
           }
           // Convert year to integer for payroll_records
           if (f === 'year' && tableName === 'payroll_records') {
@@ -1495,20 +1934,75 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
               return formatDateValue(value === undefined ? null : value, f);
             });
           
-          const whereIndex = updateValues.length + 1;
+          // For payroll_records, use emp_id, month, year in WHERE clause
+          // For other tables, use idField
+          let whereClause;
+          let whereValues;
+          if (tableName === 'payroll_records') {
+            // Convert month to number for WHERE clause (same conversion as in values)
+            let monthForWhere = recordToUse.month;
+            if (typeof monthForWhere === 'string') {
+              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                 'July', 'August', 'September', 'October', 'November', 'December'];
+              const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthForWhere.toLowerCase());
+              if (monthIndex !== -1) {
+                monthForWhere = monthIndex + 1;
+              } else {
+                const numValue = parseInt(monthForWhere, 10);
+                if (!isNaN(numValue) && numValue >= 1 && numValue <= 12) {
+                  monthForWhere = numValue;
+                }
+              }
+            }
+            const yearForWhere = typeof recordToUse.year === 'string' ? parseInt(recordToUse.year, 10) : recordToUse.year;
+            
+            whereClause = `emp_id = $${updateValues.length + 1} AND month = $${updateValues.length + 2} AND year = $${updateValues.length + 3}`;
+            whereValues = [recordToUse.emp_id, monthForWhere, yearForWhere];
+          } else {
+            whereClause = `${idField} = $${updateValues.length + 1}`;
+            whereValues = [mappedRecord[idField]];
+          }
+          
           await pgPool.query(
-            `UPDATE ${tableName} SET ${updateFields}, updated_at = CURRENT_TIMESTAMP WHERE ${idField} = $${whereIndex}`,
-            [...updateValues, mappedRecord[idField]]
+            `UPDATE ${tableName} SET ${updateFields}, updated_at = CURRENT_TIMESTAMP WHERE ${whereClause}`,
+            [...updateValues, ...whereValues]
           );
-          console.log(`Updated PostgreSQL ${tableName} record with ${idField}: ${mappedRecord[idField]}`);
+          console.log(`Updated PostgreSQL ${tableName} record with ${tableName === 'payroll_records' ? `emp_id: ${recordToUse.emp_id}, month: ${recordToUse.month}, year: ${recordToUse.year}` : `${idField}: ${mappedRecord[idField]}`}`);
         } else {
           // Insert new record into PostgreSQL
+          if (tableName === 'payroll_records') {
+            console.log(`[PAYROLL PUSH] Inserting new record into PostgreSQL: emp_id=${mappedRecord.emp_id}, month=${mappedRecord.month} (type: ${typeof mappedRecord.month}), year=${mappedRecord.year}`);
+            console.log(`[PAYROLL PUSH] Field names: ${fieldNames}`);
+            console.log(`[PAYROLL PUSH] Values array (first 5):`, values.slice(0, 5).map((v, i) => `${i}: ${v} (type: ${typeof v})`));
+            // Double-check month is a number in the values array
+            const monthIndex = availableFields.indexOf('month');
+            if (monthIndex !== -1) {
+              if (typeof values[monthIndex] === 'string') {
+                console.error(`[PAYROLL PUSH ERROR] Month value is still a string at index ${monthIndex}: ${values[monthIndex]}`);
+                // Force convert it
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                   'July', 'August', 'September', 'October', 'November', 'December'];
+                const monthStr = values[monthIndex];
+                const monthIdx = monthNames.findIndex(m => m.toLowerCase() === monthStr.toLowerCase());
+                if (monthIdx !== -1) {
+                  values[monthIndex] = monthIdx + 1;
+                  console.log(`[PAYROLL PUSH FIX] Forced conversion of month "${monthStr}" to ${values[monthIndex]}`);
+                } else {
+                  throw new Error(`Cannot convert month "${monthStr}" to number`);
+                }
+              }
+            }
+          }
           try {
             await pgPool.query(
               `INSERT INTO ${tableName} (${fieldNames}) VALUES (${placeholders})`,
               values
             );
-            console.log(`Inserted new PostgreSQL ${tableName} record with ${idField}: ${mappedRecord[idField]}`);
+            if (tableName === 'payroll_records') {
+              console.log(`[PAYROLL PUSH] Successfully inserted new PostgreSQL record: emp_id=${mappedRecord.emp_id}, month=${mappedRecord.month}, year=${mappedRecord.year}`);
+            } else {
+              console.log(`Inserted new PostgreSQL ${tableName} record with ${idField}: ${mappedRecord[idField]}`);
+            }
           } catch (insertErr) {
             // If it's a unique constraint error, try updating instead
             if (insertErr.code === '23505' || insertErr.message.includes('duplicate key') || insertErr.message.includes('UNIQUE constraint')) {
@@ -1540,13 +2034,25 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
           }
         }
 
-        // Mark as synced in SQLite (use original record idField, not mapped)
-        await sqliteRun(
-          `UPDATE ${tableName} SET synced = 1 WHERE ${idField} = ?`,
-          [record[idField]]
-        );
+        // Mark as synced in SQLite
+        // For payroll_records, use emp_id, month, year instead of id
+        if (tableName === 'payroll_records') {
+          // Ensure month and year are numbers for the query
+          const monthValue = typeof record.month === 'string' ? parseInt(record.month, 10) : record.month;
+          const yearValue = typeof record.year === 'string' ? parseInt(record.year, 10) : record.year;
+          await sqliteRun(
+            `UPDATE ${tableName} SET synced = 1 WHERE emp_id = ? AND month = ? AND year = ?`,
+            [record.emp_id, monthValue, yearValue]
+          );
+          console.log(`[PAYROLL PUSH] Successfully pushed and marked as synced: emp_id=${record.emp_id}, month=${monthValue}, year=${yearValue}`);
+        } else {
+          await sqliteRun(
+            `UPDATE ${tableName} SET synced = 1 WHERE ${idField} = ?`,
+            [record[idField]]
+          );
+          console.log(`Successfully pushed ${tableName} record ${record[idField]} to PostgreSQL`);
+        }
         pushedCount++;
-        console.log(`Successfully pushed ${tableName} record ${record[idField]} to PostgreSQL`);
       } catch (err) {
         console.error(`Error pushing ${tableName} record:`, {
           error: err.message,
@@ -1733,7 +2239,17 @@ const initializeSync = async () => {
       try {
         console.log(`Syncing table: ${table.name}`);
         
-        // Step 1: Pull from PostgreSQL to SQLite
+        // IMPORTANT: Push FIRST to ensure local unsynced changes are saved to PostgreSQL
+        // before pulling (which might overwrite local changes)
+        // Step 1: Push unsynced SQLite records to PostgreSQL FIRST
+        const pushResult = await pushTableToPostgres(
+          table.name,
+          table.idField,
+          table.fields
+        );
+        results.push({ ...pushResult, direction: 'push' });
+        
+        // Step 2: Pull from PostgreSQL to SQLite (after pushing local changes)
         const pullResult = await syncTable(
           table.name,
           table.idField,
@@ -1742,15 +2258,7 @@ const initializeSync = async () => {
         );
         results.push({ ...pullResult, direction: 'pull' });
         
-        // Step 2: Push unsynced SQLite records to PostgreSQL
-        const pushResult = await pushTableToPostgres(
-          table.name,
-          table.idField,
-          table.fields
-        );
-        results.push({ ...pushResult, direction: 'push' });
-        
-        console.log(`Successfully synced table: ${table.name} (pulled: ${pullResult.synced || 0}, pushed: ${pushResult.pushed || 0})`);
+        console.log(`Successfully synced table: ${table.name} (pushed: ${pushResult.pushed || 0}, pulled: ${pullResult.synced || 0})`);
       } catch (err) {
         console.error(`Error syncing table ${table.name}:`, err);
         results.push({ success: false, table: table.name, error: err.message });
