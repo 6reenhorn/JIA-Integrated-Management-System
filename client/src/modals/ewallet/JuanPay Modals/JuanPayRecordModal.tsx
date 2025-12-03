@@ -159,14 +159,16 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
         return;
     }
 
-    const beginningsStr = formData.beginnings
+    // Convert beginnings to array of objects with amount property
+    const beginningsArray = formData.beginnings
         .filter(b => b.amount.trim() !== '')
-        .map(b => parseFormattedNumber(b.amount))
-        .join('|');
+        .map(b => ({
+            amount: parseFormattedNumber(b.amount)
+        }));
 
-    const newRecord: Omit<JuanPayRecord, 'id'> = {
+    const newRecord: any = {
         date: formData.date,
-        beginnings: beginningsStr,
+        beginnings: beginningsArray,
         ending: parseFormattedNumber(formData.ending) || 0,
         sales: parseFloat(formData.sales) || 0,
     };

@@ -195,10 +195,23 @@ router.post('/', async (req, res) => {
       });
     } else if (typeof beginnings === 'number') {
       beginningsArray = [beginnings];
-    } else if (beginnings && typeof beginnings === 'object') {
+    } else if (beginnings && typeof beginnings === 'object' && !Array.isArray(beginnings)) {
       // Handle single object case
       if ('amount' in beginnings) {
         beginningsArray = [typeof beginnings.amount === 'number' ? beginnings.amount : parseFloat(beginnings.amount) || 0];
+      }
+    } else if (typeof beginnings === 'string') {
+      // Fallback: Handle pipe-separated string format (for backward compatibility)
+      if (beginnings.includes('|')) {
+        beginningsArray = beginnings.split('|')
+          .map(val => parseFloat(val.trim()))
+          .filter(val => !isNaN(val));
+      } else {
+        // Single number string
+        const num = parseFloat(beginnings);
+        if (!isNaN(num)) {
+          beginningsArray = [num];
+        }
       }
     }
 
@@ -255,10 +268,23 @@ router.put('/:id', async (req, res) => {
       });
     } else if (typeof beginnings === 'number') {
       beginningsArray = [beginnings];
-    } else if (beginnings && typeof beginnings === 'object') {
+    } else if (beginnings && typeof beginnings === 'object' && !Array.isArray(beginnings)) {
       // Handle single object case
       if ('amount' in beginnings) {
         beginningsArray = [typeof beginnings.amount === 'number' ? beginnings.amount : parseFloat(beginnings.amount) || 0];
+      }
+    } else if (typeof beginnings === 'string') {
+      // Fallback: Handle pipe-separated string format (for backward compatibility)
+      if (beginnings.includes('|')) {
+        beginningsArray = beginnings.split('|')
+          .map(val => parseFloat(val.trim()))
+          .filter(val => !isNaN(val));
+      } else {
+        // Single number string
+        const num = parseFloat(beginnings);
+        if (!isNaN(num)) {
+          beginningsArray = [num];
+        }
       }
     }
 
