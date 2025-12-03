@@ -89,9 +89,9 @@ router.post('/', async (req, res) => {
     // Use provided name or construct from parsed firstName/lastName
     const fullName = name || (parsedFirstName && parsedLastName ? `${parsedFirstName} ${parsedLastName}` : parsedFirstName || parsedLastName || '');
 
-    // Generate password if not provided
+    // Generate password if not provided or empty
     let finalPassword = password;
-    if (!finalPassword) {
+    if (!finalPassword || (typeof finalPassword === 'string' && finalPassword.trim() === '')) {
       // Generate random password 8-10 characters
       const length = Math.floor(Math.random() * 3) + 8;
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
@@ -99,6 +99,9 @@ router.post('/', async (req, res) => {
       for (let i = 0; i < length; i++) {
         finalPassword += chars.charAt(Math.floor(Math.random() * chars.length));
       }
+      console.log(`[EMPLOYEE CREATE] Generated password for new employee (password was missing/empty)`);
+    } else {
+      console.log(`[EMPLOYEE CREATE] Using provided password (length: ${finalPassword.length})`);
     }
 
     // Use DBHelper.insert to automatically set synced = 0 for new records
