@@ -49,6 +49,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   const [isClosing, setIsClosing] = useState(false);
   const [showValidationAlert, setShowValidationAlert] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [priceError, setPriceError] = useState<string>('');
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -71,6 +72,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       setIsClosing(false);
       setShowValidationAlert(false);
       setMissingFields([]);
+      setPriceError('');
     }
   }, [isOpen]);
 
@@ -90,11 +92,13 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       setIsClosing(false);
       setShowValidationAlert(false);
       setMissingFields([]);
+      setPriceError('');
     }, 300);
   };
 
   const validateForm = (): boolean => {
     const missing: string[] = [];
+    let hasError = false;
 
     if (!formData.productName.trim()) {
       missing.push('Product Name');
@@ -102,9 +106,21 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     if (!formData.category) {
       missing.push('Category');
     }
+    
+    // Validate price
+    const price = Number(formData.productPrice);
     if (!formData.productPrice || formData.productPrice === '') {
       missing.push('Price');
+      setPriceError('Price is required');
+      hasError = true;
+    } else if (price <= 0) {
+      missing.push('Price (must be greater than 0)');
+      setPriceError('Price must be greater than 0');
+      hasError = true;
+    } else {
+      setPriceError('');
     }
+    
     if (formData.quantity === '') {
       missing.push('Current Stock');
     }
@@ -121,7 +137,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       return false;
     }
 
-    return true;
+    return !hasError;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -162,8 +178,10 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       productPrice: '',
       quantity: '',
       minimumStock: '',
-      description: ''
+      description: '',
+      productPriceDisplay: ''
     });
+    setPriceError('');
     
     handleClose();
   };
@@ -186,6 +204,16 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     if (name === 'productPrice') {
       const numericValue = value.replace(/,/g, '');
       const formattedValue = formatNumberWithCommas(value);
+      
+      // Validate price in real-time
+      const price = Number(numericValue);
+      if (numericValue === '') {
+        setPriceError('');
+      } else if (price <= 0) {
+        setPriceError('Price must be greater than 0');
+      } else {
+        setPriceError('');
+      }
       
       setFormData(prev => ({
         ...prev,
@@ -342,25 +370,31 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         overflowY: categories.length <= 5 ? 'visible' : 'auto'
                       }}
                     >
-                    {[...categories].reverse().map((category) => (
-                      <div
-                        key={category}
-                        className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                        onClick={() => handleCategorySelect(category)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleCategorySelect(category);
-                          }
-                        }}
-                        tabIndex={0}
-                      >
-                        <div 
-                          className="w-3 h-3 rounded-full mr-3 flex-shrink-0"
-                          style={{ backgroundColor: categoryColors[category] || '#6B7280' }}
-                        ></div>
-                        <span className="truncate">{category}</span>
+                    {categories.length === 0 ? (
+                      <div className="px-4 py-2 text-gray-500 text-center">
+                        No categories available
                       </div>
-                    ))}
+                    ) : (
+                      [...categories].reverse().map((category) => (
+                        <div
+                          key={category}
+                          className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                          onClick={() => handleCategorySelect(category)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleCategorySelect(category);
+                            }
+                          }}
+                          tabIndex={0}
+                        >
+                          <div 
+                            className="w-3 h-3 rounded-full mr-3 flex-shrink-0"
+                            style={{ backgroundColor: categoryColors[category] || '#6B7280' }}
+                          ></div>
+                          <span className="truncate">{category}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                   </div>
                 </div>
@@ -376,11 +410,14 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     onChange={handleChange}
                     placeholder="0.00"
                     className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
-                      showValidationAlert && (!formData.productPrice || formData.productPrice === '') 
+                      priceError || (showValidationAlert && (!formData.productPrice || formData.productPrice === ''))
                         ? 'border-red-300 bg-red-50' 
                         : 'border-gray-300'
                     }`}
                   />
+                  {priceError && (
+                    <p className="text-red-600 text-xs mt-1">{priceError}</p>
+                  )}
                 </div>
               </div>
 
