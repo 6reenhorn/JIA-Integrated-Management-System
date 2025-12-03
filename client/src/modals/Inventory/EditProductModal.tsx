@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import type { InventoryItem } from '../../types/inventory_types';
 import Portal from '../../components/common/Portal';
 
@@ -35,10 +36,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
 
   const [productPriceDisplay, setProductPriceDisplay] = useState<string>('');
   const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const [showValidationAlert, setShowValidationAlert] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
   const [isClosing, setIsClosing] = useState(false);
   const [wasUpdating, setWasUpdating] = useState(false);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null); // Add ref for the modal
+  const modalRef = useRef<HTMLDivElement>(null);
 
 // Close dropdown when clicking outside
 useEffect(() => {
@@ -64,7 +67,7 @@ useEffect(() => {
   return () => {
     document.removeEventListener('mousedown', handleClickOutside);
   };
-}, [isUpdating, onClose]); // Add onClose as dependency
+}, [isUpdating, onClose]);
 
 // Handle escape key
 useEffect(() => {
@@ -105,6 +108,13 @@ useEffect(() => {
     }
   }, [initialData, isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      setShowValidationAlert(false);
+      setMissingFields([]);
+    }
+  }, [isOpen]);
+
     // Watch for update completion
   useEffect(() => {
     if (wasUpdating && !isUpdating && isOpen) {
@@ -135,6 +145,11 @@ useEffect(() => {
     if (!isUpdating) {
       setFormData(prev => ({ ...prev, category }));
       setIsSelectOpen(false);
+      
+      // Hide validation alert when user makes changes
+      if (showValidationAlert) {
+        setShowValidationAlert(false);
+      }
     }
   };
 
@@ -150,6 +165,11 @@ useEffect(() => {
       ...prev,
       [field]: value
     }));
+    
+    // Hide validation alert when user makes changes
+    if (showValidationAlert) {
+      setShowValidationAlert(false);
+    }
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,8 +190,43 @@ useEffect(() => {
     handleInputChange('productPrice', cleanedNumeric === '' ? 0 : parseFloat(cleanedNumeric) || 0);
   };
 
+  const validateForm = () => {
+    const missing: string[] = [];
+
+    if (!formData.productName.trim()) {
+      missing.push('Product Name');
+    }
+    if (!formData.category) {
+      missing.push('Category');
+    }
+    if (!formData.productPrice || formData.productPrice <= 0) {
+      missing.push('Price');
+    }
+    if (formData.stock === undefined || formData.stock === null) {
+      missing.push('Current Stock');
+    }
+
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      setShowValidationAlert(true);
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        setShowValidationAlert(false);
+      }, 5000);
+      
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = () => {
     if (isUpdating) return;
+    
+    if (!validateForm()) {
+      return;
+    }
     
     const minStock = formData.minimumStock || 5;
     const updatedFormData = {
@@ -200,17 +255,40 @@ useEffect(() => {
     <Portal>
       <div 
         className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        // Remove the onClick from here since we're handling it in useEffect
       >
         <div 
-          ref={modalRef} // Add ref to modal content
+          ref={modalRef}
           className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] ${isClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
-          // Remove onClick stopPropagation since we're handling clicks in useEffect
         >
           <div>
             <h3 className="text-[20px] font-bold">Edit Product</h3>
             <p className="text-[12px]">Update the product information and inventory details.</p>
           </div>
+
+          {/* Validation Alert */}
+          {showValidationAlert && (
+            <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 animate-modal-in">
+              <div className="flex gap-2">
+                <AlertTriangle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-red-800 mb-1">
+                    Please fill in all required fields
+                  </p>
+                  <p className="text-xs text-red-700">
+                    Missing: {missingFields.join(', ')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowValidationAlert(false)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
           
           <div className="overflow-y-auto max-h-[550px] mt-4 text-[12px]">
             <div className="flex flex-col gap-3">
@@ -219,13 +297,17 @@ useEffect(() => {
                 <h3 className="text-[16px] font-bold">Product Details</h3>
                 
                 <div className="mt-2">
-                  <label className="text-[12px] font-bold">Product Name</label>
+                  <label className="text-[12px] font-bold">
+                    Product Name
+                  </label>
                   <input
                     type="text"
                     value={formData.productName}
                     onChange={(e) => handleInputChange('productName', e.target.value)}
                     disabled={isUpdating}
-                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                      showValidationAlert && !formData.productName.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                   />
                 </div>
 
@@ -242,12 +324,16 @@ useEffect(() => {
 
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div className="dropdown relative" ref={categoryDropdownRef}>
-                    <p className="text-[12px] font-bold">Category</p>
+                    <p className="text-[12px] font-bold">
+                      Category
+                    </p>
                     <div
-                      className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 cursor-pointer h-[29px] ${
+                      className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full rounded-md px-4 text-gray-600 cursor-pointer h-[29px] ${
                         isUpdating 
-                          ? 'opacity-50 cursor-not-allowed' 
-                          : 'hover:bg-gray-200'
+                          ? 'opacity-50 cursor-not-allowed border-[#E5E7EB]' 
+                          : showValidationAlert && !formData.category
+                          ? 'border-red-300 bg-red-50'
+                          : 'border-[#E5E7EB] hover:bg-gray-200'
                       }`}
                       onClick={toggleCategoryDropdown}
                       onKeyDown={(e) => {
@@ -282,7 +368,6 @@ useEffect(() => {
                       </svg>
                     </div>
                     
-                    {/* KEEPING YOUR EXACT DROPDOWN STYLING */}
                     <div
                       className="dropdown-options mt-1 rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                       style={{
@@ -327,28 +412,36 @@ useEffect(() => {
                   </div>
 
                 <div>
-                  <label className="text-[12px] font-bold">Price (₱)</label>
+                  <label className="text-[12px] font-bold">
+                    Price (₱)
+                  </label>
                   <input
                     type="text"
                     value={productPriceDisplay}
                     onChange={handlePriceChange}
                     disabled={isUpdating}
                     placeholder="0.00"
-                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                      showValidationAlert && (!formData.productPrice || formData.productPrice <= 0) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                   />
                 </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div>
-                    <label className="text-[12px] font-bold">Current Stock</label>
+                    <label className="text-[12px] font-bold">
+                      Current Stock
+                    </label>
                     <input
                       type="number"
                       value={formData.stock || ''}
                       onChange={(e) => handleInputChange('stock', parseInt(e.target.value) || 0)}
                       disabled={isUpdating}
                       min="0"
-                      className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                        showValidationAlert && (formData.stock === undefined || formData.stock === null) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     />
                   </div>
                   <div>
