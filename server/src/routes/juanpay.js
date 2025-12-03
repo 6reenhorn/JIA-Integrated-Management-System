@@ -145,8 +145,7 @@ const safeJsonParse = (value, defaultValue = []) => {
     if (typeof value === 'number') {
       return [{ amount: value }];
     }
-    // For any other type, return default
-    return defaultValue;
+    return '';
   } catch (e) {
     console.error('Error parsing JSON in safeJsonParse:', e.message, 'Value type:', typeof value, 'Value:', value);
     return defaultValue;
@@ -161,14 +160,12 @@ router.get('/', async (req, res) => {
     );
 
     const records = rows.map(row => {
-      // Safely parse the 'beginnings' field
-      // The safeJsonParse function now handles all cases
-      const beginnings = safeJsonParse(row.beginnings, []);
+      const beginnings = parseBeginnings(row.beginnings);
       
       return {
         id: row.id.toString(),
         date: formatDatePH(row.date),
-        beginnings,
+        beginnings: beginnings,
         ending: parseFloat(row.ending) || 0,
         sales: parseFloat(row.sales) || 0
       };
@@ -211,8 +208,6 @@ router.post('/', async (req, res) => {
       sales: sales || 0
     });
 
-    // For SQLite, insert returns { id: ..., ...data }
-    // For PostgreSQL, insert returns the full row
     const recordId = result.id || result.lastID || result.insertId;
     if (!recordId) {
       throw new Error('Failed to get JuanPay record ID after insert');

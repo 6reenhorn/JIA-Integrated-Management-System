@@ -68,7 +68,13 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
     });
   };
 
-  const totalBeginning = record.beginnings.reduce((sum, b) => sum + b.amount, 0);
+  const beginningsArray = record.beginnings
+    ? record.beginnings.split('|')
+        .map(val => parseFloat(val.trim()))
+        .filter(val => !isNaN(val))
+    : [];
+
+  const totalBeginning = beginningsArray.reduce((sum, amount) => sum + amount, 0);
 
   const handleConfirm = () => {
       if (record && !isDeleting) {
@@ -139,13 +145,13 @@ const DeleteJuanPayRecordModal: React.FC<DeleteJuanPayRecordModalProps> = ({
                   <span className="text-gray-600 font-medium">Beginning Balance:</span>
                   <span className="text-gray-900 font-semibold">{formatCurrency(totalBeginning)}</span>
                 </div>
-                {record.beginnings.length > 1 && (
+                {beginningsArray.length > 1 && (
                   <div className="mt-2 pl-3 space-y-1 bg-gray-50 rounded py-2 px-2 border border-gray-100">
                     <div className="text-[10px] text-gray-500 font-medium mb-1">Breakdown:</div>
-                    {record.beginnings.map((b, idx) => (
+                    {beginningsArray.map((amount, idx) => (
                       <div key={idx} className="flex justify-between text-[10px] text-gray-600">
                         <span>Entry #{idx + 1}</span>
-                        <span className="font-medium">{formatCurrency(b.amount)}</span>
+                        <span className="font-medium">{formatCurrency(amount)}</span>
                       </div>
                     ))}
                   </div>

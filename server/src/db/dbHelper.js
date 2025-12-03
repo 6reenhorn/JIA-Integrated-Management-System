@@ -113,15 +113,14 @@ class DBHelper {
     const values = columns.map(col => data[col]);
     
     if (this.dbType === 'sqlite') {
-      // Add synced = 0 for new records (they need to be pushed to PostgreSQL)
-      const columnsWithSynced = [...columns, 'synced'];
-      const valuesWithSynced = [...values, 0];
-      const placeholders = columnsWithSynced.map(() => '?').join(', ');
+      const columnsWithMeta = [...columns, 'synced', 'updated_at'];
+      const valuesWithMeta = [...values, 0, null];
+      const placeholders = columnsWithMeta.map(() => '?').join(', ');
       const sql = `
-        INSERT INTO ${table} (${columnsWithSynced.join(', ')})
+        INSERT INTO ${table} (${columnsWithMeta.join(', ')})
         VALUES (${placeholders})
       `;
-      const result = await this.run(sql, valuesWithSynced);
+      const result = await this.run(sql, valuesWithMeta);
       return { id: result.lastID, ...data };
     } else {
       const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');

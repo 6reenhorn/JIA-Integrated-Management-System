@@ -122,7 +122,7 @@ const createGCashRecordsTable = async () => {
       reference_number TEXT,
       date TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
       deleted_at TIMESTAMP DEFAULT NULL,
       synced INTEGER DEFAULT 1
     )
@@ -181,7 +181,7 @@ const createPayMayaRecordsTable = async () => {
       reference_number TEXT,
       date TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
       deleted_at TIMESTAMP DEFAULT NULL,
       synced INTEGER DEFAULT 1
     )
@@ -232,7 +232,7 @@ const createJuanPayRecordsTable = async () => {
       ending REAL DEFAULT 0,
       sales REAL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
       deleted_at TIMESTAMP DEFAULT NULL,
       synced INTEGER DEFAULT 1
     )
