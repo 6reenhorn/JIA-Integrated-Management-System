@@ -26,6 +26,9 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
   const [focusedRoleOption, setFocusedRoleOption] = useState(0);
   const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [contactNameError, setContactNameError] = useState('');
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
@@ -33,8 +36,22 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
       // Populate form fields when employee changes
       useEffect(() => {
         if (employee) {
-          setFirstName(employee.name.split(' ')[0] || '');
-          setLastName(employee.name.split(' ').slice(1).join(' ') || '');
+          // Use firstName/lastName if available, otherwise split the name
+          if ((employee as any).firstName && (employee as any).lastName) {
+            setFirstName((employee as any).firstName);
+            setLastName((employee as any).lastName);
+          } else {
+            // Fallback: split name on last space (first part = firstName, last word = lastName)
+            const nameParts = employee.name.trim().split(/\s+/);
+            if (nameParts.length === 1) {
+              setFirstName(nameParts[0] || '');
+              setLastName('');
+            } else {
+              // First part is firstName, last word is lastName
+              setFirstName(nameParts.slice(0, -1).join(' ') || '');
+              setLastName(nameParts[nameParts.length - 1] || '');
+            }
+          }
 
           // Parse contact string (email\nphone\naddress)
           const contactParts = employee.contact.split('\n');
@@ -85,6 +102,18 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
     setIsRelationshipDropdownOpen(false);
   };
 
+  const handleClose = () => {
+    if (!isClosing) {
+      setIsClosing(true);
+    }
+  };
+
+  const handleAnimationEnd = () => {
+    if (isClosing) {
+      onClose();
+    }
+  };
+  
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -105,36 +134,70 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
     };
   }, []);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  // Validate name fields - no numbers allowed
+  const validateName = (name: string): boolean => {
+    return /^[a-zA-Z\s'-]+$/.test(name.trim());
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // Validate names
+    if (!validateName(firstName)) {
+      setNameError('First name cannot contain numbers');
+      return;
+    }
+    if (!validateName(lastName)) {
+      setNameError('Last name cannot contain numbers');
+      return;
+    }
+    if (contactName.trim() !== '' && !validateName(contactName)) {
+      setContactNameError('Contact name cannot contain numbers');
+      return;
+    }
+
+    setNameError('');
+    setContactNameError('');
+
+    if (isSaving) return;
     setIsSaving(true);
-    const updatedEmployee: Employee & {
-      email: string;
-      phone: string;
-      address: string;
-      salary: string;
-      contactName: string;
-      contactNumber: string;
-      relationship: string;
-    } = {
-      ...employee,
-      name: `${firstName} ${lastName}`,
-      contact: `${email}\n${phone}\n${address}`,
-      status: selectedStatusText as "Active" | "Inactive",
-      role: selectedRoleText,
-      email,
-      phone,
-      address,
-      salary,
-      contactName,
-      contactNumber,
-      relationship: selectedRelationshipText,
-    };
-    onSave(updatedEmployee);
+
+    try {
+      const updatedEmployee = {
+        ...employee,
+        name: `${firstName} ${lastName}`,
+        contact: `${email}\n${phone}\n${address}`,
+        status: selectedStatusText as "Active" | "Inactive",
+        role: selectedRoleText,
+        email,
+        phone,
+        address,
+        salary,
+        contactName,
+        contactNumber,
+        relationship: selectedRelationshipText,
+      };
+
+      await onSave(updatedEmployee);
+
+      setIsClosing(true);
+
+    } catch (err) {
+      console.error('Failed to save employee:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={handleAnimationEnd}
+      >
       <div>
         <h3 className="text-[20px] font-bold">Edit Employee</h3>
         <p className="text-[12px]">Update the employee's information and role details.</p>
@@ -146,11 +209,18 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div>
                 <label htmlFor="edited_first_name" className="text-[12px] font-bold">First Name</label>
-                <input type="text" name="edited_first_name" id="edited_first_name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" />
+                <input type="text" name="edited_first_name" id="edited_first_name" value={firstName} onChange={(e) => {
+                  setFirstName(e.target.value);
+                  setNameError('');
+                }} className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'}`} />
+                {nameError && <p className="text-red-500 text-[10px] mt-1">{nameError}</p>}
               </div>
               <div>
                 <label htmlFor="edited_last_name" className="text-[12px] font-bold">Last Name</label>
-                <input type="text" name="edited_last_name" id="edited_last_name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" />
+                <input type="text" name="edited_last_name" id="edited_last_name" value={lastName} onChange={(e) => {
+                  setLastName(e.target.value);
+                  setNameError('');
+                }} className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'}`} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-2">
@@ -310,11 +380,11 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                     } else if (e.key === 'Enter') {
                       e.preventDefault();
                       const roles = [
-                        { value: 'manager', text: 'Manager' },
                         { value: 'admin', text: 'Admin' },
-                        { value: 'sales_associates', text: 'Sales Associate' },
-                        { value: 'cashier', text: 'Cashier' },
-                        { value: 'maintenance', text: 'Maintenance' }
+                        { value: 'general_manager', text: 'General Manager' },
+                        { value: 'inventory_manager', text: 'Inventory Manager' },
+                        { value: 'e_wallet_recorder', text: 'E-Wallet Recorder' },
+                        { value: 'inventory_transaction_manager', text: 'Inventory Transaction Manager' }
                       ];
                       const selected = roles[focusedRoleOption];
                       handleRoleOptionClick(selected.value, selected.text);
@@ -325,19 +395,6 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   }}
                   tabIndex={isRoleDropdownOpen ? 0 : -1}
                 >
-                  <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 0 ? 'bg-blue-100' : ''}`}
-                    data-value="manager"
-                    onClick={() => handleRoleOptionClick('manager', 'Manager')}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleRoleOptionClick('manager', 'Manager');
-                      }
-                    }}
-                    tabIndex={isRoleDropdownOpen ? 0 : -1}
-                  >
-                    Manager
-                  </div>
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 1 ? 'bg-blue-100' : ''}`}
                     data-value="admin"
@@ -352,43 +409,56 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                     Admin
                   </div>
                   <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 2 ? 'bg-blue-100' : ''}`}
-                    data-value="sales_associates"
-                    onClick={() => handleRoleOptionClick('sales_associates', 'Sales Associate')}
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 0 ? 'bg-blue-100' : ''}`}
+                    data-value="general_manager"
+                    onClick={() => handleRoleOptionClick('general_manager', 'General Manager')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRoleOptionClick('sales_associates', 'Sales Associate');
+                        handleRoleOptionClick('general_manager', 'General Manager');
                       }
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Sales Associate
+                    General Manager
+                  </div>
+                  <div
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 2 ? 'bg-blue-100' : ''}`}
+                    data-value="inventory_manager"
+                    onClick={() => handleRoleOptionClick('inventory_manager', 'Inventory Manager')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRoleOptionClick('inventory_manager', 'Inventory Manager');
+                      }
+                    }}
+                    tabIndex={isRoleDropdownOpen ? 0 : -1}
+                  >
+                    Inventory Manager
                   </div>
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 3 ? 'bg-blue-100' : ''}`}
-                    data-value="cashier"
-                    onClick={() => handleRoleOptionClick('cashier', 'Cashier')}
+                    data-value="e_wallet_recorder"
+                    onClick={() => handleRoleOptionClick('e_wallet_recorder', 'E-Wallet Recorder')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRoleOptionClick('cashier', 'Cashier');
+                        handleRoleOptionClick('e_wallet_recorder', 'E-Wallet Recorder');
                       }
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Cashier
+                    E-Wallet Recorder
                   </div>
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 4 ? 'bg-blue-100' : ''}`}
-                    data-value="maintenance"
-                    onClick={() => handleRoleOptionClick('maintenance', 'Maintenance')}
+                    data-value="inventory_transaction_manager"
+                    onClick={() => handleRoleOptionClick('inventory_transaction_manager', 'Inventory Transaction Manager')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRoleOptionClick('maintenance', 'Maintenance');
+                        handleRoleOptionClick('inventory_transaction_manager', 'Inventory Transaction Manager');
                       }
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Maintenance
+                    Inventory Transaction Manager
                   </div>
                 </div>
               </div>
@@ -403,7 +473,11 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div className="flex flex-col justify-center">
                 <label htmlFor="employee_contact_name" className="text-[12px] font-bold">Contact Name</label>
-                <input type="text" id="employee_contact_name" name="employee_contact_name" value={contactName} onChange={(e) => setContactName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                <input type="text" id="employee_contact_name" name="employee_contact_name" value={contactName} onChange={(e) => {
+                  setContactName(e.target.value);
+                  setContactNameError('');
+                }} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${contactNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'}`} />
+                {contactNameError && <p className="text-red-500 text-[10px] mt-1">{contactNameError}</p>}
               </div>
               <div>
                 <label htmlFor="employee_contact_number" className="text-[12px] font-bold">Phone Number</label>
@@ -547,16 +621,35 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
           </div>
         </form>
         <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
-          <button
-            onClick={onClose}
-            className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1">
-            Cancel
-          </button>
-          <button type="submit" form="edit-employee-form" className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} disabled={isSaving}>
+        <button
+          onClick={handleClose}
+          type="button"
+          className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
+        >
+          Cancel
+        </button>
+          <button 
+            type="button"
+            className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} 
+            disabled={isSaving}
+            onClick={(e) => {
+              // Ensure form submission works on mobile devices
+              e.preventDefault();
+              if (!isSaving) {
+                const form = document.getElementById('edit-employee-form') as HTMLFormElement;
+                if (form) {
+                  // Trigger form submission
+                  const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                  form.dispatchEvent(submitEvent);
+                }
+              }
+            }}
+          >
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 };

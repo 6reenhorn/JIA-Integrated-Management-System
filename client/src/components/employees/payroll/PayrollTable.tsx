@@ -1,7 +1,25 @@
 import React, { useMemo, useState } from 'react';
-import { User, Trash2 } from "lucide-react";
+import { User, Edit, Trash2 } from "lucide-react";
 import DeletePayrollRecordModal from '../../../modals/employee/DeletePayrollRecordModal';
 import { useDateFormat } from '../../../context/DateFormatContext';
+import EditPayrollDetailsModal from '../../../modals/employee/EditPayrollDetailsModal';
+import Portal from '../../common/Portal';
+
+interface Employee {
+  id: number;
+  name: string;
+  empId: string;
+  role: string;
+  contact: string;
+  status: string;
+  lastLogin: string;
+  address: string;
+  salary: string;
+  contactName: string;
+  contactNumber: string;
+  relationship: string;
+  password: string;
+}
 
 interface PayrollRecord {
   id: number;
@@ -21,14 +39,24 @@ interface PayrollTableProps {
   payrollRecords: PayrollRecord[];
   isLoading: boolean;
   onDelete: (id: number) => void;
+  onUpdate: (id: number, updatedData: Omit<PayrollRecord, 'id' | 'netSalary'> & { netSalary: number }) => void; // Add this
+  employees: Employee[]; // Add this
   headColor?: 'normal' | 'green' | 'red';
 }
 
-const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, onDelete, headColor = 'normal' }) => {
+const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, onDelete, onUpdate, employees, headColor = 'normal' }) => {
   const { formatDate } = useDateFormat();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // In PayrollTable component, add state for edit modal
+  const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const targetEditRecord = useMemo(() => {
+    return payrollRecords.find(r => r.id === editTargetId) || null;
+  }, [editTargetId, payrollRecords]);
 
   const targetRecord = useMemo(() => {
     return payrollRecords.find(r => r.id === deleteTargetId) || null;
@@ -40,11 +68,57 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
   }, [targetRecord]);
   if (isLoading) {
     return (
-      <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-500">Loading payroll records...</p>
-        </div>
+      <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] max-h-[429px] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <table className="table-fixed w-full">
+          <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${headColor === 'green' ? 'bg-green-200' : headColor === 'red' ? 'bg-red-200' : 'bg-[#EDEDED]'}`}>
+            <tr>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[220px]">Employee Name</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Period</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Basic Salary</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Deductions</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Net Salary</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[100px]">Status</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Payment Date</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[80px]">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="py-[26px] px-6 w-[220px]">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse mr-3 flex-shrink-0"></div>
+                    <div className="min-w-0">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse mb-1"></div>
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 w-[100px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
+                </td>
+                <td className="py-4 px-6 text-sm w-[120px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 w-[80px]">
+                  <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }
@@ -55,7 +129,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
         <table className="table-fixed w-full">
           <thead className={`border-[#E5E7EB] border-b sticky top-0 z-10 ${headColor === 'green' ? 'bg-green-200' : headColor === 'red' ? 'bg-red-200' : 'bg-[#EDEDED]'}`}>
             <tr>
-              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[200px]">Employee Name</th>
+              <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[220px]">Employee Name</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Period</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Basic Salary</th>
               <th className="py-4 px-6 text-gray-500 font-medium text-left text-sm w-[120px]">Deductions</th>
@@ -110,22 +184,73 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
               </td>
               <td className="py-4 px-6 text-sm w-[120px] text-gray-600">
                 <div>
-                  {record.month} {record.year}
+                  {(() => {
+                    try {
+                      // Parse month and year - handle both string and number
+                      let month: number;
+                      let year: number;
+                      
+                      if (typeof record.month === 'string') {
+                        // If month is already a month name, find its index
+                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+                        const monthIndex = monthNames.findIndex(m => m.toLowerCase() === record.month.toLowerCase());
+                        month = monthIndex >= 0 ? monthIndex + 1 : parseInt(record.month);
+                      } else {
+                        month = record.month;
+                      }
+                      
+                      year = typeof record.year === 'string' ? parseInt(record.year) : record.year;
+                      
+                      if (month && year && month >= 1 && month <= 12) {
+                        // Create a date from month and year (use first day of month) to format consistently
+                        const date = new Date(year, month - 1, 1); // month is 0-indexed
+                        // Format using date formatter, then extract month name and year
+                        const formatted = formatDate(date);
+                        // Try to extract month name from formatted date
+                        // If formatDate returns something like "November 27, 2025", extract "November 2025"
+                        // If it returns "11/27/2025", use month names array
+                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+                        
+                        // Check if formatted date contains month name
+                        const monthName = monthNames.find(m => formatted.includes(m));
+                        if (monthName) {
+                          return `${monthName} ${year}`;
+                        }
+                        // Otherwise use month name from array
+                        return `${monthNames[month - 1]} ${year}`;
+                      }
+                    } catch (error) {
+                      console.error('Error formatting payroll period:', error);
+                    }
+                    // Fallback: if month is already a name, use it; otherwise format it
+                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+                    if (typeof record.month === 'string' && monthNames.includes(record.month)) {
+                      return `${record.month} ${record.year}`;
+                    }
+                    const monthNum = typeof record.month === 'string' ? parseInt(record.month) : record.month;
+                    if (monthNum >= 1 && monthNum <= 12) {
+                      return `${monthNames[monthNum - 1]} ${record.year}`;
+                    }
+                    return `${record.month} ${record.year}`;
+                  })()}
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
-                  ₱{record.basicSalary.toLocaleString()}
+                  ₱{(record.basicSalary ?? 0).toLocaleString()}
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
-                  ₱{record.deductions.toLocaleString()}
+                  ₱{(record.deductions ?? 0).toLocaleString()}
                 </div>
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
-                <div>
-                  ₱{record.netSalary.toLocaleString()}
+                <div className={record.netSalary < 0 ? 'text-red-600' : ''}>
+                  ₱{record.netSalary.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </td>
               <td className="py-4 px-6 w-[100px]">
@@ -135,23 +260,26 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
               </td>
               <td className="py-4 px-6 text-sm w-[120px]">
                 <div>
-                  {record.paymentDate ? (() => {
-                    const dateStr = record.paymentDate.split(' ')[0];
-                    const [yy, mm, dd] = dateStr.split('-');
-                    const fullYear = `20${yy}`;
-                    const dateObj = new Date(parseInt(fullYear), parseInt(mm) - 1, parseInt(dd));
-                    return formatDate(dateObj);
-                  })() : '-'}
+                  {record.paymentDate ? formatDate(new Date(record.paymentDate)) : '-'}
                 </div>
               </td>
               <td className="py-4 px-6 w-[80px]">
-                <button
-                  onClick={() => { setDeleteTargetId(record.id); setIsDeleteModalOpen(true); }}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title="Delete record"
-                >
-                  <Trash2 className="w-4 h-4 text-gray-600" />
-                </button>
+                <div className='flex items-center gap-2 '>
+                  <button
+                    onClick={() => { setEditTargetId(record.id); setIsEditModalOpen(true); }}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="Edit"
+                  >
+                    <Edit className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => { setDeleteTargetId(record.id); setIsDeleteModalOpen(true); }}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="Delete record"
+                  >
+                    <Trash2 className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -176,6 +304,34 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
           }
         }}
       />
+
+      {isEditModalOpen && targetEditRecord && (
+        <Portal>
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+              onClick={() => {
+                setIsEditModalOpen(false);
+                setEditTargetId(null);
+              }}
+            />
+            <div className="relative z-[1010]">
+              <EditPayrollDetailsModal
+                payrollRecord={targetEditRecord}
+                employees={employees}
+                onClose={() => { 
+                  setIsEditModalOpen(false); 
+                  setEditTargetId(null); 
+                }}
+                onUpdatePayroll={(id, updatedData) => {
+                  onUpdate(id, updatedData); 
+                }}
+              />
+            </div>
+          </div>
+        </Portal>
+      )}
     </div>
   );
 };

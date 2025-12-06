@@ -14,12 +14,23 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
 
-  const toggleFilters = () => setIsFiltersOpen(!isFiltersOpen);
+  const toggleFilters = () => {
+    if (isFiltersOpen) {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setIsFiltersOpen(false);
+        setIsAnimating(false);
+      }, 100);
+    } else {
+      setIsFiltersOpen(true);
+    }
+  };
   const toggleRoleDropdown = () => setIsRoleDropdownOpen(!isRoleDropdownOpen);
   const toggleStatusDropdown = () => setIsStatusDropdownOpen(!isStatusDropdownOpen);
 
@@ -33,13 +44,19 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
     setIsStatusDropdownOpen(false);
   };
 
-  const roleOptions = ['All Roles', 'Manager', 'Admin', 'Sales Associate', 'Cashier', 'Maintenance'];
+  const roleOptions = ['All Roles', 'Admin', 'General Manager', 'Inventory Manager', 'E-Wallet Recorder', 'Inventory Transaction Manager'];
   const statusOptions = ['All Status', 'Active', 'Inactive'];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filtersRef.current && !filtersRef.current.contains(event.target as Node) && buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
-        setIsFiltersOpen(false);
+        if (isFiltersOpen) {
+          setIsAnimating(true);
+          setTimeout(() => {
+            setIsFiltersOpen(false);
+            setIsAnimating(false);
+          }, 100);
+        }
       }
       if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target as Node)) {
         setIsRoleDropdownOpen(false);
@@ -51,7 +68,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isFiltersOpen]);
 
   return (
     <div className="flex justify-between items-center gap-4 my-5">
@@ -81,7 +98,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
         </button>
         {isFiltersOpen && (
           <div ref={filtersRef} className="absolute top-full mt-2 -right-[1px] z-50">
-            <div className="bg-white p-4 rounded-md shadow-md flex flex-col gap-2">
+            <div className={`bg-white p-4 rounded-md shadow-md flex flex-col gap-2 ${isAnimating ? 'animate-dropdown-out' : 'animate-dropdown-in'}`}>
               <div className="dropdown relative text-[15px]" ref={roleDropdownRef}>
                 <div
                   className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[185px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -147,7 +164,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
                   style={{
                     display: isStatusDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
-                    top: '40%',
+                    top: '100%',
                     left: 0,
                     right: 0,
                     backgroundColor: 'white',
@@ -159,15 +176,16 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
                     boxSizing: 'border-box'
                   }}
                 >
-                {statusOptions.map((option) => (
-                  <div
-                    key={option}
-                    className="option text-[14px] px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleStatusOptionClick(option)}
-                  >
-                    {option}
-                  </div>
-                ))}
+                  {statusOptions.map((option) => (
+                    <div
+                      key={option}
+                      className="option text-[14px] px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleStatusOptionClick(option)}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Reset Button */}
@@ -177,7 +195,6 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
               >
                 Reset Filters
               </button>
-            </div>
             </div>
           </div>
         )}

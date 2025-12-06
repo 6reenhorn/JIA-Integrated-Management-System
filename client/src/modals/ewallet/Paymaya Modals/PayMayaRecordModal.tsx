@@ -13,6 +13,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     onClose,
     onAddRecord,
 }) => {
+    const [isClosing, setIsClosing] = useState(false);
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
         const local = new Date(date.getTime() - tzOffset);
@@ -63,6 +64,18 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     const chargeMOPRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
 
+    const amountRef = useRef<HTMLInputElement>(null);
+    const serviceChargeRef = useRef<HTMLInputElement>(null);
+    const transactionSelectedRef = useRef<HTMLDivElement>(null);
+    const chargeMOPSelectedRef = useRef<HTMLDivElement>(null);
+    const referenceNumberRef = useRef<HTMLInputElement>(null);
+    const dateWrapperRef = useRef<HTMLDivElement>(null);
+    const transactionOptionsListRef = useRef<HTMLDivElement>(null);
+    const chargeMOPOptionsListRef = useRef<HTMLDivElement>(null);
+
+    const [focusedTransactionOption, setFocusedTransactionOption] = useState(0);
+    const [focusedChargeMOPOption, setFocusedChargeMOPOption] = useState(0);
+
     const transactionTypeOptions = ['Cash-In', 'Cash-Out'];
     const chargeMOPOptions = ['Cash', 'PayMaya'];
 
@@ -74,21 +87,6 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                     formData.date !== '';
         setIsFormValid(valid);
     }, [formData.amount, formData.transactionType, formData.chargeMOP, formData.date]);
-
-    // Close dropdowns when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (transactionTypeRef.current && !transactionTypeRef.current.contains(event.target as Node)) {
-                setDropdowns(prev => ({ ...prev, transactionType: false }));
-            }
-            if (chargeMOPRef.current && !chargeMOPRef.current.contains(event.target as Node)) {
-                setDropdowns(prev => ({ ...prev, chargeMOP: false }));
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     // Close modal on escape key
     useEffect(() => {
@@ -126,10 +124,99 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     };
 
     const handleDropdownToggle = (dropdown: 'transactionType' | 'chargeMOP') => {
-        setDropdowns(prev => ({
-            ...prev,
-            [dropdown]: !prev[dropdown],
-        }));
+        setDropdowns(prev => {
+            const opening = !prev[dropdown];
+            if (opening) {
+                if (dropdown === 'transactionType') setFocusedTransactionOption(0);
+                else setFocusedChargeMOPOption(0);
+            }
+            return ({ ...prev, [dropdown]: !prev[dropdown] });
+        });
+
+        setTimeout(() => {
+            if (dropdown === 'transactionType' && transactionOptionsListRef.current) {
+                const el = transactionOptionsListRef.current.querySelector('[data-option]') as HTMLElement | null;
+                el?.focus();
+            }
+            if (dropdown === 'chargeMOP' && chargeMOPOptionsListRef.current) {
+                const el = chargeMOPOptionsListRef.current.querySelector('[data-option]') as HTMLElement | null;
+                el?.focus();
+            }
+        }, 0);
+    };
+
+    const handleDropdownKeyDown = (dropdown: 'transactionType' | 'chargeMOP', e: React.KeyboardEvent) => {
+        const options = dropdown === 'transactionType' ? transactionTypeOptions : chargeMOPOptions;
+
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setDropdowns(prev => ({ ...prev, [dropdown]: !prev[dropdown] }));
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!dropdowns[dropdown]) {
+                setDropdowns(prev => ({ ...prev, [dropdown]: true }));
+                return;
+            }
+            if (dropdown === 'transactionType') {
+                const next = (focusedTransactionOption + 1) % options.length;
+                setFocusedTransactionOption(next);
+                const nodes = transactionOptionsListRef.current?.querySelectorAll('[data-option]');
+                const el = nodes ? (nodes[next] as HTMLElement) : null;
+                el?.focus();
+            } else {
+                const next = (focusedChargeMOPOption + 1) % options.length;
+                setFocusedChargeMOPOption(next);
+                const nodes = chargeMOPOptionsListRef.current?.querySelectorAll('[data-option]');
+                const el = nodes ? (nodes[next] as HTMLElement) : null;
+                el?.focus();
+            }
+            return;
+        }
+
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!dropdowns[dropdown]) return;
+            if (dropdown === 'transactionType') {
+                const len = options.length;
+                const prev = (focusedTransactionOption - 1 + len) % len;
+                setFocusedTransactionOption(prev);
+                const nodes = transactionOptionsListRef.current?.querySelectorAll('[data-option]');
+                const el = nodes ? (nodes[prev] as HTMLElement) : null;
+                el?.focus();
+            } else {
+                const len = options.length;
+                const prev = (focusedChargeMOPOption - 1 + len) % len;
+                setFocusedChargeMOPOption(prev);
+                const nodes = chargeMOPOptionsListRef.current?.querySelectorAll('[data-option]');
+                const el = nodes ? (nodes[prev] as HTMLElement) : null;
+                el?.focus();
+            }
+            return;
+        }
+
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            setDropdowns(prev => ({ ...prev, [dropdown]: false }));
+            return;
+        }
+
+        if (e.key === 'Tab') {
+            if (dropdowns[dropdown]) {
+                e.preventDefault();
+                if (dropdown === 'transactionType') {
+                    const el = transactionOptionsListRef.current?.querySelector('[data-option]') as HTMLElement | null;
+                    el?.focus();
+                } else {
+                    const el = chargeMOPOptionsListRef.current?.querySelector('[data-option]') as HTMLElement | null;
+                    el?.focus();
+                }
+                return;
+            }
+            setDropdowns(prev => ({ ...prev, [dropdown]: false }));
+        }
     };
 
     const handleDropdownSelect = (dropdown: 'transactionType' | 'chargeMOP', value: string) => {
@@ -160,31 +247,39 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
             date: formData.date,
         };
 
-        onAddRecord(newRecord);
-        
-        // Reset form
-        setFormData({
-            amount: '',
-            serviceCharge: '',
-            transactionType: '',
-            chargeMOP: '',
-            referenceNumber: '',
-            date: getLocalISODate(new Date()),
-        });
-        
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            onAddRecord(newRecord);
+            
+            // Reset form
+            setFormData({
+                amount: '',
+                serviceCharge: '',
+                transactionType: '',
+                chargeMOP: '',
+                referenceNumber: '',
+                date: getLocalISODate(new Date()),
+            });
+            
+            onClose();
+            setIsClosing(false);
+        }, 300);
     };
 
     const handleCancel = () => {
-        setFormData({
-            amount: '',
-            serviceCharge: '',
-            transactionType: '',
-            chargeMOP: '',
-            referenceNumber: '',
-            date: getLocalISODate(new Date()),
-        });
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            setFormData({
+                amount: '',
+                serviceCharge: '',
+                transactionType: '',
+                chargeMOP: '',
+                referenceNumber: '',
+                date: getLocalISODate(new Date()),
+            });
+            setIsClosing(false);
+            onClose();
+        }, 300);
     };
 
     if (!isOpen) return null;
@@ -192,8 +287,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={onClose}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -202,7 +296,8 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
 
             <div 
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 
+                            ${isClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>
@@ -223,6 +318,13 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                     placeholder='0.00' 
                                     value={formData.amount} 
                                     onChange={(e) => handleInputChange('amount', e.target.value)} 
+                                    ref={amountRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            serviceChargeRef.current?.focus();
+                                        }
+                                    }}
                                     className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
                                     required
                                 />
@@ -236,6 +338,13 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                     placeholder='0.00' 
                                     value={formData.serviceCharge} 
                                     onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
+                                    ref={serviceChargeRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            transactionSelectedRef.current?.focus();
+                                        }
+                                    }}
                                     className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
                                 />
                             </div>
@@ -248,6 +357,9 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                 <div
                                     className="dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
                                     onClick={() => handleDropdownToggle('transactionType')}
+                                    tabIndex={0}
+                                    ref={transactionSelectedRef}
+                                    onKeyDown={(e) => handleDropdownKeyDown('transactionType', e)}
                                 >
                                     <span className={formData.transactionType ? 'text-gray-900' : 'text-gray-500'}>
                                         {formData.transactionType || 'Select Transaction Type'}
@@ -263,12 +375,42 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                     </svg>
                                 </div>
                                 {dropdowns.transactionType && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
-                                        {transactionTypeOptions.map((option) => (
+                                    <div
+                                        ref={transactionOptionsListRef}
+                                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const selected = transactionTypeOptions[focusedTransactionOption];
+                                                handleDropdownSelect('transactionType', selected);
+                                            }
+                                            if (e.key === 'ArrowDown') {
+                                                e.preventDefault();
+                                                const len = transactionTypeOptions.length;
+                                                const next = (focusedTransactionOption + 1) % len;
+                                                setFocusedTransactionOption(next);
+                                                const nodes = transactionOptionsListRef.current?.querySelectorAll('[data-option]');
+                                                const el = nodes ? (nodes[next] as HTMLElement) : null;
+                                                el?.focus();
+                                            }
+                                            if (e.key === 'ArrowUp') {
+                                                e.preventDefault();
+                                                const len = transactionTypeOptions.length;
+                                                const prev = (focusedTransactionOption - 1 + len) % len;
+                                                setFocusedTransactionOption(prev);
+                                                const nodes = transactionOptionsListRef.current?.querySelectorAll('[data-option]');
+                                                const el = nodes ? (nodes[prev] as HTMLElement) : null;
+                                                el?.focus();
+                                            }
+                                        }}
+                                    >
+                                        {transactionTypeOptions.map((option, idx) => (
                                             <div
                                                 key={option}
-                                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
+                                                data-option
+                                                className={`px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900 ${focusedTransactionOption === idx ? 'bg-blue-50' : ''}`}
                                                 onClick={() => handleDropdownSelect('transactionType', option)}
+                                                tabIndex={dropdowns.transactionType ? 0 : -1}
                                             >
                                                 {option}
                                             </div>
@@ -282,6 +424,9 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                 <div
                                     className="dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
                                     onClick={() => handleDropdownToggle('chargeMOP')}
+                                    tabIndex={0}
+                                    ref={chargeMOPSelectedRef}
+                                    onKeyDown={(e) => handleDropdownKeyDown('chargeMOP', e)}
                                 >
                                     <span className={formData.chargeMOP ? 'text-gray-900' : 'text-gray-500'}>
                                         {formData.chargeMOP || 'Select MOP'}
@@ -297,12 +442,42 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                     </svg>
                                 </div>
                                 {dropdowns.chargeMOP && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden">
-                                        {chargeMOPOptions.map((option) => (
+                                    <div
+                                        ref={chargeMOPOptionsListRef}
+                                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const selected = chargeMOPOptions[focusedChargeMOPOption];
+                                                handleDropdownSelect('chargeMOP', selected);
+                                            }
+                                            if (e.key === 'ArrowDown') {
+                                                e.preventDefault();
+                                                const len = chargeMOPOptions.length;
+                                                const next = (focusedChargeMOPOption + 1) % len;
+                                                setFocusedChargeMOPOption(next);
+                                                const nodes = chargeMOPOptionsListRef.current?.querySelectorAll('[data-option]');
+                                                const el = nodes ? (nodes[next] as HTMLElement) : null;
+                                                el?.focus();
+                                            }
+                                            if (e.key === 'ArrowUp') {
+                                                e.preventDefault();
+                                                const len = chargeMOPOptions.length;
+                                                const prev = (focusedChargeMOPOption - 1 + len) % len;
+                                                setFocusedChargeMOPOption(prev);
+                                                const nodes = chargeMOPOptionsListRef.current?.querySelectorAll('[data-option]');
+                                                const el = nodes ? (nodes[prev] as HTMLElement) : null;
+                                                el?.focus();
+                                            }
+                                        }}
+                                    >
+                                        {chargeMOPOptions.map((option, idx) => (
                                             <div
                                                 key={option}
-                                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900"
+                                                data-option
+                                                className={`px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900 ${focusedChargeMOPOption === idx ? 'bg-blue-50' : ''}`}
                                                 onClick={() => handleDropdownSelect('chargeMOP', option)}
+                                                tabIndex={dropdowns.chargeMOP ? 0 : -1}
                                             >
                                                 {option}
                                             </div>
@@ -322,6 +497,13 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                 placeholder="Enter reference number" 
                                 value={formData.referenceNumber} 
                                 onChange={(e) => handleInputChange('referenceNumber', e.target.value)} 
+                                ref={referenceNumberRef}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        dateWrapperRef.current?.focus();
+                                    }
+                                }}
                                 className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
                             />
                         </div>
@@ -329,11 +511,13 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                         {/* Date */}
                         <div className="flex flex-col">
                             <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
-                            <CustomDatePicker
-                                selected={formData.date ? parseLocalDate(formData.date) : null}
-                                onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
-                                maxDate={new Date()}
-                            />
+                            <div ref={dateWrapperRef} tabIndex={0} className="outline-none">
+                                <CustomDatePicker
+                                    selected={formData.date ? parseLocalDate(formData.date) : null}
+                                    onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
+                                    maxDate={new Date()}
+                                />
+                            </div>
                         </div>
                     </form>
                 </div>

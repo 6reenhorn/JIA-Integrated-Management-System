@@ -1,13 +1,29 @@
 import { Router } from 'express';
-import pool from '../db/postgres';
+import { DBHelper } from '../db/dbHelper';
 
 const router = Router();
+
+// Helper function to format payment date
+const formatPaymentDate = (dateStr: string | null): string | null => {
+  if (!dateStr) return null;
+  try {
+    const date = new Date(dateStr);
+    const YY = date.getFullYear() % 100;
+    const DD = String(date.getDate()).padStart(2, '0');
+    const MM = String(date.getMonth() + 1).padStart(2, '0');
+    const Hr = String(date.getHours()).padStart(2, '0');
+    const Min = String(date.getMinutes()).padStart(2, '0');
+    return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
+  } catch {
+    return dateStr;
+  }
+};
 
 // GET /api/payroll - Fetch all payroll records
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM payroll_records ORDER BY id DESC');
-    const payrollRecords = result.rows.map(row => ({
+    const rows = await DBHelper.query('SELECT * FROM payroll_records WHERE deleted_at IS NULL ORDER BY id DESC');
+    const payrollRecords = rows.map((row: any) => ({
       id: row.id,
       employeeName: row.employee_name,
       empId: row.emp_id,
@@ -18,15 +34,7 @@ router.get('/', async (req, res) => {
       deductions: row.deductions,
       netSalary: row.net_salary,
       status: row.status,
-      paymentDate: row.payment_date ? (() => {
-        const date = new Date(row.payment_date);
-        const YY = date.getFullYear() % 100;
-        const DD = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const Hr = String(date.getHours()).padStart(2, '0');
-        const Min = String(date.getMinutes()).padStart(2, '0');
-        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
-      })() : null
+      paymentDate: formatPaymentDate(row.payment_date)
     }));
     res.json(payrollRecords);
   } catch (err) {
@@ -51,26 +59,72 @@ router.post('/', async (req, res) => {
   } = req.body;
 
   try {
-    const query = `
-      INSERT INTO payroll_records (employee_name, emp_id, role, month, year, basic_salary, deductions, net_salary, status, payment_date)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING *
-    `;
-    const values = [
-      employeeName,
-      empId,
-      role,
-      month,
-      year,
-      basicSalary,
-      deductions,
-      netSalary,
-      status,
-      paymentDate || null
-    ];
+    // Use DBHelper.insert to automatically set synced = 0 for new records
+    const result = await DBHelper.insert('payroll_records', {
+      employee_name: employeeName,
+      emp_id: empId,
+      role: role,
+      month: month,
+      year: year,
+      basic_salary: basicSalary,
+      deductions: deductions,
+      net_salary: netSalary,
+      status: status,
+      payment_date: paymentDate || null
+    });
 
-    const result = await pool.query(query, values);
-    const newRecord = result.rows[0];
+    const lastId = typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid;
+    
+    // Immediately verify the record was created with synced = 0
+    const verifyRecord = await DBHelper.queryOne(
+      'SELECT id, emp_id, month, year, synced FROM payroll_records WHERE id = ?',
+      [lastId]
+    ) as any;
+    
+    if (verifyRecord) {
+      console.log(`[PAYROLL DEBUG] New payroll record created - ID: ${verifyRecord.id}, emp_id: ${verifyRecord.emp_id}, month: ${verifyRecord.month}, year: ${verifyRecord.year}, synced: ${verifyRecord.synced} (type: ${typeof verifyRecord.synced})`);
+      if (verifyRecord.synced !== 0 && verifyRecord.synced !== '0') {
+        console.error(`[PAYROLL ERROR] New payroll record should have synced=0 but has synced=${verifyRecord.synced} (type: ${typeof verifyRecord.synced})`);
+        // Force set it to 0
+        await DBHelper.execute(
+          'UPDATE payroll_records SET synced = 0 WHERE id = ?',
+          [lastId]
+        );
+        console.log(`[PAYROLL FIX] Forced synced to 0 for record ${lastId}`);
+      } else {
+        console.log(`[PAYROLL SUCCESS] Record created with synced=0 - ready to be pushed to PostgreSQL`);
+        
+        // Try to push immediately (don't wait for scheduled sync)
+        try {
+          const { pushTableToPostgres } = require('../services/dbSyncService');
+          console.log(`[PAYROLL PUSH] Attempting immediate push to PostgreSQL...`);
+          await pushTableToPostgres('payroll_records', 'id', [
+            'id', 'employee_name', 'emp_id', 'role', 'month', 'year', 
+            'basic_salary', 'deductions', 'net_salary', 'status', 'payment_date',
+            'created_at', 'updated_at', 'deleted_at'
+          ]);
+          console.log(`[PAYROLL PUSH] Immediate push completed`);
+        } catch (pushError) {
+          console.error(`[PAYROLL PUSH] Immediate push failed (will retry on next scheduled sync):`, pushError.message);
+          // Don't fail the request - the scheduled sync will handle it
+        }
+      }
+      
+      // Double-check after a short delay to ensure it's still there
+      setTimeout(async () => {
+        const checkAgain = await DBHelper.queryOne(
+          'SELECT id, emp_id, month, year, synced, deleted_at FROM payroll_records WHERE id = ?',
+          [lastId]
+        ) as any;
+        if (checkAgain) {
+          console.log(`[PAYROLL CHECK] Record still exists after creation - ID: ${checkAgain.id}, synced: ${checkAgain.synced}, deleted_at: ${checkAgain.deleted_at}`);
+        } else {
+          console.error(`[PAYROLL ERROR] Record ${lastId} disappeared after creation!`);
+        }
+      }, 2000);
+    }
+    
+    const newRecord = await DBHelper.getById('payroll_records', lastId) as any;
 
     const payrollRecord = {
       id: newRecord.id,
@@ -83,15 +137,7 @@ router.post('/', async (req, res) => {
       deductions: newRecord.deductions,
       netSalary: newRecord.net_salary,
       status: newRecord.status,
-      paymentDate: newRecord.payment_date ? (() => {
-        const date = new Date(newRecord.payment_date);
-        const YY = date.getFullYear() % 100;
-        const DD = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const Hr = String(date.getHours()).padStart(2, '0');
-        const Min = String(date.getMinutes()).padStart(2, '0');
-        return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
-      })() : null
+      paymentDate: formatPaymentDate(newRecord.payment_date)
     };
 
     res.status(201).json(payrollRecord);
@@ -101,21 +147,79 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PUT /api/payroll/:id - Update a payroll record
+router.put('/:id', async (req, res): Promise<void> => {
+  const { id } = req.params;
+  const idNum = parseInt(id, 10);
+  if (Number.isNaN(idNum)) {
+      res.status(400).json({ error: 'Invalid payroll record id' });
+      return;
+  }
+
+  const {
+    basicSalary,
+    deductions,
+    netSalary,
+    status,
+    paymentDate
+  } = req.body;
+
+  try {
+    const record = await DBHelper.getById('payroll_records', idNum) as any;
+    if (!record || record.deleted_at) {
+      res.status(404).json({ error: 'Payroll record not found' });
+      return;
+    }
+
+    // Use DBHelper.update which automatically marks records as synced = 0
+    await DBHelper.update('payroll_records', idNum, {
+      basic_salary: basicSalary,
+      deductions: deductions,
+      net_salary: netSalary,
+      status: status,
+      payment_date: paymentDate || null
+    });
+
+    const updatedRecord = await DBHelper.getById('payroll_records', idNum) as any;
+    const payrollRecord = {
+      id: updatedRecord.id,
+      employeeName: updatedRecord.employee_name,
+      empId: updatedRecord.emp_id,
+      role: updatedRecord.role,
+      month: updatedRecord.month,
+      year: updatedRecord.year,
+      basicSalary: updatedRecord.basic_salary,
+      deductions: updatedRecord.deductions,
+      netSalary: updatedRecord.net_salary,
+      status: updatedRecord.status,
+      paymentDate: formatPaymentDate(updatedRecord.payment_date)
+    };
+
+    res.json(payrollRecord);
+  } catch (err) {
+    console.error('Error updating payroll record:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // DELETE /api/payroll/:id - Delete a payroll record by ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res): Promise<void> => {
   const { id } = req.params;
   const idNum = parseInt(id as unknown as string, 10);
   if (Number.isNaN(idNum)) {
-    return res.status(400).json({ error: 'Invalid payroll record id' });
+      res.status(400).json({ error: 'Invalid payroll record id' });
+      return;
   }
 
   try {
-    const query = 'DELETE FROM payroll_records WHERE id = $1 RETURNING *';
-    const result = await pool.query(query, [idNum]);
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Payroll record not found' });
+    const record = await DBHelper.getById('payroll_records', idNum) as any;
+    if (!record || record.deleted_at) {
+      res.status(404).json({ error: 'Payroll record not found' });
+      return;
     }
+
+    // Use soft delete which automatically marks as synced = 0 for sync
+    await DBHelper.softDelete('payroll_records', idNum);
 
     res.json({ message: 'Payroll record deleted successfully' });
   } catch (err) {

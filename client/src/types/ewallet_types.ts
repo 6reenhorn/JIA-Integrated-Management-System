@@ -35,7 +35,7 @@ export interface PayMayaRecord {
 export interface JuanPayRecord {
   id: string;
   date: string;
-  beginnings: JuanPayBeginning[];
+  beginnings: string;
   ending: number;
   sales: number;
   createdAt?: string;

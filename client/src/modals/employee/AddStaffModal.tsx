@@ -65,6 +65,9 @@ const AddStaffModal = ({
   const [focusedRoleOption, setFocusedRoleOption] = useState(0);
   const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [contactNameError, setContactNameError] = useState('');
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
@@ -103,6 +106,14 @@ const AddStaffModal = ({
     setIsRelationshipDropdownOpen(false);
   };
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose?.();
+    }, 100);
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -123,15 +134,48 @@ const AddStaffModal = ({
     };
   }, []);
 
+  // Validate name fields - no numbers allowed
+  const validateName = (name: string): boolean => {
+    return /^[a-zA-Z\s'-]+$/.test(name.trim());
+  };
+
   // Validate form
   useEffect(() => {
-    const valid = firstName.trim() !== '' && lastName.trim() !== '' && email.trim() !== '' && phone.trim() !== '' && address.trim() !== '' && salary.trim() !== '' && selectedRoleText !== 'Select Role' && selectedStatusText !== 'Select Status';
+    // Check for name validation errors
+    const firstNameValid = firstName.trim() !== '' && validateName(firstName);
+    const lastNameValid = lastName.trim() !== '' && validateName(lastName);
+    const contactNameValid = contactName.trim() === '' || validateName(contactName);
+    
+    if (firstName.trim() !== '' && !validateName(firstName)) {
+      setNameError('First name cannot contain numbers');
+    } else if (lastName.trim() !== '' && !validateName(lastName)) {
+      setNameError('Last name cannot contain numbers');
+    } else {
+      setNameError('');
+    }
+
+    if (contactName.trim() !== '' && !validateName(contactName)) {
+      setContactNameError('Contact name cannot contain numbers');
+    } else {
+      setContactNameError('');
+    }
+
+    const valid = firstNameValid && lastNameValid && contactNameValid && 
+                  email.trim() !== '' && phone.trim() !== '' && 
+                  address.trim() !== '' && salary.trim() !== '' && 
+                  selectedRoleText !== 'Select Role' && selectedStatusText !== 'Select Status';
     setIsFormValid(valid);
-  }, [firstName, lastName, email, phone, address, salary, selectedRoleText, selectedStatusText]);
+  }, [firstName, lastName, contactName, email, phone, address, salary, selectedRoleText, selectedStatusText]);
 
 
   return (
-    <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
       <div>
         <h3 className="text-[20px] font-bold">Add New Employee</h3>
         <p className="text-[12px]">Add a new team member to your organization with their details and role.</p>
@@ -144,11 +188,12 @@ const AddStaffModal = ({
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_first_name" className="text-[12px] font-bold">First Name</label>
-                  <input type="text" id="employee_first_name" name="employee_first_name" placeholder='Enter first name' value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none" />
+                  <input type="text" id="employee_first_name" name="employee_first_name" placeholder='Enter first name' value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'}`} />
+                  {nameError && <p className="text-red-500 text-[10px] mt-1">{nameError}</p>}
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_last_name" className="text-[12px] font-bold">Last Name</label>
-                  <input type="text" id="employee_last_name" name="employee_last_name" placeholder='Enter last name' value={lastName} onChange={(e) => setLastName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <input type="text" id="employee_last_name" name="employee_last_name" placeholder='Enter last name' value={lastName} onChange={(e) => setLastName(e.target.value)} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'}`} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-2">
@@ -309,11 +354,11 @@ const AddStaffModal = ({
                     } else if (e.key === 'Enter') {
                       e.preventDefault();
                       const roleOptions = [
-                        { value: 'manager', text: 'Manager' },
                         { value: 'admin', text: 'Admin' },
-                        { value: 'sales_associates', text: 'Sales Associate' },
-                        { value: 'cashier', text: 'Cashier' },
-                        { value: 'maintenance', text: 'Maintenance' }
+                        { value: 'general_manager', text: 'General Manager' },
+                        { value: 'inventory_manager', text: 'Inventory Manager' },
+                        { value: 'e_wallet_recorder', text: 'E-Wallet Recorder' },
+                        { value: 'inventory_transaction_manager', text: 'Inventory Transaction Manager' }
                       ];
                       const selected = roleOptions[focusedRoleOption];
                       handleRoleOptionClick(selected.value, selected.text);
@@ -326,19 +371,6 @@ const AddStaffModal = ({
                 >
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 0 ? 'bg-blue-100' : ''}`}
-                    data-value="manager"
-                    onClick={() => handleRoleOptionClick('manager', 'Manager')}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleRoleOptionClick('manager', 'Manager');
-                      }
-                    }}
-                    tabIndex={isRoleDropdownOpen ? 0 : -1}
-                  >
-                    Manager
-                  </div>
-                  <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 1 ? 'bg-blue-100' : ''}`}
                     data-value="admin"
                     onClick={() => handleRoleOptionClick('admin', 'Admin')}
                     onKeyDown={(e) => {
@@ -351,43 +383,56 @@ const AddStaffModal = ({
                     Admin
                   </div>
                   <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 2 ? 'bg-blue-100' : ''}`}
-                    data-value="sales_associates"
-                    onClick={() => handleRoleOptionClick('sales_associates', 'Sales Associate')}
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 1 ? 'bg-blue-100' : ''}`}
+                    data-value="general_manager"
+                    onClick={() => handleRoleOptionClick('general_manager', 'General Manager')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRoleOptionClick('sales_associates', 'Sales Associate');
+                        handleRoleOptionClick('general_manager', 'General Manager');
                       }
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Sales Associate
+                    General Manager
+                  </div>
+                  <div
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 2 ? 'bg-blue-100' : ''}`}
+                    data-value="inventory_manager"
+                    onClick={() => handleRoleOptionClick('inventory_manager', 'Inventory Manager')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRoleOptionClick('inventory_manager', 'Inventory Manager');
+                      }
+                    }}
+                    tabIndex={isRoleDropdownOpen ? 0 : -1}
+                  >
+                    Inventory Manager
                   </div>
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 3 ? 'bg-blue-100' : ''}`}
-                    data-value="cashier"
-                    onClick={() => handleRoleOptionClick('cashier', 'Cashier')}
+                    data-value="e_wallet_recorder"
+                    onClick={() => handleRoleOptionClick('e_wallet_recorder', 'E-Wallet Recorder')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRoleOptionClick('cashier', 'Cashier');
+                        handleRoleOptionClick('e_wallet_recorder', 'E-Wallet Recorder');
                       }
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Cashier
+                    E-Wallet Recorder
                   </div>
                   <div
                     className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 4 ? 'bg-blue-100' : ''}`}
-                    data-value="maintenance"
-                    onClick={() => handleRoleOptionClick('maintenance', 'Maintenance')}
+                    data-value="inventory_transaction_officer"
+                    onClick={() => handleRoleOptionClick('inventory_transaction_officer', 'Inventory Transaction Officer')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleRoleOptionClick('maintenance', 'Maintenance');
+                        handleRoleOptionClick('inventory_transaction_officer', 'Inventory Transaction Officer');
                       }
                     }}
                     tabIndex={isRoleDropdownOpen ? 0 : -1}
                   >
-                    Maintenance
+                    Inventory Transaction Manager
                   </div>
                 </div>
               </div>
@@ -404,7 +449,8 @@ const AddStaffModal = ({
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div className="flex flex-col justify-center">
                     <label htmlFor="employee_contact_name" className="text-[12px] font-bold">Contact Name</label>
-                    <input type="text" id="employee_contact_name" name="employee_contact_name" placeholder="Enter contact name" value={contactName} onChange={(e) => setContactName(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                    <input type="text" id="employee_contact_name" name="employee_contact_name" placeholder="Enter contact name" value={contactName} onChange={(e) => setContactName(e.target.value)} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${contactNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'}`} />
+                    {contactNameError && <p className="text-red-500 text-[10px] mt-1">{contactNameError}</p>}
                   </div>
                   <div>
                     <label htmlFor="employee_contact_number" className="text-[12px] font-bold">Phone Number</label>
@@ -553,7 +599,7 @@ const AddStaffModal = ({
       <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button 
           className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
-          onClick={onClose}>
+          onClick={handleClose}>
           Cancel
         </button>
         <button
@@ -561,26 +607,32 @@ const AddStaffModal = ({
           onClick={() => {
             if (isFormValid && !isSaving && onAddEmployee) {
               setIsSaving(true);
-              // Generate random password 8-10 characters
-              const length = Math.floor(Math.random() * 3) + 8; // 8 to 10
-              const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-              let password = '';
-              for (let i = 0; i < length; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
-              }
-              onAddEmployee({
-                name: `${firstName} ${lastName}`,
-                role: selectedRoleText,
-                contact: `${email}\n${phone}\n${address}`,
-                status: selectedStatus,
-                avatar: undefined,
-                address,
-                salary,
-                contactName,
-                contactNumber,
-                relationship: selectedRelationshipText,
-                password
-              });
+              setIsClosing(true);
+              setTimeout(() => {
+                // Generate random password 8-10 characters
+                const length = Math.floor(Math.random() * 3) + 8;
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+                let password = '';
+                for (let i = 0; i < length; i++) {
+                  password += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                onAddEmployee({
+                  name: `${firstName} ${lastName}`,
+                  firstName: firstName,
+                  lastName: lastName,
+                  role: selectedRoleText,
+                  contact: `${email}\n${phone}\n${address}`,
+                  status: selectedStatus,
+                  avatar: undefined,
+                  address,
+                  salary,
+                  contactName,
+                  contactNumber,
+                  relationship: selectedRelationshipText,
+                  password
+                });
+                setIsClosing(false);
+              }, 200);
             }
           }}
           disabled={!isFormValid || isSaving}
@@ -589,6 +641,7 @@ const AddStaffModal = ({
         </button>
       </div>
     </div>
+  </div>
   );
 }
 

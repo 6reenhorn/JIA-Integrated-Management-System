@@ -10,12 +10,14 @@
     "sync": "node src/db/sync.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "pg": "^8.11.3"
+    "pg": "^8.16.3",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

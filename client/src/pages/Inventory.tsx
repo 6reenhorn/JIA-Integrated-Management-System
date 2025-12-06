@@ -38,14 +38,20 @@ interface InventoryProps {
 const normalizeDateFormat = (dateString: string): string => {
   if (!dateString) return '';
   
-  // If date is in MM/DD/YYYY format, convert to YYYY-MM-DD
-  if (dateString.includes('/')) {
-    const [month, day, year] = dateString.split('/');
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  try {
+    // Create date object and format it in local timezone
+    const date = new Date(dateString);
+    
+    // Get year, month, day in local timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.error('Error normalizing date:', error);
+    return '';
   }
-  
-  // If date is in YYYY-MM-DD format, return as is
-  return dateString;
 };
 
 const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection, onSectionChange }) => {
@@ -102,27 +108,37 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [categoriesData, setCategoriesData] = useState<Category[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setIsLoadingCategories(true);
-      try {
-        const response = await axios.get('http://localhost:3001/api/inventory/categories');
-        setCategoriesData(response.data);
-      } catch (err: unknown) {
-        console.error('Error fetching categories:', err);
-        if (axios.isAxiosError(err)) {
-          console.error('Error details:', err.response?.data);
-        } else if (err instanceof Error) {
-          console.error('Error message:', err.message);
-        } else {
-          console.error('Error details:', String(err));
-        }
-      } finally {
-        setIsLoadingCategories(false);
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const response = await axios.get('http://localhost:3001/api/inventory/categories');
+      console.log('Fetched categories:', response.data.length, 'categories');
+      setCategoriesData(response.data);
+    } catch (err: unknown) {
+      console.error('Error fetching categories:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', err.response?.data);
+      } else if (err instanceof Error) {
+        console.error('Error message:', err.message);
+      } else {
+        console.error('Error details:', String(err));
       }
-    };
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
+  useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Refetch categories when the inventory section becomes active
+  // This ensures we get categories that were synced from remote
+  useEffect(() => {
+    if (activeSection === 'inventory' || activeSection === 'category') {
+      fetchCategories();
+    }
+  }, [activeSection]);
 
   const fetchInventoryItems = async () => {
     setIsLoadingInventory(true);
@@ -200,9 +216,13 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     let filtered = salesRecords;
     
     if (selectedDate) {
+      // Normalize the selected date
       const normalizedSelectedDate = normalizeDateFormat(selectedDate);
+      console.log('Normalized selected date:', normalizedSelectedDate);
+      
       filtered = filtered.filter(record => {
         const normalizedRecordDate = normalizeDateFormat(record.date);
+        console.log('Comparing:', normalizedRecordDate, '===', normalizedSelectedDate);
         return normalizedRecordDate === normalizedSelectedDate;
       });
       console.log('After date filter:', filtered.length);
@@ -395,10 +415,14 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       
       console.log('Product updated:', response.data);
       setInventoryItems(prev => prev.map(i => (i.id === response.data.id ? response.data : i)));
-      setIsEditModalOpen(false);
-      setEditingItem(undefined);
+      
     } catch (err: unknown) {
       console.error('Error updating product:', err);
+      
+      // On error, close modal immediately (no animation for errors)
+      setIsEditModalOpen(false);
+      setEditingItem(undefined);
+      
       if (axios.isAxiosError(err)) {
         console.error('Error details:', err.response?.data);
       } else if (err instanceof Error) {
@@ -440,8 +464,27 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
         color: color,
       });
       
-      console.log('Category added:', response.data);
-      setCategoriesData(prev => [...prev, response.data]);
+      console.log('Category added/restored:', response.data);
+      
+      // Update state: check if category already exists (by id or name) to handle restored categories
+      setCategoriesData(prev => {
+        const existingIndex = prev.findIndex(cat => 
+          cat.id === response.data.id || cat.name === response.data.name
+        );
+        
+        if (existingIndex >= 0) {
+          // Update existing category (restored category)
+          const updated = [...prev];
+          updated[existingIndex] = response.data;
+          console.log('Updated existing category in state:', response.data.name);
+          return updated;
+        } else {
+          // Add new category
+          console.log('Added new category to state:', response.data.name);
+          return [...prev, response.data];
+        }
+      });
+      
       setCategoryCurrentPage(1);
       setIsAddCategoryModalOpen(false);
     } catch (err: unknown) {
@@ -465,10 +508,96 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
     }
   };
 
-  const handleCloseCategoryModal = () => {
-    setIsAddCategoryModalOpen(false);
-  };
+const handleDeleteCategory = async (categoryName: string) => {
+  try {
+    console.log('Deleting category:', categoryName);
+    
+    await axios.delete(`http://localhost:3001/api/inventory/categories/${encodeURIComponent(categoryName)}`);
+    
+    console.log('Category deleted successfully');
+    
+    // Remove the category from state
+    setCategoriesData(prev => prev.filter(cat => cat.name !== categoryName));
+    
+    // Reset to first page if needed
+    const remainingCategories = categoriesData.filter(cat => cat.name !== categoryName);
+    const totalPages = Math.ceil(remainingCategories.length / 9);
+    if (categoryCurrentPage > totalPages && totalPages > 0) {
+      setCategoryCurrentPage(totalPages);
+    } else if (remainingCategories.length === 0) {
+      setCategoryCurrentPage(1);
+    }
+    
+    // If the deleted category was selected in the filter, reset to 'all'
+    if (selectedCategory === categoryName) {
+      setSelectedCategory('all');
+    }
+    
+  } catch (err: unknown) {
+    console.error('Error deleting category:', err);
+    if (axios.isAxiosError(err)) {
+      console.error('Error details:', err.response?.data);
+    } else if (err instanceof Error) {
+      console.error('Error message:', err.message);
+    } else {
+      console.error('Error details:', String(err));
+    }
+    
+    // Just re-throw the error - CategoryContent will handle displaying it
+    throw err;
+  }
+};
 
+const handleEditCategory = async (oldName: string, newName: string, color: string) => {
+  try {
+    console.log('Editing category:', { oldName, newName, color });
+    
+    const response = await axios.put(
+      `http://localhost:3001/api/inventory/categories/${encodeURIComponent(oldName)}`,
+      {
+        name: newName,
+        color: color,
+      }
+    );
+    
+    console.log('Category updated:', response.data);
+    
+    // Update the categories in state
+    setCategoriesData(prev => 
+      prev.map(cat => 
+        cat.name === oldName 
+          ? { ...cat, name: newName, color: color }
+          : cat
+      )
+    );
+    
+    // If the edited category was selected in filter, update the selection
+    if (selectedCategory === oldName) {
+      setSelectedCategory(newName);
+    }
+    
+  } catch (err: unknown) {
+    console.error('Error editing category:', err);
+    if (axios.isAxiosError(err)) {
+      console.error('Error details:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      console.error('Error message:', err.message);
+      // THIS IS THE KEY - Log the full response
+      console.error('Full error response:', JSON.stringify(err.response?.data, null, 2));
+    } else if (err instanceof Error) {
+      console.error('Error message:', err.message);
+    } else {
+      console.error('Error details:', String(err));
+    }
+    
+    // Re-throw the error so CategoryContent can handle it
+    throw err;
+  }
+};
+
+const handleCloseCategoryModal = () => {
+  setIsAddCategoryModalOpen(false);
+};
   const handleViewProducts = (categoryName: string) => {
     handleSectionChange('inventory');
     setSelectedCategory(categoryName);
@@ -630,10 +759,13 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           record.id === response.data.id ? response.data : record
         )
       );
-      setIsEditSaleModalOpen(false);
-      setEditingSale(null);
     } catch (err: unknown) {
       console.error('Error updating sales record:', err);
+      
+      // On error, close modal immediately (no animation for errors)
+      setIsEditSaleModalOpen(false);
+      setEditingSale(null);
+      
       if (axios.isAxiosError(err)) {
         console.error('Error details:', err.response?.data);
       } else if (err instanceof Error) {
@@ -755,6 +887,7 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           sections={sections}
           onRefresh={handleRefreshInventory}
           isRefreshing={isRefreshingInventory}
+          isLoading={isLoadingInventory}
         >
           <InventoryTable
             items={filteredItems}
@@ -783,6 +916,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
           onViewProducts={handleViewProducts}
           showHeaderStats={true}
           onAddCategory={handleAddCategory}
+          onDeleteCategory={handleDeleteCategory}
+          onEditCategory={handleEditCategory} 
           searchQuery={categorySearchTerm}
           onSearchChange={setCategorySearchTerm}
           sections={sections}
@@ -855,8 +990,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       <AddSalesModal
         isOpen={isAddSalesModalOpen}
         onClose={handleCloseSalesModal}
-        onAddSale={handleAddNewSale} // This is now defined
-        onInventoryUpdate={fetchInventoryItems} // Pass the refresh function
+        onAddSale={handleAddNewSale} 
+        onInventoryUpdate={fetchInventoryItems} 
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
 interface DeletePayrollRecordModalProps {
@@ -21,11 +21,22 @@ const DeletePayrollRecordModal: React.FC<DeletePayrollRecordModalProps> = ({
   onConfirmDelete
 }) => {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
+
+  const handleClose = () => {
+    if (!isDeleting) {
+      setIsClosing(true);
+      setTimeout(() => {
+        setIsClosing(false);
+        onClose();
+      }, 200);
+    }
+  };
 
   useEffect(() => {
     const handleEscape = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape' && !isDeleting) {
-        onClose();
+        handleClose();
       }
     };
 
@@ -38,11 +49,16 @@ const DeletePayrollRecordModal: React.FC<DeletePayrollRecordModalProps> = ({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose, isDeleting]);
+  }, [isOpen, isDeleting]);
 
   const handleConfirm = () => {
     if (recordId !== null && !isDeleting) {
-      onConfirmDelete(recordId);
+      setIsClosing(true);
+      setTimeout(() => {
+        onConfirmDelete(recordId);
+        setIsClosing(false);
+        onClose();
+      }, 200);
     }
   };
 
@@ -51,17 +67,21 @@ const DeletePayrollRecordModal: React.FC<DeletePayrollRecordModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={!isDeleting ? onClose : undefined}
+        className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+          isClosing ? 'opacity-0' : 'opacity-100'
+        }`}
         style={{
           backdropFilter: 'blur(4px)',
           WebkitBackdropFilter: 'blur(4px)'
         }}
+        //onClick={!isDeleting ? handleClose : undefined}
       />
 
       <div
         ref={modalRef}
-        className="bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+        className={`bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -75,7 +95,7 @@ const DeletePayrollRecordModal: React.FC<DeletePayrollRecordModalProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isDeleting}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -115,7 +135,7 @@ const DeletePayrollRecordModal: React.FC<DeletePayrollRecordModalProps> = ({
           <button
             type="button"
             className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isDeleting}
           >
             Cancel
@@ -142,5 +162,3 @@ const DeletePayrollRecordModal: React.FC<DeletePayrollRecordModalProps> = ({
 };
 
 export default DeletePayrollRecordModal;
-
-

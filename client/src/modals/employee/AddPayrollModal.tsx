@@ -51,6 +51,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
 
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const employeeDropdownRef = useRef<HTMLDivElement>(null);
   const monthDropdownRef = useRef<HTMLDivElement>(null);
@@ -75,7 +76,10 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
   const handleEmployeeOptionClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setSelectedEmployeeText(`${employee.name} (${employee.empId})`);
-    setBasicSalary(employee.salary);
+    // Convert salary to string to ensure it works with the input field
+    // Ensure the salary is properly parsed as a number first, then convert to string
+    const salary = parseFloat(employee.salary) || 0;
+    setBasicSalary(salary.toString());
     setIsEmployeeDropdownOpen(false);
   };
 
@@ -118,6 +122,14 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
     setIsStatusDropdownOpen(false);
   };
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose?.();
+    }, 100);
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -148,14 +160,26 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
     setNetSalary(basic - ded);
   }, [basicSalary, deductions]);
 
-  // Validate form
+  // Validate form - Fixed to handle string validation properly
   useEffect(() => {
-    const valid = selectedEmployee !== null && selectedMonth !== '' && selectedYear !== '' && basicSalary.trim() !== '' && selectedStatusText !== 'Select Status';
+    const salaryStr = basicSalary.toString().trim();
+    const valid = selectedEmployee !== null && 
+                selectedMonth !== '' && 
+                selectedYear !== '' && 
+                salaryStr !== '' && 
+                !isNaN(Number(salaryStr)) && 
+                selectedStatusText !== 'Select Status';
     setIsFormValid(valid);
   }, [selectedEmployee, selectedMonth, selectedYear, basicSalary, selectedStatusText]);
 
   return (
-    <div className="bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] relative z-10 ${
+          isClosing ? 'animate-modal-out' : 'animate-modal-in'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
       <div>
         <h3 className="text-[20px] font-bold">Add Payroll Record</h3>
         <p className="text-[12px]">Add a new payroll record for an employee with salary details and payment status.</p>
@@ -190,7 +214,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
                   style={{
                     display: isEmployeeDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -273,7 +297,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
                   style={{
                     display: isMonthDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -349,7 +373,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
                   style={{
                     display: isYearDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -363,8 +387,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                     width: '100%',
                     maxWidth: '100%',
                     boxSizing: 'border-box',
-                    maxHeight: '200px',
-                    overflowY: 'auto'
+                    maxHeight: '200px'
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'ArrowDown') {
@@ -417,7 +440,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
               </div>
               <div className='mt-2'>
                 <label htmlFor="net_salary" className="text-[12px] font-bold">Net Salary (Auto-calculated)</label>
-                <input type="number" id="net_salary" name="net_salary" placeholder='Net salary' value={netSalary.toFixed(2)} readOnly className="border border-gray-300 rounded-md w-full px-2 py-1 bg-gray-100 focus:outline-none" />
+                <input type="number" id="net_salary" name="net_salary" placeholder='Net salary' value={netSalary.toFixed(2)} readOnly className={`border rounded-md w-full px-2 py-1 bg-gray-100 focus:outline-none ${netSalary < 0 ? 'border-red-500 text-red-600' : 'border-gray-300'}`} />
               </div>
             </div>
           </div>
@@ -527,11 +550,21 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </div>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <label htmlFor="payment_date" className="text-[12px] font-bold">Payment Date (Optional)</label>
+                  <label htmlFor="payment_date" className="text-[12px] font-bold">Payment Date</label>
                   <div className="relative w-full">
                     <CustomDatePicker
                       selected={paymentDate ? new Date(paymentDate) : null}
-                      onChange={(date: Date | null) => setPaymentDate(date ? date.toISOString().split('T')[0] : '')}
+                      onChange={(date: Date | null) => {
+                        if (!date) {
+                          setPaymentDate('');
+                          return;
+                        }
+                        // Format as YYYY-MM-DD in local timezone
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        setPaymentDate(`${year}-${month}-${day}`);
+                      }}
                       className="w-full px-4 py-[5px] border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
@@ -544,7 +577,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
       <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button 
           className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
-          onClick={onClose}>
+          onClick={handleClose}>
           Cancel
         </button>
         <button
@@ -552,18 +585,22 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
           onClick={() => {
             if (isFormValid && !isSaving && onAddPayroll && selectedEmployee) {
               setIsSaving(true);
-              onAddPayroll({
-                employeeName: selectedEmployee.name,
-                empId: selectedEmployee.empId,
-                role: selectedEmployee.role,
-                month: selectedMonthText,
-                year: selectedYear,
-                basicSalary: parseFloat(basicSalary),
-                deductions: parseFloat(deductions),
-                status: selectedStatus,
-                paymentDate: paymentDate || undefined,
-                netSalary: netSalary
-              });
+              setIsClosing(true);
+              setTimeout(() => {
+                onAddPayroll({
+                  employeeName: selectedEmployee.name,
+                  empId: selectedEmployee.empId,
+                  role: selectedEmployee.role,
+                  month: selectedMonthText,
+                  year: selectedYear,
+                  basicSalary: parseFloat(basicSalary),
+                  deductions: parseFloat(deductions),
+                  status: selectedStatus,
+                  paymentDate: paymentDate,
+                  netSalary: netSalary
+                });
+                setIsClosing(false);
+              }, 100);
             }
           }}
           disabled={!isFormValid || isSaving}
@@ -571,6 +608,7 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
           {isSaving ? 'Adding...' : 'Add Payroll'}
         </button>
       </div>
+    </div>
     </div>
   );
 }

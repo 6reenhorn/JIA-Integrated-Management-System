@@ -2,6 +2,8 @@ export interface Employee {
   id: number;
   name: string;
   empId: string;
+  firstName?: string;
+  lastName?: string;
   role: string;
   contact: string;
   status: 'Active' | 'Inactive';
@@ -30,4 +32,10 @@ export interface AttendanceRecord {
   timeIn: string;
   timeOut: string;
   status: 'Present' | 'Absent' | 'On Leave';
+}
+
+export interface AttendanceStats {
+  present: number;
+  absent: number;
+  onLeave: number;
 }

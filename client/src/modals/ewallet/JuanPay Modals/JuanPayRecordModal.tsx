@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { JuanPayRecord, JuanPayBeginning } from '../../../types/ewallet_types';
+import type { JuanPayRecord } from '../../../types/ewallet_types';
 import CustomDatePicker from '../../../components/common/CustomDatePicker';
 import { Plus, X } from 'lucide-react';
 
@@ -16,6 +16,7 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
     onAddRecord,
     lastEndingBalance = null,
 }) => {
+    const [isClosing, setIsClosing] = React.useState(false);
     const getLocalISODate = (date: Date) => {
         const tzOffset = date.getTimezoneOffset() * 60000;
         const local = new Date(date.getTime() - tzOffset);
@@ -152,44 +153,54 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!isFormValid) {
-            return;
-        }
+    e.preventDefault;
+    
+    if (!isFormValid) {
+        return;
+    }
 
-        const beginnings: JuanPayBeginning[] = formData.beginnings
-            .filter(b => b.amount.trim() !== '')
-            .map(b => ({ amount: parseFormattedNumber(b.amount) }));
+    // Convert beginnings to array of objects with amount property
+    const beginningsArray = formData.beginnings
+        .filter(b => b.amount.trim() !== '')
+        .map(b => ({
+            amount: parseFormattedNumber(b.amount)
+        }));
 
-        const newRecord: Omit<JuanPayRecord, 'id'> = {
-            date: formData.date,
-            beginnings: beginnings,
-            ending: parseFormattedNumber(formData.ending) || 0,
-            sales: parseFloat(formData.sales) || 0,
-        };
+    const newRecord: any = {
+        date: formData.date,
+        beginnings: beginningsArray,
+        ending: parseFormattedNumber(formData.ending) || 0,
+        sales: parseFloat(formData.sales) || 0,
+    };
 
+    setIsClosing(true);
+    setTimeout(() => {
         onAddRecord(newRecord);
         
         // Reset form
         setFormData({
-            date: getLocalISODate(new Date()),
-            beginnings: [{ amount: '' }],
-            ending: '',
-            sales: '',
+        date: getLocalISODate(new Date()),
+        beginnings: [{ amount: '' }],
+        ending: '',
+        sales: '',
         });
         
         onClose();
+        setIsClosing(false);
+    }, 300);
     };
 
     const handleCancel = () => {
-        setFormData({
-            date: getLocalISODate(new Date()),
-            beginnings: [{ amount: '' }],
-            ending: '',
-            sales: '',
-        });
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            setFormData({
+                date: getLocalISODate(new Date()),
+                beginnings: [{ amount: '' }],
+                ending: '',
+                sales: '',
+            });
+            onClose();
+        }, 300);
     };
 
     if (!isOpen) return null;
@@ -203,8 +214,7 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Background overlay */}
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={onClose}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -212,9 +222,11 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
             />
 
             {/* Modal content */}
-            <div 
+            <div
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 ${
+                    isClosing ? 'animate-modal-out' : 'animate-modal-in'
+                }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>

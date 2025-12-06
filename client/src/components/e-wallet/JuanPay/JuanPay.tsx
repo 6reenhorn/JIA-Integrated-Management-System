@@ -52,8 +52,15 @@ const JuanPay: React.FC<JuanPayProps> = ({
     const todayRecords = records.filter(record => record.date === targetDateStr);
 
     const totalBeginning = todayRecords.reduce((sum, r) => {
-      const beginningSum = r.beginnings.reduce((s, b) => s + b.amount, 0);
-      return sum + beginningSum;
+      if (!r.beginnings) return sum;
+      if (!Array.isArray(r.beginnings)) return sum;
+      const amounts = r.beginnings.map(b => {
+        if (typeof b === 'object' && b !== null && 'amount' in b) {
+          return typeof b.amount === 'number' ? b.amount : parseFloat(b.amount) || 0;
+        }
+        return typeof b === 'number' ? b : parseFloat(b) || 0;
+      });
+      return sum + amounts.reduce((a, b) => a + b, 0);
     }, 0);
 
     const totalEnding = todayRecords.reduce((sum, r) => sum + r.ending, 0);
@@ -74,7 +81,9 @@ const JuanPay: React.FC<JuanPayProps> = ({
     const term = searchTerm.trim().toLowerCase();
     const matchesSearch = !term || (
       record.date.toLowerCase().includes(term) ||
-      record.beginnings.some(b => b.amount.toString().includes(term)) ||
+      (Array.isArray(record.beginnings) 
+        ? record.beginnings.map(b => typeof b === 'object' && b !== null && 'amount' in b ? b.amount.toString() : String(b)).join(' ').toLowerCase().includes(term)
+        : String(record.beginnings || '').toLowerCase().includes(term)) ||
       record.ending.toString().includes(term) ||
       record.sales.toString().includes(term)
     );
@@ -121,54 +130,70 @@ const JuanPay: React.FC<JuanPayProps> = ({
     <div className="space-y-6 mt-5">
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <LayoutCard className="bg-blue-500 min-h-[120px]">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-gray-500 font-medium">Beginning Balance {filterDate ? '(Filtered)' : '(Today)'}</h3>
-            {filterDate && (
-              <div className="text-right text-xs text-gray-600">
-                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+        {isLoading ? (
+          // Skeleton Loading
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <LayoutCard key={i} className="min-h-[120px] animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-32 mb-5"></div>
+                <div className={`h-9 rounded w-40 mb-2 ${i === 3 ? 'bg-red-200' : 'bg-gray-200'}`}></div>
+                <div className="h-3 bg-gray-200 rounded w-16"></div>
+              </LayoutCard>
+            ))}
+          </>
+        ) : (
+          // Actual Cards
+          <>
+            <LayoutCard className="bg-blue-500 min-h-[120px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-gray-500 font-medium">Beginning Balance {filterDate ? '(Filtered)' : '(Today)'}</h3>
+                {filterDate && (
+                  <div className="text-right text-xs text-gray-600">
+                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.totalBeginning)}</div>
-          <div className="text-sm text-gray-500">Total Beginning</div>
-        </LayoutCard>
-        <LayoutCard className="min-h-[120px]">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-gray-500 font-medium">Ending Balance {filterDate ? '(Filtered)' : '(Today)'}</h3>
-            {filterDate && (
-              <div className="text-right text-xs text-gray-600">
-                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.totalBeginning)}</div>
+              <div className="text-sm text-gray-500">Total Beginning</div>
+            </LayoutCard>
+            <LayoutCard className="min-h-[120px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-gray-500 font-medium">Ending Balance {filterDate ? '(Filtered)' : '(Today)'}</h3>
+                {filterDate && (
+                  <div className="text-right text-xs text-gray-600">
+                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.totalEnding)}</div>
-          <div className="text-sm text-gray-500">Current Balance</div>
-        </LayoutCard>
-        <LayoutCard className="min-h-[120px]">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-gray-500 font-medium">Sales {filterDate ? '(Filtered)' : '(Today)'}</h3>
-            {filterDate && (
-              <div className="text-right text-xs text-gray-600">
-                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.totalEnding)}</div>
+              <div className="text-sm text-gray-500">Current Balance</div>
+            </LayoutCard>
+            <LayoutCard className="min-h-[120px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-gray-500 font-medium">Sales {filterDate ? '(Filtered)' : '(Today)'}</h3>
+                {filterDate && (
+                  <div className="text-right text-xs text-gray-600">
+                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(stats.totalSales)}</div>
-          <div className="text-sm text-gray-500">Total Sales</div>
-        </LayoutCard>
-        <LayoutCard className="min-h-[120px]">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-gray-500 font-medium">Average per Record {filterDate ? '(Filtered)' : '(Today)'}</h3>
-            {filterDate && (
-              <div className="text-right text-xs text-gray-600">
-                {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+              <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(stats.totalSales)}</div>
+              <div className="text-sm text-gray-500">Total Sales</div>
+            </LayoutCard>
+            <LayoutCard className="min-h-[120px]">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-gray-500 font-medium">Average per Record {filterDate ? '(Filtered)' : '(Today)'}</h3>
+                {filterDate && (
+                  <div className="text-right text-xs text-gray-600">
+                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.avgSales)}</div>
-          <div className="text-sm text-gray-500">Per Transaction</div>
-        </LayoutCard>
+              <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.avgSales)}</div>
+              <div className="text-sm text-gray-500">Per Transaction</div>
+            </LayoutCard>
+          </>
+        )}
       </div>
 
       {/* JuanPay Records Section */}
@@ -176,9 +201,9 @@ const JuanPay: React.FC<JuanPayProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           {/* Left side: Title + Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">JuanPay Records</h3>
-            </div>
+            </div> */}
 
             {/* Search */}
             <div className="flex items-center gap-4">
@@ -189,7 +214,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
                   placeholder="Search Records"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[265px]"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
                 />
               </div>
               <RefreshBtn onClick={handleRefresh} isSpinning={isRefreshing} />
@@ -245,7 +270,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
       />
 
       {/* Pagination */}
-      <div className="flex items-center justify-between pt-2 pb-1">
+      <div className="flex items-center justify-between pt-1 pb-0">
         <div className="text-sm text-gray-500">
           Page {currentPage} of {totalPages}
         </div>

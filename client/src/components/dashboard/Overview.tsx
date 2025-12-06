@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Package } from 'lucide-react';
@@ -20,11 +20,15 @@ const Overview: React.FC = () => {
   const [paymayaRecords, setPaymayaRecords] = useState<any[]>([]);
   const [juanpayRecords, setJuanpayRecords] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+  
+  // Track if component is mounted to avoid duplicate fetches
+  const hasFetchedRef = useRef(false);
 
-  useEffect(() => {
-    const fetchAllData = async () => {
+  // Extract fetch function so it can be reused
+  const fetchAllData = React.useCallback(async () => {
+      console.log('Overview: Fetching data...');
       try {
-        const [inventory, sales, gcash, paymaya, juanpay, employeeData] = await Promise.all([
+        const [inventory, sales, gcash, paymaya, juanpay, employeeData] = await Promise.allSettled([
           axios.get('http://localhost:3001/api/inventory'),
           axios.get('http://localhost:3001/api/inventory/sales'),
           axios.get('http://localhost:3001/api/gcash'),
@@ -33,19 +37,153 @@ const Overview: React.FC = () => {
           axios.get('http://localhost:3001/api/employees'),
         ]);
 
-        setInventoryItems(inventory.data);
-        setSalesRecords(sales.data);
-        setGcashRecords(gcash.data);
-        setPaymayaRecords(paymaya.data);
-        setJuanpayRecords(juanpay.data);
-        setEmployees(employeeData.data);
+        // Handle each response individually to prevent one failure from breaking all
+        if (inventory.status === 'fulfilled') {
+          setInventoryItems(inventory.value.data || []);
+        } else {
+          const error = inventory.reason;
+          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
+                                   error?.code === 'ERR_NETWORK' ||
+                                   error?.code === 'ECONNREFUSED' ||
+                                   error?.message?.includes('ECONNREFUSED') ||
+                                   error?.message?.includes('Network Error') ||
+                                   error?.request?.status === 0;
+          if (isConnectionError) {
+            console.warn('Server not available. Please ensure the server is running on port 3001.');
+          } else {
+            console.error('Error fetching inventory:', error);
+          }
+          setInventoryItems([]);
+        }
+
+        if (sales.status === 'fulfilled') {
+          setSalesRecords(sales.value.data || []);
+        } else {
+          const error = sales.reason;
+          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
+                                   error?.code === 'ERR_NETWORK' ||
+                                   error?.code === 'ECONNREFUSED' ||
+                                   error?.message?.includes('ECONNREFUSED') ||
+                                   error?.message?.includes('Network Error') ||
+                                   error?.request?.status === 0;
+          if (isConnectionError) {
+            console.warn('Server not available for sales data.');
+          } else {
+            console.error('Error fetching sales:', sales.reason);
+          }
+          setSalesRecords([]);
+        }
+
+        if (gcash.status === 'fulfilled') {
+          setGcashRecords(gcash.value.data || []);
+        } else {
+          const error = gcash.reason;
+          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
+                                   error?.code === 'ERR_NETWORK' ||
+                                   error?.code === 'ECONNREFUSED' ||
+                                   error?.message?.includes('ECONNREFUSED') ||
+                                   error?.message?.includes('Network Error') ||
+                                   error?.request?.status === 0;
+          if (isConnectionError) {
+            console.warn('Server not available for GCash data.');
+          } else {
+            console.error('Error fetching GCash:', gcash.reason);
+          }
+          setGcashRecords([]);
+        }
+
+        if (paymaya.status === 'fulfilled') {
+          setPaymayaRecords(paymaya.value.data || []);
+        } else {
+          const error = paymaya.reason;
+          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
+                                   error?.code === 'ERR_NETWORK' ||
+                                   error?.code === 'ECONNREFUSED' ||
+                                   error?.message?.includes('ECONNREFUSED') ||
+                                   error?.message?.includes('Network Error') ||
+                                   error?.request?.status === 0;
+          if (isConnectionError) {
+            console.warn('Server not available for PayMaya data.');
+          } else {
+            console.error('Error fetching PayMaya:', paymaya.reason);
+          }
+          setPaymayaRecords([]);
+        }
+
+        if (juanpay.status === 'fulfilled') {
+          setJuanpayRecords(juanpay.value.data || []);
+        } else {
+          const error = juanpay.reason;
+          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
+                                   error?.code === 'ERR_NETWORK' ||
+                                   error?.code === 'ECONNREFUSED' ||
+                                   error?.message?.includes('ECONNREFUSED') ||
+                                   error?.message?.includes('Network Error') ||
+                                   error?.request?.status === 0;
+          if (isConnectionError) {
+            console.warn('Server not available for JuanPay data.');
+          } else {
+            console.error('Error fetching JuanPay:', juanpay.reason);
+          }
+          setJuanpayRecords([]);
+        }
+
+        if (employeeData.status === 'fulfilled') {
+          setEmployees(employeeData.value.data || []);
+        } else {
+          const error = employeeData.reason;
+          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
+                                   error?.code === 'ERR_NETWORK' ||
+                                   error?.code === 'ECONNREFUSED' ||
+                                   error?.message?.includes('ECONNREFUSED') ||
+                                   error?.message?.includes('Network Error') ||
+                                   error?.request?.status === 0;
+          if (isConnectionError) {
+            console.warn('Server not available for employees data.');
+          } else {
+            console.error('Error fetching employees:', employeeData.reason);
+          }
+          setEmployees([]);
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        // Set empty arrays as fallback
+        setInventoryItems([]);
+        setSalesRecords([]);
+        setGcashRecords([]);
+        setPaymayaRecords([]);
+        setJuanpayRecords([]);
+        setEmployees([]);
+      }
+  }, []); // Empty deps - function is stable
+
+  // Fetch immediately on mount - this runs as soon as the component is rendered
+  useEffect(() => {
+    console.log('Overview: Component mounted, fetching data immediately');
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchAllData();
+    } else {
+      // If component remounts (e.g., navigating back to dashboard), refetch
+      console.log('Overview: Component remounted, refetching data');
+      fetchAllData();
+    }
+  }, [fetchAllData]); // Fetch data when component mounts or remounts
+
+  // Also refetch when component becomes visible (using Intersection Observer or visibility API)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Refetch data when tab/window becomes visible
+        fetchAllData();
       }
     };
 
-    fetchAllData();
-  }, []);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchAllData]);
 
   // Calculate revenue data from sales with proper month handling
   const revenueData = useMemo(() => {
@@ -174,7 +312,7 @@ const Overview: React.FC = () => {
     
     return Array.from(productMap.values())
       .sort((a: any, b: any) => b.revenue - a.revenue)
-      .slice(0, 5);
+      .slice(0, 10); // Top 10 products
   }, [salesRecords]);
 
   // Calculate e-wallet data
@@ -590,7 +728,7 @@ const Overview: React.FC = () => {
                 <table className="w-full">
                   <thead className="bg-[#EDEDED] border-b border-[#E5E7EB] sticky top-0 ">
                     <tr>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 w-[60px]">#</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-gray-500 w-[60px]">#</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Product</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Units</th>
                       <th className="text-center py-3 px-4 text-sm font-medium text-gray-500w-[190px]">Revenue</th>
@@ -600,7 +738,15 @@ const Overview: React.FC = () => {
                     {topProducts.map((product, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="py-3 px-4">
-                          <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg flex items-center justify-center">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            index === 0 
+                              ? 'bg-red-500' 
+                              : index === 1 
+                              ? 'bg-blue-500' 
+                              : index === 2 
+                              ? 'bg-green-500'
+                              : 'bg-gray-500'
+                          }`}>
                             <span className="text-white font-bold text-sm">{index + 1}</span>
                           </div>
                         </td>

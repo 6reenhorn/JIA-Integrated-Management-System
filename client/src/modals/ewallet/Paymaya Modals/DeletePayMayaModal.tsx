@@ -17,6 +17,7 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
     record,
     isDeleting = false
 }) => {
+    const [isClosing, setIsClosing] = React.useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -39,7 +40,10 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
 
     const handleConfirm = () => {
         if (record && !isDeleting) {
-            onConfirmDelete(record.id);
+            setIsClosing(true);
+            setTimeout(() => {
+                onConfirmDelete(record.id);
+            }, 300);
         }
     };
 
@@ -73,17 +77,18 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={!isDeleting ? onClose : undefined}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
                 }}
             />
 
-            <div 
+            <div
                 ref={modalRef}
-                className="bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 animate-in fade-in-0 zoom-in-95 duration-200"
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[420px] max-h-[85vh] relative z-10 ${
+                    isClosing ? 'animate-modal-out' : 'animate-modal-in'
+                }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-6">
@@ -97,7 +102,12 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
                         </div>
                     </div>
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            if (!isDeleting) {
+                                setIsClosing(true);
+                                setTimeout(() => onClose(), 300);
+                            }
+                        }}
                         disabled={isDeleting}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -149,7 +159,12 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
                     <button 
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={onClose}
+                        onClick={() => {
+                            if (!isDeleting) {
+                                setIsClosing(true);
+                                setTimeout(() => onClose(), 300);
+                            }
+                        }}
                         disabled={isDeleting}
                     >
                         Cancel

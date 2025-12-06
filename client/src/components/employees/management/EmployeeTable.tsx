@@ -30,11 +30,66 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 
   if (isLoading) {
     return (
-      <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-500">Loading employees...</p>
-        </div>
+      <div className="border-2 border-[#E5E7EB] rounded-md min-h-[429px] max-h-[429px] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <table className="table-fixed w-full">
+          <thead className="border-[#E5E7EB] border-b sticky top-0 bg-[#EDEDED] z-10">
+            <tr>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[220px]">
+                Staff Member
+              </th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                Role
+              </th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[180px]">
+                Contact
+              </th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[100px]">
+                Status
+              </th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[150px]">
+                Last Login
+              </th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 w-[120px]">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="py-4 px-6 w-[220px]">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse mr-3 flex-shrink-0"></div>
+                    <div className="min-w-0">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse mb-1"></div>
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4 px-6 w-[100px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
+                </td>
+                <td className="py-4 px-6 w-[180px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-1"></div>
+                  <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                </td>
+                <td className="py-4 px-6 w-[100px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
+                </td>
+                <td className="py-4 px-6 w-[150px]">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-6 w-[120px]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }
@@ -106,7 +161,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         </thead>
         <tbody className="divide-y divide-gray-200">
           {employees.map((employee, index) => (
-            <tr key={employee.id} className="hover:bg-gray-50">
+            <tr key={employee.id || `employee-${index}`} className="hover:bg-gray-50">
               <td className="py-4 px-6 w-[220px]">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
@@ -134,15 +189,22 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                 </span>
               </td>
               <td className="py-4 px-6 w-[150px] text-sm text-gray-600">
-                {employee.lastLogin !== 'Never' ? (() => {
-                  const date = new Date(employee.lastLogin);
-                  const formattedDate = formatDate(date);
-                  const hours = date.getHours();
-                  const minutes = String(date.getMinutes()).padStart(2, '0');
-                  const ampm = hours >= 12 ? 'PM' : 'AM';
-                  const displayHours = hours % 12 || 12;
-                  return `${formattedDate} ${displayHours}:${minutes}${ampm}`;
-                })() : 'Never'}
+                {employee.lastLogin && employee.lastLogin !== 'Never' && employee.lastLogin !== 'N/A' ? (() => {
+                  try {
+                    const date = new Date(employee.lastLogin);
+                    if (isNaN(date.getTime())) {
+                      return 'N/A';
+                    }
+                    const formattedDate = formatDate(date);
+                    const hours = date.getHours();
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const displayHours = hours % 12 || 12;
+                    return `${formattedDate} ${displayHours}:${minutes}${ampm}`;
+                  } catch {
+                    return 'N/A';
+                  }
+                })() : 'N/A'}
               </td>
               <td className="py-4 px-6 w-[120px]">
                 <div className="flex items-center gap-2">

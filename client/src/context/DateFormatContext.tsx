@@ -1,3 +1,4 @@
+/* DateFormatContext */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type DateFormat = 'MM/dd/yyyy' | 'dd/MM/yyyy' | 'yyyy-MM-dd' | 'dd-MMM-yyyy';
@@ -25,28 +26,63 @@ export const DateFormatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const formatDate = (date: Date | string): string => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (!date) return '-';
     
-    if (isNaN(dateObj.getTime())) return '';
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      
+      // Check if date is invalid
+      if (isNaN(dateObj.getTime())) return '-';
 
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const year = dateObj.getFullYear();
-    
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthName = monthNames[dateObj.getMonth()];
+      const day = dateObj.getDate();
+      const month = dateObj.getMonth();
+      const year = dateObj.getFullYear();
+      
+      // Additional validation to prevent NaN values
+      if (isNaN(day) || isNaN(month) || isNaN(year) || 
+          day < 1 || day > 31 || month < 0 || month > 11 || year < 1 || year > 9999) {
+        return '-';
+      }
+      
+      const dayStr = String(day).padStart(2, '0');
+      const monthStr = String(month + 1).padStart(2, '0');
+      const yearStr = String(year);
+      
+      // Final check to ensure no NaN in the strings
+      if (dayStr.includes('NaN') || monthStr.includes('NaN') || yearStr.includes('NaN')) {
+        return '-';
+      }
+      
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthName = monthNames[month];
 
-    switch (dateFormat) {
-      case 'MM/dd/yyyy':
-        return `${month}/${day}/${year}`;
-      case 'dd/MM/yyyy':
-        return `${day}/${month}/${year}`;
-      case 'yyyy-MM-dd':
-        return `${year}-${month}-${day}`;
-      case 'dd-MMM-yyyy':
-        return `${day}-${monthName}-${year}`;
-      default:
-        return `${month}/${day}/${year}`;
+      let result: string;
+      switch (dateFormat) {
+        case 'MM/dd/yyyy':
+          result = `${monthStr}/${dayStr}/${yearStr}`;
+          break;
+        case 'dd/MM/yyyy':
+          result = `${dayStr}/${monthStr}/${yearStr}`;
+          break;
+        case 'yyyy-MM-dd':
+          result = `${yearStr}-${monthStr}-${dayStr}`;
+          break;
+        case 'dd-MMM-yyyy':
+          result = `${dayStr}-${monthName}-${yearStr}`;
+          break;
+        default:
+          result = `${monthStr}/${dayStr}/${yearStr}`;
+      }
+      
+      // Final safety check - if result contains NaN, return '-'
+      if (result.includes('NaN') || result.includes('undefined') || result.includes('null')) {
+        return '-';
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error in formatDate:', error, date);
+      return '-';
     }
   };
 

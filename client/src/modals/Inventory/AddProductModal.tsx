@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import Portal from '../../components/common/Portal';
 
 interface ProductFormData {
   productName: string;
@@ -33,16 +34,22 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     quantity: number | string;
     minimumStock: number | string;
     description?: string;
+    productPriceDisplay?: string; 
   }>({
     productName: '',
     category: '',
     productPrice: '',
     quantity: '',
     minimumStock: '',
-    description: ''
+    description: '',
+    productPriceDisplay: ''
   });
 
   const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [showValidationAlert, setShowValidationAlert] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [priceError, setPriceError] = useState<string>('');
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -59,6 +66,16 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     };
   }, []);
 
+  // Reset closing state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setIsClosing(false);
+      setShowValidationAlert(false);
+      setMissingFields([]);
+      setPriceError('');
+    }
+  }, [isOpen]);
+
   const toggleCategoryDropdown = () => {
     setIsSelectOpen(!isSelectOpen);
   };
@@ -68,9 +85,69 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     setIsSelectOpen(false);
   };
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+      setShowValidationAlert(false);
+      setMissingFields([]);
+      setPriceError('');
+    }, 300);
+  };
+
+  const validateForm = (): boolean => {
+    const missing: string[] = [];
+    let hasError = false;
+
+    if (!formData.productName.trim()) {
+      missing.push('Product Name');
+    }
+    if (!formData.category) {
+      missing.push('Category');
+    }
+    
+    // Validate price
+    const price = Number(formData.productPrice);
+    if (!formData.productPrice || formData.productPrice === '') {
+      missing.push('Price');
+      setPriceError('Price is required');
+      hasError = true;
+    } else if (price <= 0) {
+      missing.push('Price (must be greater than 0)');
+      setPriceError('Price must be greater than 0');
+      hasError = true;
+    } else {
+      setPriceError('');
+    }
+    
+    if (formData.quantity === '') {
+      missing.push('Current Stock');
+    }
+
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      setShowValidationAlert(true);
+      
+      // Auto-hide alert after 5 seconds
+      setTimeout(() => {
+        setShowValidationAlert(false);
+      }, 5000);
+      
+      return false;
+    }
+
+    return !hasError;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+
     const quantity = Number(formData.quantity) || 0;
     const minimumStock = Number(formData.minimumStock) || 0;
     
@@ -101,16 +178,49 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       productPrice: '',
       quantity: '',
       minimumStock: '',
-      description: ''
+      description: '',
+      productPriceDisplay: ''
     });
+    setPriceError('');
     
-    onClose();
+    handleClose();
+  };
+
+  const formatNumberWithCommas = (value: string): string => {
+    const cleanValue = value.replace(/[^\d.]/g, '');
+    const parts = cleanValue.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.length > 1 ? `${parts[0]}.${parts[1].slice(0, 2)}` : parts[0];
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    if (name === 'productPrice' || name === 'quantity' || name === 'minimumStock') {
+    // Hide validation alert when user starts typing
+    if (showValidationAlert) {
+      setShowValidationAlert(false);
+    }
+    
+    if (name === 'productPrice') {
+      const numericValue = value.replace(/,/g, '');
+      const formattedValue = formatNumberWithCommas(value);
+      
+      // Validate price in real-time
+      const price = Number(numericValue);
+      if (numericValue === '') {
+        setPriceError('');
+      } else if (price <= 0) {
+        setPriceError('Price must be greater than 0');
+      } else {
+        setPriceError('');
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        productPrice: numericValue === '' ? '' : numericValue,
+        productPriceDisplay: formattedValue
+      }));
+    } else if (name === 'quantity' || name === 'minimumStock') {
       setFormData(prev => ({
         ...prev,
         [name]: value === '' ? '' : parseFloat(value)
@@ -123,32 +233,55 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Add New Product</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1 rounded-md p-1"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+    <Portal>
+      <div 
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={handleClose}
+      >
+        <div 
+          className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] ${isClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div>
+            <h3 className="text-[20px] font-bold">Add New Product</h3>
+            <p className="text-[12px]">Add a new product to your inventory with details and pricing.</p>
+          </div>
 
-        {/* Form */}
-        <div className="px-6 pb-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Validation Alert */}
+          {showValidationAlert && (
+            <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 animate-modal-in">
+              <div className="flex gap-2">
+                <AlertTriangle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-red-800 mb-1">
+                    Please fill in all required fields
+                  </p>
+                  <p className="text-xs text-red-700">
+                    Missing: {missingFields.join(', ')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowValidationAlert(false)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[550px] mt-4 text-[12px] flex flex-col gap-3">
             {/* Product Details Section */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-4">Product Details</h3>
+            <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4">
+              <h3 className="text-[16px] font-bold">Product Details</h3>
               
-              {/* Product Name */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="mt-2">
+                <label className="text-[12px] font-bold">
                   Product Name
                 </label>
                 <input
@@ -157,118 +290,141 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   value={formData.productName}
                   onChange={handleChange}
                   placeholder="Enter product name"
-                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none"
-                  required
+                  className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                    showValidationAlert && !formData.productName.trim() 
+                      ? 'border-red-300 bg-red-50' 
+                      : 'border-gray-300'
+                  }`}
                 />
               </div>
 
-              {/* Description */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
+              <div className="mt-2">
+                <label className="text-[12px] font-bold">Description</label>
                 <textarea
                   name="description"
                   value={formData.description || ''}
                   onChange={handleChange}
                   placeholder="Enter product description"
                   rows={3}
-                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all resize-none outline-none"
+                  className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none"
                 />
               </div>
 
-              {/* Category and Price */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
-                  </label>
-                  <div className="relative" ref={categoryDropdownRef}>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div className="dropdown relative" ref={categoryDropdownRef}>
+                  <p className="text-[12px] font-bold">Category</p>
+                  <div className="relative">
                     <div
+                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[32px]"
                       onClick={toggleCategoryDropdown}
-                      className={`w-full px-3 py-2 pr-8 bg-gray-100 border border-gray-300 rounded-lg text-left cursor-pointer hover:bg-gray-200 transition-all outline-none ${
-                        isSelectOpen ? 'ring-2 ring-[#02367B] border-[#02367B] bg-white' : 'focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white'
-                      }`}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          toggleCategoryDropdown();
+                          e.preventDefault();
+                        }
+                      }}
+                      tabIndex={0}
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-center min-h-0">
                         {formData.category ? (
                           <>
                             <div 
-                              className="w-3 h-3 rounded-full mr-2"
+                              className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
                               style={{ backgroundColor: categoryColors[formData.category] || '#6B7280' }}
                             ></div>
-                            {formData.category}
+                            <span className="truncate">{formData.category}</span>
                           </>
                         ) : (
                           <span className="text-gray-500">Select Category</span>
                         )}
                       </div>
-                    </div>
-                    
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg 
+                      <svg
                         width="16"
                         height="16"
                         viewBox="0 0 16 16"
                         fill="none"
-                        className={`text-gray-500 transition-transform duration-200 ease-in-out ${
-                          isSelectOpen ? 'rotate-180' : ''
-                        }`}
+                        className={`transition-transform flex-shrink-0 ${isSelectOpen ? 'rotate-180' : ''}`}
                       >
                         <polygon points="4,6 12,6 8,12" fill="currentColor" />
                       </svg>
                     </div>
-
+                    
                     <div
-                      className="dropdown-options absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-48 overflow-y-auto"
+                      className="dropdown-options rounded-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                       style={{
                         display: isSelectOpen ? 'block' : 'none',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                        position: 'absolute',
+                        top: 'auto',
+                        bottom: 'calc(100% + 4px)',
+                        left: 0,
+                        right: 0,
+                        transform: 'translateY(0)',
+                        backgroundColor: 'white',
+                        border: '1px solid #ccc',
+                        zIndex: 10,
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                        maxHeight: categories.length <= 5 ? 'fit-content' : '190px',
+                        overflowY: categories.length <= 5 ? 'visible' : 'auto'
                       }}
                     >
-                      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 font-medium text-gray-700 text-center text-sm">
-                        Select Category
+                    {categories.length === 0 ? (
+                      <div className="px-4 py-2 text-gray-500 text-center">
+                        No categories available
                       </div>
-                      
-                      {categories.map((category) => (
+                    ) : (
+                      [...categories].reverse().map((category) => (
                         <div
                           key={category}
+                          className="option px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
                           onClick={() => handleCategorySelect(category)}
-                          className="px-4 py-2 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center transition-colors cursor-pointer"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleCategorySelect(category);
+                            }
+                          }}
+                          tabIndex={0}
                         >
                           <div 
-                            className="w-3 h-3 rounded-full mr-3"
+                            className="w-3 h-3 rounded-full mr-3 flex-shrink-0"
                             style={{ backgroundColor: categoryColors[category] || '#6B7280' }}
                           ></div>
-                          {category}
+                          <span className="truncate">{category}</span>
                         </div>
-                      ))}
-                    </div>
+                      ))
+                    )}
+                  </div>
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Price (₱)
+                  <label className="text-[12px] font-bold">
+                    Price (₱) 
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="productPrice"
-                    value={formData.productPrice}
+                    value={formData.productPriceDisplay || ''}
                     onChange={handleChange}
                     placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    required
+                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                      priceError || (showValidationAlert && (!formData.productPrice || formData.productPrice === ''))
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-gray-300'
+                    }`}
                   />
+                  {priceError && (
+                    <p className="text-red-600 text-xs mt-1">{priceError}</p>
+                  )}
                 </div>
               </div>
 
-              {/* Current Stock and Minimum Stock */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mt-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Stock
+                  <label className="text-[12px] font-bold">
+                    Current Stock 
                   </label>
                   <input
                     type="number"
@@ -277,14 +433,15 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    required
+                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      showValidationAlert && formData.quantity === '' 
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-gray-300'
+                    }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Minimum Stock
-                  </label>
+                  <label className="text-[12px] font-bold">Minimum Stock</label>
                   <input
                     type="number"
                     name="minimumStock"
@@ -292,24 +449,24 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02367B] focus:border-[#02367B] focus:bg-white transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
               <button
                 type="button"
-                onClick={onClose}
-                className="px-4 py-1.5 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
+                onClick={handleClose}
+                className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 bg-[#02367B] text-white rounded-md hover:bg-[#02367B]/90 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#02367B] focus:ring-offset-1"
+                className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300"
               >
                 Add Product
               </button>
@@ -317,7 +474,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           </form>
         </div>
       </div>
-    </div>
+    </Portal>
   );
 };
 

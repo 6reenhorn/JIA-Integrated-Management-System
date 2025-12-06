@@ -117,6 +117,8 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     const fetchJuanPayRecords = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/juanpay');
+        console.log('JuanPay records fetched:', response.data);
+        console.log('First record sample:', response.data[0]);
         setJuanpayRecords(response.data);
       } catch (err) {
         console.error('Error fetching JuanPay records:', err);
@@ -152,7 +154,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     } catch (err) {
       console.error('Error fetching GCash records:', err);
     } finally {
-      setIsInitialLoading(false);
+      setTimeout(() => {
+        setIsInitialLoading(false);
+      }, 500);
     }
   };
 
@@ -164,7 +168,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     } catch (err) {
       console.error('Error fetching PayMaya records:', err);
     } finally {
-      setIsInitialLoadingPayMaya(false);
+      setTimeout(() => {
+        setIsInitialLoadingPayMaya(false);
+      }, 500);
     }
   };
 
@@ -176,7 +182,9 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     } catch (err) {
       console.error('Error fetching JuanPay records:', err);
     } finally {
-      setIsInitialLoadingJuanPay(false);
+      setTimeout(() => {
+        setIsInitialLoadingJuanPay(false);
+      }, 500);
     }
   };
 
@@ -431,7 +439,12 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
         {/* Overview Section */}
         {activeSection === 'Overview' && (
           <div className="space-y-6">
-            <Overview gcashRecords={gcashRecords} paymayaRecords={paymayaRecords} juanpayRecords={juanpayRecords} />
+            <Overview 
+              gcashRecords={gcashRecords} 
+              paymayaRecords={paymayaRecords} 
+              juanpayRecords={juanpayRecords}
+              isLoading={isInitialLoading || isInitialLoadingPayMaya || isInitialLoadingJuanPay}
+            />
           </div>
         )}
 
@@ -488,7 +501,6 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
       {isGCashModalOpen && (
         <Portal>
           <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
-            <div className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm' style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}></div>
             <div className='relative z-[1010]'>
               <AddGCashRecordModal
                 isOpen={isGCashModalOpen}
@@ -544,7 +556,6 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
       {isPayMayaModalOpen && (
         <Portal>
           <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
-            <div className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm' style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}></div>
             <div className='relative z-[1010]'>
               <AddPayMayaRecordModal
                 isOpen={isPayMayaModalOpen}
@@ -600,7 +611,6 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
       {isJuanPayModalOpen && (
         <Portal>
           <div className='fixed inset-0 z-[1000] flex items-center justify-center'>
-            <div className='absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm' style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}></div>
             <div className='relative z-[1010]'>
               <AddJuanPayRecordModal
                 isOpen={isJuanPayModalOpen}

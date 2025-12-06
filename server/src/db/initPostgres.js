@@ -6,8 +6,13 @@ const createEmployeesTable = async () => {
       id SERIAL PRIMARY KEY,
       emp_id VARCHAR(10) UNIQUE NOT NULL,
       name VARCHAR(255) NOT NULL,
+      first_name VARCHAR(255),
+      last_name VARCHAR(255),
       role VARCHAR(100) NOT NULL,
+      department VARCHAR(100),
       contact TEXT,
+      email VARCHAR(255),
+      phone VARCHAR(50),
       status VARCHAR(10) CHECK (status IN ('Active', 'Inactive')) DEFAULT 'Active',
       last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       avatar TEXT,
@@ -16,19 +21,42 @@ const createEmployeesTable = async () => {
       contact_name VARCHAR(255),
       contact_number VARCHAR(50),
       relationship VARCHAR(100),
-      password VARCHAR(255) NOT NULL
+      password VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
+      deleted_at TIMESTAMP DEFAULT NULL
     );
   `;
 
   try {
     await pool.query(query);
     console.log('Employees table created or already exists');
+    
+    // Add missing columns if they don't exist (for existing databases)
+    const columnsToAdd = [
+      { name: 'first_name', type: 'VARCHAR(255)' },
+      { name: 'last_name', type: 'VARCHAR(255)' },
+      { name: 'department', type: 'VARCHAR(100)' },
+      { name: 'email', type: 'VARCHAR(255)' },
+      { name: 'phone', type: 'VARCHAR(50)' }
+    ];
+    
+    for (const col of columnsToAdd) {
+      try {
+        await pool.query(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS ${col.name} ${col.type}`);
+      } catch (err) {
+        // Column might already exist or error occurred, continue
+        if (!err.message.includes('already exists') && !err.message.includes('duplicate')) {
+          console.warn(`Could not add column ${col.name}:`, err.message);
+        }
+      }
+    }
   } catch (err) {
     console.error('Error creating employees table:', err);
   }
 };
 
-const createGCashRecordsTable = async () => {
+const createGCashRecordsTable = async () => {``
   const query = `
     CREATE TABLE IF NOT EXISTS gcash_records (
       id SERIAL PRIMARY KEY,
@@ -81,7 +109,7 @@ const createJuanPayRecordsTable = async () => {
     CREATE TABLE IF NOT EXISTS juanpay_records (
       id SERIAL PRIMARY KEY,
       date DATE NOT NULL,
-      beginnings JSONB NOT NULL DEFAULT '[]',
+      beginnings TEXT NOT NULL DEFAULT '',
       ending NUMERIC NOT NULL DEFAULT 0,
       sales NUMERIC NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -211,7 +239,7 @@ const createAttendanceTable = async () => {
   const query = `
     CREATE TABLE IF NOT EXISTS attendance (
       id SERIAL PRIMARY KEY,
-      employee_id INTEGER REFERENCES employees(id),
+      employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
       date DATE NOT NULL DEFAULT CURRENT_DATE,
       time_in TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       time_out TIMESTAMP,
@@ -227,12 +255,33 @@ const createAttendanceTable = async () => {
   }
 };
 
+const addCascadeToAttendance = async () => {
+  try {
+    // Drop the existing foreign key constraint if it exists
+    await pool.query(`
+      ALTER TABLE attendance
+      DROP CONSTRAINT IF EXISTS attendance_employee_id_fkey;
+    `);
+
+    // Add the foreign key constraint with ON DELETE CASCADE
+    await pool.query(`
+      ALTER TABLE attendance
+      ADD CONSTRAINT attendance_employee_id_fkey
+      FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+    `);
+
+    console.log('ON DELETE CASCADE added to attendance table foreign key');
+  } catch (err) {
+    console.error('Error adding CASCADE to attendance table:', err);
+  }
+};
+
 const insertSampleEmployees = async () => {
   const sampleEmployees = [
     {
       emp_id: 'EMP001',
       name: 'John Cyril Espina',
-      role: 'Manager',
+      role: 'General Manager',
       department: 'Front Desk',
       contact: 'johncyril.espina@gmail.com\n+1 (555) 123-4567\nLingion, Manolo Fortich, Bukidnon',
       status: 'Active',
@@ -247,7 +296,7 @@ const insertSampleEmployees = async () => {
     {
       emp_id: 'EMP002',
       name: 'Den Jester Antonio',
-      role: 'Admin',
+      role: 'Inventory Manager',
       department: 'Administrative',
       contact: 'denjester.antonio@gmail.com\n+1 (555) 234-5678\nManolo Fortich, Bukidnon',
       status: 'Active',
@@ -256,12 +305,13 @@ const insertSampleEmployees = async () => {
       salary: '55000',
       contact_name: 'John Smith',
       contact_number: '555-234-5678',
-      relationship: 'Parent'
+      relationship: 'Parent',
+      password: 'TempPass123'
     },
     {
       emp_id: 'EMP003',
       name: 'John Jaybord Casia',
-      role: 'Sales Associate',
+      role: 'E-Wallet Recorder',
       department: 'Front Desk',
       contact: 'johnjaybord.casia@gmail.com\n+1 (555) 345-6789\nTagoloan, Misamis Oriental',
       status: 'Active',
@@ -270,12 +320,13 @@ const insertSampleEmployees = async () => {
       salary: '45000',
       contact_name: 'Mary Johnson',
       contact_number: '555-345-6789',
-      relationship: 'Sibling'
+      relationship: 'Sibling',
+      password: 'TempPass123'
     },
     {
       emp_id: 'EMP004',
       name: 'Sophia Marie Flores',
-      role: 'Cashier',
+      role: 'Inventory Transaction Manager',
       department: 'Front Desk',
       contact: 'sophiamarie.flores@gmail.com\n+1 (555) 456-7890\nPatag, Cagayyan de Oro City',
       status: 'Active',
@@ -284,12 +335,13 @@ const insertSampleEmployees = async () => {
       salary: '40000',
       contact_name: 'Robert Brown',
       contact_number: '555-456-7890',
-      relationship: 'Friend'
+      relationship: 'Friend',
+      password: 'TempPass123'
     },
     {
       emp_id: 'EMP005',
       name: 'Glenn Mark Anino',
-      role: 'Maintenance',
+      role: 'E-Wallet Recorder',
       department: 'Maintenance',
       contact: 'glennmark.anino@gmail.com\n+1 (555) 567-8901\nCamaman-an, Cagayyan de Oro City',
       status: 'Inactive',
@@ -298,15 +350,16 @@ const insertSampleEmployees = async () => {
       salary: '35000',
       contact_name: 'N/A',
       contact_number: 'N/A',
-      relationship: 'Other'
+      relationship: 'Other',
+      password: 'TempPass123'
     }
   ];
 
   try {
     for (const employee of sampleEmployees) {
       const insertQuery = `
-        INSERT INTO employees (emp_id, name, role, contact, status, last_login, address, salary, contact_name, contact_number, relationship)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        INSERT INTO employees (emp_id, name, role, contact, status, last_login, address, salary, contact_name, contact_number, relationship, password)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         ON CONFLICT (emp_id) DO NOTHING;
       `;
       const values = [
@@ -320,7 +373,8 @@ const insertSampleEmployees = async () => {
         employee.salary,
         employee.contact_name,
         employee.contact_number,
-        employee.relationship
+        employee.relationship,
+        employee.password
       ];
       await pool.query(insertQuery, values);
     }
@@ -402,6 +456,7 @@ const syncDatabase = async () => {
   await updateNumericColumns();
   await createPayrollRecordsTable();
   await createAttendanceTable();
+  await addCascadeToAttendance();
 };
 
 module.exports = { syncDatabase };
