@@ -10,6 +10,8 @@ interface CheckInProps {
   onClose: () => void;
 }
 
+
+
 const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -26,7 +28,12 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
 
     const selectedEmployeeText = selectedEmployee ? `${selectedEmployee.name} (${selectedEmployee.empId})` : 'Select Employee';
 
+    const [activeIndex, setActiveIndex] = useState(-1);
+
     const { checkIn } = useAuth();
+
+    const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
 
     const toggleEmployeeDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
@@ -191,6 +198,14 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
         }
     };
 
+    useEffect(() => {
+        if (activeIndex >= 0 && optionRefs.current[activeIndex]) {
+            optionRefs.current[activeIndex].scrollIntoView({
+            block: 'nearest',
+            });
+        }
+    }, [activeIndex]);
+
     return (
         <div className="relative w-[55vw] h-[60vh] px-8 py-16 bg-gradient-to-b from-[#02367B] to-[#016CA5] rounded-2xl rounded-tl-[14px] rounded-bl-[14px] modal-content">
             {/* Left Side */}
@@ -231,11 +246,15 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                 onClick={toggleEmployeeDropdown}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' || e.key === ' ') {
-                                        toggleEmployeeDropdown();
+                                        setIsDropdownOpen(true);
+                                        setActiveIndex(0);
                                         e.preventDefault();
                                     }
                                 }}
                                 tabIndex={0}
+                                role="combobox"
+                                aria-expanded={isDropdownOpen}
+                                aria-controls="employee-listbox"
                             >
                                 <div className='px-2'>
                                     {selectedEmployeeText}
@@ -251,7 +270,31 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                 </svg>
                             </div>
                             {isDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-2xl shadow-lg max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-2xl shadow-lg max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                                    id="employee-listbox"
+                                    role="listbox"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "ArrowDown") {
+                                            setActiveIndex((prev) => Math.min(prev + 1, employees.length - 1));
+                                            e.preventDefault();
+                                        }
+                                        
+                                        if (e.key === "ArrowUp") {
+                                            setActiveIndex((prev) => Math.max(prev - 1, 0));
+                                            e.preventDefault();
+                                        }
+
+                                        if (e.key === 'Enter' && activeIndex >= 0) {
+                                            setSelectedEmployee(employees[activeIndex]);
+                                            setIsDropdownOpen(false);
+                                        }
+
+                                        if (e.key === 'Escape') {
+                                            setIsDropdownOpen(false);
+                                        }
+                                    }}
+                                >
                                     {isLoadingEmployees ? (
                                         <div className="px-4 py-4 text-center text-gray-500">
                                             Loading employees...
@@ -261,14 +304,19 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                             No employees found
                                         </div>
                                     ) : (
-                                        employees.map((employee) => (
+                                        employees.map((employee, index) => (
                                             <div
                                                 key={employee.id}
+                                                ref={(el) => {optionRefs.current[index] = el}}
+                                                role="option"
+                                                aria-selected={activeIndex === index}
                                                 onClick={() => {
                                                     setSelectedEmployee(employee);
                                                     setIsDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer 
+                                                ${activeIndex === index ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"}`}
+                                                onMouseEnter={() => setActiveIndex(index)}
                                             >
                                                 {employee.name} ({employee.empId})
                                             </div>
