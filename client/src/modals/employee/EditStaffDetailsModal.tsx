@@ -833,7 +833,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               }
             }}
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? 'Updating...' : 'Update Employee'}
           </button>
         </div>
       </div>

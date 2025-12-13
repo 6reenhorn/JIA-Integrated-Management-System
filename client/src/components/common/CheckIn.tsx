@@ -227,7 +227,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                         {/* Custom Dropdown for Employees */}
                         <div className="relative" ref={employeeDropdownRef}>
                             <div
-                                className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-3xl px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[40px]"
+                                className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-3xl px-4 text-gray-600 hover:bg-gray-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 h-[40px]"
                                 onClick={toggleEmployeeDropdown}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' || e.key === ' ') {
@@ -331,7 +331,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                             ref={checkInButtonRef}
                             type="button"
                             disabled={isProcessing || message?.type === 'success'}
-                            className={`w-full py-2 rounded-3xl text-white transition-colors ${
+                            className={`w-full py-2 rounded-3xl text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                 isProcessing 
                                     ? 'bg-gray-400 cursor-not-allowed' 
                                     : 'bg-[#02367B] hover:bg-[#1C4A9E]'
