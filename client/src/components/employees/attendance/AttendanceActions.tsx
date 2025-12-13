@@ -42,7 +42,7 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
         <button
           disabled={currentPage === 1}
           onClick={() => onPageChange(1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -56,7 +56,7 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
         <button
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -70,7 +70,7 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
         {visiblePages.map((page) => (
           <button
             key={page}
-            className={`px-3 py-1 text-sm rounded ${currentPage === page ? 'bg-[#02367B] text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
+            className={`px-3 py-1 text-sm rounded focus:outline-none ${currentPage === page ? 'bg-[#02367B] text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
             onClick={() => onPageChange(page)}
           >
             {page}
@@ -79,7 +79,7 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
         <button
           disabled={currentPage === pageCount}
           onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -93,7 +93,7 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
         <button
           disabled={currentPage === pageCount}
           onClick={() => onPageChange(pageCount)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path

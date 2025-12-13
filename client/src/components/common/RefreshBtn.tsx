@@ -2,7 +2,7 @@ const RefreshBtn = ({ onClick, isSpinning }: { onClick: () => void; isSpinning: 
   return (
     <button 
       onClick={onClick}
-      className="p-[10px] border border-gray-300 hover:bg-gray-200 text-black rounded-md flex items-center justify-center"
+      className="p-[10px] border border-gray-300 hover:bg-gray-200 text-black rounded-md flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
     >
       <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform duration-500 ${isSpinning ? 'rotate-360' : 'rotate-0'}`} >
         <rect width="24" height="24" fill="none"/>
