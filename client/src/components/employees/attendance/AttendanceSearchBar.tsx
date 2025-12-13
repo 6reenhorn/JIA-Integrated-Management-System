@@ -8,7 +8,7 @@ const AttendanceSearchBar: React.FC = () => {
             <input
                 type="text"
                 placeholder="Search Attendance"
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-90"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-90"
             />
         </div>
     );

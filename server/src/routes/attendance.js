@@ -119,40 +119,114 @@ router.post('/checkin', async (req, res) => {
   }
 });
 
-// Helper function to format time in 12-hour format (HH:MM AM/PM)
-const formatTime = (timeValue) => {
-  if (!timeValue && timeValue !== 0) return null;
+router.post('/checkout', async (req, res) => {
+  const { employeeId } = req.body;
+
+  if (!employeeId) {
+    return res.status(400).json({ error: 'Employee ID is required' });
+  }
+
   try {
-    // Handle both string and number (Unix timestamp) inputs
-    let date;
+    const employee = await dbHelper.queryOne(
+      'SELECT * FROM employees WHERE (id = ? OR emp_id = ?) AND deleted_at IS NULL', 
+      [employeeId, employeeId]
+    );
+
+    if (!employee) {
+      return res.status(400).json({ error: 'Employee not found' });
+    }
+
+    // For admin, just return success without recording attendance
+    if (employee.role.toLowerCase() === 'admin') {
+      return res.json({
+        success: true,
+        message: 'Admin checkout successful'
+      });
+    }
+
+    // Find the most recent attendance record for this employee
+    // Unlike checkin which creates a new record, checkout always updates the most recent one
+    const attendanceRecord = await dbHelper.queryOne(
+      'SELECT id FROM attendance WHERE employee_id = ? AND deleted_at IS NULL ORDER BY date DESC, time_in DESC LIMIT 1',
+      [employee.id]
+    );
+
+    if (!attendanceRecord) {
+      return res.status(400).json({ error: 'No attendance record found to checkout' });
+    }
+
+    // Update the attendance record with time_out (using PH local time)
+    const now = getPHLocalTimeISO();
+    await dbHelper.update('attendance', attendanceRecord.id, {
+      time_out: now,
+      updated_at: now
+    });
+
+    res.json({
+      success: true,
+      message: 'Check-out successful'
+    });
+
+  } catch (err) {
+    console.error('Error during check-out:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Helper function to format time in 12-hour format (HH:MM AM/PM)
+// Parse stored timestamps robustly and display them in Philippines timezone (Asia/Manila)
+// using Intl.DateTimeFormat to avoid manual offset math and double-shifting.
+const formatTime = (timeValue) => {
+  if (timeValue === null || timeValue === undefined) return null;
+  try {
+    let dateObj;
+
     if (typeof timeValue === 'number') {
-      // If it's a number, treat it as milliseconds since epoch
-      date = new Date(timeValue);
+      // Treat numbers as milliseconds since epoch
+      dateObj = new Date(timeValue);
     } else if (typeof timeValue === 'string') {
-      // Handle SQL datetime format: "2025-11-30 06:49:27.565"
-      // Convert to ISO format by replacing space with 'T'
-      let timeStr = timeValue.trim();
-      if (timeStr.includes(' ') && !timeStr.includes('T')) {
-        // Replace space with 'T' to make it ISO-like: "2025-11-30T06:49:27.565"
-        timeStr = timeStr.replace(' ', 'T');
+      let t = timeValue.trim();
+      // Normalize SQL datetime with a space to an ISO-like string
+      if (t.includes(' ') && !t.includes('T')) {
+        // Some databases store 'YYYY-MM-DD HH:MM:SS.sss' without timezone
+        // Treat it as local/naive time by attaching 'Z' to avoid incorrect local parsing later
+        // but prefer parsing as-is first
+        const tryIso = t.replace(' ', 'T');
+        const parsed = Date.parse(tryIso);
+        if (!isNaN(parsed)) {
+          dateObj = new Date(parsed);
+        } else {
+          // As a fallback, append Z (assume UTC) and parse
+          dateObj = new Date(tryIso + 'Z');
+        }
+      } else {
+        // Let Date.parse handle ISO strings with timezone (Z or +08:00)
+        const parsed = Date.parse(t);
+        if (!isNaN(parsed)) {
+          dateObj = new Date(parsed);
+        } else {
+          // As a last resort, try adding Z
+          const parsedZ = Date.parse(t + 'Z');
+          if (!isNaN(parsedZ)) dateObj = new Date(parsedZ);
+          else return null;
+        }
       }
-      date = new Date(timeStr);
     } else {
       return null;
     }
-    
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      return null;
-    }
-    
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    const displayMinutes = String(minutes).padStart(2, '0');
-    return `${displayHours}:${displayMinutes} ${ampm}`;
-  } catch {
+
+    if (!dateObj || isNaN(dateObj.getTime())) return null;
+
+    // Use Intl.DateTimeFormat to format the time in Asia/Manila timezone reliably
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Manila'
+    });
+
+    return dtf.format(dateObj);
+  } catch (err) {
     return null;
   }
 };

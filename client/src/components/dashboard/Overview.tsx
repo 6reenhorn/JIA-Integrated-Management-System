@@ -3,12 +3,13 @@ import axios from 'axios';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Package } from 'lucide-react';
 
-const LayoutCard = ({ title, children, className = "" }: any) => (
+const LayoutCard = React.memo(({ title, children, className = "" }: any) => (
   <div className={`bg-gray-100 border-2 border-[#E5E7EB] rounded-[12px] p-6 shadow-sm min-h-[150px] ${className}`}>
     {title && <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>}
     {children}
   </div>
-);
+));
+LayoutCard.displayName = 'LayoutCard';
 
 const Overview: React.FC = () => {
   const [timeRange, setTimeRange] = useState('week');
@@ -170,22 +171,38 @@ const Overview: React.FC = () => {
     }
   }, [fetchAllData]); // Fetch data when component mounts or remounts
 
-  // Also refetch when component becomes visible (using Intersection Observer or visibility API)
+  // Also refetch when component becomes visible (debounced to prevent excessive calls)
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        // Refetch data when tab/window becomes visible
-        fetchAllData();
+        // Debounce refetch to prevent excessive API calls
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          fetchAllData();
+        }, 1000); // Wait 1 second after tab becomes visible
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
+      clearTimeout(timeoutId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchAllData]);
 
-  // Calculate revenue data from sales with proper month handling
+  // Pre-process sales records by date for faster lookups
+  const salesByDate = useMemo(() => {
+    const map = new Map<string, number>();
+    salesRecords.forEach((sale: any) => {
+      const dateStr = sale.date;
+      const total = Number(sale.total) || 0;
+      map.set(dateStr, (map.get(dateStr) || 0) + total);
+    });
+    return map;
+  }, [salesRecords]);
+
+  // Calculate revenue data from sales with optimized filtering
   const revenueData = useMemo(() => {
     if (timeRange === 'week') {
       const last7Days = [];
@@ -197,8 +214,7 @@ const Overview: React.FC = () => {
         const dateStr = date.toISOString().split('T')[0];
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
 
-        const daySales = salesRecords.filter((sale: any) => sale.date === dateStr);
-        const revenue = daySales.reduce((sum: number, sale: any) => sum + (Number(sale.total) || 0), 0);
+        const revenue = salesByDate.get(dateStr) || 0;
         const expenses = revenue * 0.6;
         
         last7Days.push({
@@ -212,12 +228,17 @@ const Overview: React.FC = () => {
     } else if (timeRange === 'month') {
       const daysInMonth = 31;
       const monthlyData: { name: string; revenue: number; expenses: number }[] = [];
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      
       for (let day = 1; day <= daysInMonth; day++) {
-        const daySales = salesRecords.filter((sale: any) => {
-          const saleDate = new Date(sale.date);
-          return saleDate.getDate() === day;
+        let revenue = 0;
+        salesByDate.forEach((total, dateStr) => {
+          const saleDate = new Date(dateStr);
+          if (saleDate.getDate() === day && saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
+            revenue += total;
+          }
         });
-        const revenue = daySales.reduce((sum: number, sale: any) => sum + (Number(sale.total) || 0), 0);
         const expenses = revenue * 0.6;
         monthlyData.push({
           name: day.toString(),
@@ -232,11 +253,13 @@ const Overview: React.FC = () => {
       for (let month = 0; month < 12; month++) {
         const monthName = new Date(year, month).toLocaleDateString('en-US', { month: 'short' });
         
-        const monthSales = salesRecords.filter((sale: any) => {
-          const saleDate = new Date(sale.date);
-          return saleDate.getFullYear() === year && saleDate.getMonth() === month;
+        let revenue = 0;
+        salesByDate.forEach((total, dateStr) => {
+          const saleDate = new Date(dateStr);
+          if (saleDate.getFullYear() === year && saleDate.getMonth() === month) {
+            revenue += total;
+          }
         });
-        const revenue = monthSales.reduce((sum: number, sale: any) => sum + (Number(sale.total) || 0), 0);
         const expenses = revenue * 0.6;
         
         last12Months.push({
@@ -248,40 +271,50 @@ const Overview: React.FC = () => {
       
       return last12Months;
     }
-  }, [salesRecords, timeRange]);
+  }, [salesByDate, timeRange]);
   
-  // Calculate category data from inventory
+  // Pre-process inventory items by product name for faster lookups
+  const inventoryByProduct = useMemo(() => {
+    const map = new Map<string, string>();
+    inventoryItems.forEach((item: any) => {
+      map.set(item.productName, item.category || 'Uncategorized');
+    });
+    return map;
+  }, [inventoryItems]);
+
+  // Calculate category data from inventory with optimized filtering
   const categoryData = useMemo(() => {
-    const categoryMap = new Map();
+    const categoryMap = new Map<string, { name: string; value: number; sales: number }>();
     
-    // Filter sales based on timeRange
-    let filteredSales = salesRecords;
+    // Calculate date threshold once
     const today = new Date();
-    
+    let thresholdDate: Date;
     if (timeRange === 'week') {
-      const weekAgo = new Date(today);
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      filteredSales = salesRecords.filter((sale: any) => new Date(sale.date) >= weekAgo);
+      thresholdDate = new Date(today);
+      thresholdDate.setDate(thresholdDate.getDate() - 7);
     } else if (timeRange === 'month') {
-      const monthAgo = new Date(today);
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      filteredSales = salesRecords.filter((sale: any) => new Date(sale.date) >= monthAgo);
+      thresholdDate = new Date(today);
+      thresholdDate.setMonth(thresholdDate.getMonth() - 1);
     } else if (timeRange === 'year') {
-      const yearAgo = new Date(today);
-      yearAgo.setFullYear(yearAgo.getFullYear() - 1);
-      filteredSales = salesRecords.filter((sale: any) => new Date(sale.date) >= yearAgo);
+      thresholdDate = new Date(today);
+      thresholdDate.setFullYear(thresholdDate.getFullYear() - 1);
+    } else {
+      thresholdDate = new Date(0); // All time
     }
     
-    // Group by category from filtered sales
-    filteredSales.forEach((sale: any) => {
-      const item = inventoryItems.find((inv: any) => inv.productName === sale.productName);
-      const key = item?.category ?? 'Uncategorized';
-      
-      if (!categoryMap.has(key)) {
-        categoryMap.set(key, { name: key, value: 0, sales: 0 });
+    // Single pass through sales records
+    salesRecords.forEach((sale: any) => {
+      const saleDate = new Date(sale.date);
+      if (saleDate >= thresholdDate) {
+        const key = inventoryByProduct.get(sale.productName) ?? 'Uncategorized';
+        const total = Number(sale.total) || 0;
+        
+        if (!categoryMap.has(key)) {
+          categoryMap.set(key, { name: key, value: 0, sales: 0 });
+        }
+        const cat = categoryMap.get(key);
+        cat.sales += total;
       }
-      const cat = categoryMap.get(key);
-      cat.sales += Number(sale.total) || 0;
     });
     
     const total = Array.from(categoryMap.values()).reduce((sum, cat) => sum + cat.sales, 0);
@@ -290,32 +323,64 @@ const Overview: React.FC = () => {
       ...cat,
       value: total > 0 ? Math.round((cat.sales / total) * 100) : 0
     }));
-  }, [inventoryItems, salesRecords, timeRange]);
+  }, [inventoryByProduct, salesRecords, timeRange]);
 
-  // Calculate top products from sales
+  // Calculate top products from sales (optimized single pass)
   const topProducts = useMemo(() => {
-    const productMap = new Map();
+    const productMap = new Map<string, { name: string; sales: number; revenue: number }>();
     
+    // Single pass through sales records
     salesRecords.forEach((sale: any) => {
       const name = sale?.productName ?? 'Unknown Product';
+      const quantity = Number(sale.quantity) || 0;
+      const total = Number(sale.total) || 0;
+      
       if (!productMap.has(name)) {
-        productMap.set(name, {
-          name,
-          sales: 0,
-          revenue: 0,
-        });
+        productMap.set(name, { name, sales: 0, revenue: 0 });
       }
-      const product = productMap.get(name);
-      product.sales += Number(sale.quantity) || 0;
-      product.revenue += Number(sale.total) || 0;
+      const product = productMap.get(name)!;
+      product.sales += quantity;
+      product.revenue += total;
     });
     
+    // Convert to array, sort, and slice in one operation
     return Array.from(productMap.values())
-      .sort((a: any, b: any) => b.revenue - a.revenue)
+      .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10); // Top 10 products
   }, [salesRecords]);
 
-  // Calculate e-wallet data
+  // Pre-process e-wallet records by date for faster lookups
+  const ewalletByDate = useMemo(() => {
+    const gcashMap = new Map<string, number>();
+    const paymayaMap = new Map<string, number>();
+    const juanpayMap = new Map<string, number>();
+
+    gcashRecords.forEach((record: any) => {
+      const dateStr = record.date;
+      const amount = Number(record.amount) || 0;
+      gcashMap.set(dateStr, (gcashMap.get(dateStr) || 0) + amount);
+    });
+
+    paymayaRecords.forEach((record: any) => {
+      const dateStr = record.date;
+      const amount = Number(record.amount) || 0;
+      paymayaMap.set(dateStr, (paymayaMap.get(dateStr) || 0) + amount);
+    });
+
+    juanpayRecords.forEach((record: any) => {
+      const dateStr = record.date;
+      const endings = Number(record.ending) || 0;
+      const beginnings = Array.isArray(record.beginnings)
+        ? record.beginnings.reduce((s: number, b: any) => s + (Number(b.amount) || 0), 0)
+        : 0;
+      const amount = Math.abs(endings - beginnings);
+      juanpayMap.set(dateStr, (juanpayMap.get(dateStr) || 0) + amount);
+    });
+
+    return { gcashMap, paymayaMap, juanpayMap };
+  }, [gcashRecords, paymayaRecords, juanpayRecords]);
+
+  // Calculate e-wallet data with optimized lookups
   const ewalletData = useMemo(() => {
     if (ewalletTimeRange === 'daily') {
       const last7Days = [];
@@ -327,23 +392,9 @@ const Overview: React.FC = () => {
         const dateStr = date.toISOString().split('T')[0];
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
 
-        const gcashDay = gcashRecords
-          .filter((record: any) => record.date === dateStr)
-          .reduce((sum: number, record: any) => sum + (Number(record.amount) || 0), 0);
-
-        const paymayaDay = paymayaRecords
-          .filter((record: any) => record.date === dateStr)
-          .reduce((sum: number, record: any) => sum + (Number(record.amount) || 0), 0);
-
-        const juanpayDay = juanpayRecords
-          .filter((record: any) => record.date === dateStr)
-          .reduce((sum: number, record: any) => {
-            const endings = Number(record.ending) || 0;
-            const beginnings = Array.isArray(record.beginnings)
-              ? record.beginnings.reduce((s: number, b: any) => s + (Number(b.amount) || 0), 0)
-              : 0;
-            return sum + Math.abs(endings - beginnings);
-          }, 0);
+        const gcashDay = ewalletByDate.gcashMap.get(dateStr) || 0;
+        const paymayaDay = ewalletByDate.paymayaMap.get(dateStr) || 0;
+        const juanpayDay = ewalletByDate.juanpayMap.get(dateStr) || 0;
 
         last7Days.push({
           name: dayName,
@@ -364,32 +415,30 @@ const Overview: React.FC = () => {
         const year = date.getFullYear();
         const month = date.getMonth();
 
-        const gcashMonth = gcashRecords
-          .filter((record: any) => {
-            const recordDate = new Date(record.date);
-            return recordDate.getFullYear() === year && recordDate.getMonth() === month;
-          })
-          .reduce((sum: number, record: any) => sum + (Number(record.amount) || 0), 0);
+        let gcashMonth = 0;
+        let paymayaMonth = 0;
+        let juanpayMonth = 0;
 
-        const paymayaMonth = paymayaRecords
-          .filter((record: any) => {
-            const recordDate = new Date(record.date);
-            return recordDate.getFullYear() === year && recordDate.getMonth() === month;
-          })
-          .reduce((sum: number, record: any) => sum + (Number(record.amount) || 0), 0);
+        ewalletByDate.gcashMap.forEach((amount, dateStr) => {
+          const recordDate = new Date(dateStr);
+          if (recordDate.getFullYear() === year && recordDate.getMonth() === month) {
+            gcashMonth += amount;
+          }
+        });
 
-        const juanpayMonth = juanpayRecords
-          .filter((record: any) => {
-            const recordDate = new Date(record.date);
-            return recordDate.getFullYear() === year && recordDate.getMonth() === month;
-          })
-          .reduce((sum: number, record: any) => {
-            const endings = Number(record.ending) || 0;
-            const beginnings = Array.isArray(record.beginnings)
-              ? record.beginnings.reduce((s: number, b: any) => s + (Number(b.amount) || 0), 0)
-              : 0;
-            return sum + Math.abs(endings - beginnings);
-          }, 0);
+        ewalletByDate.paymayaMap.forEach((amount, dateStr) => {
+          const recordDate = new Date(dateStr);
+          if (recordDate.getFullYear() === year && recordDate.getMonth() === month) {
+            paymayaMonth += amount;
+          }
+        });
+
+        ewalletByDate.juanpayMap.forEach((amount, dateStr) => {
+          const recordDate = new Date(dateStr);
+          if (recordDate.getFullYear() === year && recordDate.getMonth() === month) {
+            juanpayMonth += amount;
+          }
+        });
 
         last6Months.push({
           name: monthName,
@@ -408,32 +457,30 @@ const Overview: React.FC = () => {
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
 
-        const gcashWeek = gcashRecords
-          .filter((record: any) => {
-            const recordDate = new Date(record.date);
-            return recordDate >= weekStart && recordDate <= weekEnd;
-          })
-          .reduce((sum: number, record: any) => sum + (Number(record.amount) || 0), 0);
+        let gcashWeek = 0;
+        let paymayaWeek = 0;
+        let juanpayWeek = 0;
 
-        const paymayaWeek = paymayaRecords
-          .filter((record: any) => {
-            const recordDate = new Date(record.date);
-            return recordDate >= weekStart && recordDate <= weekEnd;
-          })
-          .reduce((sum: number, record: any) => sum + (Number(record.amount) || 0), 0);
+        ewalletByDate.gcashMap.forEach((amount, dateStr) => {
+          const recordDate = new Date(dateStr);
+          if (recordDate >= weekStart && recordDate <= weekEnd) {
+            gcashWeek += amount;
+          }
+        });
 
-        const juanpayWeek = juanpayRecords
-          .filter((record: any) => {
-            const recordDate = new Date(record.date);
-            return recordDate >= weekStart && recordDate <= weekEnd;
-          })
-          .reduce((sum: number, record: any) => {
-            const endings = Number(record.ending) || 0;
-            const beginnings = Array.isArray(record.beginnings)
-              ? record.beginnings.reduce((s: number, b: any) => s + (Number(b.amount) || 0), 0)
-              : 0;
-            return sum + (endings - beginnings);
-          }, 0);
+        ewalletByDate.paymayaMap.forEach((amount, dateStr) => {
+          const recordDate = new Date(dateStr);
+          if (recordDate >= weekStart && recordDate <= weekEnd) {
+            paymayaWeek += amount;
+          }
+        });
+
+        ewalletByDate.juanpayMap.forEach((amount, dateStr) => {
+          const recordDate = new Date(dateStr);
+          if (recordDate >= weekStart && recordDate <= weekEnd) {
+            juanpayWeek += amount;
+          }
+        });
 
         last4Weeks.push({
           name: `Week ${4 - i}`,
@@ -444,7 +491,7 @@ const Overview: React.FC = () => {
       }
       return last4Weeks;
     }
-  }, [gcashRecords, paymayaRecords, juanpayRecords, ewalletTimeRange]);
+  }, [ewalletByDate, ewalletTimeRange]);
 
   // Calculate dynamic Y-axis domain for revenue chart
   const revenueDomain = useMemo(() => {
@@ -525,7 +572,7 @@ const Overview: React.FC = () => {
 
   const totalEmployees = employees.length;
 
-  const stats = [
+  const stats = useMemo(() => [
     {
       title: 'Total Revenue',
       value: `₱${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
@@ -546,7 +593,7 @@ const Overview: React.FC = () => {
       value: lowStockItems,
       subtitle: lowStockItems > 0 ? `${lowStockItems} items need attention` : 'All items stocked',
     },
-  ];
+  ], [totalRevenue, totalSales, inventoryValue, lowStockItems]);
 
   return (
     <div className="space-y-6">

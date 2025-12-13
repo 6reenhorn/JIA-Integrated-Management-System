@@ -399,7 +399,7 @@ const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecor
             </div>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 text-[14px] h-[36px] bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
+              className="flex items-center gap-2 text-[14px] py-2 bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0 focus:ring-2 focus:ring-blue-500"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Payroll

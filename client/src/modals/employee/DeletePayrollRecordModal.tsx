@@ -152,7 +152,7 @@ const DeletePayrollRecordModal: React.FC<DeletePayrollRecordModalProps> = ({
                 Deleting...
               </>
             ) : (
-              'Delete Record'
+              'Delete Payroll'
             )}
           </button>
         </div>
