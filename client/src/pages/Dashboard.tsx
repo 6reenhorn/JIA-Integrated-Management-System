@@ -457,7 +457,7 @@ const Dashboard: React.FC = () => {
                 ) : (
                   <button 
                     onClick={handleCheckIn} 
-                    className='bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-7 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0 transition-all duration-200'
+                    className='bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-7 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0 transition-all duration-200'
                   >
                     Check In
                   </button>
@@ -471,7 +471,7 @@ const Dashboard: React.FC = () => {
       </div>
       {showCheckInModal && (
         <div
-          className={`fixed inset-0 flex items-center justify-center z-50 ${
+          className={`fixed inset-0 flex items-center justify-center z-50 opacity-0 ${
             isClosingModal ? 'modal-backdrop-out' : 'modal-backdrop'
           }`}
           onClick={handleCloseModal}
