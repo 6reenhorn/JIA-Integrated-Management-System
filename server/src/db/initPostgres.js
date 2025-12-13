@@ -241,8 +241,8 @@ const createAttendanceTable = async () => {
       id SERIAL PRIMARY KEY,
       employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
       date DATE NOT NULL DEFAULT CURRENT_DATE,
-      time_in TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      time_out TIMESTAMP,
+      time_in TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      time_out TIMESTAMP WITH TIME ZONE,
       status VARCHAR(20) DEFAULT 'Present'
     );
   `;

@@ -1532,14 +1532,27 @@ const formatDateValue = (value, fieldName) => {
   
   // If it's already a string that looks like a date, return it
   if (typeof value === 'string') {
-    // Check if it's already an ISO string or valid date string
-    if (value.includes('T') || value.match(/^\d{4}-\d{2}-\d{2}/)) {
-      return value;
-    }
-    // Try to parse it as a date
-    const date = new Date(value);
-    if (!isNaN(date.getTime())) {
-      return date.toISOString();
+    // Try to parse it as a date and return a normalized UTC ISO string.
+    // This ensures we push unambiguous timestamps (with 'Z') to PostgreSQL
+    // instead of ambiguous timezone-less strings that can be interpreted
+    // differently by the remote DB or other processes.
+    try {
+      // If it's already an ISO with timezone (ends with Z or contains +hh:mm/-hh:mm)
+      if (/Z$/.test(value) || /[+\-]\d{2}:?\d{2}$/.test(value)) {
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) return d.toISOString();
+      }
+      // If it looks like YYYY-MM-DD (date only) keep as-is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+        return value.trim();
+      }
+      // Try parsing other common formats (including 'YYYY-MM-DDTHH:MM:SS' without Z)
+      const parsed = Date.parse(value);
+      if (!isNaN(parsed)) {
+        return new Date(parsed).toISOString();
+      }
+    } catch (e) {
+      // fallthrough to return original value
     }
     return value;
   }
@@ -1563,6 +1576,61 @@ const formatDateValue = (value, fieldName) => {
   }
   
   return value;
+};
+
+// Normalize timestamp strings/numbers for pushing to PostgreSQL.
+// - If value is a string without timezone info (no 'Z' and no +hh:mm),
+//   assume it's a Philippines local wall-clock and convert to UTC ISO.
+// - If it's a number (ms since epoch) or a string with timezone, return UTC ISO.
+const normalizeTimestampForPush = (value) => {
+  if (value === null || value === undefined) return null;
+  // If it's already a number (ms since epoch)
+  if (typeof value === 'number') {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString();
+  }
+  if (typeof value === 'string') {
+    const s = value.trim();
+    // If it's a date-only string YYYY-MM-DD, return as-is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+    // If contains timezone info (Z or +hh), parse and return ISO
+    if ( /Z$/.test(s) || /[+\-]\d{2}:?\d{2}$/.test(s) ) {
+      const parsed = Date.parse(s);
+      if (!isNaN(parsed)) return new Date(parsed).toISOString();
+      return s;
+    }
+
+    // Handle SQL datetime with space 'YYYY-MM-DD HH:MM:SS(.sss)'
+    let t = s;
+    if (t.includes(' ') && !t.includes('T')) {
+      t = t.replace(' ', 'T');
+    }
+
+    // At this point t has no timezone info and looks like 'YYYY-MM-DDTHH:MM:SS...'
+    // Treat it as Asia/Manila local wall-clock: compute UTC instant by subtracting 8 hours.
+    const m = t.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}(?:\.\d+)?))?/);
+    if (m) {
+      const year = parseInt(m[1], 10);
+      const month = parseInt(m[2], 10);
+      const day = parseInt(m[3], 10);
+      const hour = parseInt(m[4], 10);
+      const minute = parseInt(m[5], 10);
+      const second = m[6] ? parseFloat(m[6]) : 0;
+
+      // Build UTC milliseconds by interpreting the parts as Asia/Manila local
+      const phOffsetMs = 8 * 60 * 60 * 1000;
+      const utcMs = Date.UTC(year, month - 1, day, hour, minute, Math.floor(second)) - phOffsetMs;
+      return new Date(utcMs).toISOString();
+    }
+
+    // Fallback: try parsing and returning ISO
+    const parsed = Date.parse(s);
+    if (!isNaN(parsed)) return new Date(parsed).toISOString();
+    return s;
+  }
+  return null;
 };
 
 // Push sync: Push unsynced SQLite records to PostgreSQL
@@ -1978,10 +2046,18 @@ const pushTableToPostgres = async (tableName, idField, fields) => {
                 return value;
               }
             }
-            // Use formatDateValue for other cases
+            // Use formatDateValue for other cases, except treat time fields specially
+            const timeFields = ['time_in','time_out','last_login','created_at','updated_at','payment_date','date'];
+            if (timeFields.includes(f)) {
+              return normalizeTimestampForPush(value === undefined ? null : value);
+            }
             return formatDateValue(value === undefined ? null : value, f);
           }
           // Format date/timestamp fields
+          const timeFields = ['time_in','time_out','last_login','created_at','updated_at','payment_date','date'];
+          if (timeFields.includes(f)) {
+            return normalizeTimestampForPush(value === undefined ? null : value);
+          }
           return formatDateValue(value === undefined ? null : value, f);
         });
 
