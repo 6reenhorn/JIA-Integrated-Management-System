@@ -206,6 +206,12 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
         }
     }, [activeIndex]);
 
+    useEffect(() => {
+        if (isDropdownOpen) {
+            document.getElementById('employee-listbox')?.focus();
+        }
+    }, [isDropdownOpen]);
+
     return (
         <div className="relative w-[55vw] h-[60vh] px-8 py-16 bg-gradient-to-b from-[#02367B] to-[#016CA5] rounded-2xl rounded-tl-[14px] rounded-bl-[14px] modal-content">
             {/* Left Side */}
@@ -270,7 +276,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                 </svg>
                             </div>
                             {isDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-2xl shadow-lg max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 focus:outline-none rounded-2xl shadow-lg max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                                     id="employee-listbox"
                                     role="listbox"
                                     tabIndex={0}
@@ -315,7 +321,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                                     setIsDropdownOpen(false);
                                                 }}
                                                 className={`px-4 py-2 hover:bg-gray-100 cursor-pointer 
-                                                ${activeIndex === index ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"}`}
+                                                ${activeIndex === index ? "bg-blue-50" : "hover:bg-gray-100"}`}
                                                 onMouseEnter={() => setActiveIndex(index)}
                                             >
                                                 {employee.name} ({employee.empId})
