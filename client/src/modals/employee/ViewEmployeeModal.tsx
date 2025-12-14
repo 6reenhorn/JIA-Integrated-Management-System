@@ -156,7 +156,7 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose
                   />
                   <button
                     onClick={() => setShowPassword(!showPassword)}
-                    className="px-3 py-1 bg-gray-500 border-2 border-gray-600 text-white rounded text-sm hover:bg-gray-600 flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-1 bg-gray-500 border-2 border-gray-600 text-white rounded text-sm hover:bg-gray-600 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-gray-600"
                     title={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}

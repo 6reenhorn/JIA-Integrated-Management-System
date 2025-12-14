@@ -677,13 +677,13 @@ const EditPayrollModal = ({ onClose, onUpdatePayroll, employees, payrollRecord }
       </div>
       <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button 
-          className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-[6px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-[6px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           onClick={handleClose}
         >
           Cancel
         </button>
         <button
-          className={`border border-gray-300 rounded-md px-3 py-1 text-white focus:outline-none ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E] focus:ring-2 focus:ring-blue-500' : 'bg-gray-400 cursor-not-allowed'}`}
+          className={`border border-gray-300 rounded-md px-3 py-1 text-white focus:outline-none ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E] focus-visible:ring-2 focus-visible:ring-blue-500' : 'bg-gray-400 cursor-not-allowed'}`}
           onClick={() => {
             if (isFormValid && !isSaving && onUpdatePayroll && selectedEmployee) {
               setIsSaving(true);

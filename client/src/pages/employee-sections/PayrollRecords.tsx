@@ -359,7 +359,7 @@ const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecor
               <button
                 ref={buttonRef}
                 onClick={toggleFilters}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <svg viewBox="0 0 1000 1000" data-name="Layer 2" id="Layer_2" xmlns="http://www.w3.org/2000/svg" fill="#000000" className="w-5 h-5">
                   <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
