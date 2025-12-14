@@ -1,4 +1,5 @@
 import React from 'react';
+import LayoutCard from '../../layout/LayoutCard';
 
 const Support: React.FC = () => (
   <section id="about-support" className="scroll-mt-20">
@@ -11,7 +12,7 @@ const Support: React.FC = () => (
         For technical support, bug reports, or feature requests, please contact the development team.
       </p>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <LayoutCard>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Development Team Contacts</h3>
         <div className="space-y-4">
           <div>
@@ -36,19 +37,19 @@ const Support: React.FC = () => (
             </a>
           </div>
         </div>
-      </div>
+      </LayoutCard>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <LayoutCard>
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Project Advisor</h3>
         <p className="font-semibold text-gray-900">Prof. Marylene S. Eder</p>
         <p className="text-gray-600">Department of Computer Science</p>
-      </div>
+      </LayoutCard>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <LayoutCard>
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Client</h3>
         <p className="font-semibold text-gray-900">Ms. Jennie Estoque</p>
         <p className="text-gray-600">JIA Business Center</p>
-      </div>
+      </LayoutCard>
     </div>
   </section>
 );

@@ -1,4 +1,5 @@
 import React from 'react';
+import LayoutCard from '../../layout/LayoutCard';
 
 const MainAbout: React.FC = () => {
   return (
@@ -13,7 +14,7 @@ const MainAbout: React.FC = () => {
           digitalize and streamline business operations for JIA Business Center.
         </p>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <LayoutCard>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Info</h3>
           <ul className="space-y-2 text-gray-700">
             <li><strong>Version:</strong> 1.0.0</li>
@@ -21,9 +22,9 @@ const MainAbout: React.FC = () => {
             <li><strong>Support:</strong> Nobus Group</li>
             <li><strong>Documentation:</strong> Project Charter & Technical Specifications</li>
           </ul>
-        </div>
+        </LayoutCard>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <LayoutCard>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h3>
           <ul className="space-y-2 text-gray-700 list-disc list-inside">
             <li>Inventory Management</li>
@@ -32,7 +33,7 @@ const MainAbout: React.FC = () => {
             <li>E-Wallet Transaction Tracking</li>
             <li>Business Reporting & Analytics</li>
           </ul>
-        </div>
+        </LayoutCard>
       </div>
     </section>
   );
