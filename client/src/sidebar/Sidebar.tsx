@@ -20,7 +20,7 @@ export interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, isCollapsed, currentSection }) => {
-  const { currentUser, hasAccess, hasAccessToEmployeeSection, checkOut } = useAuth();
+  const { hasAccess, hasAccessToEmployeeSection } = useAuth();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 

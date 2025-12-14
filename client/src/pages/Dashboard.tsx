@@ -19,7 +19,7 @@ interface SectionInfo {
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
-  const [dashboardKey, setDashboardKey] = useState<number>(0);
+  const [dashboardKey] = useState<number>(0);
   const [showCheckOutConfirm, setShowCheckOutConfirm] = useState<boolean>(false);
 
   const [currentSection, setCurrentSection] = useState<SectionInfo>({ 
