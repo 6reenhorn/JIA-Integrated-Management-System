@@ -161,7 +161,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               <div
                 onClick={toggleDropdown}
                 tabIndex={0}
-                className="relative flex items-center justify-between bg-[#02367B] text-white rounded-lg px-4 py-2 hover:bg-[#1C4A9E] cursor-pointer w-full min-w-[140px] h-[36px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+                className="relative flex items-center justify-between bg-[#02367B] text-white rounded-lg px-4 py-2 hover:bg-[#1C4A9E] cursor-pointer w-full min-w-[140px] h-[36px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 font-sm transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 <span className="truncate">{getDisplayText()}</span>
                 <svg
@@ -191,7 +191,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 <div
                   onClick={() => handleCategorySelect('all')}
                   className={`px-4 py-3 hover:bg-[#1C4A9E]/10 cursor-pointer text-[15px] transition-colors duration-150 first:rounded-t-lg ${
-                    selectedCategory === 'all' ? 'bg-[#02367B]/10 text-[#02367B] font-medium' : 'text-gray-700'
+                    selectedCategory === 'all' ? 'bg-[#02367B]/10 text-[#02367B] font-sm' : 'text-gray-700'
                   }`}
                 >
                   All Categories
@@ -216,7 +216,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
 
           <button
             onClick={handleAddClick}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0  focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500" 
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-sm rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0  focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500" 
           >
             <Plus className="w-4 h-4" />
             {config.addButtonText}
