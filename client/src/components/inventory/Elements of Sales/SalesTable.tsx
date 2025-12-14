@@ -266,17 +266,17 @@ const SalesTable: React.FC<SalesTableProps> = ({
                       <div className="flex justify-start space-x-2">
                         <button
                           onClick={() => onEditSale(record.id)}
-                          className="text-black hover:text-black p-1 rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                          className="p-1 hover:bg-gray-100 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                           title="Edit"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-4 h-4 text-gray-600" />
                         </button>
                         <button
                           onClick={(e) => handleDeleteClick(record, e)}
-                          className="text-black hover:text-black p-1 rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                          className="p-1 hover:bg-gray-100 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                           title="Delete"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4 text-gray-600" />
                         </button>
                       </div>
                     </td>

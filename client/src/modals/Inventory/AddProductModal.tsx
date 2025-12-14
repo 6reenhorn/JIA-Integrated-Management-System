@@ -290,7 +290,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   value={formData.productName}
                   onChange={handleChange}
                   placeholder="Enter product name"
-                  className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                  className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                     showValidationAlert && !formData.productName.trim() 
                       ? 'border-red-300 bg-red-50' 
                       : 'border-gray-300'
@@ -306,7 +306,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   onChange={handleChange}
                   placeholder="Enter product description"
                   rows={3}
-                  className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none"
+                  className="w-full border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
@@ -315,7 +315,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   <p className="text-[12px] font-bold">Category</p>
                   <div className="relative">
                     <div
-                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[32px]"
+                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[32px] focus:outline-none focus:ring-1 focus:ring-blue-500"
                       onClick={toggleCategoryDropdown}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -409,7 +409,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     value={formData.productPriceDisplay || ''}
                     onChange={handleChange}
                     placeholder="0.00"
-                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                    className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                       priceError || (showValidationAlert && (!formData.productPrice || formData.productPrice === ''))
                         ? 'border-red-300 bg-red-50' 
                         : 'border-gray-300'
@@ -433,7 +433,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
-                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                       showValidationAlert && formData.quantity === '' 
                         ? 'border-red-300 bg-red-50' 
                         : 'border-gray-300'
@@ -449,7 +449,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
-                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
@@ -460,13 +460,13 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               <button
                 type="button"
                 onClick={handleClose}
-                className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
+                className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300"
+                className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 Add Product
               </button>

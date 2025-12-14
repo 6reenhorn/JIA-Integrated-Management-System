@@ -175,7 +175,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                     disabled={isUpdating}
                     placeholder="Enter category name"
                     autoFocus
-                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !isUpdating) {
                         handleSubmit();
@@ -194,9 +194,9 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
                         type="button"
                         onClick={() => setSelectedColor(color)}
                         disabled={isUpdating}
-                        className={`w-10 h-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#02367B] disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`w-10 h-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                           selectedColor === color 
-                            ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' 
+                            ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' 
                             : 'hover:scale-105'
                         }`}
                         style={{ backgroundColor: color }}
@@ -252,7 +252,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
               type="button"
               onClick={handleCancel}
               disabled={isUpdating}
-              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               Cancel
             </button>
@@ -260,7 +260,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
               type="button"
               onClick={handleSubmit}
               disabled={isUpdating || !categoryName.trim()}
-              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors duration-200"
+              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               {isUpdating ? (
                 <>
