@@ -15,9 +15,9 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({ sidebarExpanded, onTo
       <div className="space-y-2">
         <button
           onClick={() => onToggle(false)}
-          className={`w-full flex items-center justify-between px-4 py-3 border-2 rounded-lg transition-colors ${
-            !sidebarExpanded 
-              ? 'bg-blue-50 border-blue-500' 
+          className={`w-full flex items-center justify-between px-4 py-3 border-2 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+            !sidebarExpanded
+              ? 'bg-blue-50 border-blue-500'
               : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
           }`}
         >
@@ -34,9 +34,9 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({ sidebarExpanded, onTo
         
         <button
           onClick={() => onToggle(true)}
-          className={`w-full flex items-center justify-between px-4 py-3 border-2 rounded-lg transition-colors ${
-            sidebarExpanded 
-              ? 'bg-blue-50 border-blue-500' 
+          className={`w-full flex items-center justify-between px-4 py-3 border-2 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+            sidebarExpanded
+              ? 'bg-blue-50 border-blue-500'
               : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
           }`}
         >

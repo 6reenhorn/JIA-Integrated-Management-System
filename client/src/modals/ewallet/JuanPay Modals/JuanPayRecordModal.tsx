@@ -262,7 +262,7 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
                                     </button>
                                 </div>
                                 
-                                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                <div className="space-y-2 max-h-[200px] overflow-y-auto px-1 py-1">
                                     {formData.beginnings.map((beginning, index) => (
                                         <div key={index} className="flex items-center gap-2">
                                             <input 

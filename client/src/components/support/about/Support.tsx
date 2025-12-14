@@ -18,21 +18,21 @@ const Support: React.FC = () => (
           <div>
             <p className="font-semibold text-gray-900">John Cyril G. Espina</p>
             <p className="text-sm text-gray-600">Project Manager</p>
-            <a href="mailto:johncyril.espina@1.ustp.edu.ph" className="text-[#02367B] hover:underline">
+            <a href="mailto:johncyril.espina@1.ustp.edu.ph" className="text-[#02367B] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
               johncyril.espina@1.ustp.edu.ph
             </a>
           </div>
           <div>
             <p className="font-semibold text-gray-900">Glenn Mark R. Anino</p>
             <p className="text-sm text-gray-600">Lead QA</p>
-            <a href="mailto:glennmark.anino@1.ustp.edu.ph" className="text-[#02367B] hover:underline">
+            <a href="mailto:glennmark.anino@1.ustp.edu.ph" className="text-[#02367B] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
               glennmark.anino@1.ustp.edu.ph
             </a>
           </div>
           <div>
             <p className="font-semibold text-gray-900">Sophia Marie M. Flores</p>
             <p className="text-sm text-gray-600">Lead UI/UX</p>
-            <a href="mailto:sophiamarie.flores@1.ustp.edu.ph" className="text-[#02367B] hover:underline">
+            <a href="mailto:sophiamarie.flores@1.ustp.edu.ph" className="text-[#02367B] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
               sophiamarie.flores@1.ustp.edu.ph
             </a>
           </div>
