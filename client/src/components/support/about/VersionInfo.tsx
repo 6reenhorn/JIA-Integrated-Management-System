@@ -1,4 +1,5 @@
 import React from 'react';
+import LayoutCard from '../../layout/LayoutCard';
 
 const VersionInfo: React.FC = () => (
   <section id="about-version" className="scroll-mt-20">
@@ -7,12 +8,12 @@ const VersionInfo: React.FC = () => (
     </h2>
     
     <div className="space-y-6 text-gray-700">
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <LayoutCard>
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Current Version</h3>
         <p className="text-2xl font-bold text-[#02367B]">v1.0.0</p>
-      </div>
+      </LayoutCard>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <LayoutCard>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Build Details</h3>
         <ul className="space-y-2 text-gray-700">
           <li><strong>Project Start:</strong> August 18, 2025</li>
@@ -20,16 +21,16 @@ const VersionInfo: React.FC = () => (
           <li><strong>Development Phase:</strong> August - December 2025</li>
           <li><strong>Technology Stack:</strong> React, TypeScript, Node.js</li>
         </ul>
-      </div>
+      </LayoutCard>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <LayoutCard>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Release Notes</h3>
         <ul className="space-y-2 text-gray-700 list-disc list-inside">
           <li>Initial release of JIMS application</li>
           <li>Core modules: Inventory, POS, Attendance, E-Wallet Tracking</li>
           <li>Basic reporting and analytics features</li>
         </ul>
-      </div>
+      </LayoutCard>
     </div>
   </section>
 );

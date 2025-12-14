@@ -142,11 +142,11 @@ const About: React.FC<AboutProps> = ({ activeSection, onSectionChange }) => {
   }, [onSectionChange]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-[#02367B] to-[#034694] py-16 px-6 text-white">
+      <div className="bg-gradient-to-r from-[#02367B] to-[#034694] py-16 px-6 rounded-2xl text-white">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">About JIMS</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">JIA Integrated Management System</h1>
           <p className="text-lg text-gray-200">
             Learn more about JIA Integrated Management System - our journey, features, and team.
           </p>
