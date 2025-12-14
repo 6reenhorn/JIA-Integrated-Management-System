@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import type { Employee } from '../../types/employee_types';
 
 interface AddStaffModalProps {
@@ -68,9 +69,13 @@ const AddStaffModal = ({
   const [isClosing, setIsClosing] = useState(false);
   const [nameError, setNameError] = useState('');
   const [contactNameError, setContactNameError] = useState('');
+  const [showValidationAlert, setShowValidationAlert] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const toggleStatusDropdown = () => {
     setIsStatusDropdownOpen(!isStatusDropdownOpen);
@@ -108,6 +113,9 @@ const AddStaffModal = ({
 
   const handleClose = () => {
     setIsClosing(true);
+    setShowValidationAlert(false);
+    setMissingFields([]);
+    setFieldErrors({});
     setTimeout(() => {
       setIsClosing(false);
       onClose?.();
@@ -139,38 +147,187 @@ const AddStaffModal = ({
     return /^[a-zA-Z\s'-]+$/.test(name.trim());
   };
 
-  // Validate form
+  // Validate phone number - must be numeric
+  const validatePhone = (phone: string): boolean => {
+    const phoneStr = String(phone || '').trim();
+    if (phoneStr === '' || phoneStr.toUpperCase() === 'N/A') return true; // Empty or N/A is OK, we only validate when there's actual input
+    return /^[0-9+\-\s()]+$/.test(phoneStr);
+  };
+
+  // Validate salary - must be numeric
+  const validateSalary = (salary: string): boolean => {
+    if (salary.trim() === '') return true; // Empty is OK, we only validate when there's input
+    // Allow numbers, decimal point, and commas
+    return /^[0-9,.\s]+$/.test(salary.trim()) && !isNaN(parseFloat(salary.replace(/,/g, '')));
+  };
+
+  // Real-time validation - runs whenever any field changes
+  // Only shows alert for invalid input (not empty fields)
   useEffect(() => {
-    // Check for name validation errors
-    const firstNameValid = firstName.trim() !== '' && validateName(firstName);
-    const lastNameValid = lastName.trim() !== '' && validateName(lastName);
-    const contactNameValid = contactName.trim() === '' || validateName(contactName);
-    
+    const invalidFields: string[] = [];
+    const errors: Record<string, boolean> = {};
+
+    // Track name errors for internal use (not displayed)
     if (firstName.trim() !== '' && !validateName(firstName)) {
       setNameError('First name cannot contain numbers');
-    } else if (lastName.trim() !== '' && !validateName(lastName)) {
-      setNameError('Last name cannot contain numbers');
+      invalidFields.push('First Name (contains numbers)');
+      errors.firstName = true;
     } else {
       setNameError('');
     }
 
-    if (contactName.trim() !== '' && !validateName(contactName)) {
+    if (lastName.trim() !== '' && !validateName(lastName)) {
+      setNameError('Last name cannot contain numbers');
+      invalidFields.push('Last Name (contains numbers)');
+      errors.lastName = true;
+    } else if (!errors.firstName) {
+      setNameError('');
+    }
+
+    // Validate Contact Name - only check if there's input (not empty or N/A)
+    if (contactName.trim() !== '' && contactName.trim().toUpperCase() !== 'N/A' && !validateName(contactName)) {
       setContactNameError('Contact name cannot contain numbers');
+      invalidFields.push('Contact Name (contains numbers)');
+      errors.contactName = true;
     } else {
       setContactNameError('');
     }
 
-    const valid = firstNameValid && lastNameValid && contactNameValid && 
+    // Validate phone - only check if there's input (not empty or N/A)
+    const phoneStr = String(phone || '').trim();
+    if (phoneStr !== '' && phoneStr.toUpperCase() !== 'N/A' && !validatePhone(phoneStr)) {
+      invalidFields.push('Phone Number (must be numeric)');
+      errors.phone = true;
+    }
+
+    // Validate Contact Number (Emergency Contact Phone) - only check if there's input (not empty or N/A)
+    const contactNumberStr = String(contactNumber || '').trim();
+    if (contactNumberStr !== '' && contactNumberStr.toUpperCase() !== 'N/A' && !validatePhone(contactNumberStr)) {
+      invalidFields.push('Contact Number (must be numeric)');
+      errors.contactNumber = true;
+    }
+
+    // Validate salary - only check if there's input
+    if (salary.trim() !== '' && !validateSalary(salary)) {
+      invalidFields.push('Salary (must be numeric)');
+      errors.salary = true;
+    }
+
+    // Update field errors
+    setFieldErrors(errors);
+
+    // Show/hide validation alert based on invalid input only (exclude optional Contact Name)
+    if (invalidFields.length > 0) {
+      setMissingFields(invalidFields);
+      setShowValidationAlert(true);
+    } else {
+      setShowValidationAlert(false);
+      setMissingFields([]);
+    }
+
+    // Update form validity (still checks all required fields)
+    const firstNameValid = firstName.trim() !== '' && validateName(firstName);
+    const lastNameValid = lastName.trim() !== '' && validateName(lastName);
+    const contactNameValid = contactName.trim() === '' || validateName(contactName);
+    const phoneValid = phone.trim() === '' || validatePhone(phone);
+    const salaryValid = salary.trim() === '' || validateSalary(salary);
+    
+    const valid = firstNameValid && lastNameValid && contactNameValid && phoneValid && salaryValid &&
                   email.trim() !== '' && phone.trim() !== '' && 
                   address.trim() !== '' && salary.trim() !== '' && 
                   selectedRoleText !== 'Select Role' && selectedStatusText !== 'Select Status';
     setIsFormValid(valid);
-  }, [firstName, lastName, contactName, email, phone, address, salary, selectedRoleText, selectedStatusText]);
+  }, [firstName, lastName, contactName, email, phone, address, salary, selectedRoleText, selectedStatusText, contactNumber]);
+
+  const validateForm = (): boolean => {
+    const missing: string[] = [];
+    const errors: Record<string, boolean> = {};
+
+    // Check for name validation errors first
+    const firstNameValid = firstName.trim() !== '' && validateName(firstName);
+    const lastNameValid = lastName.trim() !== '' && validateName(lastName);
+    const contactNameValid = contactName.trim() === '' || validateName(contactName);
+
+    if (!firstNameValid) {
+      missing.push('First Name');
+      errors.firstName = true;
+    }
+    if (!lastNameValid) {
+      missing.push('Last Name');
+      errors.lastName = true;
+    }
+    if (!email.trim()) {
+      missing.push('Email Address');
+      errors.email = true;
+    }
+    if (!phone.trim()) {
+      missing.push('Phone Number');
+      errors.phone = true;
+    }
+    if (!address.trim()) {
+      missing.push('Address');
+      errors.address = true;
+    }
+    if (!salary.trim()) {
+      missing.push('Salary');
+      errors.salary = true;
+    }
+    if (selectedRoleText === 'Select Role') {
+      missing.push('Role');
+      errors.role = true;
+    }
+    if (selectedStatusText === 'Select Status') {
+      missing.push('Status');
+      errors.status = true;
+    }
+    if (contactName.trim() && !contactNameValid) {
+      missing.push('Contact Name (invalid format)');
+      errors.contactName = true;
+    }
+
+    setFieldErrors(errors);
+
+    // Note: Real-time validation is handled in the useEffect above
+    // This function is kept for form submission validation
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      setShowValidationAlert(true);
+      return false;
+    }
+
+    return true;
+  };
 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Validation Alert - Absolutely positioned beside modal, doesn't affect modal layout */}
+      {showValidationAlert && (
+        <div className="absolute w-[300px] bg-red-50 border border-red-200 rounded-lg p-3 animate-modal-in z-50" style={{ left: 'calc(50% + 250px)', top: '15%', transform: 'translateY(-50%)' }}>
+          <div className="flex gap-2">
+            <AlertTriangle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-red-800 mb-1">
+                Invalid input detected
+              </p>
+              <p className="text-xs text-red-700">
+                {missingFields.join(', ')}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowValidationAlert(false)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div
+        ref={modalRef}
         className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] relative z-10 ${
           isClosing ? 'animate-modal-out' : 'animate-modal-in'
         }`}
@@ -188,27 +345,87 @@ const AddStaffModal = ({
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_first_name" className="text-[12px] font-bold">First Name</label>
-                  <input type="text" id="employee_first_name" name="employee_first_name" placeholder='Enter first name' value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'}`} />
-                  {nameError && <p className="text-red-500 text-[10px] mt-1">{nameError}</p>}
+                  <input 
+                    type="text" 
+                    id="employee_first_name" 
+                    name="employee_first_name" 
+                    placeholder='Enter first name' 
+                    value={firstName} 
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                    }} 
+                    className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
+                      fieldErrors.firstName
+                        ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'
+                    }`} 
+                  />
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_last_name" className="text-[12px] font-bold">Last Name</label>
-                  <input type="text" id="employee_last_name" name="employee_last_name" placeholder='Enter last name' value={lastName} onChange={(e) => setLastName(e.target.value)} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'}`} />
+                  <input 
+                    type="text" 
+                    id="employee_last_name" 
+                    name="employee_last_name" 
+                    placeholder='Enter last name' 
+                    value={lastName} 
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                    }} 
+                    className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
+                      fieldErrors.lastName
+                        ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                    }`} 
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_email_address" className="text-[12px] font-bold">Email Address</label>
-                  <input type="text" id="employee_email_address" name="employee_email_address" placeholder='Enter email address' value={email} onChange={(e) => setEmail(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <input 
+                    type="text" 
+                    id="employee_email_address" 
+                    name="employee_email_address" 
+                    placeholder='Enter email address' 
+                    value={email} 
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                    }} 
+                    className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" 
+                  />
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="employee_phone_number" className="text-[12px] font-bold">Phone Number</label>
-                  <input type="text" id="employee_phone_number" name="employee_phone_number" placeholder='Enter phone number' value={phone} onChange={(e) => setPhone(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <input 
+                    type="text" 
+                    id="employee_phone_number" 
+                    name="employee_phone_number" 
+                    placeholder='Enter phone number' 
+                    value={phone} 
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                    }} 
+                    className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
+                      fieldErrors.phone
+                        ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                    }`}
+                  />
                 </div>
               </div>
               <div className='mt-2'>
                 <label htmlFor="employee_address" className="text-[12px] font-bold">Address</label>
-                <textarea name="employee_address" id="employee_address" placeholder='Enter complete address' value={address} onChange={(e) => setAddress(e.target.value)} className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"></textarea>
+                <textarea 
+                  name="employee_address" 
+                  id="employee_address" 
+                  placeholder='Enter complete address' 
+                  value={address} 
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                  }} 
+                  className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                ></textarea>
               </div>
             </div>
           </div>
@@ -439,7 +656,21 @@ const AddStaffModal = ({
             </div>
             <div className='mt-2'>
               <label htmlFor="employee-salary" className='text-[12px] font-bold'>Salary</label>
-              <input type="text" id='employee-salary' name='employee-salary' placeholder='Enter salary' value={salary} onChange={(e) => setSalary(e.target.value)} className="border border-gray-300 rounded-md w-full px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+              <input 
+                type="text" 
+                id='employee-salary' 
+                name='employee-salary' 
+                placeholder='Enter salary' 
+                value={salary} 
+                onChange={(e) => {
+                  setSalary(e.target.value);
+                }} 
+                className={`border rounded-md w-full px-2 py-1 focus:ring-2 focus:outline-none ${
+                  fieldErrors.salary
+                    ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                }`} 
+              />
             </div>
           </div>
           <div>
@@ -449,12 +680,37 @@ const AddStaffModal = ({
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div className="flex flex-col justify-center">
                     <label htmlFor="employee_contact_name" className="text-[12px] font-bold">Contact Name</label>
-                    <input type="text" id="employee_contact_name" name="employee_contact_name" placeholder="Enter contact name" value={contactName} onChange={(e) => setContactName(e.target.value)} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${contactNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'}`} />
-                    {contactNameError && <p className="text-red-500 text-[10px] mt-1">{contactNameError}</p>}
+                    <input 
+                      type="text" 
+                      id="employee_contact_name" 
+                      name="employee_contact_name" 
+                      placeholder="Enter contact name" 
+                      value={contactName} 
+                      onChange={(e) => {
+                        setContactName(e.target.value);
+                      }} 
+                      className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
+                        fieldErrors.contactName
+                          ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                          : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                      }`} 
+                    />
                   </div>
                   <div>
                     <label htmlFor="employee_contact_number" className="text-[12px] font-bold">Phone Number</label>
-                    <input type="text" id="employee_contact_number" name="employee_contact_number" placeholder="Enter phone number" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none w-full" />
+                    <input 
+                      type="text" 
+                      id="employee_contact_number" 
+                      name="employee_contact_number" 
+                      placeholder="Enter phone number" 
+                      value={contactNumber} 
+                      onChange={(e) => setContactNumber(e.target.value)} 
+                      className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none w-full ${
+                        fieldErrors.contactNumber
+                          ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                          : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                      }`}
+                    />
                   </div>
                 </div>
                 <div className='mt-2 w-full'>
@@ -603,9 +859,14 @@ const AddStaffModal = ({
           Cancel
         </button>
         <button
-          className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E]' : 'bg-gray-400 cursor-not-allowed'}`}
+          className={`border border-gray-300 rounded-md px-3 py-[6px] text-white ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E]' : 'bg-gray-400 cursor-not-allowed'}`}
           onClick={() => {
-            if (isFormValid && !isSaving && onAddEmployee) {
+            if (!isSaving && onAddEmployee) {
+              // Validate form before submission
+              if (!validateForm()) {
+                return;
+              }
+              
               setIsSaving(true);
               setIsClosing(true);
               setTimeout(() => {
@@ -635,13 +896,13 @@ const AddStaffModal = ({
               }, 200);
             }
           }}
-          disabled={!isFormValid || isSaving}
+          disabled={isSaving}
         >
           {isSaving ? 'Adding...' : 'Add Employee'}
         </button>
       </div>
+      </div>
     </div>
-  </div>
   );
 }
 

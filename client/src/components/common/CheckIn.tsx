@@ -10,6 +10,8 @@ interface CheckInProps {
   onClose: () => void;
 }
 
+
+
 const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -26,7 +28,12 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
 
     const selectedEmployeeText = selectedEmployee ? `${selectedEmployee.name} (${selectedEmployee.empId})` : 'Select Employee';
 
+    const [activeIndex, setActiveIndex] = useState(-1);
+
     const { checkIn } = useAuth();
+
+    const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
 
     const toggleEmployeeDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
@@ -191,6 +198,20 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
         }
     };
 
+    useEffect(() => {
+        if (activeIndex >= 0 && optionRefs.current[activeIndex]) {
+            optionRefs.current[activeIndex].scrollIntoView({
+            block: 'nearest',
+            });
+        }
+    }, [activeIndex]);
+
+    useEffect(() => {
+        if (isDropdownOpen) {
+            document.getElementById('employee-listbox')?.focus();
+        }
+    }, [isDropdownOpen]);
+
     return (
         <div className="relative w-[55vw] h-[60vh] px-8 py-16 bg-gradient-to-b from-[#02367B] to-[#016CA5] rounded-2xl rounded-tl-[14px] rounded-bl-[14px] modal-content">
             {/* Left Side */}
@@ -227,15 +248,19 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                         {/* Custom Dropdown for Employees */}
                         <div className="relative" ref={employeeDropdownRef}>
                             <div
-                                className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-3xl px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[40px]"
+                                className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-3xl px-4 text-gray-600 hover:bg-gray-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 h-[40px]"
                                 onClick={toggleEmployeeDropdown}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' || e.key === ' ') {
-                                        toggleEmployeeDropdown();
+                                        setIsDropdownOpen(true);
+                                        setActiveIndex(0);
                                         e.preventDefault();
                                     }
                                 }}
                                 tabIndex={0}
+                                role="combobox"
+                                aria-expanded={isDropdownOpen}
+                                aria-controls="employee-listbox"
                             >
                                 <div className='px-2'>
                                     {selectedEmployeeText}
@@ -251,7 +276,31 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                 </svg>
                             </div>
                             {isDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-2xl shadow-lg max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 focus:outline-none rounded-2xl shadow-lg max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                                    id="employee-listbox"
+                                    role="listbox"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "ArrowDown") {
+                                            setActiveIndex((prev) => Math.min(prev + 1, employees.length - 1));
+                                            e.preventDefault();
+                                        }
+                                        
+                                        if (e.key === "ArrowUp") {
+                                            setActiveIndex((prev) => Math.max(prev - 1, 0));
+                                            e.preventDefault();
+                                        }
+
+                                        if (e.key === 'Enter' && activeIndex >= 0) {
+                                            setSelectedEmployee(employees[activeIndex]);
+                                            setIsDropdownOpen(false);
+                                        }
+
+                                        if (e.key === 'Escape') {
+                                            setIsDropdownOpen(false);
+                                        }
+                                    }}
+                                >
                                     {isLoadingEmployees ? (
                                         <div className="px-4 py-4 text-center text-gray-500">
                                             Loading employees...
@@ -261,14 +310,19 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                                             No employees found
                                         </div>
                                     ) : (
-                                        employees.map((employee) => (
+                                        employees.map((employee, index) => (
                                             <div
                                                 key={employee.id}
+                                                ref={(el) => {optionRefs.current[index] = el}}
+                                                role="option"
+                                                aria-selected={activeIndex === index}
                                                 onClick={() => {
                                                     setSelectedEmployee(employee);
                                                     setIsDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                className={`px-4 py-2 hover:bg-gray-100 cursor-pointer 
+                                                ${activeIndex === index ? "bg-blue-50" : "hover:bg-gray-100"}`}
+                                                onMouseEnter={() => setActiveIndex(index)}
                                             >
                                                 {employee.name} ({employee.empId})
                                             </div>
@@ -331,7 +385,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                             ref={checkInButtonRef}
                             type="button"
                             disabled={isProcessing || message?.type === 'success'}
-                            className={`w-full py-2 rounded-3xl text-white transition-colors ${
+                            className={`w-full py-2 rounded-3xl text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                 isProcessing 
                                     ? 'bg-gray-400 cursor-not-allowed' 
                                     : 'bg-[#02367B] hover:bg-[#1C4A9E]'
@@ -345,7 +399,7 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                             }}
                         >
                             {isProcessing ? (
-                                <span className="flex items-center justify-center gap-2">
+                                <span className="flex items-center justify-center gap-2 focus:ring-2 focus:ring-blue-500">
                                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

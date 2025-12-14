@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import type { Employee } from '../../types/employee_types';
 
 interface EditStaffModalProps {
@@ -29,9 +30,13 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
   const [isClosing, setIsClosing] = useState(false);
   const [nameError, setNameError] = useState('');
   const [contactNameError, setContactNameError] = useState('');
+  const [showValidationAlert, setShowValidationAlert] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const relationshipDropdownRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
       // Populate form fields when employee changes
       useEffect(() => {
@@ -59,7 +64,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
           setPhone(contactParts[1] || '');
           setAddress(contactParts[2] || (employee as any).address || '123 Main Street, City, State, ZIP');
 
-          setSalary((employee as any).salary || '50000');
+          setSalary(String((employee as any).salary || '50000'));
           setContactName((employee as any).contactName || 'N/A');
           setContactNumber((employee as any).contactNumber || 'N/A');
           setSelectedStatusText(employee.status);
@@ -105,6 +110,9 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
   const handleClose = () => {
     if (!isClosing) {
       setIsClosing(true);
+      setShowValidationAlert(false);
+      setMissingFields([]);
+      setFieldErrors({});
     }
   };
 
@@ -139,6 +147,87 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
     return /^[a-zA-Z\s'-]+$/.test(name.trim());
   };
 
+  // Validate phone number - must be numeric
+  const validatePhone = (phone: string): boolean => {
+    const phoneStr = String(phone || '').trim();
+    if (phoneStr === '' || phoneStr.toUpperCase() === 'N/A') return true; // Empty or N/A is OK, we only validate when there's actual input
+    return /^[0-9+\-\s()]+$/.test(phoneStr);
+  };
+
+  // Validate salary - must be numeric
+  const validateSalary = (salary: string | number): boolean => {
+    const salaryStr = String(salary || '');
+    if (salaryStr.trim() === '') return true; // Empty is OK, we only validate when there's input
+    // Allow numbers, decimal point, and commas
+    return /^[0-9,.\s]+$/.test(salaryStr.trim()) && !isNaN(parseFloat(salaryStr.replace(/,/g, '')));
+  };
+
+  // Real-time validation - runs whenever any field changes
+  // Only shows alert for invalid input (not empty fields)
+  useEffect(() => {
+    const invalidFields: string[] = [];
+    const errors: Record<string, boolean> = {};
+
+    // Track name errors for internal use (not displayed)
+    if (firstName.trim() !== '' && !validateName(firstName)) {
+      setNameError('First name cannot contain numbers');
+      invalidFields.push('First Name (contains numbers)');
+      errors.firstName = true;
+    } else {
+      setNameError('');
+    }
+
+    if (lastName.trim() !== '' && !validateName(lastName)) {
+      setNameError('Last name cannot contain numbers');
+      invalidFields.push('Last Name (contains numbers)');
+      errors.lastName = true;
+    } else if (!errors.firstName) {
+      setNameError('');
+    }
+
+    // Validate Contact Name - only check if there's input (not empty or N/A)
+    if (contactName.trim() !== '' && contactName.trim().toUpperCase() !== 'N/A' && !validateName(contactName)) {
+      setContactNameError('Contact name cannot contain numbers');
+      invalidFields.push('Contact Name (contains numbers)');
+      errors.contactName = true;
+    } else {
+      setContactNameError('');
+    }
+
+    // Validate phone - only check if there's input (not empty or N/A)
+    const phoneStr = String(phone || '').trim();
+    if (phoneStr !== '' && phoneStr.toUpperCase() !== 'N/A' && !validatePhone(phoneStr)) {
+      invalidFields.push('Phone Number (must be numeric)');
+      errors.phone = true;
+    }
+
+    // Validate Contact Number (Emergency Contact Phone) - only check if there's input (not empty or N/A)
+    const contactNumberStr = String(contactNumber || '').trim();
+    if (contactNumberStr !== '' && contactNumberStr.toUpperCase() !== 'N/A' && !validatePhone(contactNumberStr)) {
+      invalidFields.push('Contact Number (must be numeric)');
+      errors.contactNumber = true;
+    }
+
+    // Validate salary - only check if there's input
+    const salaryStr = String(salary || '');
+    if (salaryStr.trim() !== '' && !validateSalary(salaryStr)) {
+      invalidFields.push('Salary (must be numeric)');
+      errors.salary = true;
+    }
+
+    // Update field errors
+    setFieldErrors(errors);
+
+    // Show/hide validation alert based on invalid input only (exclude optional Contact Name)
+    if (invalidFields.length > 0) {
+      setMissingFields(invalidFields);
+      setShowValidationAlert(true);
+    } else {
+      setShowValidationAlert(false);
+      setMissingFields([]);
+    }
+  }, [firstName, lastName, contactName, phone, salary, contactNumber]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -153,6 +242,15 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
     }
     if (contactName.trim() !== '' && !validateName(contactName)) {
       setContactNameError('Contact name cannot contain numbers');
+      return;
+    }
+
+    // Validate phone and salary
+    if (phone.trim() !== '' && !validatePhone(phone)) {
+      return;
+    }
+    const salaryStr = String(salary || '');
+    if (salaryStr.trim() !== '' && !validateSalary(salaryStr)) {
       return;
     }
 
@@ -191,7 +289,33 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Validation Alert - Absolutely positioned beside modal, doesn't affect modal layout */}
+      {showValidationAlert && (
+        <div className="absolute w-[300px] bg-red-50 border border-red-200 rounded-lg p-3 animate-modal-in z-50" style={{ left: 'calc(50% + 250px)', top: '15%', transform: 'translateY(-50%)' }}>
+          <div className="flex gap-2">
+            <AlertTriangle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-red-800 mb-1">
+                Invalid input detected
+              </p>
+              <p className="text-xs text-red-700">
+                {missingFields.join(', ')}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowValidationAlert(false)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div
+        ref={modalRef}
         className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[850px] relative z-10 ${
           isClosing ? 'animate-modal-out' : 'animate-modal-in'
         }`}
@@ -209,18 +333,39 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div>
                 <label htmlFor="edited_first_name" className="text-[12px] font-bold">First Name</label>
-                <input type="text" name="edited_first_name" id="edited_first_name" value={firstName} onChange={(e) => {
-                  setFirstName(e.target.value);
-                  setNameError('');
-                }} className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'}`} />
-                {nameError && <p className="text-red-500 text-[10px] mt-1">{nameError}</p>}
+                <input 
+                  type="text" 
+                  name="edited_first_name" 
+                  id="edited_first_name" 
+                  value={firstName} 
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    setNameError('');
+                  }} 
+                  className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
+                    fieldErrors.firstName
+                      ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'
+                  }`} 
+                />
               </div>
               <div>
                 <label htmlFor="edited_last_name" className="text-[12px] font-bold">Last Name</label>
-                <input type="text" name="edited_last_name" id="edited_last_name" value={lastName} onChange={(e) => {
-                  setLastName(e.target.value);
-                  setNameError('');
-                }} className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'}`} />
+                <input 
+                  type="text" 
+                  name="edited_last_name" 
+                  id="edited_last_name" 
+                  value={lastName} 
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    setNameError('');
+                  }} 
+                  className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
+                    fieldErrors.lastName
+                      ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'
+                  }`} 
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-2">
@@ -230,7 +375,18 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               </div>
               <div className="flex flex-col justify-center">
                 <label htmlFor="edited_phone_number" className="text-[12px] font-bold">Phone Number</label>
-                <input type="text" id="edited_phone_number" name="edited_phone_number" value={phone} onChange={(e) => setPhone(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                <input 
+                  type="text" 
+                  id="edited_phone_number" 
+                  name="edited_phone_number" 
+                  value={phone} 
+                  onChange={(e) => setPhone(e.target.value)} 
+                  className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
+                    fieldErrors.phone
+                      ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                  }`}
+                />
               </div>
             </div>
             <div className="mt-2">
@@ -465,7 +621,18 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             </div>
             <div className='mt-2'>
               <label htmlFor="employee-salary" className='text-[12px] font-bold'>Salary</label>
-              <input type="text" id='employee-salary' name='employee-salary' value={salary} onChange={(e) => setSalary(e.target.value)} className="border border-gray-300 rounded-md w-full px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+              <input 
+                type="text" 
+                id='employee-salary' 
+                name='employee-salary' 
+                value={salary} 
+                onChange={(e) => setSalary(e.target.value)} 
+                className={`border rounded-md w-full px-2 py-1 focus:ring-2 focus:outline-none ${
+                  fieldErrors.salary
+                    ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                }`}
+              />
             </div>
           </div>
           <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4 text-[12px]">
@@ -473,15 +640,36 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div className="flex flex-col justify-center">
                 <label htmlFor="employee_contact_name" className="text-[12px] font-bold">Contact Name</label>
-                <input type="text" id="employee_contact_name" name="employee_contact_name" value={contactName} onChange={(e) => {
-                  setContactName(e.target.value);
-                  setContactNameError('');
-                }} className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${contactNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'}`} />
-                {contactNameError && <p className="text-red-500 text-[10px] mt-1">{contactNameError}</p>}
+                <input 
+                  type="text" 
+                  id="employee_contact_name" 
+                  name="employee_contact_name" 
+                  value={contactName} 
+                  onChange={(e) => {
+                    setContactName(e.target.value);
+                    setContactNameError('');
+                  }} 
+                  className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
+                    fieldErrors.contactName
+                      ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                  }`}
+                />
               </div>
               <div>
                 <label htmlFor="employee_contact_number" className="text-[12px] font-bold">Phone Number</label>
-                <input type="text" id="employee_contact_number" name="employee_contact_number" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none w-full" />
+                <input 
+                  type="text" 
+                  id="employee_contact_number" 
+                  name="employee_contact_number" 
+                  value={contactNumber} 
+                  onChange={(e) => setContactNumber(e.target.value)} 
+                  className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none w-full ${
+                    fieldErrors.contactNumber
+                      ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                  }`}
+                />
               </div>
             </div>
             <div className='mt-2 w-full'>
@@ -645,7 +833,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               }
             }}
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? 'Updating...' : 'Update Employee'}
           </button>
         </div>
       </div>
