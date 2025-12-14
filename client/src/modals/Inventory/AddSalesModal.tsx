@@ -382,7 +382,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                       }}
                       onFocus={() => setIsProductDropdownOpen(true)}
                       placeholder="Search and select product"
-                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                      className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                         showValidationAlert && errors.productName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -479,7 +479,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                         handleInputChange('quantity', formatted === '' ? '' : formatted);
                       }}
                       placeholder="0"
-                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                      className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                         showValidationAlert && errors.quantity ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -497,7 +497,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                       onChange={(e) => handleInputChange('price', e.target.value)}
                       readOnly={true}
                       placeholder="0.00"
-                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none cursor-not-allowed ${
+                      className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-not-allowed ${
                         showValidationAlert && errors.price ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -529,7 +529,7 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
                         }
                       }}
                       tabIndex={0}
-                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
+                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-1 focus:ring-blue-500" 
                     >
                       <span>{formData.paymentMethod}</span>
                       <svg 
@@ -621,14 +621,14 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
+              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               Cancel
             </button>
             <button
               type="submit"
               onClick={handleSubmit}
-              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300"
+              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Add Sales
             </button>

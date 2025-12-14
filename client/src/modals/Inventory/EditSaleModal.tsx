@@ -470,7 +470,7 @@ useEffect(() => {
                         onFocus={() => setIsProductDropdownOpen(true)}
                         disabled={isUpdating}
                         placeholder="Search and select product"
-                        className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                           showValidationAlert && errors.productName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                         }`}
                       />
@@ -561,7 +561,7 @@ useEffect(() => {
                         disabled={isUpdating}
                         min="1"
                         placeholder="0"
-                        className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                           showValidationAlert && errors.quantity ? 'border-red-300 bg-red-50' : 'border-gray-300'
                         }`}
                         required
@@ -581,7 +581,7 @@ useEffect(() => {
                       step="0.01"
                       min="0"
                       placeholder="0.00"
-                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-not-allowed ${
+                      className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-not-allowed ${
                         showValidationAlert && errors.price ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                       required
@@ -617,7 +617,7 @@ useEffect(() => {
                           }
                         }}
                         tabIndex={isUpdating ? -1 : 0}
-                        className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 cursor-pointer h-[29px] ${
+                        className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 cursor-pointer h-[29px] focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                           isUpdating 
                             ? 'opacity-50 cursor-not-allowed' 
                             : 'hover:bg-gray-200'
@@ -710,7 +710,7 @@ useEffect(() => {
                 type="button"
                 onClick={handleClose}
                 disabled={isUpdating}
-                className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 Cancel
               </button>
@@ -718,7 +718,7 @@ useEffect(() => {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isUpdating}
-                className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors duration-200"
+                className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {isUpdating ? (
                   <>
