@@ -137,7 +137,8 @@ const createInventoryTable = async () => {
       product_price NUMERIC NOT NULL,
       total_amount NUMERIC NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      updated_at TIMESTAMP DEFAULT NULL,
+      deleted_at TIMESTAMP DEFAULT NULL
     );
   `;
 
@@ -163,7 +164,13 @@ const addInventoryColumns = async () => {
       ADD COLUMN IF NOT EXISTS minimum_stock INTEGER DEFAULT 0;
     `);
     
-    console.log('Inventory columns (description, minimum_stock) added successfully');
+    // Add sync-related columns if they don't exist
+    await pool.query(`
+      ALTER TABLE inventory_items 
+      ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL;
+    `);
+    
+    console.log('Inventory columns (description, minimum_stock, deleted_at) added successfully');
   } catch (err) {
     console.error('Error adding inventory columns:', err);
   }
@@ -175,7 +182,9 @@ const createCategoriesTable = async () => {
       id SERIAL PRIMARY KEY,
       category_name VARCHAR(100) UNIQUE NOT NULL,
       color VARCHAR(7) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
+      deleted_at TIMESTAMP DEFAULT NULL
     );
   `;
 
@@ -198,7 +207,8 @@ const createSalesRecordsTable = async () => {
       total NUMERIC NOT NULL,
       payment_method VARCHAR(20) CHECK (payment_method IN ('Cash', 'Gcash', 'PayMaya', 'Juanpay')) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      updated_at TIMESTAMP DEFAULT NULL,
+      deleted_at TIMESTAMP DEFAULT NULL
     );
   `;
 
@@ -223,7 +233,10 @@ const createPayrollRecordsTable = async () => {
       deductions NUMERIC,
       net_salary NUMERIC,
       status VARCHAR(20),
-      payment_date DATE
+      payment_date DATE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT NULL,
+      deleted_at TIMESTAMP DEFAULT NULL
     );
   `;
 
@@ -243,7 +256,10 @@ const createAttendanceTable = async () => {
       date DATE NOT NULL DEFAULT CURRENT_DATE,
       time_in TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       time_out TIMESTAMP WITH TIME ZONE,
-      status VARCHAR(20) DEFAULT 'Present'
+      status VARCHAR(20) DEFAULT 'Present',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+      deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
     );
   `;
 

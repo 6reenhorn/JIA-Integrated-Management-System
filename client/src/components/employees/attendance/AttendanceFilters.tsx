@@ -37,12 +37,15 @@ const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
   const presets = ['Today', 'Yesterday', 'This Week', 'Last Week', 'This Month', 'Last Month'];
 
   const [isPresetOpen, setIsPresetOpen] = useState(false);
+  const [presetFocusIndex, setPresetFocusIndex] = useState(-1);
   const presetRef = useRef<HTMLDivElement>(null);
+  const presetOptionsRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (presetRef.current && !presetRef.current.contains(event.target as Node)) {
         setIsPresetOpen(false);
+        setPresetFocusIndex(-1);
       }
     };
 
@@ -117,6 +120,52 @@ const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
     onApply(range);
   };
 
+  const handlePresetSelect = (option: string) => {
+    onSelectedPresetChange(option);
+    onApply(getPresetRange(option));
+    setIsPresetOpen(false);
+    setPresetFocusIndex(-1);
+  };
+
+  const togglePresetDropdown = () => {
+    setIsPresetOpen(!isPresetOpen);
+    setPresetFocusIndex(-1);
+  };
+
+  const handlePresetKeyDown = (e: React.KeyboardEvent) => {
+    if (!isPresetOpen && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      togglePresetDropdown();
+      return;
+    }
+
+    if (!isPresetOpen) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setPresetFocusIndex(prev => {
+          const next = prev < presets.length - 1 ? prev + 1 : 0;
+          presetOptionsRefs.current[next]?.focus();
+          return next;
+        });
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setPresetFocusIndex(prev => {
+          const next = prev > 0 ? prev - 1 : presets.length - 1;
+          presetOptionsRefs.current[next]?.focus();
+          return next;
+        });
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsPresetOpen(false);
+        setPresetFocusIndex(-1);
+        break;
+    }
+  };
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `.wide-calendar { width: 100% !important; }` }} />
@@ -127,7 +176,7 @@ const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
           <button
             key={type}
             onClick={() => handleFilterTypeChange(type)}
-            className={`px-4 py-2 text-sm font-medium ${
+            className={`px-4 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded ${
               filterType === type
                 ? 'filter-type-active text-[#03285F]'
                 : 'text-gray-500 hover:text-gray-700'
@@ -142,8 +191,10 @@ const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
       {filterType === 'preset' && (
         <div className="dropdown relative text-[15px]" ref={presetRef}>
           <div
-            className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-full h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={() => setIsPresetOpen(!isPresetOpen)}
+            className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-full h-[36px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            onClick={togglePresetDropdown}
+            onKeyDown={handlePresetKeyDown}
+            tabIndex={0}
           >
             {selectedPreset}
             <svg
@@ -173,15 +224,33 @@ const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
               boxSizing: 'border-box'
             }}
           >
-            {presets.map((option) => (
+            {presets.map((option, index) => (
               <div
                 key={option}
-                className="option px-4 py-2 hover:bg-gray-100 cursor-pointer text-[14px]"
-                onClick={() => {
-                  onSelectedPresetChange(option);
-                  onApply(getPresetRange(option));
-                  setIsPresetOpen(false);
+                ref={el => {presetOptionsRefs.current[index] = el}}
+                className="option px-4 py-2 hover:bg-gray-100 cursor-pointer text-[14px] focus:outline-none focus-visible:bg-blue-50"
+                onClick={() => handlePresetSelect(option)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handlePresetSelect(option);
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const nextIndex = index < presets.length - 1 ? index + 1 : 0;
+                    presetOptionsRefs.current[nextIndex]?.focus();
+                    setPresetFocusIndex(nextIndex);
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prevIndex = index > 0 ? index - 1 : presets.length - 1;
+                    presetOptionsRefs.current[prevIndex]?.focus();
+                    setPresetFocusIndex(prevIndex);
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setIsPresetOpen(false);
+                    setPresetFocusIndex(-1);
+                  }
                 }}
+                tabIndex={0}
               >
                 {option}
               </div>
@@ -217,7 +286,7 @@ const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
         {filterType === 'custom' && (
           <button
             onClick={handleApply}
-            className="flex-1 text-sm px-4 py-2 bg-[#02367B] border-2 border-[#1C4A9E] text-white rounded-sm hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
+            className="flex-1 text-sm px-4 py-2 bg-[#02367B] border-2 border-[#1C4A9E] text-white rounded-sm hover:bg-[#1C4A9E] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex-shrink-0"
           >
             Apply Filter
           </button>
@@ -225,7 +294,7 @@ const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
         {/* Reset Button */}
         <button
           onClick={onReset}
-          className="flex-1 text-sm px-4 py-2 bg-gray-500 border-2 border-gray-600 text-white rounded-sm hover:bg-gray-600 focus:outline-none flex-shrink-0"
+          className="flex-1 text-sm px-4 py-2 bg-gray-500 border-2 border-gray-600 text-white rounded-sm hover:bg-gray-600 focus:outline-none flex-shrink-0 focus-visible:ring-1 focus-visible:ring-gray-600"
         >
           Reset Filters
         </button>
