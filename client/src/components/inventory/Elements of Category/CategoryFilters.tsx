@@ -38,7 +38,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
             />
           </div>
           {onRefresh && <RefreshBtn onClick={onRefresh} isSpinning={isRefreshing} />}
@@ -51,7 +51,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
         {onAddCategory && (
           <button
             onClick={onAddCategory}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0  focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500"
           >
             <Plus className="w-4 h-4" />
             {addButtonText}

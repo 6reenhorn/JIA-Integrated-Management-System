@@ -55,7 +55,7 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
                 placeholder="Search Sales"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
               />
             </div>
             <RefreshBtn onClick={onRefresh} isSpinning={isRefreshing} />
@@ -72,13 +72,13 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
                 <CustomDatePicker
                   selected={selectedDate ? parseDateFromMMDDYYYY(selectedDate) : null}
                   onChange={(date: Date | null) => setSelectedDate(date ? formatDateToMMDDYYYY(date) : '')}
-                  className="text-sm"
+                  className="text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 w-full"
                 />
               </div>
               {selectedDate && (
                 <button
                   onClick={() => setSelectedDate('')}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   title="Clear date filter"
                 >
                   <X className="w-4 h-4" />
@@ -90,7 +90,7 @@ const SalesFilters: React.FC<SalesFiltersProps> = ({
           {/* Add Button */}
           <button
             onClick={onAddSale}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#1C4A9E] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex-shrink-0"
           >
             <Plus className="w-4 h-4" />
             Add Sales
