@@ -153,41 +153,41 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault;
-    
-    if (!isFormValid) {
-        return;
-    }
-
-    // Convert beginnings to array of objects with amount property
-    const beginningsArray = formData.beginnings
-        .filter(b => b.amount.trim() !== '')
-        .map(b => ({
-            amount: parseFormattedNumber(b.amount)
-        }));
-
-    const newRecord: any = {
-        date: formData.date,
-        beginnings: beginningsArray,
-        ending: parseFormattedNumber(formData.ending) || 0,
-        sales: parseFloat(formData.sales) || 0,
-    };
-
-    setIsClosing(true);
-    setTimeout(() => {
-        onAddRecord(newRecord);
+        e.preventDefault();
         
-        // Reset form
-        setFormData({
-        date: getLocalISODate(new Date()),
-        beginnings: [{ amount: '' }],
-        ending: '',
-        sales: '',
-        });
-        
-        onClose();
-        setIsClosing(false);
-    }, 300);
+        if (!isFormValid) {
+            return;
+        }
+
+        // Convert beginnings to array of objects with amount property
+        const beginningsArray = formData.beginnings
+            .filter(b => b.amount.trim() !== '')
+            .map(b => ({
+                amount: parseFormattedNumber(b.amount)
+            }));
+
+        const newRecord: any = {
+            date: formData.date,
+            beginnings: beginningsArray,
+            ending: parseFormattedNumber(formData.ending) || 0,
+            sales: parseFloat(formData.sales) || 0,
+        };
+
+        setIsClosing(true);
+        setTimeout(() => {
+            onAddRecord(newRecord);
+            
+            // Reset form
+            setFormData({
+                date: getLocalISODate(new Date()),
+                beginnings: [{ amount: '' }],
+                ending: '',
+                sales: '',
+            });
+            
+            onClose();
+            setIsClosing(false);
+        }, 300);
     };
 
     const handleCancel = () => {
@@ -234,107 +234,110 @@ const AddJuanPayRecordModal: React.FC<AddJuanPayRecordModalProps> = ({
                     <p className="text-[12px] text-gray-600">Record JuanPay beginning balance(s), ending balance, and sales.</p>
                 </div>
                 
-                <div className="overflow-y-auto max-h-[60vh] mt-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
-                        {/* Date */}
-                        <div className="flex flex-col">
-                            <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
-                            <CustomDatePicker
-                                selected={formData.date ? parseLocalDate(formData.date) : null}
-                                onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
-                                maxDate={new Date()}
-                            />
-                        </div>
+                <div className='shadow-md shadow-gray-200 rounded-md mt-4'>
+                    <div className="overflow-y-auto max-h-[60vh] mt-4 p-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                        <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
+                            {/* Date */}
+                            <div className="flex flex-col">
+                                <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
+                                <CustomDatePicker
+                                    selected={formData.date ? parseLocalDate(formData.date) : null}
+                                    onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
+                                    maxDate={new Date()}
+                                    className='py-[5px]'
+                                />
+                            </div>
 
-                        {/* Beginning Balance(s) */}
-                        <div className="flex flex-col">
-                            <div className="flex items-center justify-between mb-1">
-                                <label className="text-[12px] font-bold text-gray-700">Beginning Balance (₱)</label>
-                                <button
-                                    type="button"
-                                    onClick={addBeginningField}
-                                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-[11px] font-medium"
-                                >
-                                    <Plus className="w-3 h-3" />
-                                    Add More
-                                </button>
-                            </div>
-                            
-                            <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                                {formData.beginnings.map((beginning, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                        <input 
-                                            type="text"
-                                            placeholder={`Beginning #${index + 1}`}
-                                            value={beginning.amount} 
-                                            onChange={(e) => handleBeginningChange(index, e.target.value)} 
-                                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
-                                        />
-                                        {formData.beginnings.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => removeBeginningField(index)}
-                                                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
-                                                title="Remove"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                            
-                            {formData.beginnings.length > 1 && (
-                                <div className="mt-2 text-[11px] text-gray-600 bg-blue-50 px-3 py-2 rounded-md">
-                                    Total Beginning: ₱{totalBeginning.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {/* Beginning Balance(s) */}
+                            <div className="flex flex-col">
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="text-[12px] font-bold text-gray-700">Beginning Balance (₱)</label>
+                                    <button
+                                        type="button"
+                                        onClick={addBeginningField}
+                                        className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-[11px] font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
+                                    >
+                                        <Plus className="w-3 h-3" />
+                                        Add More
+                                    </button>
                                 </div>
-                            )}
-                        </div>
+                                
+                                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                    {formData.beginnings.map((beginning, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                            <input 
+                                                type="text"
+                                                placeholder={`Beginning #${index + 1}`}
+                                                value={beginning.amount} 
+                                                onChange={(e) => handleBeginningChange(index, e.target.value)} 
+                                                className="flex-1 border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                            />
+                                            {formData.beginnings.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeBeginningField(index)}
+                                                    className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                                    title="Remove"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                {formData.beginnings.length > 1 && (
+                                    <div className="mt-2 text-[11px] text-gray-600 bg-blue-50 px-3 py-2 rounded-md">
+                                        Total Beginning: ₱{totalBeginning.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </div>
+                                )}
+                            </div>
 
-                        {/* Ending Balance */}
-                        <div className="flex flex-col">
-                            <label htmlFor="ending" className="text-[12px] font-bold text-gray-700 mb-1">Ending Balance (₱)</label>
-                            <input 
-                                type="text"
-                                id="ending" 
-                                name="ending" 
-                                placeholder='0.00' 
-                                value={formData.ending} 
-                                onChange={(e) => handleEndingChange(e.target.value)} 
-                                className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
-                            />
-                        </div>
+                            {/* Ending Balance */}
+                            <div className="flex flex-col">
+                                <label htmlFor="ending" className="text-[12px] font-bold text-gray-700 mb-1">Ending Balance (₱)</label>
+                                <input 
+                                    type="text"
+                                    id="ending" 
+                                    name="ending" 
+                                    placeholder='0.00' 
+                                    value={formData.ending} 
+                                    onChange={(e) => handleEndingChange(e.target.value)} 
+                                    className="border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                />
+                            </div>
 
-                        {/* Sales (Auto-calculated) */}
-                        <div className="flex flex-col">
-                            <label htmlFor="sales" className="text-[12px] font-bold text-gray-700 mb-1">Sales (Auto-calculated)</label>
-                            <input 
-                                type="text" 
-                                id="sales" 
-                                name="sales" 
-                                value={`₱${parseFloat(formData.sales).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                                readOnly
-                                className="border border-gray-300 rounded-md px-3 py-2 bg-gray-200 text-gray-700 cursor-not-allowed" 
-                            />
-                            <p className="text-[10px] text-gray-500 mt-1">Sales = Total Beginning - Ending</p>
-                        </div>
-                    </form>
+                            {/* Sales (Auto-calculated) */}
+                            <div className="flex flex-col">
+                                <label htmlFor="sales" className="text-[12px] font-bold text-gray-700 mb-1">Sales (Auto-calculated)</label>
+                                <input 
+                                    type="text" 
+                                    id="sales" 
+                                    name="sales" 
+                                    value={`₱${parseFloat(formData.sales).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    readOnly
+                                    className="border border-gray-300 rounded-md px-3 py-1 bg-gray-200 text-gray-700 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:outline-none" 
+                                />
+                                <p className="text-[10px] text-gray-500 mt-1">Sales = Total Beginning - Ending</p>
+                            </div>
+                        </form>
+                    </div>
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="w-full flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                <div className="w-full flex justify-end gap-3 mt-3 pt-4 border-gray-200">
                     <button 
                         type="button"
-                        className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm"
+                        className="px-3 py-[5px] border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         onClick={handleCancel}
                     >
                         Cancel
                     </button>
                     <button 
                         type="submit"
-                        className={`px-4 py-2 rounded-md transition-colors duration-200 font-medium text-sm shadow-sm ${
+                        className={`px-3 py-[5px] rounded-md transition-colors duration-200 font-medium text-sm shadow-sm ${
                             isFormValid 
-                                ? 'bg-[#02367B] hover:bg-[#01285a] text-white' 
+                                ? 'bg-[#02367B] hover:bg-[#01285a] text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500' 
                                 : 'bg-gray-400 text-white cursor-not-allowed'
                         }`}
                         onClick={handleSubmit}

@@ -106,6 +106,21 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
         setIsFormValid(valid);
     }, [formData.amount, formData.transactionType, formData.chargeMOP, formData.date]);
 
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (transactionTypeRef.current && !transactionTypeRef.current.contains(event.target as Node)) {
+                setDropdowns(prev => ({ ...prev, transactionType: false }));
+            }
+            if (chargeMOPRef.current && !chargeMOPRef.current.contains(event.target as Node)) {
+                setDropdowns(prev => ({ ...prev, chargeMOP: false }));
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     // Close modal on escape key
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
@@ -296,7 +311,7 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -305,241 +320,245 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
 
             <div
                 ref={modalRef}
-                className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] relative z-10 ${
+                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 ${
                     isClosing ? 'animate-modal-out' : 'animate-modal-in'
                 }`}
+                onClick={(e) => e.stopPropagation()}
             >
                 <div>
-                    <h3 className="text-[20px] font-bold">Edit PayMaya Record</h3>
-                    <p className="text-[12px]">Update PayMaya cash-in, cash-out, service charge, and charge MOP.</p>
+                    <h3 className="text-[20px] font-bold text-gray-900">Edit PayMaya Record</h3>
+                    <p className="text-[12px] text-gray-600">Update PayMaya cash-in, cash-out, service charge, and charge MOP.</p>
                 </div>
                 
-                <div className="overflow-y-auto max-h-[550px] mt-4 text-[12px]">
-                    <form onSubmit={handleSubmit} className='flex flex-col gap-3'>
-                        {/* Amount and Service Charge */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col">
-                                <label htmlFor="amount" className="text-[12px] font-bold mb-1">Amount (₱)</label>
-                                <input 
-                                    type="text" 
-                                    id="amount" 
-                                    name="amount" 
-                                    placeholder='0.00' 
-                                    value={formData.amount} 
-                                    onChange={(e) => handleInputChange('amount', e.target.value)} 
-                                    ref={amountRef}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            serviceChargeRef.current?.focus();
-                                        }
-                                    }}
-                                    className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors duration-200" 
-                                    required
-                                    disabled={isEditing}
-                                />
-                            </div>
-                            <div className="flex flex-col">
-                                <label htmlFor="serviceCharge" className="text-[12px] font-bold mb-1">Service Charge (₱)</label>
-                                <input 
-                                    type="text" 
-                                    id="serviceCharge" 
-                                    name="serviceCharge" 
-                                    placeholder='0.00' 
-                                    value={formData.serviceCharge} 
-                                    onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
-                                    ref={serviceChargeRef}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            transactionSelectedRef.current?.focus();
-                                        }
-                                    }}
-                                    className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors duration-200" 
-                                    disabled={isEditing}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Transaction Type and Charge MOP */}
-                        <div className='grid grid-cols-2 gap-4'>
-                            <div className="dropdown relative" ref={transactionTypeRef}>
-                                <label className="text-[12px] font-bold mb-1 block">Transaction Type</label>
-                                <div
-                                    className={`dropdown-selected relative flex items-center justify-between border border-gray-300 rounded-md px-2 py-1 transition-all duration-200 min-h-[32px] ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'cursor-not-allowed'}`}
-                                    onClick={() => handleDropdownToggle('transactionType')}
-                                    tabIndex={isEditing ? -1 : 0}
-                                    ref={transactionSelectedRef}
-                                    onKeyDown={(e) => handleDropdownKeyDown('transactionType', e)}
-                                >
-                                    <span className={formData.transactionType ? '' : 'text-gray-500'}>
-                                        {formData.transactionType || 'Select Transaction Type'}
-                                    </span>
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 16 16"
-                                        fill="none"
-                                        className={`transition-transform duration-200 ${dropdowns.transactionType ? 'rotate-180' : ''}`}
-                                    >
-                                        <polygon points="4,6 12,6 8,12" fill="currentColor" />
-                                    </svg>
-                                </div>
-                                {dropdowns.transactionType && !isEditing && (
-                                    <div
-                                        ref={transactionOptionsListRef}
-                                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden"
+                <div className='shadow-md shadow-gray-200 rounded-md mt-4'>
+                    <div className="overflow-y-auto max-h-[60vh] mt-4 p-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                        <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
+                            {/* Amount and Service Charge */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex flex-col">
+                                    <label htmlFor="amount" className="text-[12px] font-bold text-gray-700 mb-1">Amount (₱)</label>
+                                    <input 
+                                        type="text" 
+                                        id="amount" 
+                                        name="amount" 
+                                        placeholder='0.00' 
+                                        value={formData.amount} 
+                                        onChange={(e) => handleInputChange('amount', e.target.value)} 
+                                        ref={amountRef}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
-                                                const selected = transactionTypeOptions[focusedTransactionOption];
-                                                handleDropdownSelect('transactionType', selected);
-                                            }
-                                            if (e.key === 'ArrowDown') {
-                                                e.preventDefault();
-                                                const len = transactionTypeOptions.length;
-                                                const next = (focusedTransactionOption + 1) % len;
-                                                setFocusedTransactionOption(next);
-                                                const nodes = transactionOptionsListRef.current?.querySelectorAll('[data-option]');
-                                                const el = nodes ? (nodes[next] as HTMLElement) : null;
-                                                el?.focus();
-                                            }
-                                            if (e.key === 'ArrowUp') {
-                                                e.preventDefault();
-                                                const len = transactionTypeOptions.length;
-                                                const prev = (focusedTransactionOption - 1 + len) % len;
-                                                setFocusedTransactionOption(prev);
-                                                const nodes = transactionOptionsListRef.current?.querySelectorAll('[data-option]');
-                                                const el = nodes ? (nodes[prev] as HTMLElement) : null;
-                                                el?.focus();
+                                                serviceChargeRef.current?.focus();
                                             }
                                         }}
-                                    >
-                                        {transactionTypeOptions.map((option, idx) => (
-                                            <div
-                                                key={option}
-                                                data-option
-                                                className={`px-2 py-1 hover:bg-gray-100 cursor-pointer transition-colors duration-150 ${focusedTransactionOption === idx ? 'bg-blue-50' : ''}`}
-                                                onClick={() => handleDropdownSelect('transactionType', option)}
-                                                tabIndex={dropdowns.transactionType ? 0 : -1}
-                                            >
-                                                {option}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="dropdown relative" ref={chargeMOPRef}>
-                                <label className="text-[12px] font-bold mb-1 block">Charge MOP (₱)</label>
-                                <div
-                                    className={`dropdown-selected relative flex items-center justify-between border border-gray-300 rounded-md px-2 py-1 transition-all duration-200 min-h-[32px] ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'cursor-not-allowed'}`}
-                                    onClick={() => handleDropdownToggle('chargeMOP')}
-                                    tabIndex={isEditing ? -1 : 0}
-                                    ref={chargeMOPSelectedRef}
-                                    onKeyDown={(e) => handleDropdownKeyDown('chargeMOP', e)}
-                                >
-                                    <span className={formData.chargeMOP ? '' : 'text-gray-500'}>
-                                        {formData.chargeMOP || 'Select MOP'}
-                                    </span>
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 16 16"
-                                        fill="none"
-                                        className={`transition-transform duration-200 ${dropdowns.chargeMOP ? 'rotate-180' : ''}`}
-                                    >
-                                        <polygon points="4,6 12,6 8,12" fill="currentColor" />
-                                    </svg>
+                                        className="border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                        required
+                                        disabled={isEditing}
+                                    />
                                 </div>
-                                {dropdowns.chargeMOP && !isEditing && (
-                                    <div
-                                        ref={chargeMOPOptionsListRef}
-                                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden"
+                                <div className="flex flex-col">
+                                    <label htmlFor="serviceCharge" className="text-[12px] font-bold text-gray-700 mb-1">Service Charge (₱)</label>
+                                    <input 
+                                        type="text" 
+                                        id="serviceCharge" 
+                                        name="serviceCharge" 
+                                        placeholder='0.00' 
+                                        value={formData.serviceCharge} 
+                                        onChange={(e) => handleInputChange('serviceCharge', e.target.value)} 
+                                        ref={serviceChargeRef}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
-                                                const selected = chargeMOPOptions[focusedChargeMOPOption];
-                                                handleDropdownSelect('chargeMOP', selected);
-                                            }
-                                            if (e.key === 'ArrowDown') {
-                                                e.preventDefault();
-                                                const len = chargeMOPOptions.length;
-                                                const next = (focusedChargeMOPOption + 1) % len;
-                                                setFocusedChargeMOPOption(next);
-                                                const nodes = chargeMOPOptionsListRef.current?.querySelectorAll('[data-option]');
-                                                const el = nodes ? (nodes[next] as HTMLElement) : null;
-                                                el?.focus();
-                                            }
-                                            if (e.key === 'ArrowUp') {
-                                                e.preventDefault();
-                                                const len = chargeMOPOptions.length;
-                                                const prev = (focusedChargeMOPOption - 1 + len) % len;
-                                                setFocusedChargeMOPOption(prev);
-                                                const nodes = chargeMOPOptionsListRef.current?.querySelectorAll('[data-option]');
-                                                const el = nodes ? (nodes[prev] as HTMLElement) : null;
-                                                el?.focus();
+                                                transactionSelectedRef.current?.focus();
                                             }
                                         }}
-                                    >
-                                        {chargeMOPOptions.map((option, idx) => (
-                                            <div
-                                                key={option}
-                                                data-option
-                                                className={`px-2 py-1 hover:bg-gray-100 cursor-pointer transition-colors duration-150 ${focusedChargeMOPOption === idx ? 'bg-blue-50' : ''}`}
-                                                onClick={() => handleDropdownSelect('chargeMOP', option)}
-                                                tabIndex={dropdowns.chargeMOP ? 0 : -1}
-                                            >
-                                                {option}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                        className="border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                        disabled={isEditing}
+                                    />
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Reference Number */}
-                        <div className="flex flex-col">
-                            <label htmlFor="referenceNumber" className="text-[12px] font-bold mb-1">Reference Number</label>
-                            <input 
-                                type="text" 
-                                id="referenceNumber" 
-                                name="referenceNumber" 
-                                placeholder="Enter reference number" 
-                                value={formData.referenceNumber} 
-                                onChange={(e) => handleInputChange('referenceNumber', e.target.value)} 
-                                ref={referenceNumberRef}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        dateWrapperRef.current?.focus();
-                                    }
-                                }}
-                                className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors duration-200" 
-                                disabled={isEditing}
-                            />
-                        </div>
+                            {/* Transaction Type and Charge MOP */}
+                            <div className='grid grid-cols-2 gap-4'>
+                                <div className="dropdown relative" ref={transactionTypeRef}>
+                                    <label className="text-[12px] font-bold text-gray-700 mb-1 block">Transaction Type</label>
+                                    <div
+                                        className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 transition-all duration-200 h-[29px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'cursor-not-allowed'}`}
+                                        onClick={() => handleDropdownToggle('transactionType')}
+                                        tabIndex={isEditing ? -1 : 0}
+                                        ref={transactionSelectedRef}
+                                        onKeyDown={(e) => handleDropdownKeyDown('transactionType', e)}
+                                    >
+                                        <span className={formData.transactionType ? 'text-gray-900' : 'text-gray-500'}>
+                                            {formData.transactionType || 'Select Transaction Type'}
+                                        </span>
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 16 16"
+                                            fill="none"
+                                            className={`transition-transform duration-200 ${dropdowns.transactionType ? 'rotate-180' : ''}`}
+                                        >
+                                            <polygon points="4,6 12,6 8,12" fill="currentColor" />
+                                        </svg>
+                                    </div>
+                                    {dropdowns.transactionType && !isEditing && (
+                                        <div
+                                            ref={transactionOptionsListRef}
+                                            className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const selected = transactionTypeOptions[focusedTransactionOption];
+                                                    handleDropdownSelect('transactionType', selected);
+                                                }
+                                                if (e.key === 'ArrowDown') {
+                                                    e.preventDefault();
+                                                    const len = transactionTypeOptions.length;
+                                                    const next = (focusedTransactionOption + 1) % len;
+                                                    setFocusedTransactionOption(next);
+                                                    const nodes = transactionOptionsListRef.current?.querySelectorAll('[data-option]');
+                                                    const el = nodes ? (nodes[next] as HTMLElement) : null;
+                                                    el?.focus();
+                                                }
+                                                if (e.key === 'ArrowUp') {
+                                                    e.preventDefault();
+                                                    const len = transactionTypeOptions.length;
+                                                    const prev = (focusedTransactionOption - 1 + len) % len;
+                                                    setFocusedTransactionOption(prev);
+                                                    const nodes = transactionOptionsListRef.current?.querySelectorAll('[data-option]');
+                                                    const el = nodes ? (nodes[prev] as HTMLElement) : null;
+                                                    el?.focus();
+                                                }
+                                            }}
+                                        >
+                                            {transactionTypeOptions.map((option, idx) => (
+                                                <div
+                                                    key={option}
+                                                    data-option
+                                                    className={`px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900 focus:outline-none ${focusedTransactionOption === idx ? 'bg-blue-50' : ''}`}
+                                                    onClick={() => handleDropdownSelect('transactionType', option)}
+                                                    tabIndex={dropdowns.transactionType ? 0 : -1}
+                                                >
+                                                    {option}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
 
-                        {/* Date */}
-                        <div className="flex flex-col">
-                            <label htmlFor="date" className="text-[12px] font-bold mb-1">Date</label>
-                            <div ref={dateWrapperRef} tabIndex={isEditing ? -1 : 0} className="outline-none">
-                                <CustomDatePicker
-                                    selected={formData.date ? parseLocalDate(formData.date) : null}
-                                    onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
-                                    maxDate={new Date()}
+                                <div className="dropdown relative" ref={chargeMOPRef}>
+                                    <label className="text-[12px] font-bold text-gray-700 mb-1 block">Charge MOP (₱)</label>
+                                    <div
+                                        className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 transition-all duration-200 h-[29px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${!isEditing ? 'hover:border-gray-400 cursor-pointer' : 'cursor-not-allowed'}`}
+                                        onClick={() => handleDropdownToggle('chargeMOP')}
+                                        tabIndex={isEditing ? -1 : 0}
+                                        ref={chargeMOPSelectedRef}
+                                        onKeyDown={(e) => handleDropdownKeyDown('chargeMOP', e)}
+                                    >
+                                        <span className={formData.chargeMOP ? 'text-gray-900' : 'text-gray-500'}>
+                                            {formData.chargeMOP || 'Select MOP'}
+                                        </span>
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 16 16"
+                                            fill="none"
+                                            className={`transition-transform duration-200 ${dropdowns.chargeMOP ? 'rotate-180' : ''}`}
+                                        >
+                                            <polygon points="4,6 12,6 8,12" fill="currentColor" />
+                                        </svg>
+                                    </div>
+                                    {dropdowns.chargeMOP && !isEditing && (
+                                        <div
+                                            ref={chargeMOPOptionsListRef}
+                                            className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 overflow-hidden"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const selected = chargeMOPOptions[focusedChargeMOPOption];
+                                                    handleDropdownSelect('chargeMOP', selected);
+                                                }
+                                                if (e.key === 'ArrowDown') {
+                                                    e.preventDefault();
+                                                    const len = chargeMOPOptions.length;
+                                                    const next = (focusedChargeMOPOption + 1) % len;
+                                                    setFocusedChargeMOPOption(next);
+                                                    const nodes = chargeMOPOptionsListRef.current?.querySelectorAll('[data-option]');
+                                                    const el = nodes ? (nodes[next] as HTMLElement) : null;
+                                                    el?.focus();
+                                                }
+                                                if (e.key === 'ArrowUp') {
+                                                    e.preventDefault();
+                                                    const len = chargeMOPOptions.length;
+                                                    const prev = (focusedChargeMOPOption - 1 + len) % len;
+                                                    setFocusedChargeMOPOption(prev);
+                                                    const nodes = chargeMOPOptionsListRef.current?.querySelectorAll('[data-option]');
+                                                    const el = nodes ? (nodes[prev] as HTMLElement) : null;
+                                                    el?.focus();
+                                                }
+                                            }}
+                                        >
+                                            {chargeMOPOptions.map((option, idx) => (
+                                                <div
+                                                    key={option}
+                                                    data-option
+                                                    className={`px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900 focus:outline-none ${focusedChargeMOPOption === idx ? 'bg-blue-50' : ''}`}
+                                                    onClick={() => handleDropdownSelect('chargeMOP', option)}
+                                                    tabIndex={dropdowns.chargeMOP ? 0 : -1}
+                                                >
+                                                    {option}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Reference Number */}
+                            <div className="flex flex-col">
+                                <label htmlFor="referenceNumber" className="text-[12px] font-bold text-gray-700 mb-1">Reference Number</label>
+                                <input 
+                                    type="text" 
+                                    id="referenceNumber" 
+                                    name="referenceNumber" 
+                                    placeholder="Enter reference number" 
+                                    value={formData.referenceNumber} 
+                                    onChange={(e) => handleInputChange('referenceNumber', e.target.value)} 
+                                    ref={referenceNumberRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            dateWrapperRef.current?.focus();
+                                        }
+                                    }}
+                                    className="border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 bg-gray-100" 
                                     disabled={isEditing}
                                 />
                             </div>
-                        </div>
-                    </form>
+
+                            {/* Date */}
+                            <div className="flex flex-col">
+                                <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
+                                <div ref={dateWrapperRef} tabIndex={isEditing ? -1 : 0} className="outline-none">
+                                    <CustomDatePicker
+                                        selected={formData.date ? parseLocalDate(formData.date) : null}
+                                        onChange={(date: Date | null) => handleInputChange('date', date ? getLocalISODate(date) : '')}
+                                        maxDate={new Date()}
+                                        disabled={isEditing}
+                                        className='py-[5px]'
+                                    />
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
+                <div className="w-full flex justify-end gap-3 mt-3 pt-4 border-gray-200">
                     <button 
                         type="button"
-                        className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                        className="px-3 py-[5px] border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" 
                         onClick={handleCancel}
                         disabled={isEditing}
                     >
@@ -547,17 +566,17 @@ const EditPayMayaRecordModal: React.FC<EditPayMayaRecordModalProps> = ({
                     </button>
                     <button 
                         type="submit"
-                        className={`rounded-md px-3 py-1 border border-gray-300 flex items-center gap-2 transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                        className={`px-3 py-[5px] rounded-md transition-colors duration-200 font-medium text-sm shadow-sm ${
                             isFormValid && !isEditing
-                                ? 'bg-[#02367B] hover:bg-[#1C4A9E] text-white' 
-                                : 'bg-gray-400 text-white cursor-not-allowed opacity-50'
+                                ? 'bg-[#02367B] hover:bg-[#01285a] text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500' 
+                                : 'bg-gray-400 text-white cursor-not-allowed'
                         }`}
                         onClick={handleSubmit}
                         disabled={!isFormValid || isEditing}
                     >
                         {isEditing ? (
                             <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                                 Updating...
                             </>
                         ) : (
