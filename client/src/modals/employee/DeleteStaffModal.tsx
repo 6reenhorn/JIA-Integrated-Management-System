@@ -89,7 +89,7 @@ const DeleteEmployeeModal: React.FC<DeleteEmployeeModalProps> = ({
           <button
             onClick={handleClose}
             disabled={isDeleting}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <X size={20} className="text-gray-500" />
           </button>
@@ -123,7 +123,7 @@ const DeleteEmployeeModal: React.FC<DeleteEmployeeModalProps> = ({
         <div className="flex justify-end space-x-3">
           <button
             type="button"
-            className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             onClick={handleClose}
             disabled={isDeleting}
           >
@@ -131,7 +131,7 @@ const DeleteEmployeeModal: React.FC<DeleteEmployeeModalProps> = ({
           </button>
           <button
             type="button"
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm flex items-center gap-2"
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
             onClick={handleConfirm}
           >
             Delete Employee

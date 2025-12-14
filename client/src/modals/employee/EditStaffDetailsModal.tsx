@@ -851,13 +851,13 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
           <button
             onClick={handleClose}
             type="button"
-            className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-[6px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-[6px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Cancel
           </button>
           <button 
             type="button"
-            className={`border border-gray-300 rounded-md px-3 py-1 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} 
+            className={`border border-gray-300 rounded-md px-3 py-1 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} 
             disabled={isSaving}
             onClick={(e) => {
               // Ensure form submission works on mobile devices
