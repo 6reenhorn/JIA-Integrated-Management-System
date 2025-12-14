@@ -228,6 +228,13 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
             ...prev,
             [dropdown]: false,
         }));
+        setTimeout(() => {
+            if (dropdown === 'transactionType') {
+                chargeMOPSelectedRef.current?.focus();
+            } else if (dropdown === 'chargeMOP') {
+                referenceNumberRef.current?.focus();
+            }
+        }, 0);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -287,7 +294,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
-                className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                     backdropFilter: 'blur(4px)',
                     WebkitBackdropFilter: 'blur(4px)'
@@ -296,21 +303,21 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
 
             <div 
                 ref={modalRef}
-                className={`bg-white shadow-2xl rounded-lg p-6 w-[460px] max-h-[85vh] relative z-10 
+                className={`bg-gray-100 shadow-md rounded-md p-6 w-[460px] max-h-[750px] relative z-10 
                             ${isClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div>
-                    <h3 className="text-[20px] font-bold text-gray-900">Add New PayMaya Record</h3>
-                    <p className="text-[12px] text-gray-600">Record PayMaya cash-in, PayMaya cash-out, service charge, and charge MOP.</p>
+                    <h3 className="text-[20px] font-bold">Add New PayMaya Record</h3>
+                    <p className="text-[12px]">Record PayMaya cash-in, PayMaya cash-out, service charge, and charge MOP.</p>
                 </div>
                 
-                <div className="overflow-y-auto max-h-[60vh] mt-4 text-[12px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
+                <div className="overflow-y-auto max-h-[550px] mt-4 text-[12px]">
+                    <form onSubmit={handleSubmit} className='flex flex-col gap-3'>
                         {/* Amount and Service Charge */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="flex flex-col">
-                                <label htmlFor="amount" className="text-[12px] font-bold text-gray-700 mb-1">Amount (₱)</label>
+                                <label htmlFor="amount" className="text-[12px] font-bold mb-1">Amount (₱)</label>
                                 <input 
                                     type="text" 
                                     id="amount" 
@@ -325,12 +332,12 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                             serviceChargeRef.current?.focus();
                                         }
                                     }}
-                                    className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                    className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors duration-200" 
                                     required
                                 />
                             </div>
                             <div className="flex flex-col">
-                                <label htmlFor="serviceCharge" className="text-[12px] font-bold text-gray-700 mb-1">Service Charge (₱)</label>
+                                <label htmlFor="serviceCharge" className="text-[12px] font-bold mb-1">Service Charge (₱)</label>
                                 <input 
                                     type="text"
                                     id="serviceCharge" 
@@ -345,7 +352,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                             transactionSelectedRef.current?.focus();
                                         }
                                     }}
-                                    className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                    className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors duration-200" 
                                 />
                             </div>
                         </div>
@@ -353,15 +360,15 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                         {/* Transaction Type and Charge MOP */}
                         <div className='grid grid-cols-2 gap-4'>
                             <div className="dropdown relative" ref={transactionTypeRef}>
-                                <label className="text-[12px] font-bold text-gray-700 mb-1 block">Transaction Type</label>
+                                <label className="text-[12px] font-bold mb-1 block">Transaction Type</label>
                                 <div
-                                    className="dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
+                                    className={`dropdown-selected relative flex items-center justify-between border border-gray-300 rounded-md px-2 py-1 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[32px] ${formData.transactionType ? 'bg-blue-50' : ''}`}
                                     onClick={() => handleDropdownToggle('transactionType')}
                                     tabIndex={0}
                                     ref={transactionSelectedRef}
                                     onKeyDown={(e) => handleDropdownKeyDown('transactionType', e)}
                                 >
-                                    <span className={formData.transactionType ? 'text-gray-900' : 'text-gray-500'}>
+                                    <span className={formData.transactionType ? 'text-blue-700 font-semibold' : 'text-gray-500'}>
                                         {formData.transactionType || 'Select Transaction Type'}
                                     </span>
                                     <svg
@@ -408,7 +415,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                             <div
                                                 key={option}
                                                 data-option
-                                                className={`px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900 ${focusedTransactionOption === idx ? 'bg-blue-50' : ''}`}
+                                                className={`px-2 py-1 hover:bg-gray-100 cursor-pointer transition-colors duration-150 ${focusedTransactionOption === idx ? 'bg-blue-50' : ''}`}
                                                 onClick={() => handleDropdownSelect('transactionType', option)}
                                                 tabIndex={dropdowns.transactionType ? 0 : -1}
                                             >
@@ -420,15 +427,15 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                             </div>
 
                             <div className="dropdown relative" ref={chargeMOPRef}>
-                                <label className="text-[12px] font-bold text-gray-700 mb-1 block">Charge MOP (₱)</label>
+                                <label className="text-[12px] font-bold mb-1 block">Charge MOP (₱)</label>
                                 <div
-                                    className="dropdown-selected relative flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-gray-700 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[38px]"
+                                    className={`dropdown-selected relative flex items-center justify-between border border-gray-300 rounded-md px-2 py-1 hover:border-gray-400 cursor-pointer transition-all duration-200 min-h-[32px] ${formData.chargeMOP ? 'bg-blue-50' : ''}`}
                                     onClick={() => handleDropdownToggle('chargeMOP')}
                                     tabIndex={0}
                                     ref={chargeMOPSelectedRef}
                                     onKeyDown={(e) => handleDropdownKeyDown('chargeMOP', e)}
                                 >
-                                    <span className={formData.chargeMOP ? 'text-gray-900' : 'text-gray-500'}>
+                                    <span className={formData.chargeMOP ? 'text-blue-700 font-semibold' : 'text-gray-500'}>
                                         {formData.chargeMOP || 'Select MOP'}
                                     </span>
                                     <svg
@@ -475,7 +482,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                             <div
                                                 key={option}
                                                 data-option
-                                                className={`px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-150 text-gray-700 hover:text-gray-900 ${focusedChargeMOPOption === idx ? 'bg-blue-50' : ''}`}
+                                                className={`px-2 py-1 hover:bg-gray-100 cursor-pointer transition-colors duration-150 ${focusedChargeMOPOption === idx ? 'bg-blue-50' : ''}`}
                                                 onClick={() => handleDropdownSelect('chargeMOP', option)}
                                                 tabIndex={dropdowns.chargeMOP ? 0 : -1}
                                             >
@@ -489,7 +496,7 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
 
                         {/* Reference Number */}
                         <div className="flex flex-col">
-                            <label htmlFor="referenceNumber" className="text-[12px] font-bold text-gray-700 mb-1">Reference Number</label>
+                            <label htmlFor="referenceNumber" className="text-[12px] font-bold mb-1">Reference Number</label>
                             <input 
                                 type="text" 
                                 id="referenceNumber" 
@@ -504,13 +511,13 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                                         dateWrapperRef.current?.focus();
                                     }
                                 }}
-                                className="border border-gray-300 rounded-md px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-gray-100" 
+                                className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors duration-200" 
                             />
                         </div>
 
                         {/* Date */}
                         <div className="flex flex-col">
-                            <label htmlFor="date" className="text-[12px] font-bold text-gray-700 mb-1">Date</label>
+                            <label htmlFor="date" className="text-[12px] font-bold mb-1">Date</label>
                             <div ref={dateWrapperRef} tabIndex={0} className="outline-none">
                                 <CustomDatePicker
                                     selected={formData.date ? parseLocalDate(formData.date) : null}
@@ -523,20 +530,20 @@ const AddPayMayaRecordModal: React.FC<AddPayMayaRecordModalProps> = ({
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="w-full flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
                     <button 
                         type="button"
-                        className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium text-sm"
+                        className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         onClick={handleCancel}
                     >
                         Cancel
                     </button>
                     <button 
                         type="submit"
-                        className={`px-4 py-2 rounded-md transition-colors duration-200 font-medium text-sm shadow-sm ${
+                        className={`rounded-md px-3 py-1 border border-gray-300 transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                             isFormValid 
-                                ? 'bg-[#02367B] hover:bg-[#01285a] text-white' 
-                                : 'bg-gray-400 text-white cursor-not-allowed'
+                                ? 'bg-[#02367B] hover:bg-[#1C4A9E] text-white' 
+                                : 'bg-gray-400 text-white cursor-not-allowed opacity-50'
                         }`}
                         onClick={handleSubmit}
                         disabled={!isFormValid}
