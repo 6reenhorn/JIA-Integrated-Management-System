@@ -1,6 +1,5 @@
 // client/src/pages/EWallet.tsx - UPDATED with JuanPay integration
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import MainLayoutCard from '../components/layout/MainLayoutCard';
 import Portal from '../components/common/Portal';
 import Overview from '../components/e-wallet/Overview/Overview';
@@ -85,9 +84,11 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   // Fetch GCash records on mount
   useEffect(() => {
     const fetchGcashRecords = async () => {
+      const api = window.electronAPI;
+      if (!api) return;
       try {
-        const response = await axios.get('http://localhost:3001/api/gcash');
-        setGcashRecords(response.data);
+        const data = await api.getGCashRecords();
+        setGcashRecords(data || []);
       } catch (err) {
         console.error('Error fetching GCash records:', err);
       } finally {
@@ -100,9 +101,11 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   // Fetch PayMaya records on mount
   useEffect(() => {
     const fetchPayMayaRecords = async () => {
+      const api = window.electronAPI;
+      if (!api) return;
       try {
-        const response = await axios.get('http://localhost:3001/api/paymaya');
-        setPaymayaRecords(response.data);
+        const data = await api.getPayMayaRecords();
+        setPaymayaRecords(data || []);
       } catch (err) {
         console.error('Error fetching PayMaya records:', err);
       } finally {
@@ -115,11 +118,11 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   // Fetch JuanPay records on mount
   useEffect(() => {
     const fetchJuanPayRecords = async () => {
+      const api = window.electronAPI;
+      if (!api) return;
       try {
-        const response = await axios.get('http://localhost:3001/api/juanpay');
-        console.log('JuanPay records fetched:', response.data);
-        console.log('First record sample:', response.data[0]);
-        setJuanpayRecords(response.data);
+        const data = await api.getJuanPayRecords();
+        setJuanpayRecords(data || []);
       } catch (err) {
         console.error('Error fetching JuanPay records:', err);
       } finally {
@@ -148,9 +151,11 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
 
   const handleRefreshGCash = async () => {
     setIsInitialLoading(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      const response = await axios.get('http://localhost:3001/api/gcash');
-      setGcashRecords(response.data);
+      const data = await api.getGCashRecords();
+      setGcashRecords(data || []);
     } catch (err) {
       console.error('Error fetching GCash records:', err);
     } finally {
@@ -162,9 +167,11 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
 
   const handleRefreshPayMaya = async () => {
     setIsInitialLoadingPayMaya(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      const response = await axios.get('http://localhost:3001/api/paymaya');
-      setPaymayaRecords(response.data);
+      const data = await api.getPayMayaRecords();
+      setPaymayaRecords(data || []);
     } catch (err) {
       console.error('Error fetching PayMaya records:', err);
     } finally {
@@ -176,9 +183,11 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
 
   const handleRefreshJuanPay = async () => {
     setIsInitialLoadingJuanPay(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      const response = await axios.get('http://localhost:3001/api/juanpay');
-      setJuanpayRecords(response.data);
+      const data = await api.getJuanPayRecords();
+      setJuanpayRecords(data || []);
     } catch (err) {
       console.error('Error fetching JuanPay records:', err);
     } finally {
@@ -192,11 +201,12 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const handleAddGCashRecord = async (newRecord: Omit<GCashRecord, 'id'>) => {
     setIsGCashModalOpen(false);
     setIsAddingGCash(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      const response = await axios.post('http://localhost:3001/api/gcash', newRecord);
-      
+      const created = await api.addGCashRecord(newRecord);
       setGcashRecords(prev => {
-        const updated = [...prev, response.data];
+        const updated = [...prev, created];
         return updated.sort((a, b) => {
           const dateA = new Date(a.date).getTime();
           const dateB = new Date(b.date).getTime();
@@ -219,8 +229,10 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     setIsDeletingGCash(true);
     setIsDeleteModalOpen(false);
     setRecordToDelete(null);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      await axios.delete(`http://localhost:3001/api/gcash/${id}`);
+      await api.deleteGCashRecord(Number(id));
       setGcashRecords(prev => prev.filter(record => record.id !== id));
       console.log('GCash record deleted successfully');
     } catch (err) {
@@ -234,12 +246,14 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
 
   const handleEditGCashRecord = async (id: string, updatedRecord: Omit<GCashRecord, 'id'>) => {
     setIsEditing(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      await axios.put(`http://localhost:3001/api/gcash/${id}`, updatedRecord);
+      const saved = await api.updateGCashRecord({ ...updatedRecord, id: Number(id) });
       
       setGcashRecords(prev => {
         const updated = prev.map(record => 
-          record.id === id ? { ...updatedRecord, id } : record
+          record.id === id ? { ...saved, id: String(saved.id) } : record
         );
         return updated.sort((a, b) => {
           const dateA = new Date(a.date).getTime();
@@ -274,11 +288,12 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const handleAddPayMayaRecord = async (newRecord: Omit<PayMayaRecord, 'id'>) => {
     setIsPayMayaModalOpen(false);
     setIsAddingPayMaya(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      const response = await axios.post('http://localhost:3001/api/paymaya', newRecord);
-      
+      const created = await api.addPayMayaRecord(newRecord);
       setPaymayaRecords(prev => {
-        const updated = [...prev, response.data];
+        const updated = [...prev, created];
         return updated.sort((a, b) => {
           const dateA = new Date(a.date).getTime();
           const dateB = new Date(b.date).getTime();
@@ -301,8 +316,10 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     setIsDeletingPayMayaRecord(true);
     setIsDeletePayMayaModalOpen(false);
     setPaymayaRecordToDelete(null);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      await axios.delete(`http://localhost:3001/api/paymaya/${id}`);
+      await api.deletePayMayaRecord(Number(id));
       setPaymayaRecords(prev => prev.filter(record => record.id !== id));
       console.log('PayMaya record deleted successfully');
     } catch (err) {
@@ -321,12 +338,14 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
 
   const handleEditPayMayaRecord = async (id: string, updatedRecord: Omit<PayMayaRecord, 'id'>) => {
     setIsEditingPayMaya(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      await axios.put(`http://localhost:3001/api/paymaya/${id}`, updatedRecord);
+      const saved = await api.updatePayMayaRecord({ ...updatedRecord, id: Number(id) });
       
       setPaymayaRecords(prev => {
         const updated = prev.map(record => 
-          record.id === id ? { ...updatedRecord, id } : record
+          record.id === id ? { ...saved, id: String(saved.id) } : record
         );
         return updated.sort((a, b) => {
           const dateA = new Date(a.date).getTime();
@@ -356,11 +375,12 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
   const handleAddJuanPayRecord = async (newRecord: Omit<JuanPayRecord, 'id'>) => {
     setIsJuanPayModalOpen(false);
     setIsAddingJuanPay(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      const response = await axios.post('http://localhost:3001/api/juanpay', newRecord);
-      
+      const created = await api.addJuanPayRecord(newRecord);
       setJuanpayRecords(prev => {
-        const updated = [...prev, response.data];
+        const updated = [...prev, created];
         return updated.sort((a, b) => {
           const dateA = new Date(a.date).getTime();
           const dateB = new Date(b.date).getTime();
@@ -382,8 +402,10 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
     setIsDeletingJuanPay(true);
     setIsDeleteJuanPayModalOpen(false);
     setJuanpayRecordToDelete(null);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      await axios.delete(`http://localhost:3001/api/juanpay/${id}`);
+      await api.deleteJuanPayRecord(Number(id));
       setJuanpayRecords(prev => prev.filter(record => record.id !== id));
       console.log('JuanPay record deleted successfully');
     } catch (err) {
@@ -397,12 +419,14 @@ const EWallet: React.FC<EWalletProps> = ({ activeSection: propActiveSection, onS
 
   const handleEditJuanPayRecord = async (id: string, updatedRecord: Omit<JuanPayRecord, 'id'>) => {
     setIsEditingJuanPay(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      await axios.put(`http://localhost:3001/api/juanpay/${id}`, updatedRecord);
+      const saved = await api.updateJuanPayRecord({ ...updatedRecord, id: Number(id) });
       
       setJuanpayRecords(prev => {
         const updated = prev.map(record => 
-          record.id === id ? { ...updatedRecord, id } : record
+          record.id === id ? { ...saved, id: String(saved.id) } : record
         );
         return updated.sort((a, b) => {
           const dateA = new Date(a.date).getTime();

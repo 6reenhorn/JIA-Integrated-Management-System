@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import axios from 'axios';
 import InventoryStats from '../components/inventory/Elements of Inventory/InventoryStats';
 import InventoryTable from '../components/inventory/Elements of Inventory/InventoryTable';
 import AddProductModal from '../modals/Inventory/AddProductModal';
@@ -109,20 +108,14 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   const fetchCategories = async () => {
+    const api = window.electronAPI;
+    if (!api) return;
     setIsLoadingCategories(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/inventory/categories');
-      console.log('Fetched categories:', response.data.length, 'categories');
-      setCategoriesData(response.data);
-    } catch (err: unknown) {
+      const data = await api.getCategories();
+      setCategoriesData(data || []);
+    } catch (err) {
       console.error('Error fetching categories:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
     } finally {
       setIsLoadingCategories(false);
     }
@@ -141,19 +134,14 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   }, [activeSection]);
 
   const fetchInventoryItems = async () => {
+    const api = window.electronAPI;
+    if (!api) return;
     setIsLoadingInventory(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/inventory');
-      setInventoryItems(response.data);
-    } catch (err: unknown) {
+      const data = await api.getInventoryItems();
+      setInventoryItems(data || []);
+    } catch (err) {
       console.error('Error fetching inventory items:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
     } finally {
       setIsLoadingInventory(false);
     }
@@ -165,19 +153,14 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
 
   useEffect(() => {
     const fetchSalesRecords = async () => {
+      const api = window.electronAPI;
+      if (!api) return;
       setIsLoadingSales(true);
       try {
-        const response = await axios.get('http://localhost:3001/api/inventory/sales');
-        setSalesRecords(response.data);
-      } catch (err: unknown) {
+        const data = await api.getSales();
+        setSalesRecords(data || []);
+      } catch (err) {
         console.error('Error fetching sales records:', err);
-        if (axios.isAxiosError(err)) {
-          console.error('Error details:', err.response?.data);
-        } else if (err instanceof Error) {
-          console.error('Error message:', err.message);
-        } else {
-          console.error('Error details:', String(err));
-        }
       } finally {
         setIsLoadingSales(false);
       }
@@ -317,8 +300,10 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
 
   const handleDeleteItem = async (id: number) => {
     setIsDeletingInventory(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      await axios.delete(`http://localhost:3001/api/inventory/${id}`);
+      await api.deleteInventoryItem(id);
       
       setInventoryItems(prev => {
         const filtered = prev.filter(i => i.id !== id);
@@ -334,22 +319,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       console.log('Inventory item deleted successfully');
     } catch (err: unknown) {
       console.error('Error deleting inventory item:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
-      let errorMessage = 'Unknown error';
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.error || err.message || String(err);
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = String(err);
-      }
-      alert(`Failed to delete item: ${errorMessage}`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Failed to delete item: ${message}`);
     } finally {
       setIsDeletingInventory(false);  
     }
@@ -360,40 +331,27 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const handleAddProduct = async (data: ProductFormData) => {
     setIsAddModalOpen(false);
     setIsAddingInventory(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
       console.log('Adding product:', data);
-      
-      const response = await axios.post('http://localhost:3001/api/inventory', {
+      const created = await api.addInventoryItem({
         productName: data.productName,
         category: data.category,
         stock: data.quantity,
         productPrice: data.productPrice,
         description: data.description,
         minimumStock: data.minimumStock,
+        status: 'In Stock'
       });
-      
-      console.log('Product added:', response.data);
-      setInventoryItems(prev => [...prev, response.data]);
+      console.log('Product added:', created);
+      setInventoryItems(prev => [...prev, created]);
       setInventoryCurrentPage(1);
       setIsAddModalOpen(false);
     } catch (err: unknown) {
       console.error('Error adding product:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
-      let errorMessage = 'Unknown error';
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = String(err);
-      }
-      alert(`Failed to add product: ${errorMessage}\n\nPlease check the console for more details.`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Failed to add product: ${message}\n\nPlease check the console for more details.`);
     } finally {
       setIsAddingInventory(false);
     }
@@ -401,20 +359,22 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
 
   const handleSaveProduct = async (updated: InventoryItem) => {
     setIsUpdatingProduct(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
       console.log('Updating product:', updated);
-      
-      const response = await axios.put(`http://localhost:3001/api/inventory/${updated.id}`, {
+      const saved = await api.updateInventoryItem({
+        id: updated.id,
         productName: updated.productName,
         category: updated.category,
         stock: updated.stock,
         productPrice: updated.productPrice,
         description: updated.description,
         minimumStock: updated.minimumStock,
+        status: updated.status ?? 'In Stock'
       });
-      
-      console.log('Product updated:', response.data);
-      setInventoryItems(prev => prev.map(i => (i.id === response.data.id ? response.data : i)));
+      console.log('Product updated:', saved);
+      setInventoryItems(prev => prev.map(i => (i.id === saved.id ? saved : i)));
       
     } catch (err: unknown) {
       console.error('Error updating product:', err);
@@ -423,22 +383,8 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
       setIsEditModalOpen(false);
       setEditingItem(undefined);
       
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
-      let errorMessage = 'Unknown error';
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = String(err);
-      }
-      alert(`Failed to update product: ${errorMessage}\n\nPlease check the console for more details.`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Failed to update product: ${message}\n\nPlease check the console for more details.`);
     } finally {
       setIsUpdatingProduct(false);
     }
@@ -456,70 +402,40 @@ const Inventory: React.FC<InventoryProps> = ({ activeSection: propActiveSection,
   const handleAddCategory = () => setIsAddCategoryModalOpen(true);
 
   const handleSaveCategory = async (categoryName: string, color: string) => {
+    const api = window.electronAPI;
+    if (!api) return;
     try {
       console.log('Adding category:', { categoryName, color });
-      
-      const response = await axios.post('http://localhost:3001/api/inventory/categories', {
-        name: categoryName,
-        color: color,
-      });
-      
-      console.log('Category added/restored:', response.data);
+      const created = await api.addCategory({ name: categoryName, color });
+      console.log('Category added/restored:', created);
       
       // Update state: check if category already exists (by id or name) to handle restored categories
       setCategoriesData(prev => {
-        const existingIndex = prev.findIndex(cat => 
-          cat.id === response.data.id || cat.name === response.data.name
-        );
-        
+        const existingIndex = prev.findIndex(cat => cat.id === created.id || cat.name === created.name);
         if (existingIndex >= 0) {
-          // Update existing category (restored category)
           const updated = [...prev];
-          updated[existingIndex] = response.data;
-          console.log('Updated existing category in state:', response.data.name);
+          updated[existingIndex] = created;
           return updated;
-        } else {
-          // Add new category
-          console.log('Added new category to state:', response.data.name);
-          return [...prev, response.data];
         }
+        return [...prev, created];
       });
       
       setCategoryCurrentPage(1);
       setIsAddCategoryModalOpen(false);
     } catch (err: unknown) {
       console.error('Error adding category:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
-      let errorMessage = 'Unknown error';
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = String(err);
-      }
-      alert(`Failed to add category: ${errorMessage}`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Failed to add category: ${message}`);
     }
   };
 
 const handleDeleteCategory = async (categoryName: string) => {
+  const api = window.electronAPI;
+  if (!api) return;
   try {
     console.log('Deleting category:', categoryName);
-    
-    await axios.delete(`http://localhost:3001/api/inventory/categories/${encodeURIComponent(categoryName)}`);
-    
-    console.log('Category deleted successfully');
-    
-    // Remove the category from state
+    await api.deleteCategory(categoryName);
     setCategoriesData(prev => prev.filter(cat => cat.name !== categoryName));
-    
-    // Reset to first page if needed
     const remainingCategories = categoriesData.filter(cat => cat.name !== categoryName);
     const totalPages = Math.ceil(remainingCategories.length / 9);
     if (categoryCurrentPage > totalPages && totalPages > 0) {
@@ -527,70 +443,27 @@ const handleDeleteCategory = async (categoryName: string) => {
     } else if (remainingCategories.length === 0) {
       setCategoryCurrentPage(1);
     }
-    
-    // If the deleted category was selected in the filter, reset to 'all'
     if (selectedCategory === categoryName) {
       setSelectedCategory('all');
     }
-    
-  } catch (err: unknown) {
+  } catch (err) {
     console.error('Error deleting category:', err);
-    if (axios.isAxiosError(err)) {
-      console.error('Error details:', err.response?.data);
-    } else if (err instanceof Error) {
-      console.error('Error message:', err.message);
-    } else {
-      console.error('Error details:', String(err));
-    }
-    
-    // Just re-throw the error - CategoryContent will handle displaying it
     throw err;
   }
 };
 
 const handleEditCategory = async (oldName: string, newName: string, color: string) => {
+  const api = window.electronAPI;
+  if (!api) return;
   try {
     console.log('Editing category:', { oldName, newName, color });
-    
-    const response = await axios.put(
-      `http://localhost:3001/api/inventory/categories/${encodeURIComponent(oldName)}`,
-      {
-        name: newName,
-        color: color,
-      }
-    );
-    
-    console.log('Category updated:', response.data);
-    
-    // Update the categories in state
-    setCategoriesData(prev => 
-      prev.map(cat => 
-        cat.name === oldName 
-          ? { ...cat, name: newName, color: color }
-          : cat
-      )
-    );
-    
-    // If the edited category was selected in filter, update the selection
+    const updated = await api.updateCategory({ oldName, newName, color });
+    setCategoriesData(prev => prev.map(cat => (cat.name === oldName ? { ...cat, name: updated.name, color: updated.color } : cat)));
     if (selectedCategory === oldName) {
       setSelectedCategory(newName);
     }
-    
-  } catch (err: unknown) {
+  } catch (err) {
     console.error('Error editing category:', err);
-    if (axios.isAxiosError(err)) {
-      console.error('Error details:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      console.error('Error message:', err.message);
-      // THIS IS THE KEY - Log the full response
-      console.error('Full error response:', JSON.stringify(err.response?.data, null, 2));
-    } else if (err instanceof Error) {
-      console.error('Error message:', err.message);
-    } else {
-      console.error('Error details:', String(err));
-    }
-    
-    // Re-throw the error so CategoryContent can handle it
     throw err;
   }
 };
@@ -619,20 +492,9 @@ const handleCloseCategoryModal = () => {
     setIsRefreshingInventory(true);
     setIsLoadingInventory(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/inventory');
-      console.log('Fetched inventory data:', response.data);
-      console.log('New inventory items count:', response.data.length);
-      setInventoryItems(response.data);
-      console.log('State updated');
+      await fetchInventoryItems();
     } catch (err: unknown) {
       console.error('Error refreshing inventory data:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
     } finally {
       setTimeout(() => {
         setIsRefreshingInventory(false);
@@ -648,20 +510,12 @@ const handleCloseCategoryModal = () => {
     setIsRefreshingSales(true);
     setIsLoadingSales(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/inventory/sales');
-      console.log('Fetched sales data:', response.data);
-      console.log('New sales records count:', response.data.length);
-      setSalesRecords(response.data);
-      console.log('State updated');
+      const api = window.electronAPI;
+      if (!api) return;
+      const data = await api.getSales();
+      setSalesRecords(data || []);
     } catch (err: unknown) {
       console.error('Error refreshing sales data:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
     } finally {
       setTimeout(() => {
         setIsRefreshingSales(false);
@@ -677,20 +531,9 @@ const handleCloseCategoryModal = () => {
     setIsRefreshingCategories(true);
     setIsLoadingCategories(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/inventory/categories');
-      console.log('Fetched categories data:', response.data);
-      console.log('New categories count:', response.data.length);
-      setCategoriesData(response.data);
-      console.log('State updated');
+      await fetchCategories();
     } catch (err: unknown) {
       console.error('Error refreshing categories data:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
     } finally {
       setTimeout(() => {
         setIsRefreshingCategories(false);
@@ -702,8 +545,10 @@ const handleCloseCategoryModal = () => {
 
   const handleDeleteSale = async (id: number) => {
     setIsDeletingSales(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
-      await axios.delete(`http://localhost:3001/api/inventory/sales/${id}`);
+      await api.deleteSale(id);
       
       setSalesRecords(prev => {
         const filtered = prev.filter(record => record.id !== id);
@@ -719,22 +564,8 @@ const handleCloseCategoryModal = () => {
       console.log('Sales record deleted successfully');
     } catch (err: unknown) {
       console.error('Error deleting sales record:', err);
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
-      let errorMessage = 'Unknown error';
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.error || err.message || String(err);
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = String(err);
-      }
-      alert(`Failed to delete sale: ${errorMessage}`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Failed to delete sale: ${message}`);
     } finally {
       setIsDeletingSales(false);  
     }
@@ -742,23 +573,13 @@ const handleCloseCategoryModal = () => {
 
   const handleSaveSale = async (updatedSale: SalesRecord) => {
     setIsUpdatingSale(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
       console.log('Updating sale:', updatedSale);
-      
-      const response = await axios.put(`http://localhost:3001/api/inventory/sales/${updatedSale.id}`, {
-        date: updatedSale.date,
-        productName: updatedSale.productName,
-        quantity: updatedSale.quantity,
-        price: updatedSale.price,
-        paymentMethod: updatedSale.paymentMethod,
-      });
-      
-      console.log('Sale updated:', response.data);
-      setSalesRecords(prev => 
-        prev.map(record => 
-          record.id === response.data.id ? response.data : record
-        )
-      );
+      const saved = await api.updateSale(updatedSale);
+      console.log('Sale updated:', saved);
+      setSalesRecords(prev => prev.map(record => (record.id === saved.id ? saved : record)));
     } catch (err: unknown) {
       console.error('Error updating sales record:', err);
       
@@ -766,22 +587,8 @@ const handleCloseCategoryModal = () => {
       setIsEditSaleModalOpen(false);
       setEditingSale(null);
       
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', err.response?.data);
-      } else if (err instanceof Error) {
-        console.error('Error message:', err.message);
-      } else {
-        console.error('Error details:', String(err));
-      }
-      let errorMessage = 'Unknown error';
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = String(err);
-      }
-      alert(`Failed to update sale: ${errorMessage}\n\nPlease check the console for more details.`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Failed to update sale: ${message}\n\nPlease check the console for more details.`);
     } finally {
       setIsUpdatingSale(false);
     }
@@ -797,19 +604,19 @@ const handleCloseCategoryModal = () => {
   }) => {
     setIsAddSalesModalOpen(false);
     setIsAddingSales(true);
+    const api = window.electronAPI;
+    if (!api) return;
     try {
       console.log('Adding sale:', saleData);
-      
-      const response = await axios.post('http://localhost:3001/api/inventory/sales', {
+      const created = await api.addSale({
         date: saleData.date,
         productName: saleData.productName,
         quantity: saleData.quantity,
         price: saleData.price,
         paymentMethod: saleData.paymentMethod,
       });
-      
-      console.log('Sale added:', response.data);
-      setSalesRecords(prev => [...prev, response.data]);
+      console.log('Sale added:', created);
+      setSalesRecords(prev => [...prev, created]);
       setSalesCurrentPage(1);
       setIsAddSalesModalOpen(false);
       
@@ -822,14 +629,7 @@ const handleCloseCategoryModal = () => {
       // Re-open the modal if there's a stock conflict so user can adjust
       setIsAddSalesModalOpen(true);
       
-      let errorMessage = 'Unknown error';
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.error || err.response?.data?.details || err.message || String(err);
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = String(err);
-      }
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       
       // Show more specific error message for stock issues
       if (errorMessage.includes('Insufficient stock') || errorMessage.includes('Available:')) {

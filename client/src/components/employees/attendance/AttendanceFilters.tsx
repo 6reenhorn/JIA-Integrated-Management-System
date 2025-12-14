@@ -37,7 +37,7 @@ const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
   const presets = ['Today', 'Yesterday', 'This Week', 'Last Week', 'This Month', 'Last Month'];
 
   const [isPresetOpen, setIsPresetOpen] = useState(false);
-  const [presetFocusIndex, setPresetFocusIndex] = useState(-1);
+  const [, setPresetFocusIndex] = useState(0);
   const presetRef = useRef<HTMLDivElement>(null);
   const presetOptionsRefs = useRef<(HTMLDivElement | null)[]>([]);
 

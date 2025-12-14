@@ -188,7 +188,6 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
                     try {
                       // Parse month and year - handle both string and number
                       let month: number;
-                      let year: number;
                       
                       if (typeof record.month === 'string') {
                         // If month is already a month name, find its index
@@ -200,7 +199,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({ payrollRecords, isLoading, 
                         month = record.month;
                       }
                       
-                      year = typeof record.year === 'string' ? parseInt(record.year) : record.year;
+                      const year = typeof record.year === 'string' ? parseInt(record.year) : record.year;
                       
                       if (month && year && month >= 1 && month <= 12) {
                         // Create a date from month and year (use first day of month) to format consistently

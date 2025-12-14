@@ -55,7 +55,6 @@ const AddStaffModal = ({
   setSelectedStatus,
   selectedRelationshipText,
   setSelectedRelationshipText,
-  onResetForm
 }: AddStaffModalProps) => {
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
@@ -67,8 +66,8 @@ const AddStaffModal = ({
   const [focusedRelationshipOption, setFocusedRelationshipOption] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [nameError, setNameError] = useState('');
-  const [contactNameError, setContactNameError] = useState('');
+  const [, setNameError] = useState('');
+  const [, setContactNameError] = useState('');
   const [showValidationAlert, setShowValidationAlert] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});

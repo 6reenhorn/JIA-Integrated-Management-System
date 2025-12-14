@@ -122,7 +122,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 // POST /api/juanpay - Add a new JuanPay record
-router.post('/', async (req: Request<{}, {}, JuanPayRequestBody>, res: Response): Promise<void> => {
+router.post('/', async (req: Request<Record<string, never>, Record<string, never>, JuanPayRequestBody>, res: Response): Promise<void> => {
   const { date, beginnings, ending, sales } = req.body;
 
   try {
@@ -165,7 +165,7 @@ router.post('/', async (req: Request<{}, {}, JuanPayRequestBody>, res: Response)
 });
 
 // PUT /api/juanpay/:id - Update a JuanPay record
-router.put('/:id', async (req: Request<{ id: string }, {}, JuanPayRequestBody>, res: Response): Promise<void> => {
+router.put('/:id', async (req: Request<{ id: string }, Record<string, never>, JuanPayRequestBody>, res: Response): Promise<void> => {
   const { id } = req.params;
   const { date, beginnings, ending, sales } = req.body;
 

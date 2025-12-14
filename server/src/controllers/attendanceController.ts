@@ -1,6 +1,6 @@
 import { dbHelper } from '../db/dbHelper';
 import { getPHLocalTimeISO, getPHLocalDate } from '../utils/timeUtils';
-const bcrypt = require('bcryptjs');
+import bcrypt from 'bcryptjs';
 
 export interface AttendanceRecord {
   id: number;

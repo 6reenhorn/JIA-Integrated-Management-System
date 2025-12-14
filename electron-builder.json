@@ -1,8 +1,8 @@
 {
     "appId": "com._Nu1L.JIA_Integrated_Management_System",
     "files": [
-        "dist-electron",
-        "dist-react"
+        "dist-electron/**/*",
+        "dist-react/**/*"
     ],
     "icon": "./JIMS_Icon1.jpg",
     "mac": {

@@ -25,7 +25,9 @@ const Portal: React.FC<PortalProps> = ({ children, rootId = 'overlay-root' }) =>
     const element = elRef.current!;
     root.appendChild(element);
     return () => {
-      root && element && root.removeChild(element);
+      if (root && element) {
+        root.removeChild(element);
+      }
       if (root && root.childElementCount === 0) {
         root.parentElement?.removeChild(root);
       }

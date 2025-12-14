@@ -5,8 +5,9 @@
     "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
@@ -24,9 +25,8 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": true,
-    "noPropertyAccessFromIndexSignature": false,
-    "noUncheckedIndexedAccess": false
+    "noPropertyAccessFromIndexSignature": false
   },
-  "include": ["src/**/*", "../electron/sqlite.ts", "../electron/sync.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

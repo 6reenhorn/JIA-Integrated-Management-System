@@ -21,7 +21,6 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onViewEmployee,
   onEditEmployee,
   onRequestDelete,
-  startIndex = 0,
   isAdding = false,
   isDeleting = false
 }) => {

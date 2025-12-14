@@ -115,6 +115,7 @@ router.post('/', async (req, res) => {
         
         // Try to push immediately (don't wait for scheduled sync)
         try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           const { pushTableToPostgres } = require('../services/dbSyncService');
           console.log(`[PAYROLL PUSH] Attempting immediate push to PostgreSQL...`);
           await pushTableToPostgres('payroll_records', 'id', [

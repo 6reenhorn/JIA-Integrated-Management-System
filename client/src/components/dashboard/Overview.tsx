@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import axios from 'axios';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Package } from 'lucide-react';
 
@@ -27,128 +26,30 @@ const Overview: React.FC = () => {
 
   // Extract fetch function so it can be reused
   const fetchAllData = React.useCallback(async () => {
-      console.log('Overview: Fetching data...');
+      console.log('Overview: Fetching data via IPC...');
+      const api = window.electronAPI;
+      if (!api) {
+        console.warn('electronAPI unavailable; skipping dashboard fetch');
+        return;
+      }
       try {
         const [inventory, sales, gcash, paymaya, juanpay, employeeData] = await Promise.allSettled([
-          axios.get('http://localhost:3001/api/inventory'),
-          axios.get('http://localhost:3001/api/inventory/sales'),
-          axios.get('http://localhost:3001/api/gcash'),
-          axios.get('http://localhost:3001/api/paymaya'),
-          axios.get('http://localhost:3001/api/juanpay'),
-          axios.get('http://localhost:3001/api/employees'),
+          api.getInventoryItems(),
+          api.getSales(),
+          api.getGCashRecords(),
+          api.getPayMayaRecords(),
+          api.getJuanPayRecords(),
+          api.getEmployees(),
         ]);
 
-        // Handle each response individually to prevent one failure from breaking all
-        if (inventory.status === 'fulfilled') {
-          setInventoryItems(inventory.value.data || []);
-        } else {
-          const error = inventory.reason;
-          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
-                                   error?.code === 'ERR_NETWORK' ||
-                                   error?.code === 'ECONNREFUSED' ||
-                                   error?.message?.includes('ECONNREFUSED') ||
-                                   error?.message?.includes('Network Error') ||
-                                   error?.request?.status === 0;
-          if (isConnectionError) {
-            console.warn('Server not available. Please ensure the server is running on port 3001.');
-          } else {
-            console.error('Error fetching inventory:', error);
-          }
-          setInventoryItems([]);
-        }
-
-        if (sales.status === 'fulfilled') {
-          setSalesRecords(sales.value.data || []);
-        } else {
-          const error = sales.reason;
-          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
-                                   error?.code === 'ERR_NETWORK' ||
-                                   error?.code === 'ECONNREFUSED' ||
-                                   error?.message?.includes('ECONNREFUSED') ||
-                                   error?.message?.includes('Network Error') ||
-                                   error?.request?.status === 0;
-          if (isConnectionError) {
-            console.warn('Server not available for sales data.');
-          } else {
-            console.error('Error fetching sales:', sales.reason);
-          }
-          setSalesRecords([]);
-        }
-
-        if (gcash.status === 'fulfilled') {
-          setGcashRecords(gcash.value.data || []);
-        } else {
-          const error = gcash.reason;
-          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
-                                   error?.code === 'ERR_NETWORK' ||
-                                   error?.code === 'ECONNREFUSED' ||
-                                   error?.message?.includes('ECONNREFUSED') ||
-                                   error?.message?.includes('Network Error') ||
-                                   error?.request?.status === 0;
-          if (isConnectionError) {
-            console.warn('Server not available for GCash data.');
-          } else {
-            console.error('Error fetching GCash:', gcash.reason);
-          }
-          setGcashRecords([]);
-        }
-
-        if (paymaya.status === 'fulfilled') {
-          setPaymayaRecords(paymaya.value.data || []);
-        } else {
-          const error = paymaya.reason;
-          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
-                                   error?.code === 'ERR_NETWORK' ||
-                                   error?.code === 'ECONNREFUSED' ||
-                                   error?.message?.includes('ECONNREFUSED') ||
-                                   error?.message?.includes('Network Error') ||
-                                   error?.request?.status === 0;
-          if (isConnectionError) {
-            console.warn('Server not available for PayMaya data.');
-          } else {
-            console.error('Error fetching PayMaya:', paymaya.reason);
-          }
-          setPaymayaRecords([]);
-        }
-
-        if (juanpay.status === 'fulfilled') {
-          setJuanpayRecords(juanpay.value.data || []);
-        } else {
-          const error = juanpay.reason;
-          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
-                                   error?.code === 'ERR_NETWORK' ||
-                                   error?.code === 'ECONNREFUSED' ||
-                                   error?.message?.includes('ECONNREFUSED') ||
-                                   error?.message?.includes('Network Error') ||
-                                   error?.request?.status === 0;
-          if (isConnectionError) {
-            console.warn('Server not available for JuanPay data.');
-          } else {
-            console.error('Error fetching JuanPay:', juanpay.reason);
-          }
-          setJuanpayRecords([]);
-        }
-
-        if (employeeData.status === 'fulfilled') {
-          setEmployees(employeeData.value.data || []);
-        } else {
-          const error = employeeData.reason;
-          const isConnectionError = error?.code === 'ERR_CONNECTION_REFUSED' || 
-                                   error?.code === 'ERR_NETWORK' ||
-                                   error?.code === 'ECONNREFUSED' ||
-                                   error?.message?.includes('ECONNREFUSED') ||
-                                   error?.message?.includes('Network Error') ||
-                                   error?.request?.status === 0;
-          if (isConnectionError) {
-            console.warn('Server not available for employees data.');
-          } else {
-            console.error('Error fetching employees:', employeeData.reason);
-          }
-          setEmployees([]);
-        }
+        setInventoryItems(inventory.status === 'fulfilled' ? inventory.value || [] : []);
+        setSalesRecords(sales.status === 'fulfilled' ? sales.value || [] : []);
+        setGcashRecords(gcash.status === 'fulfilled' ? gcash.value || [] : []);
+        setPaymayaRecords(paymaya.status === 'fulfilled' ? paymaya.value || [] : []);
+        setJuanpayRecords(juanpay.status === 'fulfilled' ? juanpay.value || [] : []);
+        setEmployees(employeeData.status === 'fulfilled' ? employeeData.value || [] : []);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        // Set empty arrays as fallback
         setInventoryItems([]);
         setSalesRecords([]);
         setGcashRecords([]);

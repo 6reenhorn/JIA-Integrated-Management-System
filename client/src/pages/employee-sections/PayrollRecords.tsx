@@ -54,7 +54,7 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(!propPayrollRecords);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [tableHeadColor, setTableHeadColor] = useState<'normal' | 'green' | 'red'>('normal');
 
   const [isSpinning, setIsSpinning] = useState(false);
@@ -73,13 +73,15 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
   // Fetch payroll records function (only if no props provided)
   const fetchPayrollRecords = async () => {
     if (propPayrollRecords) return; // Don't fetch if data is provided via props
-
+    const api = window.electronAPI;
+    if (!api) {
+      setError('IPC bridge unavailable');
+      setIsLoading(false);
+      return;
+    }
     try {
-      const response = await fetch('http://localhost:3001/api/payroll');
-      if (!response.ok) throw new Error('Failed to fetch payroll records');
-      const data = await response.json();
-      // Sort by id descending to ensure newest records appear first
-      const sortedData = data.sort((a: PayrollRecord, b: PayrollRecord) => b.id - a.id);
+      const data = await api.getPayroll();
+      const sortedData = (data || []).sort((a: PayrollRecord, b: PayrollRecord) => b.id - a.id);
       setLocalPayrollRecords(sortedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -129,7 +131,8 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
     });
   }, [payrollRecords, searchTerm, filterType, selectedPreset, dateRange]);
 
-  // Calculate stats
+  // Calculate stats (currently unused, but kept for future use)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const stats = useMemo(() => {
     const toNumber = (value: unknown) => {
       const n = typeof value === 'number' ? value : Number(value);
@@ -207,20 +210,13 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
     setTableHeadColor('green');
     // Close modal immediately while the add request is processing
     setIsAddModalOpen(false);
+    const api = window.electronAPI;
+    if (!api) {
+      setTableHeadColor('normal');
+      return;
+    }
     try {
-      const response = await fetch('http://localhost:3001/api/payroll', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newPayroll),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add payroll record');
-      }
-
-      const newRecord = await response.json();
+      const newRecord = await api.addPayrollRecord(newPayroll);
 
       // Update parent state if callback provided
       if (onUpdatePayrollRecords) {
@@ -239,24 +235,14 @@ const PayrollRecords: React.FC<PayrollRecordsProps> = ({
 
 const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecord, 'id' | 'netSalary'> & { netSalary: number }) => {
   setTableHeadColor('green');
+  const api = window.electronAPI;
+  if (!api) {
+    setTableHeadColor('normal');
+    return;
+  }
   try {
     console.log('Sending update data:', updatedPayroll); // Add this debug log
-    
-    const response = await fetch(`http://localhost:3001/api/payroll/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updatedPayroll),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json(); // Get error details
-      console.error('Backend error:', errorData); // Log backend error
-      throw new Error('Failed to update payroll record');
-    }
-
-    const updatedRecord = await response.json();
+    const updatedRecord = await api.updatePayrollRecord({ id, ...updatedPayroll });
 
     // Update parent state if callback provided
     if (onUpdatePayrollRecords) {
@@ -278,17 +264,13 @@ const handleUpdatePayroll = async (id: number, updatedPayroll: Omit<PayrollRecor
 
   const handleDeletePayroll = async (id: number) => {
     setTableHeadColor('red');
+    const api = window.electronAPI;
+    if (!api) {
+      setTableHeadColor('normal');
+      return;
+    }
     try {
-      const response = await fetch(`http://localhost:3001/api/payroll/${encodeURIComponent(id as unknown as string)}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Payroll record not found on server.');
-        }
-        throw new Error('Failed to delete payroll record.');
-      }
+      await api.deletePayrollRecord(id);
 
       // Update parent state if callback provided (optimistic update - no refetch needed)
       if (onUpdatePayrollRecords) {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import Sidebar from '../sidebar/Sidebar';
 import Overview from '../components/dashboard/Overview';
 import Inventory from './Inventory';
@@ -19,7 +18,7 @@ interface SectionInfo {
 
 const Dashboard: React.FC = () => {
   const [activeItem, setActiveItem] = useState<string>('dashboard');
-  const [dashboardKey, setDashboardKey] = useState<number>(0);
+  const [dashboardKey] = useState<number>(0);
   const [showCheckOutConfirm, setShowCheckOutConfirm] = useState<boolean>(false);
 
   const [currentSection, setCurrentSection] = useState<SectionInfo>({ 
@@ -404,10 +403,10 @@ const Dashboard: React.FC = () => {
     }
 
     try {
-      await axios.post('http://localhost:3001/api/attendance/checkout', {
-        employeeId: currentUser.id
-      });
-      
+      const api = window.electronAPI;
+      if (api) {
+        await api.attendanceCheckOut({ employeeId: currentUser.id });
+      }
       checkOut();
     } catch (error: any) {
       console.error('Error during check-out:', error);

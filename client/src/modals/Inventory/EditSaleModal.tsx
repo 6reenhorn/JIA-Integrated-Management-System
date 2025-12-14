@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import CustomDatePicker from '../../components/common/CustomDatePicker';
 import Portal from '../../components/common/Portal';
-import axios from 'axios';
 
 export type SalesRecord = {
   id: number;
@@ -113,12 +112,14 @@ useEffect(() => {
   const fetchInventoryProducts = useCallback(async () => {
     setIsLoadingProducts(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/inventory');
-      setInventoryProducts(response.data);
+      const api = window.electronAPI;
+      if (!api) return;
+      const data = await api.getInventoryItems();
+      setInventoryProducts(data || []);
       
       // Set selected product if editing existing sale
       if (sale?.productName) {
-        const product = response.data.find((p: InventoryProduct) => p.productName === sale.productName);
+        const product = data?.find((p: InventoryProduct) => p.productName === sale.productName);
         if (product) {
           setSelectedProduct(product);
           setProductSearchTerm(sale.productName);

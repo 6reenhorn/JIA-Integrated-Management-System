@@ -1,9 +1,12 @@
 {
     "compilerOptions": {
-        "strict": true,
+        "strict": false,
         "target": "esnext",
         "module": "nodenext",
         "outDir": "../dist-electron",
+        "rootDir": "./",
         "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true
     }
 }

@@ -19,7 +19,7 @@ const EmployeeActions: React.FC<EmployeeActionsProps> = ({ currentPage, pageCoun
     } else {
       // Calculate the start and end of the window
       let start = Math.max(1, currentPage - 2);
-      let end = Math.min(pageCount, start + maxVisible - 1);
+      const end = Math.min(pageCount, start + maxVisible - 1);
       
       // Adjust start if we're near the end
       if (end === pageCount) {

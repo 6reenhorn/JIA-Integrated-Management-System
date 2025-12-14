@@ -20,24 +20,16 @@ export function useNetworkStatus() {
 
     const [isCheckingConnection, setIsCheckingConnection] = useState(false);
 
-    // Check actual server connectivity (not just browser online status)
+    // Check connectivity using Electron bridge; avoid hitting localhost HTTP
     const checkServerConnection = useCallback(async (): Promise<boolean> => {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-
-            const response = await fetch('http://localhost:3001/health', {
-                method: 'GET',
-                signal: controller.signal,
-                cache: 'no-cache',
-            });
-
-            clearTimeout(timeoutId);
-            return response.ok;
-        } catch (error) {
-            // Network error or timeout
-            return false;
+        if (window.electronAPI && typeof window.electronAPI.isOnline === 'function') {
+            try {
+                return window.electronAPI.isOnline();
+            } catch (error) {
+                console.warn('isOnline check failed:', error);
+            }
         }
+        return navigator.onLine;
     }, []);
 
     // Enhanced online/offline handlers

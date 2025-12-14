@@ -17,7 +17,7 @@ const AttendanceActions: React.FC<AttendanceActionsProps> = ({ currentPage, page
       }
     } else {
       let start = Math.max(1, currentPage - 2);
-      let end = Math.min(pageCount, start + maxVisible - 1);
+      const end = Math.min(pageCount, start + maxVisible - 1);
 
       if (end === pageCount) {
         start = Math.max(1, end - maxVisible + 1);

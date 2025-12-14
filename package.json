@@ -17,13 +17,14 @@
     "dev:react": "vite --config client/vite.config.ts",
     "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
     "dev:server": "cd server && npm run dev",
-    "build": "tsc -b && vite build --config client/vite.config.ts",
+    "build": "vite build --config client/vite.config.ts",
     "lint": "eslint .",
     "preview": "vite preview --config client/vite.config.ts",
     "transpile:electron": "tsc --project electron/tsconfig.json",
-    "dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --arm64",
-    "dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64",
-    "dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
+    "dist:mac": "npm run transpile:electron && npm run build && npm run copy:server-files && electron-builder --mac --arm64",
+    "dist:linux": "npm run transpile:electron && npm run build && npm run copy:server-files && electron-builder --linux --x64",
+    "dist:win": "npm run transpile:electron && npm run build && npm run copy:server-files && electron-builder --win --x64",
+    "copy:server-files": "node -e \"const fs = require('fs'); const path = require('path'); const srcDir = path.join(__dirname, 'server', 'src', 'db'); const destDir = path.join(__dirname, 'dist-electron', 'server', 'src', 'db'); if (fs.existsSync(srcDir)) { fs.mkdirSync(destDir, { recursive: true }); fs.readdirSync(srcDir).filter(f => f.endsWith('.js')).forEach(file => { fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file)); }); console.log('Copied server .js files to dist-electron'); } else { console.warn('Source directory not found:', srcDir); }\"",
     "create-admin": "node server/scripts/createAdmin.js"
   },
   "dependencies": {

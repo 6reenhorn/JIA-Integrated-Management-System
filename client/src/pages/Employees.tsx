@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import axios from 'axios';
+// Use IPC via preload instead of HTTP when running in Electron
 import Portal from '../components/common/Portal';
 import EmployeeStats from '../components/employees/management/EmployeeStats';
 import EmployeeFilters from '../components/employees/management/EmployeeFilters';
@@ -110,8 +110,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   const fetchPayrollRecords = async () => {
     setPayrollLoading(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/payroll');
-      const data = Array.isArray(response.data) ? response.data : [];
+      const data = Array.isArray(window.electronAPI?.getPayroll ? await window.electronAPI.getPayroll() : [])
+        ? await window.electronAPI.getPayroll()
+        : [];
       // Sort by id descending to ensure newest records appear first
       const sortedData = data.sort((a, b) => b.id - a.id);
       setPayrollRecords(sortedData);
@@ -136,7 +137,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   useEffect(() => {
     try {
       localStorage.removeItem('payrollRecords');
-    } catch (_) {
+    } catch {
       // ignore storage errors
     }
     fetchPayrollRecords();
@@ -146,10 +147,12 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/employees');
-        const data = Array.isArray(response.data) ? sortEmployeesByNewest(response.data) : [];
-        console.log('Fetched employees:', data.length);
-        setEmployees(data);
+        const data = Array.isArray(window.electronAPI?.getEmployees ? await window.electronAPI.getEmployees() : [])
+          ? await window.electronAPI.getEmployees()
+          : [];
+        const sorted = sortEmployeesByNewest(data);
+        console.log('Fetched employees:', sorted.length);
+        setEmployees(sorted);
       } catch (err) {
         console.error('Error fetching employees:', err);
         setEmployees([]);
@@ -164,8 +167,9 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/attendance');
-        const data = Array.isArray(response.data) ? response.data : [];
+        const data = Array.isArray(window.electronAPI?.getAttendance ? await window.electronAPI.getAttendance() : [])
+          ? await window.electronAPI.getAttendance()
+          : [];
         setAttendanceRecords(data);
       } catch (err) {
         console.error('Error fetching attendance records:', err);
@@ -254,16 +258,14 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
 
   const handleSaveEmployee = async (updatedEmployee: Employee) => {
     try {
-      const response = await axios.put(`http://localhost:3001/api/employees/${updatedEmployee.id}`, updatedEmployee);
+      const result = await window.electronAPI.updateEmployee(updatedEmployee);
       setEmployees(prevEmployees =>
         prevEmployees.map(emp =>
-          emp.id === updatedEmployee.id ? response.data : emp
+          emp.id === updatedEmployee.id ? result : emp
         )
       );
-
     } catch (err) {
       console.error('Error updating employee:', err);
-      // Handle error (could show a toast or alert)
     }
   }
 
@@ -285,12 +287,12 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setIsAdding(true);
     setIsModalOpen(false); // Close modal immediately
     try {
-      const response = await axios.post('http://localhost:3001/api/employees', newEmployee);
+      const response = await window.electronAPI.addEmployee(newEmployee);
       // Add new employee at the start of the list (newest first)
       // Use functional update to ensure we get the latest state
       setEmployees(prevEmployees => {
         // Create new array with new employee first, then sort
-        const updated = [response.data, ...prevEmployees];
+        const updated = [response, ...prevEmployees];
         return sortEmployeesByNewest(updated);
       });
       // Reset to first page to show the new employee
@@ -304,7 +306,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     }
   }
 
-  const handleRequestDelete = (id: number, _event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleRequestDelete = (id: number) => {
     setDeleteId(id);
     setShowConfirm(true);
   };
@@ -315,7 +317,7 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
       setShowConfirm(false); // Close modal immediately
       setDeleteId(null);
       try {
-        await axios.delete(`http://localhost:3001/api/employees/${deleteId}`);
+        await window.electronAPI.deleteEmployee(deleteId);
         setEmployees(prev => prev.filter(emp => emp.id !== deleteId));
       } catch (err) {
         console.error('Error deleting employee:', err);
@@ -341,18 +343,18 @@ const Employees: React.FC<EmployeesProps> = ({ activeSection: propActiveSection,
     setPayrollLoading(true);
     try {
       // Fetch employees
-      const employeeResponse = await axios.get('http://localhost:3001/api/employees');
-      const employeeData = Array.isArray(employeeResponse.data) ? sortEmployeesByNewest(employeeResponse.data) : [];
+      const employeeDataRaw = window.electronAPI?.getEmployees ? await window.electronAPI.getEmployees() : [];
+      const employeeData = Array.isArray(employeeDataRaw) ? sortEmployeesByNewest(employeeDataRaw) : [];
       setEmployees(employeeData);
 
       // Fetch attendance
-      const attendanceResponse = await axios.get('http://localhost:3001/api/attendance');
-      const attendanceData = Array.isArray(attendanceResponse.data) ? attendanceResponse.data : [];
+      const attendanceDataRaw = window.electronAPI?.getAttendance ? await window.electronAPI.getAttendance() : [];
+      const attendanceData = Array.isArray(attendanceDataRaw) ? attendanceDataRaw : [];
       setAttendanceRecords(attendanceData);
 
       // Fetch payroll
-      const payrollResponse = await axios.get('http://localhost:3001/api/payroll');
-      const payrollData = Array.isArray(payrollResponse.data) ? payrollResponse.data.sort((a, b) => b.id - a.id) : [];
+      const payrollDataRaw = window.electronAPI?.getPayroll ? await window.electronAPI.getPayroll() : [];
+      const payrollData = Array.isArray(payrollDataRaw) ? payrollDataRaw.sort((a, b) => b.id - a.id) : [];
       setPayrollRecords(payrollData);
     } catch (err) {
       console.error('Error refreshing data:', err);

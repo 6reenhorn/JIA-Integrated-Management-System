@@ -36,7 +36,7 @@ const PayrollFilters: React.FC<PayrollFiltersProps> = ({
   const presets = ['All Status', 'Paid', 'Pending', 'Overdue'];
 
   const [isPresetOpen, setIsPresetOpen] = useState(false);
-  const [presetFocusIndex, setPresetFocusIndex] = useState(-1);
+  const [, setPresetFocusIndex] = useState(0);
   const presetRef = useRef<HTMLDivElement>(null);
   const presetOptionsRefs = useRef<(HTMLDivElement | null)[]>([]);
 

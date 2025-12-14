@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 // import checkInIcon from '../../assets/JIA_CheckIn.ico';
 import CheckIn_Icon from '../../assets/JIA_Official_Light.ico';
 import type { Employee } from '../../types/employee_types';
@@ -71,8 +70,10 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
         const fetchEmployees = async () => {
             setIsLoadingEmployees(true);
             try {
-                const response = await axios.get('http://localhost:3001/api/employees');
-                setEmployees(response.data);
+                const api = window.electronAPI;
+                if (!api) return;
+                const data = await api.getEmployees();
+                setEmployees(data || []);
             } catch (error) {
                 console.error('Error fetching employees:', error);
             } finally {
@@ -107,7 +108,9 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
         const startTime = Date.now();
         
         try {
-            const response = await axios.post('http://localhost:3001/api/attendance/checkin', {
+            const api = window.electronAPI;
+            if (!api) throw new Error('IPC bridge unavailable');
+            const response = await api.attendanceCheckIn({
                 employeeId: selectedEmployee.id,
                 password: password
             });
@@ -126,16 +129,16 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
             // Handle successful check-in
             setMessage({ 
                 type: 'success', 
-                text: response.data.message || 'Check-in successful!' 
+                text: response.message || 'Check-in successful!' 
             });
 
             // Set user in auth context
             checkIn({
-                id: response.data.user.id,
-                empId: response.data.user.empId,
-                name: response.data.user.name,
-                role: response.data.user.role as UserRole,
-                isAdmin: response.data.user.role.toLowerCase() === 'admin'
+                id: response.user.id,
+                empId: response.user.empId,
+                name: response.user.name,
+                role: response.user.role as UserRole,
+                isAdmin: response.user.role.toLowerCase() === 'admin'
             });
 
             // Reset form
@@ -155,14 +158,16 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                 await new Promise(resolve => setTimeout(resolve, remainingTime));
             }
 
-            const errorMessage = error.response?.data?.error || 'An error occurred during check-in.';
+            const errorMessage = error?.message || 'An error occurred during check-in.';
             setMessage({ type: 'error', text: errorMessage });
             
             // If it's an admin login error, try with emp_id
             if (errorMessage.includes('Employee not found') && selectedEmployee.empId === 'ADMIN001') {
                 try {
                     const adminStartTime = Date.now();
-                    const adminResponse = await axios.post('http://localhost:3001/api/attendance/checkin', {
+                    const api = window.electronAPI;
+                    if (!api) throw new Error('IPC bridge unavailable');
+                    const adminResponse = await api.attendanceCheckIn({
                         employeeId: 'ADMIN001', // Try with emp_id instead of id
                         password: password
                     });
@@ -175,10 +180,10 @@ const CheckIn: React.FC<CheckInProps> = ({ onClose }) => {
                     }
                     
                     checkIn({
-                        id: adminResponse.data.user.id,
-                        empId: adminResponse.data.user.empId,
-                        name: adminResponse.data.user.name,
-                        role: adminResponse.data.user.role as UserRole,
+                        id: adminResponse.user.id,
+                        empId: adminResponse.user.empId,
+                        name: adminResponse.user.name,
+                        role: adminResponse.user.role as UserRole,
                         isAdmin: true
                     });
                     

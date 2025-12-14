@@ -115,7 +115,9 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ employees, isLoading 
                             hour12: true 
                           });
                         }
-                      } catch {}
+                      } catch {
+                        // Ignore date parsing errors
+                      }
                       return employee.timeIn;
                     })() : '-'}
                   </div>
@@ -132,7 +134,9 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ employees, isLoading 
                             hour12: true 
                           });
                         }
-                      } catch {}
+                      } catch {
+                        // Ignore date parsing errors
+                      }
                       return employee.timeOut;
                     })() : '-'}
                   </div>

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import CustomDatePicker from '../../components/common/CustomDatePicker';
-import axios from 'axios';
 import Portal from '../../components/common/Portal';
 
 interface InventoryProduct {
@@ -111,8 +110,10 @@ const AddSalesModal: React.FC<AddSalesModalProps> = ({
   const fetchInventoryProducts = async () => {
     setIsLoadingProducts(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/inventory');
-      setInventoryProducts(response.data);
+      const api = window.electronAPI;
+      if (!api) return;
+      const data = await api.getInventoryItems();
+      setInventoryProducts(data || []);
     } catch (err) {
       console.error('Error fetching inventory products:', err);
     } finally {

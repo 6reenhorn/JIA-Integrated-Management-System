@@ -30,7 +30,8 @@ const CustomDateInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttrib
             if (!isNaN(date.getTime())) {
                 displayValue = formatDate(date);
             }
-        } catch (e) {
+        } catch {
+            // Ignore invalid date strings
         }
     }
 

@@ -15,8 +15,8 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [roleFocusIndex, setRoleFocusIndex] = useState(-1);
-  const [statusFocusIndex, setStatusFocusIndex] = useState(-1);
+  const [, setRoleFocusIndex] = useState(0);
+  const [, setStatusFocusIndex] = useState(0);
   
   const buttonRef = useRef<HTMLButtonElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
