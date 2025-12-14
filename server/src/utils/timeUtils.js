@@ -61,9 +61,61 @@ function toPHLocalTimeISO(date) {
   return dateObj.toISOString();
 }
 
+/**
+ * Format a timestamp for display in Philippines (Asia/Manila) timezone
+ * @param timestamp - Date object, ISO string, or null
+ * @param format - 'datetime' (YYYY-MM-DD HH:mm:ss) or 'date' (YYYY-MM-DD), default 'datetime'
+ * @returns Formatted string in Asia/Manila timezone or null
+ */
+function formatTimestampForResponse(timestamp, format = 'datetime') {
+  if (!timestamp) return null;
+  try {
+    const dateObj = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+    if (isNaN(dateObj.getTime())) return null;
+
+    if (format === 'date') {
+      // Return just YYYY-MM-DD
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      return formatter.format(dateObj);
+    } else {
+      // Default: return YYYY-MM-DD HH:mm:ss
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).formatToParts(dateObj);
+
+      const y = parts.find(p => p.type === 'year')?.value;
+      const mo = parts.find(p => p.type === 'month')?.value;
+      const d = parts.find(p => p.type === 'day')?.value;
+      const h = parts.find(p => p.type === 'hour')?.value;
+      const mi = parts.find(p => p.type === 'minute')?.value;
+      const s = parts.find(p => p.type === 'second')?.value;
+
+      if (y && mo && d && h && mi && s) {
+        return `${y}-${mo}-${d} ${h}:${mi}:${s}`;
+      }
+      return null;
+    }
+  } catch {
+    return null;
+  }
+}
+
 module.exports = {
   getPHLocalTimeISO,
   getPHLocalDate,
-  toPHLocalTimeISO
+  toPHLocalTimeISO,
+  formatTimestampForResponse
 };
 

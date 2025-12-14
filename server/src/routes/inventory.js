@@ -1,6 +1,7 @@
 "use strict";
 const express = require('express');
 const { dbHelper } = require('../db/dbHelper');
+const { formatTimestampForResponse } = require('../utils/timeUtils');
 
 const router = express.Router();
 
@@ -445,8 +446,8 @@ const mapInventoryItem = (r) => ({
   totalAmount: parseFloat(r.total_amount),
   description: r.description || '',
   minimumStock: r.minimum_stock || 5,
-  createdAt: r.created_at,
-  updatedAt: r.updated_at
+  createdAt: formatTimestampForResponse(r.created_at),
+  updatedAt: formatTimestampForResponse(r.updated_at)
 });
 
 // GET inventory items
