@@ -139,7 +139,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
       )}
 
       <div className="flex items-center justify-between mt-5 w-full">
-        {/* Left side: Search and Refresh */}
+        {/* Left side: Search and Refresh button */}
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -155,20 +155,20 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
         </div>
 
         {/* Right side: Category Filter and Add Button */}
-        <div className="flex items-center gap-3 ml-auto">
+          <div className="flex items-center gap-3 ml-auto">
           {config.showCategoryFilter && (
             <div className="relative text-[15px]" ref={dropdownRef}>
               <div
                 onClick={toggleDropdown}
-                className="relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-full min-w-[140px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="relative flex items-center justify-between bg-[#02367B] text-white rounded-lg px-4 py-2 hover:bg-[#1C4A9E] cursor-pointer w-full min-w-[140px] h-[36px] focus:outline-none font-medium transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                <span className="truncate ml-5">{getDisplayText()}</span>
+                <span className="truncate">{getDisplayText()}</span>
                 <svg
-                  width="30"
+                  width="16"
                   height="16"
                   viewBox="0 0 16 16"
                   fill="none"
-                  className={`transition-transform flex-shrink-0 ml-2 ${
+                  className={`transition-transform duration-300 ease-in-out flex-shrink-0 ml-2 ${
                     isDropdownOpen ? 'rotate-180' : ''
                   }`}
                 >
@@ -177,40 +177,32 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               </div>
               
               <div
+                className={`absolute top-full left-0 right-0 bg-white border border-gray-200 z-10 mt-2 rounded-lg shadow-lg max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:hidden transition-all duration-200 origin-top ${
+                  isDropdownOpen 
+                    ? 'opacity-100 scale-y-100 visible' 
+                    : 'opacity-0 scale-y-95 invisible'
+                }`}
                 style={{
-                  display: isDropdownOpen ? 'block' : 'none',
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'white',
-                  border: '1px solid #ccc',
-                  zIndex: 10,
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                  boxSizing: 'border-box',
-                  marginTop: '4px',
-                  borderRadius: '6px',
-                  maxHeight: '300px',
-                  overflowY: 'auto',
                   msOverflowStyle: 'none',
                   scrollbarWidth: 'none',
                 }}
-                className="[&::-webkit-scrollbar]:hidden"
               >
                 <div
                   onClick={() => handleCategorySelect('all')}
-                  className={`px-4 py-3 hover:bg-gray-100 cursor-pointer text-[15px] ${
-                    selectedCategory === 'all' ? 'bg-gray-100 text-blue-600' : ''
+                  className={`px-4 py-3 hover:bg-[#1C4A9E]/10 cursor-pointer text-[15px] transition-colors duration-150 first:rounded-t-lg ${
+                    selectedCategory === 'all' ? 'bg-[#02367B]/10 text-[#02367B] font-medium' : 'text-gray-700'
                   }`}
                 >
-                  All Categories:
+                  All Categories
                 </div>
-                {categories.map((category) => (
+                {categories.map((category, index) => (
                   <div
                     key={category}
                     onClick={() => handleCategorySelect(category)}
-                    className={`px-4 py-3 hover:bg-gray-100 cursor-pointer text-[15px] overflow-hidden text-ellipsis ${
-                      selectedCategory === category ? 'bg-gray-100 text-blue-600' : ''
+                    className={`px-4 py-3 hover:bg-[#1C4A9E]/10 cursor-pointer text-[15px] overflow-hidden text-ellipsis transition-colors duration-150 ${
+                      index === categories.length - 1 ? 'rounded-b-lg' : ''
+                    } ${
+                      selectedCategory === category ? 'bg-[#02367B]/10 text-[#02367B] font-medium' : 'text-gray-700'
                     }`}
                     title={category}
                   >
