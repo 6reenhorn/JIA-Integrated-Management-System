@@ -3,18 +3,18 @@ import LayoutCard from '../../layout/LayoutCard';
 
 const Support: React.FC = () => (
   <section id="about-support" className="scroll-mt-20">
-    <h2 className="text-3xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-[#02367B]">
+    <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-3 border-b-2 border-[#02367B]">
       Support
     </h2>
     
     <div className="space-y-6 text-gray-700">
-      <p className="text-lg leading-relaxed">
+      <p className="text-sm leading-relaxed">
         For technical support, bug reports, or feature requests, please contact the development team.
       </p>
       
       <LayoutCard>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Development Team Contacts</h3>
-        <div className="space-y-4">
+        <h3 className="text-base font-semibold text-gray-900 mb-4">Development Team Contacts</h3>
+        <div className="space-y-4 text-sm">
           <div>
             <p className="font-semibold text-gray-900">John Cyril G. Espina</p>
             <p className="text-sm text-gray-600">Project Manager</p>
@@ -40,15 +40,19 @@ const Support: React.FC = () => (
       </LayoutCard>
       
       <LayoutCard>
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Project Advisor</h3>
-        <p className="font-semibold text-gray-900">Prof. Marylene S. Eder</p>
-        <p className="text-gray-600">Department of Computer Science</p>
+        <h3 className="text-base font-semibold text-gray-900 mb-3">Project Advisor</h3>
+        <div className="text-sm">
+          <p className="font-semibold text-gray-900">Prof. Marylene S. Eder</p>
+          <p className="text-gray-600">Department of Computer Science</p>
+        </div>
       </LayoutCard>
       
       <LayoutCard>
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Client</h3>
-        <p className="font-semibold text-gray-900">Ms. Jennie Estoque</p>
-        <p className="text-gray-600">JIA Business Center</p>
+        <h3 className="text-base font-semibold text-gray-900 mb-3">Client</h3>
+        <div className="text-sm">
+          <p className="font-semibold text-gray-900">Ms. Jennie Estoque</p>
+          <p className="text-gray-600">JIA Business Center</p>
+        </div>
       </LayoutCard>
     </div>
   </section>
