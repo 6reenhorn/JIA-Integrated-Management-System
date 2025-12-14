@@ -376,7 +376,7 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                       {onViewProducts && (
                         <button
                           onClick={() => onViewProducts(category.name)}
-                          className="w-full text-[#02367B] hover:text-[#01295a] text-sm font-medium underline transition-colors"
+                          className="w-full text-[#02367B] hover:text-[#01295a] text-sm font-medium underline transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                           View Products
                         </button>
