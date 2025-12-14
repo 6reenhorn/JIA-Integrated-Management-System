@@ -1,60 +1,56 @@
 import React from 'react';
-import DashboardCard from '../../layout/LayoutCard';
 
-interface SupportProps {
-  isHighlighted?: boolean;
-}
-
-const Support: React.FC<SupportProps> = ({ isHighlighted = false }) => (
-  <DashboardCard 
-    title="Support"
-    className={isHighlighted ? 'ring-4 ring-[#02367B] ring-opacity-50' : ''}
-  >
-    <div className="space-y-4">
-      <p className="text-gray-600">
+const Support: React.FC = () => (
+  <section id="about-support" className="scroll-mt-20">
+    <h2 className="text-3xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-[#02367B]">
+      Support
+    </h2>
+    
+    <div className="space-y-6 text-gray-700">
+      <p className="text-lg leading-relaxed">
         For technical support, bug reports, or feature requests, please contact the development team.
       </p>
       
-      <div>
-        <h4 className="text-sm font-medium text-gray-500 mb-2">Development Team Contacts:</h4>
-        <ul className="text-sm text-gray-600 space-y-2">
-          <li>
-            <strong>John Cyril G. Espina</strong> (Project Manager)
-            <br />
-            <span className="text-blue-600">johncyril.espina@1.ustp.edu.ph</span>
-          </li>
-          <li>
-            <strong>Glenn Mark R. Anino</strong> (Lead QA)
-            <br />
-            <span className="text-blue-600">glennmark.anino@1.ustp.edu.ph</span>
-          </li>
-          <li>
-            <strong>Sophia Marie M. Flores</strong> (Lead UI/UX)
-            <br />
-            <span className="text-blue-600">sophiamarie.flores@1.ustp.edu.ph</span>
-          </li>
-        </ul>
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Development Team Contacts</h3>
+        <div className="space-y-4">
+          <div>
+            <p className="font-semibold text-gray-900">John Cyril G. Espina</p>
+            <p className="text-sm text-gray-600">Project Manager</p>
+            <a href="mailto:johncyril.espina@1.ustp.edu.ph" className="text-[#02367B] hover:underline">
+              johncyril.espina@1.ustp.edu.ph
+            </a>
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900">Glenn Mark R. Anino</p>
+            <p className="text-sm text-gray-600">Lead QA</p>
+            <a href="mailto:glennmark.anino@1.ustp.edu.ph" className="text-[#02367B] hover:underline">
+              glennmark.anino@1.ustp.edu.ph
+            </a>
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900">Sophia Marie M. Flores</p>
+            <p className="text-sm text-gray-600">Lead UI/UX</p>
+            <a href="mailto:sophiamarie.flores@1.ustp.edu.ph" className="text-[#02367B] hover:underline">
+              sophiamarie.flores@1.ustp.edu.ph
+            </a>
+          </div>
+        </div>
       </div>
       
-      <div>
-        <h4 className="text-sm font-medium text-gray-500 mb-2">Project Advisor:</h4>
-        <p className="text-sm text-gray-600">
-          <strong>Prof. Marylene S. Eder</strong>
-          <br />
-          Department of Computer Science
-        </p>
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Project Advisor</h3>
+        <p className="font-semibold text-gray-900">Prof. Marylene S. Eder</p>
+        <p className="text-gray-600">Department of Computer Science</p>
       </div>
       
-      <div>
-        <h4 className="text-sm font-medium text-gray-500 mb-2">Client:</h4>
-        <p className="text-sm text-gray-600">
-          <strong>Ms. Jennie Estoque</strong>
-          <br />
-          JIA Business Center
-        </p>
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Client</h3>
+        <p className="font-semibold text-gray-900">Ms. Jennie Estoque</p>
+        <p className="text-gray-600">JIA Business Center</p>
       </div>
     </div>
-  </DashboardCard>
+  </section>
 );
 
 export default Support;
