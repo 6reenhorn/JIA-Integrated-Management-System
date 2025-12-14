@@ -190,14 +190,26 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
             <h3 className="text-[16px] font-bold">Employee Selection</h3>
             <div className='mt-2'>
               <label htmlFor="employee_select" className="text-[12px] font-bold">Employee</label>
-              <div className="dropdown relative" ref={employeeDropdownRef}>
+              <div className="dropdown relative mt-[2px]" ref={employeeDropdownRef}>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                  onClick={toggleEmployeeDropdown}
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => {
+                    toggleEmployeeDropdown();
+                    if (!isEmployeeDropdownOpen) {
+                      setTimeout(() => {
+                        document.getElementById('employee_options')?.focus();
+                      }, 0);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       toggleEmployeeDropdown();
                       e.preventDefault();
+                      if (!isEmployeeDropdownOpen) {
+                        setTimeout(() => {
+                          document.getElementById('employee_options')?.focus();
+                        }, 0);
+                      }
                     }
                   }}
                   tabIndex={0}
@@ -214,7 +226,8 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </svg>
                 </div>
                 <div
-                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
+                  id="employee_options"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md focus:outline-none"
                   style={{
                     display: isEmployeeDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -275,12 +288,24 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
               <div className="dropdown relative" ref={monthDropdownRef}>
                 <p className="text-[12px] font-bold">Month</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                  onClick={toggleMonthDropdown}
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => {
+                    toggleMonthDropdown();
+                    if (!isMonthDropdownOpen) {
+                      setTimeout(() => {
+                        document.getElementById('month_options')?.focus();
+                      }, 0);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       toggleMonthDropdown();
                       e.preventDefault();
+                      if (!isMonthDropdownOpen) {
+                        setTimeout(() => {
+                          document.getElementById('month_options')?.focus();
+                        }, 0);
+                      }
                     }
                   }}
                   tabIndex={0}
@@ -297,7 +322,8 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </svg>
                 </div>
                 <div
-                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
+                  id="month_options"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md focus:outline-none"
                   style={{
                     display: isMonthDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -351,12 +377,24 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
               <div className="dropdown relative" ref={yearDropdownRef}>
                 <p className="text-[12px] font-bold">Year</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                  onClick={toggleYearDropdown}
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => {
+                    toggleYearDropdown();
+                    if (!isYearDropdownOpen) {
+                      setTimeout(() => {
+                        document.getElementById('year_options')?.focus();
+                      }, 0);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       toggleYearDropdown();
                       e.preventDefault();
+                      if (!isYearDropdownOpen) {
+                        setTimeout(() => {
+                          document.getElementById('year_options')?.focus();
+                        }, 0);
+                      }
                     }
                   }}
                   tabIndex={0}
@@ -373,7 +411,8 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                   </svg>
                 </div>
                 <div
-                  className="custom-scroll-bar dropdown-options mt-1 rounded-md"
+                  id="year_options"
+                  className="custom-scroll-bar dropdown-options mt-1 rounded-md focus:outline-none"
                   style={{
                     display: isYearDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -431,11 +470,11 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col justify-center">
                   <label htmlFor="basic_salary" className="text-[12px] font-bold">Basic Salary</label>
-                  <input type="number" id="basic_salary" name="basic_salary" placeholder='Enter basic salary' value={basicSalary} onChange={(e) => setBasicSalary(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <input type="number" id="basic_salary" name="basic_salary" placeholder='Enter basic salary' value={basicSalary} onChange={(e) => setBasicSalary(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <label htmlFor="deductions" className="text-[12px] font-bold">Deductions</label>
-                  <input type="number" id="deductions" name="deductions" placeholder='Enter deductions' value={deductions} onChange={(e) => setDeductions(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                  <input type="number" id="deductions" name="deductions" placeholder='Enter deductions' value={deductions} onChange={(e) => setDeductions(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
               </div>
               <div className='mt-2'>
@@ -451,12 +490,24 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                 <div className="dropdown relative" ref={statusDropdownRef}>
                   <p className="text-[12px] font-bold">Status</p>
                   <div
-                    className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                    onClick={toggleStatusDropdown}
+                    className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onClick={() => {
+                      toggleStatusDropdown();
+                      if (!isStatusDropdownOpen) {
+                        setTimeout(() => {
+                          document.getElementById('status_options')?.focus();
+                        }, 0);
+                      }
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         toggleStatusDropdown();
                         e.preventDefault();
+                        if (!isStatusDropdownOpen) {
+                          setTimeout(() => {
+                            document.getElementById('status_options')?.focus();
+                          }, 0);
+                        }
                       }
                     }}
                     tabIndex={0}
@@ -473,7 +524,8 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
                     </svg>
                   </div>
                   <div
-                    className="dropdown-options mt-1 rounded-md"
+                    id="status_options"
+                    className="dropdown-options mt-1 rounded-md focus:outline-none"
                     style={{
                       display: isStatusDropdownOpen ? 'block' : 'none',
                       position: 'absolute',
@@ -576,12 +628,12 @@ const AddPayrollModal = ({ onClose, onAddPayroll, employees }: AddPayrollModalPr
       </div>
       <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
         <button 
-          className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
+          className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-[6px] focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={handleClose}>
           Cancel
         </button>
         <button
-          className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E]' : 'bg-gray-400 cursor-not-allowed'}`}
+          className={`border border-gray-300 rounded-md px-3 py-1 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E]' : 'bg-gray-400 cursor-not-allowed'}`}
           onClick={() => {
             if (isFormValid && !isSaving && onAddPayroll && selectedEmployee) {
               setIsSaving(true);

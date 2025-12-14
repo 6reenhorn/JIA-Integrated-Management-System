@@ -891,7 +891,8 @@ const AddStaffModal = ({
           Cancel
         </button>
         <button
-          className={`border border-gray-300 rounded-md px-3 py-[6px] text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E]' : 'bg-gray-400 cursor-not-allowed'}`}
+          className={`border border-gray-300 rounded-md px-3 py-[6px] text-white focus:outline-none ${isFormValid ? 'bg-[#02367B] hover:bg-[#1C4A9E]  focus:ring-2 focus:ring-blue-500' : 'bg-gray-400 cursor-not-allowed'}`}
+          tabIndex={isSaving? 0 : -1}
           onClick={() => {
             if (!isSaving && onAddEmployee) {
               // Validate form before submission
