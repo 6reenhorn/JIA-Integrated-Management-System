@@ -9,7 +9,7 @@ import Settings from '../components/support/settings/Settings';
 import About from '../components/support/about/About';
 import Navbar from '../navbar/navbar';
 import CheckIn from '../components/common/CheckIn';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useAuth } from '../context/AuthContext';
 
 // Define the section information type
 interface SectionInfo {
@@ -90,6 +90,21 @@ const Dashboard: React.FC = () => {
     };
     setActiveItem(sectionToActiveItem[section] || 'employees');
     updateCurrentSection('employees', section);
+  };
+
+  // Handler for About section changes from scroll spy
+  const handleAboutSectionChange = (section: string) => {
+    const sectionToActiveItem: Record<string, string> = {
+      'main': 'about-main',
+      'version': 'about-version',
+      'support': 'about-support',
+      'licenses': 'about-license'
+    };
+    const newActiveItem = sectionToActiveItem[section] || 'about-main';
+    if (activeItem !== newActiveItem) {
+      setActiveItem(newActiveItem);
+      updateCurrentSection('about', section);
+    }
   };
 
   // Function to handle sidebar item clicks
@@ -188,18 +203,17 @@ const Dashboard: React.FC = () => {
       } else if (activeItem === 'about-license') {
         section = 'licenses';
       }
-      return <About activeSection={section} />;
+      return <About activeSection={section} onSectionChange={handleAboutSectionChange} />;
     }
 
     // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
-        // Add key to force remount and refetch when dashboard is opened
         return <Overview key={`dashboard-${dashboardKey}`} />;
       case 'settings':
         return <Settings />;
       case 'about':
-        return <About activeSection="main" />;
+        return <About activeSection="main" onSectionChange={handleAboutSectionChange} />;
       default:
         return <Overview key={`dashboard-${dashboardKey}`} />;
     }
@@ -362,21 +376,18 @@ const Dashboard: React.FC = () => {
   const handleCheckOut = async () => {
     if (!currentUser) {
       console.error('No user logged in');
-      checkOut(); // Still logout even if no user
+      checkOut();
       return;
     }
 
     try {
-      // Call checkout API to update attendance record
       await axios.post('http://localhost:3001/api/attendance/checkout', {
         employeeId: currentUser.id
       });
       
-      // After successful checkout, clear the session
       checkOut();
     } catch (error: any) {
       console.error('Error during check-out:', error);
-      // Even if API call fails, still logout the user
       checkOut();
     }
   };
@@ -420,19 +431,16 @@ const Dashboard: React.FC = () => {
                     {showCheckOutConfirm && (
                       <div className='absolute top-full right-0 mt-3 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl shadow-2xl p-6 w-80 z-50 animate-in fade-in slide-in-from-top-2 duration-200'>
                         <div className='flex flex-col items-center'>
-                          {/* Warning Icon */}
                           <div className='w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3'>
                             <svg className='w-6 h-6 text-red-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' />
                             </svg>
                           </div>
                           
-                          {/* Message */}
                           <p className='text-gray-800 text-base mb-5 text-center font-semibold leading-relaxed'>
                             Are you sure you want to check out?
                           </p>
                           
-                          {/* Buttons */}
                           <div className='flex gap-3 w-full'>
                             <button
                               onClick={() => setShowCheckOutConfirm(false)}
