@@ -15,10 +15,15 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [roleFocusIndex, setRoleFocusIndex] = useState(-1);
+  const [statusFocusIndex, setStatusFocusIndex] = useState(-1);
+  
   const buttonRef = useRef<HTMLButtonElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const roleOptionsRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const statusOptionsRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const toggleFilters = () => {
     if (isFiltersOpen) {
@@ -31,21 +36,101 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
       setIsFiltersOpen(true);
     }
   };
-  const toggleRoleDropdown = () => setIsRoleDropdownOpen(!isRoleDropdownOpen);
-  const toggleStatusDropdown = () => setIsStatusDropdownOpen(!isStatusDropdownOpen);
+  
+  const toggleRoleDropdown = () => {
+    setIsRoleDropdownOpen(!isRoleDropdownOpen);
+    setRoleFocusIndex(-1);
+  };
+  
+  const toggleStatusDropdown = () => {
+    setIsStatusDropdownOpen(!isStatusDropdownOpen);
+    setStatusFocusIndex(-1);
+  };
 
   const handleRoleOptionClick = (role: string) => {
     onRoleChange(role);
     setIsRoleDropdownOpen(false);
+    setRoleFocusIndex(-1);
   };
 
   const handleStatusOptionClick = (status: string) => {
     onStatusChange(status);
     setIsStatusDropdownOpen(false);
+    setStatusFocusIndex(-1);
   };
 
   const roleOptions = ['All Roles', 'Admin', 'General Manager', 'Inventory Manager', 'E-Wallet Recorder', 'Inventory Transaction Manager'];
   const statusOptions = ['All Status', 'Active', 'Inactive'];
+
+  // Handle role dropdown keyboard navigation
+  const handleRoleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isRoleDropdownOpen && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      toggleRoleDropdown();
+      return;
+    }
+
+    if (!isRoleDropdownOpen) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setRoleFocusIndex(prev => {
+          const next = prev < roleOptions.length - 1 ? prev + 1 : 0;
+          roleOptionsRefs.current[next]?.focus();
+          return next;
+        });
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setRoleFocusIndex(prev => {
+          const next = prev > 0 ? prev - 1 : roleOptions.length - 1;
+          roleOptionsRefs.current[next]?.focus();
+          return next;
+        });
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsRoleDropdownOpen(false);
+        setRoleFocusIndex(-1);
+        break;
+    }
+  };
+
+  // Handle status dropdown keyboard navigation
+  const handleStatusKeyDown = (e: React.KeyboardEvent) => {
+    if (!isStatusDropdownOpen && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      toggleStatusDropdown();
+      return;
+    }
+
+    if (!isStatusDropdownOpen) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setStatusFocusIndex(prev => {
+          const next = prev < statusOptions.length - 1 ? prev + 1 : 0;
+          statusOptionsRefs.current[next]?.focus();
+          return next;
+        });
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setStatusFocusIndex(prev => {
+          const next = prev > 0 ? prev - 1 : statusOptions.length - 1;
+          statusOptionsRefs.current[next]?.focus();
+          return next;
+        });
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsStatusDropdownOpen(false);
+        setStatusFocusIndex(-1);
+        break;
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -60,9 +145,11 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
       }
       if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target as Node)) {
         setIsRoleDropdownOpen(false);
+        setRoleFocusIndex(-1);
       }
       if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
         setIsStatusDropdownOpen(false);
+        setStatusFocusIndex(-1);
       }
     };
 
@@ -76,11 +163,11 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
         <button
           ref={buttonRef}
           onClick={toggleFilters}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           <svg viewBox="0 0 1000 1000" data-name="Layer 2" id="Layer_2" xmlns="http://www.w3.org/2000/svg" fill="#000000" className="w-5 h-5">
-            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+            <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+            <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
             <g id="SVGRepo_iconCarrier">
               <defs><style>{`.cls-1{fill:none;stroke:#020202;stroke-linecap:round;stroke-miterlimit:10;stroke-width:22px;}`}</style></defs>
               <line className="cls-1" x1="184.63" x2="312.9" y1="292.84" y2="292.84"></line>
@@ -101,8 +188,10 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
             <div className={`bg-white p-4 rounded-md shadow-md flex flex-col gap-2 ${isAnimating ? 'animate-dropdown-out' : 'animate-dropdown-in'}`}>
               <div className="dropdown relative text-[15px]" ref={roleDropdownRef}>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[185px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[185px] h-[36px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   onClick={toggleRoleDropdown}
+                  onKeyDown={handleRoleKeyDown}
+                  tabIndex={0}
                 >
                   {roleFilter}
                   <svg
@@ -116,7 +205,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  className="dropdown-options mt-1 rounded-md focus:outline-none"
                   style={{
                     display: isRoleDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -132,11 +221,33 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
                     boxSizing: 'border-box'
                   }}
                 >
-                  {roleOptions.map((option) => (
+                  {roleOptions.map((option, index) => (
                     <div
                       key={option}
-                      className="option text-[14px] px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      ref={el => {roleOptionsRefs.current[index] = el}}
+                      className="option text-[14px] px-4 py-2 hover:bg-gray-100 cursor-pointer focus:outline-none focus-visible:bg-blue-50"
                       onClick={() => handleRoleOptionClick(option)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleRoleOptionClick(option);
+                        } else if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const nextIndex = index < roleOptions.length - 1 ? index + 1 : 0;
+                          roleOptionsRefs.current[nextIndex]?.focus();
+                          setRoleFocusIndex(nextIndex);
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          const prevIndex = index > 0 ? index - 1 : roleOptions.length - 1;
+                          roleOptionsRefs.current[prevIndex]?.focus();
+                          setRoleFocusIndex(prevIndex);
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setIsRoleDropdownOpen(false);
+                          setRoleFocusIndex(-1);
+                        }
+                      }}
+                      tabIndex={0}
                     >
                       {option}
                     </div>
@@ -145,8 +256,10 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
               </div>
               <div className="dropdown relative text-[15px]" ref={statusDropdownRef}>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[185px] h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 border-[#E5E7EB] rounded-md px-4 py-2 text-gray-600 hover:bg-gray-200 cursor-pointer w-[185px] h-[36px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   onClick={toggleStatusDropdown}
+                  onKeyDown={handleStatusKeyDown}
+                  tabIndex={0}
                 >
                   {statusFilter}
                   <svg
@@ -176,11 +289,33 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
                     boxSizing: 'border-box'
                   }}
                 >
-                  {statusOptions.map((option) => (
+                  {statusOptions.map((option, index) => (
                     <div
                       key={option}
-                      className="option text-[14px] px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      ref={el => {statusOptionsRefs.current[index] = el}}
+                      className="option text-[14px] px-4 py-2 hover:bg-gray-100 cursor-pointer focus:outline-none focus-visible:bg-blue-50"
                       onClick={() => handleStatusOptionClick(option)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleStatusOptionClick(option);
+                        } else if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const nextIndex = index < statusOptions.length - 1 ? index + 1 : 0;
+                          statusOptionsRefs.current[nextIndex]?.focus();
+                          setStatusFocusIndex(nextIndex);
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          const prevIndex = index > 0 ? index - 1 : statusOptions.length - 1;
+                          statusOptionsRefs.current[prevIndex]?.focus();
+                          setStatusFocusIndex(prevIndex);
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setIsStatusDropdownOpen(false);
+                          setStatusFocusIndex(-1);
+                        }
+                      }}
+                      tabIndex={0}
                     >
                       {option}
                     </div>
@@ -191,7 +326,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
               {/* Reset Button */}
               <button
                 onClick={onReset}
-                className="w-full text-sm px-4 mt-4 py-2 bg-gray-500 border-2 border-gray-600 text-white rounded-sm hover:bg-gray-600 focus:outline-none flex-shrink-0"
+                className="w-full text-sm px-4 mt-4 py-2 bg-gray-500 border-2 border-gray-600 text-white rounded-sm hover:bg-gray-600 focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-600 flex-shrink-0"
               >
                 Reset Filters
               </button>
@@ -201,7 +336,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
       </div>
       <button
         onClick={onAddStaff}
-        className='flex items-center gap-2 text-[14px] py-2 bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 py-2 text-white hover:bg-[#1C4A9E] flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500'
+        className='flex items-center gap-2 text-[14px] py-2 bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 py-2 text-white hover:bg-[#1C4A9E] flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500'
       >
         <Plus className="w-4 h-4 mr-2" />
         Add Staff

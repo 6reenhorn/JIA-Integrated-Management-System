@@ -345,7 +345,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
                     fieldErrors.firstName
                       ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'
+                      : 'border-gray-300 focus:ring-blue-500'
                   }`} 
                 />
               </div>
@@ -363,7 +363,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   className={`w-full border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
                     fieldErrors.lastName
                       ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'
+                      : 'border-gray-300 focus:ring-blue-500'
                   }`} 
                 />
               </div>
@@ -371,7 +371,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div className="flex flex-col justify-center">
                 <label htmlFor="edited_email_address" className="text-[12px] font-bold">Email Address</label>
-                <input type="text" id="edited_email_address" name="edited_email_address" value={email} onChange={(e) => setEmail(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
+                <input type="text" id="edited_email_address" name="edited_email_address" value={email} onChange={(e) => setEmail(e.target.value)} className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
               </div>
               <div className="flex flex-col justify-center">
                 <label htmlFor="edited_phone_number" className="text-[12px] font-bold">Phone Number</label>
@@ -384,14 +384,14 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
                     fieldErrors.phone
                       ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                      : 'border-gray-300 focus:ring-blue-500'
                   }`}
                 />
               </div>
             </div>
             <div className="mt-2">
               <label htmlFor="employee_address" className="text-[12px] font-bold">Address</label>
-              <textarea name="employee_address" id="employee_address" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"></textarea>
+              <textarea name="employee_address" id="employee_address" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
             </div>
           </div>
           <div className="shadow-md shadow-gray-200 rounded-md m-1 p-4 text-[12px]">
@@ -400,12 +400,24 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               <div className="dropdown relative" ref={statusDropdownRef}>
                 <p className="text-[12px] font-bold">Status</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                  onClick={toggleStatusDropdown}
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => {
+                    toggleStatusDropdown();
+                    if (!isStatusDropdownOpen) {
+                      setTimeout(() => {
+                        document.getElementById('status-dropdown-options')?.focus();
+                      }, 0);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       toggleStatusDropdown();
                       e.preventDefault();
+                      if (!isStatusDropdownOpen) {
+                        setTimeout(() => {
+                          document.getElementById('status-dropdown-options')?.focus();
+                        }, 0);
+                      }
                     }
                   }}
                   tabIndex={0}
@@ -422,7 +434,8 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  id="status-dropdown-options"
+                  className="dropdown-options mt-1 rounded-md focus:outline-none"
                   style={{
                     display: isStatusDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -489,12 +502,24 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               <div className="dropdown relative" ref={roleDropdownRef}>
                 <p className="text-[12px] font-bold">Role</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                  onClick={toggleRoleDropdown}
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => {
+                    toggleRoleDropdown();
+                    if (!isRoleDropdownOpen) {
+                      setTimeout(() => {
+                        document.getElementById('role-dropdown-options')?.focus();
+                      }, 0);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       toggleRoleDropdown();
                       e.preventDefault();
+                      if (!isRoleDropdownOpen) {
+                        setTimeout(() => {
+                          document.getElementById('role-dropdown-options')?.focus();
+                        }, 0);
+                      }
                     }
                   }}
                   tabIndex={0}
@@ -511,7 +536,8 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  id="role-dropdown-options"
+                  className="dropdown-options mt-1 rounded-md focus:outline-none"
                   style={{
                     display: isRoleDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -552,7 +578,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   tabIndex={isRoleDropdownOpen ? 0 : -1}
                 >
                   <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 1 ? 'bg-blue-100' : ''}`}
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 0 ? 'bg-blue-100' : ''}`}
                     data-value="admin"
                     onClick={() => handleRoleOptionClick('admin', 'Admin')}
                     onKeyDown={(e) => {
@@ -565,7 +591,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                     Admin
                   </div>
                   <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 0 ? 'bg-blue-100' : ''}`}
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRoleOption === 1 ? 'bg-blue-100' : ''}`}
                     data-value="general_manager"
                     onClick={() => handleRoleOptionClick('general_manager', 'General Manager')}
                     onKeyDown={(e) => {
@@ -630,7 +656,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                 className={`border rounded-md w-full px-2 py-1 focus:ring-2 focus:outline-none ${
                   fieldErrors.salary
                     ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                    : 'border-gray-300 focus:ring-blue-500'
                 }`}
               />
             </div>
@@ -652,7 +678,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
                     fieldErrors.contactName
                       ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                      : 'border-gray-300 focus:ring-blue-500'
                   }`}
                 />
               </div>
@@ -667,7 +693,7 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none w-full ${
                     fieldErrors.contactNumber
                       ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                      : 'border-gray-300 focus:ring-blue-500'
                   }`}
                 />
               </div>
@@ -676,12 +702,24 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
               <div className="dropdown relative" ref={relationshipDropdownRef}>
                 <p className="text-[12px] font-bold">Relationship</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                  onClick={toggleRelationshipDropdown}
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => {
+                    toggleRelationshipDropdown();
+                    if (!isRelationshipDropdownOpen) {
+                      setTimeout(() => {
+                        document.getElementById('relationship-dropdown-options')?.focus();
+                      }, 0);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       toggleRelationshipDropdown();
                       e.preventDefault();
+                      if (!isRelationshipDropdownOpen) {
+                        setTimeout(() => {
+                          document.getElementById('relationship-dropdown-options')?.focus();
+                        }, 0);
+                      }
                     }
                   }}
                   tabIndex={0}
@@ -698,7 +736,8 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options -mt-1 rounded-md"
+                  id="relationship-dropdown-options"
+                  className="dropdown-options -mt-1 rounded-md focus:outline-none"
                   style={{
                     display: isRelationshipDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -808,17 +847,17 @@ const EditStaffDetailsModal: React.FC<EditStaffModalProps> = ({ employee, onClos
             </div>
           </div>
         </form>
-        <div className="w-full flex justify-end gap-2 mt-4 text-[12px] font-bold">
-        <button
-          onClick={handleClose}
-          type="button"
-          className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1"
-        >
-          Cancel
-        </button>
+        <div className="w-full flex justify-end gap-2 mt-4 p-1 text-[12px] font-bold">
+          <button
+            onClick={handleClose}
+            type="button"
+            className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-[6px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Cancel
+          </button>
           <button 
             type="button"
-            className={`border border-gray-300 rounded-md px-3 py-1 text-white ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} 
+            className={`border border-gray-300 rounded-md px-3 py-1 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#02367B] hover:bg-[#1C4A9E]'}`} 
             disabled={isSaving}
             onClick={(e) => {
               // Ensure form submission works on mobile devices
