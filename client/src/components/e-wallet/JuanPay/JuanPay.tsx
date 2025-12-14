@@ -214,7 +214,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
                   placeholder="Search Records"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-[360px]"
                 />
               </div>
               <RefreshBtn onClick={handleRefresh} isSpinning={isRefreshing} />
@@ -232,14 +232,14 @@ const JuanPay: React.FC<JuanPayProps> = ({
                   <CustomDatePicker
                     selected={filterDate}
                     onChange={(date: Date | null) => setFilterDate(date)}
-                    className="text-sm"
+                    className="text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     dateFormat="MM/dd/yyyy"
                   />
                 </div>
                 {filterDate && (
                   <button
                     onClick={() => setFilterDate(null)}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                     title="Clear date filter"
                   >
                     <X className="w-4 h-4" />
@@ -250,7 +250,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
             
             <button
               onClick={onOpenModal}
-              className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
+              className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#1C4A9E] focus:outline-none focus:ring-1 focus:ring-blue-500 flex-shrink-0"
             >
               <Plus className="w-4 h-4" />
               Add Record
@@ -279,7 +279,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
           <button
             onClick={() => handlePageChange(1)}
             disabled={currentPage === 1 || filteredRecords.length === 0}
-            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -294,7 +294,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1 || filteredRecords.length === 0}
-            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -322,7 +322,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
               <button
                 key={pageNum}
                 onClick={() => handlePageChange(pageNum)}
-                className={`px-3 py-1 text-sm rounded ${
+                className={`px-3 py-1 text-sm rounded focus:outline-none ${
                   currentPage === pageNum
                     ? 'bg-[#02367B] text-white'
                     : 'border border-gray-300 hover:bg-gray-50'
@@ -336,7 +336,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || filteredRecords.length === 0}
-            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -351,7 +351,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
           <button
             onClick={() => handlePageChange(totalPages)}
             disabled={currentPage === totalPages || filteredRecords.length === 0}
-            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
