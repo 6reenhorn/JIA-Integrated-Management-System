@@ -24,7 +24,7 @@ const DateFormatSettings: React.FC = () => {
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between px-4 py-3 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
+          className="w-full flex items-center justify-between px-4 py-3 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           <div className="flex flex-col items-start">
             <span className="font-medium text-gray-900">{currentFormat.label}</span>
