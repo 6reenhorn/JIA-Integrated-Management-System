@@ -8,17 +8,36 @@ const router = express.Router();
 const formatDateForResponse = (dateStr) => {
   if (!dateStr) return null;
   try {
-    // If it's already an ISO string, return it
-    if (dateStr.includes('T')) {
-      return dateStr;
-    }
-    // If it's just a date string (YYYY-MM-DD), convert to ISO
-    const date = new Date(dateStr + 'T00:00:00');
-    if (isNaN(date.getTime())) return dateStr;
-    return date.toISOString();
+    const s = String(dateStr).trim();
+    // If it's a plain date (YYYY-MM-DD), return as-is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+    // Parse datetime/ISO and convert to Philippines local date (Asia/Manila)
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return dateStr;
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    return formatter.format(d);
   } catch {
     return dateStr;
   }
+};
+
+// Normalize input date for storage as YYYY-MM-DD in Asia/Manila
+const normalizeDateForStorage = (input) => {
+  if (!input) return null;
+  const s = String(input).trim();
+  // If already YYYY-MM-DD, return as-is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Try parse and format in Asia/Manila
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' });
+  return fmt.format(d);
 };
 
 // ============================================
@@ -254,10 +273,11 @@ router.post('/sales', async (req, res) => {
       [newStock, newStatus, newTotalAmount, prod.id]
     );
 
-    // Create sales record
+    // Create sales record - normalize date to Manila YYYY-MM-DD to avoid timezone shifts
+    const normalizedDate = normalizeDateForStorage(date);
     const total = quantity * price;
     const info = await dbHelper.insert('sales_records', {
-      date,
+      date: normalizedDate,
       product_name: productName,
       quantity,
       price,
