@@ -87,7 +87,7 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({
               key={idx}
               className={`px-3 py-1 text-sm rounded ${
                 currentPage === page 
-                  ? 'bg-[#02367B] text-white' 
+                  ? 'bg-[#02367B] text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500' 
                   : 'border border-gray-300 hover:bg-gray-50'
               }`}
               onClick={() => currentPage !== page && onPageChange(page)}
@@ -103,7 +103,7 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({
         <button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -117,7 +117,7 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({
         <button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(totalPages)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path

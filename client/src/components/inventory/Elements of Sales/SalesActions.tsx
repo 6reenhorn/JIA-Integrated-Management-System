@@ -93,7 +93,7 @@ const SalesActions: React.FC<SalesActionsProps> = ({
               disabled={isLoading}
               className={`px-3 py-1 text-sm rounded transition-opacity ${
                 currentPage === page 
-                  ? 'bg-[#02367B] text-white' 
+                  ? 'bg-[#02367B] text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500' 
                   : 'border border-gray-300 hover:bg-gray-50'
               } ${isLoading && currentPage !== page ? 'opacity-50 cursor-not-allowed' : isLoading ? 'cursor-not-allowed' : ''}`}
               onClick={() => !isLoading && currentPage !== page && onPageChange(page)}
@@ -109,7 +109,7 @@ const SalesActions: React.FC<SalesActionsProps> = ({
         <button
           disabled={currentPage === totalPages || isLoading}
           onClick={() => !isLoading && onPageChange(currentPage + 1)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -123,7 +123,7 @@ const SalesActions: React.FC<SalesActionsProps> = ({
         <button
           disabled={currentPage === totalPages || isLoading}
           onClick={() => !isLoading && onPageChange(totalPages)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500"
         >
           <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path

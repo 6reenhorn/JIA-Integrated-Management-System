@@ -140,7 +140,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
 
       <div className="flex items-center justify-between mt-5 w-full">
         {/* Left side: Search and Refresh button */}
-        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -148,7 +148,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               placeholder={config.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 w-full sm:w-[360px]"
             />
           </div>
           {onRefresh && <RefreshBtn onClick={onRefresh} isSpinning={isRefreshing} />}
@@ -160,7 +160,8 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div className="relative text-[15px]" ref={dropdownRef}>
               <div
                 onClick={toggleDropdown}
-                className="relative flex items-center justify-between bg-[#02367B] text-white rounded-lg px-4 py-2 hover:bg-[#1C4A9E] cursor-pointer w-full min-w-[140px] h-[36px] focus:outline-none font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+                tabIndex={0}
+                className="relative flex items-center justify-between bg-[#02367B] text-white rounded-lg px-4 py-2 hover:bg-[#1C4A9E] cursor-pointer w-full min-w-[140px] h-[36px] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 font-medium transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 <span className="truncate">{getDisplayText()}</span>
                 <svg
@@ -215,7 +216,7 @@ const InventoryFilters: React.FC<InventoryFiltersProps> = ({
 
           <button
             onClick={handleAddClick}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0  focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500" 
           >
             <Plus className="w-4 h-4" />
             {config.addButtonText}
