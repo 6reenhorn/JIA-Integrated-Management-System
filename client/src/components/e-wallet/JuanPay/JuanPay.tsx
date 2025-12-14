@@ -93,6 +93,7 @@ const JuanPay: React.FC<JuanPayProps> = ({
       setIsRefreshing(true);
       try {
         await onRefresh();
+        await new Promise(resolve => setTimeout(resolve, 500));
       } finally {
         setIsRefreshing(false);
       }

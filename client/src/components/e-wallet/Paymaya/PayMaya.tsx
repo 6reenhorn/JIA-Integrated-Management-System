@@ -78,6 +78,7 @@ const PayMaya: React.FC<PayMayaProps> = ({
       setIsRefreshing(true);
       try {
         await onRefresh();
+        await new Promise(resolve => setTimeout(resolve, 500));
       } finally {
         setIsRefreshing(false);
       }
