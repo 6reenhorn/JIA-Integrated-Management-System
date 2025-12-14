@@ -46,6 +46,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
     }
   }, [activeItem, expanded]);
 
+  useEffect(() => {
+    if (expanded !== null) {
+      // Wait for the transition to complete (150ms as defined in className)
+      const timer = setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 150);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [expanded, isCollapsed]);
+
   const mainMenuItems: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, category: 'Main Menu', requiresAuth: false },
     { id: 'inventory', label: 'Inventory', icon: <Package size={20} />, page: 'inventory' as const },
@@ -216,6 +227,8 @@ const renderMenuItem = (item: MenuItem) => {
               return;
             }
 
+            window.dispatchEvent(new Event('resize'));
+
             // Always update expanded state and trigger item click
             setExpanded(item.id);
             onItemClick(item.id);
@@ -285,6 +298,8 @@ const renderMenuItem = (item: MenuItem) => {
                   return;
                 }
 
+                window.dispatchEvent(new Event('resize'));
+
                 // For inventory, clicking the main button should go to inventory section
                 if (itemId === 'inventory') {
                   // Don't allow re-clicking if already on main inventory section
@@ -342,6 +357,7 @@ const renderMenuItem = (item: MenuItem) => {
                             if (isItemActive(section.id)) {
                               return;
                             }
+                            window.dispatchEvent(new Event('resize'));
                             onItemClick(section.id);
                             setExpanded(itemId);
                           }
@@ -384,6 +400,7 @@ const renderMenuItem = (item: MenuItem) => {
         <div 
           className="w-8 h-8 flex items-center justify-center mb-4 rounded-lg transition-colors duration-200 mx-auto cursor-pointer" 
           onClick={() => {
+            window.dispatchEvent(new Event('resize'));
             onToggle(); // Toggle the collapsed state
             if (isCollapsed) {
               // If we're currently collapsed and opening, set expanded state

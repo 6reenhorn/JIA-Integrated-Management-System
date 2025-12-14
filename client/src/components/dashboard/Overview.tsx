@@ -21,6 +21,9 @@ const Overview: React.FC = () => {
   const [paymayaRecords, setPaymayaRecords] = useState<any[]>([]);
   const [juanpayRecords, setJuanpayRecords] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Track if component is mounted to avoid duplicate fetches
   const hasFetchedRef = useRef(false);
@@ -170,6 +173,33 @@ const Overview: React.FC = () => {
       fetchAllData();
     }
   }, [fetchAllData]); // Fetch data when component mounts or remounts
+
+  // Handle window resize events (triggered by sidebar expansion)
+  useEffect(() => {
+    const handleResize = () => {
+      // Set resizing flag
+      setIsResizing(true);
+      
+      // Clear existing timeout
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      
+      // Wait for resize to complete before re-rendering charts
+      resizeTimeoutRef.current = setTimeout(() => {
+        setIsResizing(false);
+      }, 200);
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Also refetch when component becomes visible (debounced to prevent excessive calls)
   useEffect(() => {
@@ -630,53 +660,59 @@ const Overview: React.FC = () => {
               ))}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={revenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="name" 
-                stroke="#6b7280"
-                style={{ fontSize: '12px' }}
-              />
-              <YAxis 
-                stroke="#6b7280"
-                tickFormatter={formatYAxis}
-                domain={revenueDomain}
-                style={{ fontSize: '12px' }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px'
-                }}
-                formatter={(value: any, name: string) => [
-                  `₱${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                  name === 'revenue' ? 'Revenue' : 'Expenses'
-                ]}
-                labelFormatter={(label) => `Day: ${label}`}
-              />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="#3B82F6" 
-                strokeWidth={2.5}
-                dot={{ fill: '#3B82F6', r: 4 }}
-                activeDot={{ r: 6 }}
-                name="Revenue" 
-              />
-              <Line 
-                type="monotone" 
-                dataKey="expenses" 
-                stroke="#EF4444" 
-                strokeWidth={2.5}
-                dot={{ fill: '#EF4444', r: 4 }}
-                activeDot={{ r: 6 }}
-                name="Expenses" 
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {!isResizing ? (
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={revenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="name"
+                  stroke="#6b7280"
+                  style={{ fontSize: '12px' }}
+                />
+                <YAxis
+                  stroke="#6b7280"
+                  tickFormatter={formatYAxis}
+                  domain={revenueDomain}
+                  style={{ fontSize: '12px' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value: any, name: string) => [
+                    `₱${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    name === 'revenue' ? 'Revenue' : 'Expenses'
+                  ]}
+                  labelFormatter={(label) => `Day: ${label}`}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#3B82F6"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#3B82F6', r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Revenue"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="expenses"
+                  stroke="#EF4444"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#EF4444', r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Expenses"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[400px]">
+              <div className="text-gray-400">Resizing...</div>
+            </div>
+          )}
         </LayoutCard>
 
         {/* Sales by Category */}
@@ -684,26 +720,32 @@ const Overview: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Sales by Category</h3>
           {categoryData.length > 0 ? (
             <>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  {/* Custom renderLabel to add lines and smaller text */}
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    labelLine={true}
-                    label={renderCustomizedLabel}
-                  >
-                    {categoryData.map((_entry, index) => (
-                      <Cell key={`cell-${index}`} fill={categoryColors[index % categoryColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {!isResizing ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    {/* Custom renderLabel to add lines and smaller text */}
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      labelLine={true}
+                      label={renderCustomizedLabel}
+                    >
+                      {categoryData.map((_entry, index) => (
+                        <Cell key={`cell-${index}`} fill={categoryColors[index % categoryColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[250px]">
+                  <div className="text-gray-400">Resizing...</div>
+                </div>
+              )}
               <div className="mt-4 space-y-2">
                 {categoryData.map((item, index) => (
                   <div key={index} className="flex items-center justify-between text-sm">
@@ -746,24 +788,30 @@ const Overview: React.FC = () => {
               ))}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={ewalletData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px'
-                }}
-              />
-              <Legend content={<CustomLegend />} />
-              <Bar dataKey="gcash" fill={ewalletColors[0]} radius={[4, 4, 0, 0]} name="GCash" />
-              <Bar dataKey="paymaya" fill={ewalletColors[1]} radius={[4, 4, 0, 0]} name="PayMaya" />
-              <Bar dataKey="juanpay" fill={ewalletColors[2]} radius={[4, 4, 0, 0]} name="JuanPay" />
-            </BarChart>
-          </ResponsiveContainer>
+          {!isResizing ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={ewalletData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend content={<CustomLegend />} />
+                <Bar dataKey="gcash" fill={ewalletColors[0]} radius={[4, 4, 0, 0]} name="GCash" />
+                <Bar dataKey="paymaya" fill={ewalletColors[1]} radius={[4, 4, 0, 0]} name="PayMaya" />
+                <Bar dataKey="juanpay" fill={ewalletColors[2]} radius={[4, 4, 0, 0]} name="JuanPay" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[300px]">
+              <div className="text-gray-400">Resizing...</div>
+            </div>
+          )}
         </LayoutCard>
 
         {/* Top Products - Table Style */}
