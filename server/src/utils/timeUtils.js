@@ -8,12 +8,13 @@
  * @returns ISO string in PH local time
  */
 function getPHLocalTimeISO() {
-  const now = new Date();
-  // Philippines is UTC+8
-  const phOffset = 8 * 60; // 8 hours in minutes
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const phTime = new Date(utc + (phOffset * 60000));
-  return phTime.toISOString();
+  // Store timestamps as standard UTC ISO strings (toISOString()).
+  // Avoid creating a Date object that represents the PH local clock then
+  // calling toISOString() (that produces a different instant). Always
+  // return the current instant in UTC so it remains unambiguous across
+  // processes and databases. Formatting to PH local time should be done
+  // at display time (frontend or when formatting for users).
+  return new Date().toISOString();
 }
 
 /**
@@ -21,16 +22,28 @@ function getPHLocalTimeISO() {
  * @returns Date string in YYYY-MM-DD format
  */
 function getPHLocalDate() {
+  // Compute the current date in Philippines local date (YYYY-MM-DD)
+  // Use Intl.DateTimeFormat with timeZone to get a stable PH date regardless
+  // of server timezone.
   const now = new Date();
-  // Philippines is UTC+8
-  const phOffset = 8 * 60; // 8 hours in minutes
+  const parts = new Intl.DateTimeFormat('en-CA', { // en-CA uses YYYY-MM-DD order
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(now);
+
+  const y = parts.find(p => p.type === 'year')?.value;
+  const m = parts.find(p => p.type === 'month')?.value;
+  const d = parts.find(p => p.type === 'day')?.value;
+  if (y && m && d) return `${y}-${m}-${d}`;
+  // Fallback: compute by shifting to Manila timezone
   const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const phTime = new Date(utc + (phOffset * 60000));
-  
+  const phOffsetMs = 8 * 60 * 60 * 1000;
+  const phTime = new Date(utc + phOffsetMs);
   const year = phTime.getUTCFullYear();
   const month = String(phTime.getUTCMonth() + 1).padStart(2, '0');
   const day = String(phTime.getUTCDate()).padStart(2, '0');
-  
   return `${year}-${month}-${day}`;
 }
 
@@ -40,11 +53,12 @@ function getPHLocalDate() {
  * @returns ISO string in PH local time
  */
 function toPHLocalTimeISO(date) {
+  // Convert a Date or date string to an ISO string representing the same
+  // absolute instant (UTC). If callers want a PH-local formatted string,
+  // they should format using Intl.DateTimeFormat with timeZone 'Asia/Manila'.
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const phOffset = 8 * 60; // 8 hours in minutes
-  const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
-  const phTime = new Date(utc + (phOffset * 60000));
-  return phTime.toISOString();
+  if (!dateObj || isNaN(dateObj.getTime())) return null;
+  return dateObj.toISOString();
 }
 
 module.exports = {

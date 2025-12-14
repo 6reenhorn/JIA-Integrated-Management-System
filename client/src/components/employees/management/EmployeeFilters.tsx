@@ -201,7 +201,7 @@ const EmployeeFilters = ({ onAddStaff, roleFilter, statusFilter, onRoleChange, o
       </div>
       <button
         onClick={onAddStaff}
-        className='flex items-center gap-2 text-[14px] h-[36px] bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 py-2 text-white hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0'
+        className='flex items-center gap-2 text-[14px] py-2 bg-[#02367B] border-2 border-[#1C4A9E] rounded-md px-4 py-2 text-white hover:bg-[#1C4A9E] flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500'
       >
         <Plus className="w-4 h-4 mr-2" />
         Add Staff
