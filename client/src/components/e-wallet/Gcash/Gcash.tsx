@@ -81,6 +81,7 @@ const GCash: React.FC<GCashProps> = ({
       setIsRefreshing(true);
       try {
         await onRefresh();
+        await new Promise(resolve => setTimeout(resolve, 500));
       } finally {
         setIsRefreshing(false);
       }

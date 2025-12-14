@@ -103,12 +103,16 @@ const Attendance: React.FC<AttendanceProps> = ({ attendanceRecords, attendanceLo
   }, [isFiltersOpen, isFilterClosing]);
 
   const handleRefreshSpinning = async () => {
-    if (onRefresh) {
-      onRefresh();
-    } else {
-      // Fallback: just show spinning for a moment
-      setIsSpinning(true);
-      setTimeout(() => setIsSpinning(false), 1000);
+    setIsSpinning(true);
+    try {
+      if (onRefresh) {
+        await onRefresh();
+      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (err) {
+      console.error('Error refreshing attendance records:', err);
+    } finally {
+      setIsSpinning(false);
     }
   };
 
