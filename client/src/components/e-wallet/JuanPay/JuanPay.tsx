@@ -1,17 +1,8 @@
 import React, { useState } from 'react';
-import LayoutCard from '../../layout/LayoutCard';
-import { Search, Plus, X } from 'lucide-react';
 import type { JuanPayRecord } from '../../../types/ewallet_types';
-import JuanPayRecordsTable from './JuanPayRecords';
-import CustomDatePicker from '../../common/CustomDatePicker';
-import RefreshBtn from '../../common/RefreshBtn';
-
-const formatCurrency = (amount: number): string => {
-  return amount.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
+import JuanPayStatsCards from './JuanPayStatscards';
+import JuanPayFilter from './JuanPayFilters';
+import JuanPayTable from './juanPayTables';
 
 interface JuanPayProps {
   records: JuanPayRecord[];
@@ -40,7 +31,6 @@ const JuanPay: React.FC<JuanPayProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const recordsPerPage = 10;
 
-  // Calculate statistics
   const stats = React.useMemo(() => {
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -76,7 +66,6 @@ const JuanPay: React.FC<JuanPayProps> = ({
     };
   }, [records, filterDate]);
 
-  // Filter records
   const filteredRecords = records.filter(record => {
     const term = searchTerm.trim().toLowerCase();
     const matchesSearch = !term || (
@@ -110,7 +99,6 @@ const JuanPay: React.FC<JuanPayProps> = ({
     }
   };
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
   const startIndex = (currentPage - 1) * recordsPerPage;
   const endIndex = startIndex + recordsPerPage;
@@ -128,139 +116,23 @@ const JuanPay: React.FC<JuanPayProps> = ({
 
   return (
     <div className="space-y-6 mt-5">
-      {/* Top Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {isLoading ? (
-          // Skeleton Loading
-          <>
-            {[1, 2, 3, 4].map((i) => (
-              <LayoutCard key={i} className="min-h-[120px] animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-32 mb-5"></div>
-                <div className={`h-9 rounded w-40 mb-2 ${i === 3 ? 'bg-red-200' : 'bg-gray-200'}`}></div>
-                <div className="h-3 bg-gray-200 rounded w-16"></div>
-              </LayoutCard>
-            ))}
-          </>
-        ) : (
-          // Actual Cards
-          <>
-            <LayoutCard className="bg-blue-500 min-h-[120px]">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-gray-500 font-medium">Beginning Balance {filterDate ? '(Filtered)' : '(Today)'}</h3>
-                {filterDate && (
-                  <div className="text-right text-xs text-gray-600">
-                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
-                  </div>
-                )}
-              </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.totalBeginning)}</div>
-              <div className="text-sm text-gray-500">Total Beginning</div>
-            </LayoutCard>
-            <LayoutCard className="min-h-[120px]">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-gray-500 font-medium">Ending Balance {filterDate ? '(Filtered)' : '(Today)'}</h3>
-                {filterDate && (
-                  <div className="text-right text-xs text-gray-600">
-                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
-                  </div>
-                )}
-              </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.totalEnding)}</div>
-              <div className="text-sm text-gray-500">Current Balance</div>
-            </LayoutCard>
-            <LayoutCard className="min-h-[120px]">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-gray-500 font-medium">Sales {filterDate ? '(Filtered)' : '(Today)'}</h3>
-                {filterDate && (
-                  <div className="text-right text-xs text-gray-600">
-                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
-                  </div>
-                )}
-              </div>
-              <div className="text-3xl font-bold text-red-500 mb-1">₱{formatCurrency(stats.totalSales)}</div>
-              <div className="text-sm text-gray-500">Total Sales</div>
-            </LayoutCard>
-            <LayoutCard className="min-h-[120px]">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-gray-500 font-medium">Average per Record {filterDate ? '(Filtered)' : '(Today)'}</h3>
-                {filterDate && (
-                  <div className="text-right text-xs text-gray-600">
-                    {filterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
-                  </div>
-                )}
-              </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">₱{formatCurrency(stats.avgSales)}</div>
-              <div className="text-sm text-gray-500">Per Transaction</div>
-            </LayoutCard>
-          </>
-        )}
-      </div>
+      <JuanPayStatsCards 
+        isLoading={isLoading} 
+        stats={stats} 
+        filterDate={filterDate} 
+      />
 
-      {/* JuanPay Records Section */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          {/* Left side: Title + Search */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            {/* <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-gray-900">JuanPay Records</h3>
-            </div> */}
+      <JuanPayFilter
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filterDate={filterDate}
+        setFilterDate={setFilterDate}
+        onOpenModal={onOpenModal}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
+      />
 
-            {/* Search */}
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search Records"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-[360px]"
-                />
-              </div>
-              <RefreshBtn onClick={handleRefresh} isSpinning={isRefreshing} />
-            </div>
-          </div>
-
-          {/* Right side: Date Filter + Add Button */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                Filter By Date:
-              </label>
-              <div className="flex items-center gap-2">
-                <div className="w-[140px]">
-                  <CustomDatePicker
-                    selected={filterDate}
-                    onChange={(date: Date | null) => setFilterDate(date)}
-                    className="text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    dateFormat="MM/dd/yyyy"
-                  />
-                </div>
-                {filterDate && (
-                  <button
-                    onClick={() => setFilterDate(null)}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    title="Clear date filter"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-            
-            <button
-              onClick={onOpenModal}
-              className="flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white rounded-lg hover:bg-[#1C4A9E] focus:outline-none focus:ring-1 focus:ring-blue-500 flex-shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              Add Record
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Records Table */}
-      <JuanPayRecordsTable
+      <JuanPayTable
         records={currentRecords}
         isLoading={isLoading}
         onDelete={onDelete}
@@ -269,7 +141,6 @@ const JuanPay: React.FC<JuanPayProps> = ({
         isDeleting={isDeleting}
       />
 
-      {/* Pagination */}
       <div className="flex items-center justify-between pt-1 pb-0">
         <div className="text-sm text-gray-500">
           Page {currentPage} of {totalPages}
