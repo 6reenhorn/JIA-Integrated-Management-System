@@ -435,12 +435,24 @@ const AddStaffModal = ({
               <div className="dropdown relative" ref={statusDropdownRef}>
                 <p className="text-[12px] font-bold">Status</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                  onClick={toggleStatusDropdown}
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => {
+                    toggleStatusDropdown();
+                    if (!isStatusDropdownOpen) {
+                      setTimeout(() => {
+                        document.getElementById("status-options")?.focus();
+                      }, 0);
+                    }
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+                    if (e.key === "Enter" || e.key === " ") {
                       toggleStatusDropdown();
                       e.preventDefault();
+                      if (!isStatusDropdownOpen) {
+                        setTimeout(() => {
+                          document.getElementById("status-options")?.focus();
+                        }, 0);
+                      }
                     }
                   }}
                   tabIndex={0}
@@ -451,42 +463,44 @@ const AddStaffModal = ({
                     height="16"
                     viewBox="0 0 16 16"
                     fill="none"
-                    className={`transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`transition-transform ${isStatusDropdownOpen ? "rotate-180" : ""}`}
                   >
                     <polygon points="4,6 12,6 8,12" fill="currentColor" />
                   </svg>
                 </div>
+
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  id="status-options"
+                  className="dropdown-options mt-1 rounded-md focus:outline-none"
                   style={{
-                    display: isStatusDropdownOpen ? 'block' : 'none',
-                    position: 'absolute',
-                    top: '100%',
+                    display: isStatusDropdownOpen ? "block" : "none",
+                    position: "absolute",
+                    top: "100%",
                     left: 0,
                     right: 0,
-                    backgroundColor: 'white',
-                    border: '1px solid #ccc',
+                    backgroundColor: "white",
+                    border: "1px solid #ccc",
                     zIndex: 10,
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                    width: '100%',
-                    maxWidth: '100%',
-                    boxSizing: 'border-box'
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                    width: "100%",
+                    maxWidth: "100%",
+                    boxSizing: "border-box",
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'ArrowDown') {
+                    if (e.key === "ArrowDown") {
                       e.preventDefault();
                       setFocusedStatusOption((prev) => (prev + 1) % 2);
-                    } else if (e.key === 'ArrowUp') {
+                    } else if (e.key === "ArrowUp") {
                       e.preventDefault();
                       setFocusedStatusOption((prev) => (prev - 1 + 2) % 2);
-                    } else if (e.key === 'Enter') {
+                    } else if (e.key === "Enter") {
                       e.preventDefault();
                       if (focusedStatusOption === 0) {
-                        handleStatusOptionClick('Active', 'Active');
+                        handleStatusOptionClick("Active", "Active");
                       } else {
-                        handleStatusOptionClick('Inactive', 'Inactive');
+                        handleStatusOptionClick("Inactive", "Inactive");
                       }
-                    } else if (e.key === 'Escape') {
+                    } else if (e.key === "Escape") {
                       e.preventDefault();
                       setIsStatusDropdownOpen(false);
                     }
@@ -494,28 +508,20 @@ const AddStaffModal = ({
                   tabIndex={isStatusDropdownOpen ? 0 : -1}
                 >
                   <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedStatusOption === 0 ? 'bg-blue-100' : ''}`}
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${
+                      focusedStatusOption === 0 ? "bg-blue-50" : ""
+                    }`}
                     data-value="Active"
-                    onClick={() => handleStatusOptionClick('Active', 'Active')}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleStatusOptionClick('Active', 'Active');
-                      }
-                    }}
-                    tabIndex={isStatusDropdownOpen ? 0 : -1}
+                    onClick={() => handleStatusOptionClick("Active", "Active")}
                   >
                     Active
                   </div>
                   <div
-                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedStatusOption === 1 ? 'bg-blue-100' : ''}`}
+                    className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${
+                      focusedStatusOption === 1 ? "bg-blue-50" : ""
+                    }`}
                     data-value="Inactive"
-                    onClick={() => handleStatusOptionClick('Inactive', 'Inactive')}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleStatusOptionClick('Inactive', 'Inactive');
-                      }
-                    }}
-                    tabIndex={isStatusDropdownOpen ? 0 : -1}
+                    onClick={() => handleStatusOptionClick("Inactive", "Inactive")}
                   >
                     Inactive
                   </div>
@@ -524,12 +530,24 @@ const AddStaffModal = ({
               <div className="dropdown relative" ref={roleDropdownRef}>
                 <p className="text-[12px] font-bold">Role</p>
                 <div
-                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                  onClick={toggleRoleDropdown}
+                  className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => {
+                    toggleRoleDropdown();
+                    if (!isRoleDropdownOpen) {
+                      setTimeout(() => {
+                        document.getElementById("role-options")?.focus();
+                      }, 0);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       toggleRoleDropdown();
                       e.preventDefault();
+                      if (!isRoleDropdownOpen) {
+                        setTimeout(() => {
+                          document.getElementById("role-options")?.focus();
+                        }, 0);
+                      }
                     }
                   }}
                   tabIndex={0}
@@ -546,7 +564,8 @@ const AddStaffModal = ({
                   </svg>
                 </div>
                 <div
-                  className="dropdown-options mt-1 rounded-md"
+                  id="role-options"
+                  className="dropdown-options mt-1 rounded-md focus:outline-none"
                   style={{
                     display: isRoleDropdownOpen ? 'block' : 'none',
                     position: 'absolute',
@@ -668,7 +687,7 @@ const AddStaffModal = ({
                 className={`border rounded-md w-full px-2 py-1 focus:ring-2 focus:outline-none ${
                   fieldErrors.salary
                     ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                    : 'border-gray-300 focus:ring-blue-500'
                 }`} 
               />
             </div>
@@ -692,7 +711,7 @@ const AddStaffModal = ({
                       className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
                         fieldErrors.contactName
                           ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                          : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                          : 'border-gray-300 focus:ring-blue-500'
                       }`} 
                     />
                   </div>
@@ -708,7 +727,7 @@ const AddStaffModal = ({
                       className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none w-full ${
                         fieldErrors.contactNumber
                           ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                          : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                          : 'border-gray-300 focus:ring-blue-500'
                       }`}
                     />
                   </div>
@@ -717,12 +736,24 @@ const AddStaffModal = ({
                   <div className="dropdown relative" ref={relationshipDropdownRef}>
                     <p className="text-[12px] font-bold">Relationship</p>
                     <div
-                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px]"
-                      onClick={toggleRelationshipDropdown}
+                      className="dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full border-[#E5E7EB] rounded-md px-4 text-gray-600 hover:bg-gray-200 cursor-pointer h-[29px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onClick={() => {
+                        toggleRelationshipDropdown();
+                        if (!isRelationshipDropdownOpen) {
+                          setTimeout(() => {
+                            document.getElementById("relationship-options")?.focus();
+                          }, 0);
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           toggleRelationshipDropdown();
                           e.preventDefault();
+                          if (!isRelationshipDropdownOpen) {
+                            setTimeout(() => {
+                              document.getElementById("relationship-options")?.focus();
+                            }, 0);  
+                          }
                         }
                       }}
                       tabIndex={0}
@@ -739,7 +770,8 @@ const AddStaffModal = ({
                       </svg>
                     </div>
                     <div
-                      className="dropdown-options -mt-1 rounded-md"
+                      id="relationship-options"
+                      className="dropdown-options -mt-1 rounded-md focus:outline-none"
                       style={{
                         display: isRelationshipDropdownOpen ? 'block' : 'none',
                         position: 'absolute',
@@ -780,7 +812,7 @@ const AddStaffModal = ({
                       tabIndex={isRelationshipDropdownOpen ? 0 : -1}
                     >
                       <div
-                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 0 ? 'bg-blue-100' : ''}`}
+                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 0 ? 'bg-blue-50' : ''}`}
                         data-value="spouse"
                         onClick={() => handleRelationshipOptionClick('spouse', 'Spouse')}
                         onKeyDown={(e) => {
@@ -793,7 +825,7 @@ const AddStaffModal = ({
                         Spouse
                       </div>
                       <div
-                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 1 ? 'bg-blue-100' : ''}`}
+                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 1 ? 'bg-blue-50' : ''}`}
                         data-value="parent"
                         onClick={() => handleRelationshipOptionClick('parent', 'Parent')}
                         onKeyDown={(e) => {
@@ -806,7 +838,7 @@ const AddStaffModal = ({
                         Parent
                       </div>
                       <div
-                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 2 ? 'bg-blue-100' : ''}`}
+                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 2 ? 'bg-blue-50' : ''}`}
                         data-value="sibling"
                         onClick={() => handleRelationshipOptionClick('sibling', 'Sibling')}
                         onKeyDown={(e) => {
@@ -819,7 +851,7 @@ const AddStaffModal = ({
                         Sibling
                       </div>
                       <div
-                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 3 ? 'bg-blue-100' : ''}`}
+                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 3 ? 'bg-blue-50' : ''}`}
                         data-value="friend"
                         onClick={() => handleRelationshipOptionClick('friend', 'Friend')}
                         onKeyDown={(e) => {
@@ -832,7 +864,7 @@ const AddStaffModal = ({
                         Friend
                       </div>
                       <div
-                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 4 ? 'bg-blue-100' : ''}`}
+                        className={`option px-4 py-2 hover:bg-gray-100 cursor-pointer ${focusedRelationshipOption === 4 ? 'bg-blue-50' : ''}`}
                         data-value="other"
                         onClick={() => handleRelationshipOptionClick('other', 'Other')}
                         onKeyDown={(e) => {

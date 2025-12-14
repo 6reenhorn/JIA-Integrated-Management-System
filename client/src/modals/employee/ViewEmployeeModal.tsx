@@ -149,20 +149,21 @@ const ViewEmployeeModal: React.FC<ViewEmployeeModalProps> = ({ employee, onClose
                 <div className="flex items-center gap-2">
                   <input
                     type={showPassword ? "text" : "password"}
+                    tabIndex={-1}
                     value={employee.password}
                     readOnly
                     className="text-[14px] border border-gray-300 rounded px-2 py-1 w-full bg-gray-50"
                   />
                   <button
                     onClick={() => setShowPassword(!showPassword)}
-                    className="px-3 py-1 bg-gray-500 border-2 border-gray-600 text-white rounded text-sm hover:bg-gray-600 flex items-center gap-1"
+                    className="px-3 py-1 bg-gray-500 border-2 border-gray-600 text-white rounded text-sm hover:bg-gray-600 flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     title={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                   <button
                     onClick={() => navigator.clipboard.writeText(employee.password)}
-                    className="px-3 py-1 bg-[#02367B] border-2 border-[#1C4A9E] text-white rounded text-sm hover:bg-[#1C4A9E]"
+                    className="px-3 py-1 bg-[#02367B] border-2 border-[#1C4A9E] text-white rounded text-sm hover:bg-[#1C4A9E] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     title="Copy password"
                   >
                     Copy
