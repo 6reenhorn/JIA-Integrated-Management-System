@@ -95,10 +95,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
         break;
       case 'settings':
         sections = [
-          { id: 'settings-general', label: 'General' },
-          { id: 'settings-security', label: 'Security' },
-          { id: 'settings-notifications', label: 'Notifications' },
-          { id: 'settings-preferences', label: 'Preferences' }
+          { id: 'settings-appearance', label: 'Appearance' },
+          { id: 'settings-account&system', label: 'Account & System' },
         ];
         break;
       case 'about':
@@ -148,22 +146,25 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
   const isSectionFunctional = (sectionId: string) => {
     // E-Wallet sections are functional
     if (isEWalletSection(sectionId)) return true;
-    
+
     // Employee sections are functional
     if (isEmployeeSection(sectionId)) return true;
-    
+
     // Inventory sections are functional
     if (isInventorySection(sectionId)) return true;
-    
+
     // About sections are functional
     if (isAboutSection(sectionId)) return true;
-    
+
+    // Settings sections are functional
+    if (sectionId.startsWith('settings-')) return true;
+
     // Dashboard main section is functional
     if (sectionId === 'dashboard') return true;
-    
+
     // Settings and About main sections are functional
     if (sectionId === 'settings' || sectionId === 'about') return true;
-    
+
     // All other sections are not implemented yet
     return false;
   };

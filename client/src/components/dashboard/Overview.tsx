@@ -309,11 +309,11 @@ const Overview: React.FC = () => {
         const key = inventoryByProduct.get(sale.productName) ?? 'Uncategorized';
         const total = Number(sale.total) || 0;
         
-        if (!categoryMap.has(key)) {
-          categoryMap.set(key, { name: key, value: 0, sales: 0 });
-        }
-        const cat = categoryMap.get(key);
-        cat.sales += total;
+      if (!categoryMap.has(key)) {
+        categoryMap.set(key, { name: key, value: 0, sales: 0 });
+      }
+      const cat = categoryMap.get(key)!;
+      cat.sales += total;
       }
     });
     
