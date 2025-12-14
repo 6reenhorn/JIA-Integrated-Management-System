@@ -51,7 +51,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
         {onAddCategory && (
           <button
             onClick={onAddCategory}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-medium rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0  focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#02367B] text-white text-sm font-sm rounded-lg hover:bg-[#1C4A9E] focus:outline-none flex-shrink-0  focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500"
           >
             <Plus className="w-4 h-4" />
             {addButtonText}
