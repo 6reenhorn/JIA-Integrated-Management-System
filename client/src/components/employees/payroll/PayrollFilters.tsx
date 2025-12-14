@@ -36,7 +36,6 @@ const PayrollFilters: React.FC<PayrollFiltersProps> = ({
   const presets = ['All Status', 'Paid', 'Pending', 'Overdue'];
 
   const [isPresetOpen, setIsPresetOpen] = useState(false);
-  const [presetFocusIndex, setPresetFocusIndex] = useState(-1);
   const presetRef = useRef<HTMLDivElement>(null);
   const presetOptionsRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -44,7 +43,6 @@ const PayrollFilters: React.FC<PayrollFiltersProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (presetRef.current && !presetRef.current.contains(event.target as Node)) {
         setIsPresetOpen(false);
-        setPresetFocusIndex(-1);
       }
     };
 
@@ -75,12 +73,10 @@ const PayrollFilters: React.FC<PayrollFiltersProps> = ({
     onSelectedPresetChange(option);
     onApply(null); // Apply immediately for preset
     setIsPresetOpen(false);
-    setPresetFocusIndex(-1);
   };
 
   const togglePresetDropdown = () => {
     setIsPresetOpen(!isPresetOpen);
-    setPresetFocusIndex(-1);
   };
 
   const handlePresetKeyDown = (e: React.KeyboardEvent) => {
@@ -95,24 +91,17 @@ const PayrollFilters: React.FC<PayrollFiltersProps> = ({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setPresetFocusIndex(prev => {
-          const next = prev < presets.length - 1 ? prev + 1 : 0;
-          presetOptionsRefs.current[next]?.focus();
-          return next;
-        });
+        const nextDown = (presets.findIndex(p => p === selectedPreset) + 1) % presets.length;
+        presetOptionsRefs.current[nextDown]?.focus();
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setPresetFocusIndex(prev => {
-          const next = prev > 0 ? prev - 1 : presets.length - 1;
-          presetOptionsRefs.current[next]?.focus();
-          return next;
-        });
+        const nextUp = (presets.findIndex(p => p === selectedPreset) - 1 + presets.length) % presets.length;
+        presetOptionsRefs.current[nextUp]?.focus();
         break;
       case 'Escape':
         e.preventDefault();
         setIsPresetOpen(false);
-        setPresetFocusIndex(-1);
         break;
     }
   };
@@ -189,16 +178,13 @@ const PayrollFilters: React.FC<PayrollFiltersProps> = ({
                     e.preventDefault();
                     const nextIndex = index < presets.length - 1 ? index + 1 : 0;
                     presetOptionsRefs.current[nextIndex]?.focus();
-                    setPresetFocusIndex(nextIndex);
                   } else if (e.key === 'ArrowUp') {
                     e.preventDefault();
                     const prevIndex = index > 0 ? index - 1 : presets.length - 1;
                     presetOptionsRefs.current[prevIndex]?.focus();
-                    setPresetFocusIndex(prevIndex);
                   } else if (e.key === 'Escape') {
                     e.preventDefault();
                     setIsPresetOpen(false);
-                    setPresetFocusIndex(-1);
                   }
                 }}
                 tabIndex={0}
