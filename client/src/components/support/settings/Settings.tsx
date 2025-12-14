@@ -150,42 +150,42 @@ const Settings: React.FC<SettingsProps> = ({ activeSection, onSectionChange }) =
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DashboardCard title="Account Settings">
             <p className="text-gray-600 text-sm">Manage your account information and security</p>
-            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium cursor-not-allowed">
               Coming Soon
             </button>
           </DashboardCard>
 
           <DashboardCard title="Notifications">
             <p className="text-gray-600 text-sm">Configure notification preferences</p>
-            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium cursor-not-allowed">
               Coming Soon
             </button>
           </DashboardCard>
 
           <DashboardCard title="Theme">
             <p className="text-gray-600 text-sm">Customize the appearance and theme</p>
-            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium cursor-not-allowed">
               Coming Soon
             </button>
           </DashboardCard>
 
           <DashboardCard title="Privacy & Security">
             <p className="text-gray-600 text-sm">Control your privacy settings and data</p>
-            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium cursor-not-allowed">
               Coming Soon
             </button>
           </DashboardCard>
 
           <DashboardCard title="Language & Region">
             <p className="text-gray-600 text-sm">Set your language and regional preferences</p>
-            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium cursor-not-allowed">
               Coming Soon
             </button>
           </DashboardCard>
 
           <DashboardCard title="Data Management">
             <p className="text-gray-600 text-sm">Manage your data, backups, and exports</p>
-            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+            <button className="mt-4 px-4 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium cursor-not-allowed">
               Coming Soon
             </button>
           </DashboardCard>
