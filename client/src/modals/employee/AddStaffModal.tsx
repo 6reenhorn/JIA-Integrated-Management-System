@@ -357,7 +357,7 @@ const AddStaffModal = ({
                     className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
                       fieldErrors.firstName
                         ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-300'
+                        : 'border-gray-300 focus:ring-blue-500'
                     }`} 
                   />
                 </div>
@@ -375,7 +375,7 @@ const AddStaffModal = ({
                     className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
                       fieldErrors.lastName
                         ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                        : 'border-gray-300 focus:ring-blue-500'
                     }`} 
                   />
                 </div>
@@ -392,7 +392,7 @@ const AddStaffModal = ({
                     onChange={(e) => {
                       setEmail(e.target.value);
                     }} 
-                    className="border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" 
+                    className="border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none" 
                   />
                 </div>
                 <div className="flex flex-col justify-center">
@@ -409,7 +409,7 @@ const AddStaffModal = ({
                     className={`border rounded-md px-2 py-1 focus:ring-2 focus:outline-none ${
                       fieldErrors.phone
                         ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-300' 
-                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                        : 'border-gray-300 focus:ring-blue-500'
                     }`}
                   />
                 </div>
@@ -424,7 +424,7 @@ const AddStaffModal = ({
                   onChange={(e) => {
                     setAddress(e.target.value);
                   }} 
-                  className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                  className="w-full border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 ></textarea>
               </div>
             </div>
