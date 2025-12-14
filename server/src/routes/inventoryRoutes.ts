@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { DBHelper } from '../db/dbHelper';
+import { formatTimestampForResponse } from '../utils/timeUtils';
 
 const router = Router();
 
@@ -46,7 +47,7 @@ router.get('/categories', async (req: Request, res: Response): Promise<void> => 
       id: row.id,
       name: row.category_name,
       color: row.color,
-      createdAt: row.created_at
+      createdAt: formatTimestampForResponse(row.created_at) as any
     }));
     res.json(categories);
   } catch (err) {
@@ -83,7 +84,7 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
           id: restoredCat.id,
           name: restoredCat.category_name,
           color: restoredCat.color,
-          createdAt: restoredCat.created_at
+          createdAt: formatTimestampForResponse(restoredCat.created_at) as any
         };
         res.status(200).json(category);
         return;
@@ -117,7 +118,7 @@ router.post('/categories', async (req: Request, res: Response): Promise<void> =>
       id: newCategory.id,
       name: newCategory.category_name,
       color: newCategory.color,
-      createdAt: newCategory.created_at
+      createdAt: formatTimestampForResponse(newCategory.created_at) as any
     };
 
     res.status(201).json(category);
@@ -253,7 +254,7 @@ router.put('/categories/:categoryName', async (req: Request, res: Response): Pro
       id: updatedCategory.id,
       name: updatedCategory.category_name,
       color: updatedCategory.color,
-      createdAt: updatedCategory.created_at
+      createdAt: formatTimestampForResponse(updatedCategory.created_at) as any
     };
 
     res.json(category);
@@ -313,7 +314,7 @@ router.get('/sales', async (req: Request, res: Response): Promise<void> => {
       price: parseFloat(row.price || 0),
       total: parseFloat(row.total || 0),
       paymentMethod: row.payment_method,
-      createdAt: row.created_at
+      createdAt: formatTimestampForResponse(row.created_at) as any
     }));
     res.json(salesRecords);
   } catch (err) {
@@ -373,7 +374,7 @@ router.post('/sales', async (req: Request, res: Response): Promise<void> => {
       price: parseFloat(newSale.price || 0),
       total: parseFloat(newSale.total || 0),
       paymentMethod: newSale.payment_method,
-      createdAt: newSale.created_at
+      createdAt: formatTimestampForResponse(newSale.created_at) as any
     };
 
     res.status(201).json(salesRecord);
@@ -441,7 +442,7 @@ router.put('/sales/:id', async (req: Request, res: Response): Promise<void> => {
       price: parseFloat(updatedSale.price || 0),
       total: parseFloat(updatedSale.total || 0),
       paymentMethod: updatedSale.payment_method,
-      createdAt: updatedSale.created_at
+      createdAt: formatTimestampForResponse(updatedSale.created_at) as any
     };
 
     res.json(salesRecord);
@@ -494,8 +495,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       status: row.status,
       productPrice: parseFloat(row.product_price || 0),
       totalAmount: parseFloat(row.total_amount || 0),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      createdAt: formatTimestampForResponse(row.created_at) as any,
+      updatedAt: formatTimestampForResponse(row.updated_at) as any
     }));
     res.json(inventoryItems);
   } catch (err) {
@@ -546,8 +547,8 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       status: newItem.status,
       productPrice: parseFloat(newItem.product_price || 0),
       totalAmount: parseFloat(newItem.total_amount || 0),
-      createdAt: newItem.created_at,
-      updatedAt: newItem.updated_at
+      createdAt: formatTimestampForResponse(newItem.created_at) as any,
+      updatedAt: formatTimestampForResponse(newItem.updated_at) as any
     };
 
     res.status(201).json(inventoryItem);
@@ -606,8 +607,8 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
       status: updatedItem.status,
       productPrice: parseFloat(updatedItem.product_price || 0),
       totalAmount: parseFloat(updatedItem.total_amount || 0),
-      createdAt: updatedItem.created_at,
-      updatedAt: updatedItem.updated_at
+      createdAt: formatTimestampForResponse(updatedItem.created_at) as any,
+      updatedAt: formatTimestampForResponse(updatedItem.updated_at) as any
     };
 
     res.json(inventoryItem);

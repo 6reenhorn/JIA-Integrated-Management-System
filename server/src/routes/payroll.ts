@@ -3,17 +3,36 @@ import { DBHelper } from '../db/dbHelper';
 
 const router = Router();
 
-// Helper function to format payment date
+// Helper function to format payment date in Asia/Manila timezone
 const formatPaymentDate = (dateStr: string | null): string | null => {
   if (!dateStr) return null;
   try {
     const date = new Date(dateStr);
-    const YY = date.getFullYear() % 100;
-    const DD = String(date.getDate()).padStart(2, '0');
-    const MM = String(date.getMonth() + 1).padStart(2, '0');
-    const Hr = String(date.getHours()).padStart(2, '0');
-    const Min = String(date.getMinutes()).padStart(2, '0');
-    return `${YY}-${DD}-${MM} ${Hr}-${Min}`;
+    if (isNaN(date.getTime())) return null;
+    
+    // Format as YYYY-MM-DD HH:mm:ss in Asia/Manila timezone
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).formatToParts(date);
+
+    const y = parts.find(p => p.type === 'year')?.value;
+    const mo = parts.find(p => p.type === 'month')?.value;
+    const d = parts.find(p => p.type === 'day')?.value;
+    const h = parts.find(p => p.type === 'hour')?.value;
+    const mi = parts.find(p => p.type === 'minute')?.value;
+    const s = parts.find(p => p.type === 'second')?.value;
+
+    if (y && mo && d && h && mi && s) {
+      return `${y}-${mo}-${d} ${h}:${mi}:${s}`;
+    }
+    return null;
   } catch {
     return dateStr;
   }
