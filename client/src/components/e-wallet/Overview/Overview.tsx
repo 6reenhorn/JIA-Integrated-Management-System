@@ -539,7 +539,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                   setShowDateFilter(true);
                 }
               }}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <Calendar className="w-4 h-6" />
             <span className="text-sm font-medium">
@@ -581,7 +581,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                       setTempStartDate(date);
                       setDateRangeWarning('');
                     }}
-                    className="text-sm w-full"
+                    className="text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -592,13 +592,13 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                       setTempEndDate(date);
                       setDateRangeWarning('');
                     }}
-                    className="text-sm w-full"
+                    className="text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <button
                   onClick={handleApplyFilter}
                   disabled={!tempStartDate}
-                  className="w-full px-4 py-2 bg-[#02367B] text-white rounded-md hover:bg-[#1C4A9E] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
+                  className="w-full px-4 py-2 bg-[#02367B] text-white rounded-md hover:bg-[#1C4A9E] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Apply Filter
                 </button>
@@ -622,7 +622,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                 setShowSummaryDateFilter(true);
               }
             }}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <Calendar className="w-4 h-6" />
             <span className="text-sm font-medium">
@@ -664,7 +664,7 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                       setTempSummaryStartDate(date);
                       setSummaryDateRangeWarning('');
                     }}
-                    className="text-sm w-full"
+                    className="text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -675,13 +675,13 @@ const Overview: React.FC<OverviewProps> = ({ gcashRecords, paymayaRecords, juanp
                       setTempSummaryEndDate(date);
                       setSummaryDateRangeWarning('');
                     }}
-                    className="text-sm w-full"
+                    className="text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <button
                   onClick={handleApplySummaryFilter}
                   disabled={!tempSummaryStartDate}
-                  className="w-full px-4 py-2 bg-[#02367B] text-white rounded-md hover:bg-[#1C4A9E] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"
+                  className="w-full px-4 py-2 bg-[#02367B] text-white rounded-md hover:bg-[#1C4A9E] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Apply Filter
                 </button>
