@@ -305,7 +305,7 @@ useEffect(() => {
                     value={formData.productName}
                     onChange={(e) => handleInputChange('productName', e.target.value)}
                     disabled={isUpdating}
-                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                       showValidationAlert && !formData.productName.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                   />
@@ -318,7 +318,7 @@ useEffect(() => {
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     disabled={isUpdating}
                     rows={3}
-                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -328,7 +328,7 @@ useEffect(() => {
                       Category
                     </p>
                     <div
-                      className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full rounded-md px-4 text-gray-600 cursor-pointer h-[29px] ${
+                      className={`dropdown-selected relative flex items-center justify-between bg-gray-100 border-2 w-full rounded-md px-4 text-gray-600 cursor-pointer h-[29px] focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                         isUpdating 
                           ? 'opacity-50 cursor-not-allowed border-[#E5E7EB]' 
                           : showValidationAlert && !formData.category
@@ -427,7 +427,7 @@ useEffect(() => {
                     onChange={handlePriceChange}
                     disabled={isUpdating}
                     placeholder="0.00"
-                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                       showValidationAlert && (!formData.productPrice || formData.productPrice <= 0) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                   />
@@ -445,7 +445,7 @@ useEffect(() => {
                       onChange={(e) => handleInputChange('stock', parseInt(e.target.value) || 0)}
                       disabled={isUpdating}
                       min="0"
-                      className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      className={`w-full border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                         showValidationAlert && (formData.stock === undefined || formData.stock === null) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -458,7 +458,7 @@ useEffect(() => {
                       value={formData.minimumStock || ''}
                       onChange={(e) => handleInputChange('minimumStock', parseInt(e.target.value) || 0)}
                       disabled={isUpdating}
-                      className="w-full border border-gray-300 rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 </div>
@@ -472,7 +472,7 @@ useEffect(() => {
               type="button"
               onClick={handleCancel}
               disabled={isUpdating}
-              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               Cancel
             </button>
@@ -480,7 +480,7 @@ useEffect(() => {
               type="button"
               onClick={handleSubmit}
               disabled={isUpdating}
-              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               {isUpdating ? (
                 <>

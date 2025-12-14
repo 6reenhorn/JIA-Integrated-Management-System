@@ -333,22 +333,22 @@ const CategoryContent: React.FC<CategoryContentProps> = ({
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={(e) => handleEditClick(category, e)}
-                          className="p-1.5 hover:bg-blue-50 rounded-md transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                          title="Edit category"
-                        >
-                          <PenSquare className="w-4 h-4 text-gray-800 group-hover:text-blue-600" />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteClick(category, e)}
-                          className="p-1.5 hover:bg-red-50 rounded-md transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                          title="Delete category"
-                        >
-                          <Trash2 className="w-4 h-4 text-gray-800 group-hover:text-red-600" />
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => handleEditClick(category, e)}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        title="Edit category"
+                      >
+                        <PenSquare className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteClick(category, e)}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        title="Delete category"
+                      >
+                        <Trash2 className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
                     </div>
                     
                     {/* Stats Grid */}

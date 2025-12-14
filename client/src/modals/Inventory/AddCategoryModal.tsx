@@ -230,7 +230,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                     value={categoryName}
                     onChange={(e) => handleInputChange(e.target.value)}
                     placeholder="Enter category name"
-                    className={`w-full border rounded-md px-2 py-1 focus:border-[#02367B] focus:ring-1 focus:ring-[#02367B] focus:outline-none ${
+                    className={`w-full border rounded-md px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:outline-none ${
                       showValidationAlert && errors.categoryName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                     onKeyDown={(e) => {
@@ -250,9 +250,9 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                         key={index}
                         type="button"
                         onClick={() => setSelectedColor(color)}
-                        className={`w-10 h-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#02367B] ${
+                        className={`w-10 h-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
                           selectedColor === color 
-                            ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' 
+                            ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' 
                             : 'hover:scale-105'
                         }`}
                         style={{ backgroundColor: color }}
@@ -286,14 +286,14 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
             <button
               type="button"
               onClick={handleCancel}
-              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 transition-colors duration-200"
+              className="border border-gray-300 hover:bg-gray-200 rounded-md px-3 py-1 transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500" 
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSubmit}
-              className="bg-[#02367B] text-white rounded-md px-3 py-1 hover:bg-[#1C4A9E] border border-gray-300 transition-colors duration-200"
+              className="bg-[#02367B] text-white rounded-md px-3 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-200"
             >
               Add Category
             </button>
