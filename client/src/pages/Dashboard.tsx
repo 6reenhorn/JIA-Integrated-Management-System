@@ -206,6 +206,22 @@ const Dashboard: React.FC = () => {
       return <About activeSection={section} onSectionChange={handleAboutSectionChange} />;
     }
 
+    // Handle Settings sections
+    if (activeItem.startsWith('settings')) {
+      let section = 'appearance';
+      if (activeItem === 'settings-account&system') {
+        section = 'account&system';
+      }
+      return <Settings activeSection={section} onSectionChange={(section) => {
+        const sectionToActiveItem: Record<string, string> = {
+          'appearance': 'settings',
+          'account&system': 'settings-account&system'
+        };
+        setActiveItem(sectionToActiveItem[section] || 'settings');
+        updateCurrentSection('settings', section);
+      }} />;
+    }
+
     // Handle main menu items
     switch (activeItem) {
       case 'dashboard':
@@ -297,6 +313,13 @@ const Dashboard: React.FC = () => {
   };
 
   const getHeaderSubtitle = (): string => {
+    if (activeItem.startsWith('settings')) {
+      if (activeItem === 'settings-account&system') {
+        return 'Manage your account and system preferences';
+      }
+      return 'Customize your application preferences';
+    }
+
     if (currentSection.page === 'inventory' && currentSection.section) {
       switch (currentSection.section) {
         case 'inventory':
