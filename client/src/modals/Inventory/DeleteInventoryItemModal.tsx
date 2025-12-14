@@ -141,7 +141,7 @@ const DeleteInventoryItemModal: React.FC<DeleteInventoryItemModalProps> = ({
                     <button
                         onClick={handleCancel}
                         disabled={isDeleting}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed "
                     >
                         <X size={20} className="text-gray-500" />
                     </button>

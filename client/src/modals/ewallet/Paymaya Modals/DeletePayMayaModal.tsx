@@ -171,7 +171,7 @@ const DeletePayMayaRecordModal: React.FC<DeletePayMayaRecordModalProps> = ({
                     </button>
                     <button 
                         type="button"
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 font-medium text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
                         onClick={handleConfirm}
                         disabled={isDeleting}
                     >
