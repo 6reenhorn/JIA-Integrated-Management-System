@@ -1,4 +1,5 @@
 import React from 'react';
+import LayoutCard from '../../layout/LayoutCard';
 
 const LicenseAndCredits: React.FC = () => (
   <section id="about-license" className="scroll-mt-20">
@@ -7,15 +8,15 @@ const LicenseAndCredits: React.FC = () => (
     </h2>
     
     <div className="space-y-6 text-gray-700">
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <LayoutCard>
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Software License</h3>
         <p>
           JIMS is developed as part of CS317 - Software Engineering course requirements 
           at the Department of Computer Science. All rights reserved.
         </p>
-      </div>
+      </LayoutCard>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <LayoutCard>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Development Team Credits</h3>
         <ul className="space-y-2 list-disc list-inside">
           <li>Glenn Mark R. Anino - Full-Stack Developer / Lead QA</li>
@@ -25,9 +26,9 @@ const LicenseAndCredits: React.FC = () => (
           <li>Sophia Marie M. Flores - Front-End Developer / Lead UI/UX Designer</li>
           <li>Julien A. Marabe - UI/UX Designer / QA</li>
         </ul>
-      </div>
+      </LayoutCard>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <LayoutCard>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Third-Party Acknowledgments</h3>
         <ul className="space-y-2 list-disc list-inside">
           <li>React.js - User interface library</li>
@@ -35,9 +36,9 @@ const LicenseAndCredits: React.FC = () => (
           <li>Tailwind CSS - Styling framework</li>
           <li>Other development tools and libraries</li>
         </ul>
-      </div>
+      </LayoutCard>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
+      <div className="bg-gray-100 border-2 border-[#E5E7EB] rounded-[12px] p-6 shadow-sm text-center">
         <p className="text-sm text-gray-600">
           © 2025 JIA Integrated Management System (JIMS). CS317 Software Engineering Project.
         </p>
