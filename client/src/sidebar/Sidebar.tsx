@@ -70,14 +70,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, onToggle, is
     let sections: { id: string; label: string }[];
     
     switch (itemId) {
-      case 'dashboard':
-        sections = [
-          { id: 'dashboard-overview', label: 'Overview' },
-          { id: 'dashboard-analytics', label: 'Analytics' },
-          { id: 'dashboard-reports', label: 'Reports' },
-          { id: 'dashboard-statistics', label: 'Statistics' }
-        ];
-        break;
+      // case 'dashboard':
+      //   sections = [
+      //     { id: 'dashboard-overview', label: 'Overview' },
+      //     { id: 'dashboard-analytics', label: 'Analytics' },
+      //     { id: 'dashboard-reports', label: 'Reports' },
+      //     { id: 'dashboard-statistics', label: 'Statistics' }
+      //   ];
+      //   break;
       case 'inventory':
         sections = [
           { id: 'inventory-categories', label: 'Sales' },
